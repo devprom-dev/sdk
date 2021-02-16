@@ -190,11 +190,10 @@ public class ScrumDevelopmentScreenCast extends ProjectTestBase{
         TestScenarioTestingPage testingPage = (new StartTestingPage(driver)).startTestWithNewData("1.3", "");
         scenario.setId(testingPage.getTestRunId());
         testingPage.fillCell("1", "4", "Ok");
-        driver.navigate().refresh();
         testingPage.fillCell("2", "4", "Ok");
-        driver.navigate().refresh();
         (new CopyData()).copyImage(Configuration.getPathToBugImage());
-        testingPage.pasteToCell("3", "4"); 
+        testingPage.pasteToCell("3", "4");
+        driver.navigate().refresh();
         testingPage.failTest(scenario);
         Thread.sleep(4000);
         ScrumTaskNewPage taskNewPage = testingPage.createTask();

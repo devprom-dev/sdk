@@ -31,7 +31,7 @@ class UpdatePage extends AdminPage
 	    return $_REQUEST['action'] != '';    
 	}
 	
-	function getForm()
+	function getEntityForm()
 	{
 		$object = $this->getObject();
 		

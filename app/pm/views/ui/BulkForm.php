@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Email\CommentNotificationService;
 include_once SERVER_ROOT_PATH."core/views/BulkFormBase.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
@@ -20,7 +21,10 @@ class BulkForm extends BulkFormBase
 				
  			case 'Watchers':
  				return translate('Наблюдатели');
-				
+
+            case 'Tag':
+                return '';
+
 			default:
 				return parent::getName( $attribute );
 		}
@@ -56,15 +60,27 @@ class BulkForm extends BulkFormBase
 			$_REQUEST['Transition'] = trim($attributes[1]);
 
 			$system_attributes =
-					array_merge(
-							$object->getAttributesByGroup('system'),
-							$object->getAttributesByGroup('nonbulk')
-					);
+                array_merge(
+                    $object->getAttributesByGroup('system'),
+                    $object->getAttributesByGroup('nonbulk')
+                );
 
-			$model_builder = new WorkflowTransitionAttributesModelBuilder(
-					getFactory()->getObject('Transition')->getExact( trim($attributes[1]) )
+			$formData = array();
+            foreach( $object->getAttributes() as $attribute => $data )
+            {
+                if ( in_array($attribute, $system_attributes) ) continue;
+
+                $actualData = array_unique($this->getIt()->fieldToArray($attribute));
+                if ( count($actualData) > 1 && !in_array('', $actualData) ) {
+                    $formData[$attribute] = join(',', $actualData);
+                }
+            }
+
+            $model_builder = new WorkflowTransitionAttributesModelBuilder(
+                getFactory()->getObject('Transition')->getExact(trim($attributes[1])),
+                array(),
+                $formData
 			);
-			
 		    $model_builder->build($object);
 		    
 		    $ref_names = array();
@@ -72,7 +88,7 @@ class BulkForm extends BulkFormBase
 			{
 				if ( in_array($attribute, $system_attributes) ) continue;
 				if ( !$this->IsAttributeVisible($attribute) ) continue;
-				
+
 				$ref_names[] = $attribute;
 			}
 		    return $ref_names;
@@ -81,20 +97,6 @@ class BulkForm extends BulkFormBase
 		return parent::getActionAttributes();
 	}
 	
-	function IsAttributeModifiable( $attr )
-	{
-	    switch ( $attr )
-	    {
-	        case 'State':
-	            return false;
-
-	        case 'Watchers':
-	            return true;
-	    }
-	    
-	    return parent::IsAttributeModifiable( $attr );
-	}
-
 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 		switch ( $attribute ) 
@@ -105,18 +107,20 @@ class BulkForm extends BulkFormBase
 				$field->SetName('value');
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-				
-				echo $this->getName($attribute);
 				echo '<span id="'.$field->getId().'" class="input-block-level well well-text" style="width:100%;height:auto;">';
 				    $field->draw();
 				echo '</span>';
 				break;
 
             case 'TransitionNotification':
-                $field = new FieldCheckNotifications(
-                    getFactory()->getObject('Transition')->getExact($_REQUEST['Transition'])
+                $options = new CommentNotificationService($this->getIt());
+                $field = new FieldCheckNotifications();
+                $field->setEmails($options->getEmails());
+                $field->setPrivate(
+                    $options->getPrivate(
+                        getFactory()->getObject('Transition')->getExact($_REQUEST['Transition'])
+                    )
                 );
-                $field->setAnchor( $this->getIt() );
                 $field->SetId($attribute);
                 $field->SetName($attribute);
                 $field->SetTabIndex($tab_index);
@@ -124,34 +128,25 @@ class BulkForm extends BulkFormBase
                 break;
 
 			default:
-				if ( $this->getObject()->IsReference($attribute) )
-				{
+				if ( $this->getObject()->IsReference($attribute) ) {
 					$ref_object = $this->getObject()->getAttributeObject($attribute);
-					
-					if ( $ref_object instanceof PMCustomDictionary )
-					{
+					if ( $ref_object instanceof PMCustomDictionary ) {
 						$field = new FieldCustomDictionary($this->getObject(), $attribute);
-	
 						$field->SetId($attribute);
 						$field->SetName($attribute);
-						$field->SetValue($value);
+						$field->SetValue($value == '' ? $this->getObject()->getDefaultAttributeValue($attribute) : $value);
 						$field->SetTabIndex($tab_index);
-						
-						echo $this->getName($attribute);
 						$field->draw();
-						
 						return;
 					}
 				}
 
-				if ( $this->getObject()->getAttributeType($attribute) == 'wysiwyg' )
-				{
+				if ( $this->getAttributeType($attribute) == 'wysiwyg' ) {
 					$field = new FieldWYSIWYG();
 					$field->setObject($this->getObject());
 					$editor = $field->getEditor();
-					$editor->setMode( WIKI_MODE_MINIMAL );
+					$editor->setMode( WIKI_MODE_NORMAL );
 					$field->setCssClassName( 'wysiwyg-text' );
-
 					$field->SetId($attribute);
 					$field->SetName($attribute);
 					$field->SetTabIndex($tab_index);

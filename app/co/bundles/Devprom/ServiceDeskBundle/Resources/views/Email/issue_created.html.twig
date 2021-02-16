@@ -3,7 +3,9 @@
 {% endblock subject %}
 
 {% block body_html %}
-    {% set issueLink %}{{ url("issue_show", { "id": issue.id }) }}{% endset %}
+    {% if issueLink|length < 1 %}
+        {% set issueLink %}{{ url("issue_show", { "id": issue.id }) }}{% endset %}
+    {% endif %}
     {% embed "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
         {% block body %}
             {% include emailBody("issueCreated.twig",language) %}

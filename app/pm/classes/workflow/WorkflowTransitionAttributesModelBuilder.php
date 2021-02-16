@@ -36,7 +36,23 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
             )
         );
 
-        $attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($object, $this->transition_it->get('TargetStateReferenceName'));
+        // use attributes settings for the first state
+        $firstStateAttributeIt = WorkflowScheme::Instance()->getStateAttributeIt($object);
+        $firstStateRowset = array_filter(
+            $firstStateAttributeIt->getRowset(),
+            function( $row ) {
+                return $row['IsRequired'] == 'Y';
+            }
+        );
+
+        // apply attributes settings for the target state
+        $stateAttributeIt = WorkflowScheme::Instance()->getStateAttributeIt($object, $this->transition_it->get('TargetStateReferenceName'));
+
+        $attribute_it = $firstStateAttributeIt->object->createCachedIterator(
+            array_values(array_merge(
+                $firstStateRowset, $stateAttributeIt->getRowset()
+            ))
+        );
 		while( !$attribute_it->end() )
 		{
             if ( $this->data[$attribute_it->get('ReferenceName')] != '' && $attribute_it->get('IsAskForValue') != 'Y' && !in_array($attribute_it->get('ReferenceName'), array('Tasks','Fact')) ) {
@@ -50,9 +66,11 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
                 $attribute_it->get('ReferenceName'),
                 ($attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y') && $attribute_it->get('IsReadonly') != 'Y'
 			);
-            $object->setAttributeEditable(
-                $attribute_it->get('ReferenceName'), $attribute_it->get('IsReadonly') != 'Y'
-            );
+            if ( $object->getAttributeEditable($attribute_it->get('ReferenceName')) ) {
+                $object->setAttributeEditable(
+                    $attribute_it->get('ReferenceName'), $attribute_it->get('IsReadonly') != 'Y'
+                );
+            }
             if ( $attribute_it->get('IsVisible') == 'Y' ) {
                 $visibleAttributes[] = $attribute_it->get('ReferenceName');
             }

@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/auth/AuthenticationFactory.php";
 
 class AuthenticationAppKeyFactory extends AuthenticationFactory
@@ -41,7 +40,20 @@ class AuthenticationAppKeyFactory extends AuthenticationFactory
 			}
 			$user_it->moveNext();
 		}
-		
+
+        if ( self::getKey( INSTALLATION_UID ) == $_REQUEST['appkey'] ) {
+            $user_it = $user_it->object->createCachedIterator(array(
+                array(
+                    'cms_UserId' => 9999999,
+                    'Caption' => 'System'
+                )
+            ));
+            $this->setUser($user_it);
+            $factory = new AuthenticationCookiesFactory($this->getUser());
+            $factory->logon();
+            return $user_it->copy();
+        }
+
         return parent::authorize();
  	}
 }

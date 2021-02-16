@@ -7,6 +7,8 @@ include "WikiImporterListBuilder.php";
 
 abstract class WikiImporterEngine
 {
+    const SyntaxTagsRemove = array('p','div','br','img','span');
+
     abstract protected function getHtml( $filePath );
 
     function __construct()
@@ -31,22 +33,25 @@ abstract class WikiImporterEngine
         $documentTitle = join('.', $parts);
 
         $this->filePath = $this->filePath.'.'.$documentExt;
+
         file_put_contents($this->filePath, $rawData);
+        chmod($this->filePath, 0775);
 
         $html = $this->getHtml($this->filePath);
         if ( $html == '' ) return false;
 
-        $html = preg_replace(REGEX_UID, '\\1<stop-parse>\\2</stop-parse>', $html);
         self::stripHeaders($html);
 
         $sections = preg_split('/<h[1-6][^>]*>/i', $html);
+
         $documentContent = array_shift($sections);
+        $this->parseContent($documentContent);
 
         if ( is_object($parent_it) && $parent_it->getId() != '' ) {
             $this->document_it = $parent_it;
+            $builder->storeDocumentContent($this->document_it->getId(), $documentContent);
         }
         else {
-            $this->parseContent($documentContent);
             $this->document_it = $builder->buildDocument(
                 $documentTitle, $documentContent, $this->options, $parent_it->getId()
             );
@@ -63,21 +68,27 @@ abstract class WikiImporterEngine
 
             list($title, $content) = preg_split('/<\/h[1-6]>/i', $section);
 
-            $title = preg_replace('/[\r\n]+/i', ' ', $title);
-            $title = preg_replace('/^([\d]+\.)+/i', '', $title);
-            $totext = new \Html2Text\Html2Text($title, array('width'=>0));
-            $title = $totext->getText();
-            $title = trim(str_replace('&nbsp;', ' ', $title));
+            $title = trim(\TextUtils::stripAnyTags(preg_replace('/[\r\n]+/i', ' ', $title)));
+
+            if ( preg_match('/^(([\d]+\.)+)/i', $title, $matches) ) {
+                $sectionNumber = trim($matches[1], ' .');
+            }
+            $title = trim(preg_replace('/^(([\d]+\.)+)/i', '', $title));
+
+            if ( preg_match('/^\[([^\]]+)\]/i', $title, $matches) ) {
+                $uid = trim($matches[1]);
+            }
+            $title = trim(preg_replace('/^(\[[^\]]+\])/i', '', $title));
 
             $this->parseContent($content);
             if ( $title == '' && $content == '' ) continue;
 
             $page_it = $builder->buildPage(
-                $title, $content, $this->options, $levels[$selfLevel - 1]
+                $title, $content, $this->options, $levels[$selfLevel - 1], $this->document_it, $sectionNumber, $uid
             );
-            if ( $this->document_it->getId() == '' ) $this->document_it = $page_it;
 
             $levels[$selfLevel] = $page_it->getId();
+            \ZipSystem::sendResponse();
         }
 
         $builder->parsePages($this->document_it);
@@ -88,6 +99,13 @@ abstract class WikiImporterEngine
     function parseContent( &$content )
     {
         $content = trim(trim($content), PHP_EOL);
+
+        $content =
+            $this->parseUMLSyntax(
+                $this->parseMathSyntax(
+                    $this->parseCodeSyntax($content)
+                )
+            );
 
         // setup colspan for html tables (pandoc 1.19 doesn't support colspans)
         $tableParts = preg_split('/<table\s*/i', $content);
@@ -110,14 +128,71 @@ abstract class WikiImporterEngine
             }
             $tableParts[$key] = join('<tr ', $rowParts);
         }
-
         $content = join('<table ', $tableParts);
-        $content = TextUtils::getValidHtml(TextUtils::getCleansedHtml($content));
-        $content = preg_replace_callback('/<img([^>]+)>/', function($match) {
-            return str_replace('style=', 'oldstyle=', $match[0]);
-        }, $content);
+
+        $content = \TextUtils::getValidHtml(\TextUtils::getCleansedHtml($content));
         $content = preg_replace('/<hh([0-9])[^>]*>/', '<h\\1>', $content);
         $content = preg_replace('/<\/hh([0-9])>/', '</h\\1>', $content);
+    }
+
+    function parseUMLSyntax( $content )
+    {
+        $parts = explode('@startuml', $content);
+        $content = array_shift($parts);
+        foreach( $parts as $part ) {
+            list($umlContent, $text) = explode('@enduml', $part);
+            $umlContent = $this->convertSyntax($umlContent);
+            $umlContent = html_entity_decode($umlContent);
+            $umlContent = '<img uml="'.base64_encode(rawurlencode($umlContent)).'" src="'.\TextUtils::getPlantUMLUrl($umlContent).'">';
+            $content .= $umlContent . $text;
+        }
+        return $content;
+    }
+
+    function parseMathSyntax( $content )
+    {
+        $parts = explode('@startmath', $content);
+        $content = array_shift($parts);
+        foreach( $parts as $part ) {
+            list($mathFormula, $text) = explode('@endmath', $part);
+            $mathFormula = $this->convertSyntax($mathFormula);
+            $mathFormula = html_entity_decode($mathFormula);
+            $mathJson = array(
+                'math' => $mathFormula,
+                'classes' => array(
+                    'math-tex' => 1
+                )
+            );
+            $mathFormula = '<span class="math-tex cke_widget_element" data-widget="mathjax" data-cke-widget-data="'.rawurlencode(\JsonWrapper::encode($mathJson)).'"><iframe></iframe></span>';
+            $content .= $mathFormula . $text;
+        }
+        return $content;
+    }
+
+    function parseCodeSyntax( $content )
+    {
+        $parts = explode('@startcode', $content);
+        $content = array_shift($parts);
+        foreach( $parts as $part ) {
+            list($code, $text) = explode('@endcode', $part);
+            $language = 'xml';
+            if ( preg_match('/,language-([^\s]+)/i', $code, $matches) ) {
+                $language = $matches[1];
+                $code = preg_replace('/,language-([^\s]+)/i', '', $code);
+            }
+            $code = $this->convertSyntax($code);
+            $code = '<pre><code class="language-'.$language.' hljs">'.html_entity_decode($code).'</code></pre>';
+            $content .= $code . $text;
+        }
+        return $content;
+    }
+
+    function convertSyntax( $content ) {
+        $content = preg_replace('/(<\/p>|<\/div>|<\/?br\/?>)/i', '\\1'.PHP_EOL, $content);
+        foreach( self::SyntaxTagsRemove as $htmlTag ) {
+            $content = \TextUtils::skipHtmlTag($htmlTag, $content);
+        }
+        return $content;
     }
 
     static function stripHeaders( &$html )

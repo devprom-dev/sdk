@@ -11,8 +11,8 @@ class StageTimelinePredicate extends FilterPredicate
 			   		   " AND t.UncompletedIssues < 1 AND t.UncompletedTasks < 1 ";
 					   
 			case 'not-passed':
- 			    return " AND '".SystemDateTime::date('Y-m-d')."' <= IFNULL(t.FinishDate, NOW()) " .
-			   		   " OR (t.UncompletedIssues + t.UncompletedTasks) > 0 ";
+ 			    return " AND ('".SystemDateTime::date('Y-m-d')."' <= IFNULL(t.FinishDate, NOW()) " .
+			   		   "        OR (t.UncompletedIssues + t.UncompletedTasks) > 0) ";
 
             case 'overdue':
                 return " AND t.EstimatedFinishDate > t.FinishDate ";

@@ -4,7 +4,6 @@ namespace Devprom\ProjectBundle\Service\Tooltip;
 
 use Devprom\CommonBundle\Service\Tooltip\TooltipService;
 
-include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDetailsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDurationPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/IssueLinkedIssuesPersister.php";
@@ -12,14 +11,11 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 
 class TooltipProjectService extends TooltipService
 {
-	private $baseline;
 	private $editor;
 	
-	public function __construct( $class_name, $object_id, $extended, $baseline )
+	public function __construct( $class_name, $object_id, $extended )
 	{
-    	$this->baseline = $baseline;
         $this->editor = \WikiEditorBuilder::build();
-
     	parent::__construct($class_name, $object_id, $extended);
 	}
 	
@@ -28,21 +24,24 @@ class TooltipProjectService extends TooltipService
 		if ( $this->getObjectIt()->getId() < 1 ) return array();
 
     	$uid = new \ObjectUID();
+    	$uidInfo = $uid->getUIDInfo($this->getObjectIt());
+
+    	$typeAttribute = array_shift($this->getObjectIt()->object->getAttributesByGroup('type'));
+
     	return array_merge( parent::getData(), array (
-    			'lifecycle' =>
+    			'comments' =>
     				array (
-    						'name' => translate('Состояние'),
-    						'data' => $this->buildLifecycle( $this->getObjectIt() )
-    				),
-    			'comments' => 
-    				array (
-    						'name' => translate('Комментарий'), 
-    						'data' => $this->buildComments( $this->getObjectIt() )
+                        'name' => translate('Комментарий'),
+                        'data' => $this->buildComments( $this->getObjectIt() )
     				),
     			'type' => 
     				array (
-    						'name' => $this->getObjectIt()->object->getDisplayName(),
-    						'uid' => $uid->getUIDIcon($this->getObjectIt())
+                        'name' => $this->getObjectIt()->get($typeAttribute) != ''
+                            ? $this->getObjectIt()->getRef($typeAttribute)->getDisplayName()
+                            : $this->getObjectIt()->object->getDisplayName(),
+                        'uid' => $uidInfo['uid'],
+                        'url' => $uidInfo['url'],
+                        'message' => text(2029)
     				)
     	));
     }
@@ -52,7 +51,6 @@ class TooltipProjectService extends TooltipService
     	$object->addPersister( new \AttachmentsPersister() );
     	
     	if ( $object instanceof \MetaobjectStatable && $object->getStateClassName() != '' ) {
-			$object->addPersister( new \StateDetailsPersister() );
     		$object->addPersister( new \StateDurationPersister() );
     	}
 
@@ -66,20 +64,6 @@ class TooltipProjectService extends TooltipService
     {
     	$data = parent::buildAttributes( $object_it );
 
-     	if ( $this->baseline > 0 )
- 	 	{
- 	 		$data[] = array (
-                'name' => 'Baseline',
-                'title' => translate('Бейзлайн'),
-                'type' => 'varchar',
-                'text' => getFactory()->getObject('Snapshot')->getExact($this->baseline)->getDisplayName(),
-                'group' => TOOLTIP_GROUP_ADDITIONAL
- 	 		);
-            $data = array_filter($data, function($value) {
-                return $value['name'] != 'DocumentVersion';
-            });
- 	 	}
- 	 	
  	 	if ( $object_it->object instanceof \Request ) {
  	 		$this->buildRequestAttributes( $data, $object_it );
  	 	}
@@ -88,22 +72,15 @@ class TooltipProjectService extends TooltipService
             $this->buildCommentAttributes( $data, $object_it );
         }
 
-        $state = $this->buildLifecycle($this->getObjectIt());
-     	if ( count($state) > 0 ) {
-            $data[] = $state;
-        }
-
  	 	return $data;
     }   
     
     protected function buildRequestAttributes( &$data, $object_it )
     {
         if ( $this->getExtended() ) {
-            foreach( $data as $key => $field ) {
-                if ( in_array($field['name'], array('OpenTasks')) ) {
-                    unset($data[$key]);
-                }
-            }
+            $data = array_filter($data, function($item) {
+                return $item['name'] != 'OpenTasks';
+            });
         }
         else {
             // Tasks attribute
@@ -130,12 +107,14 @@ class TooltipProjectService extends TooltipService
                     }
                 }
                 if ( count($states) > 0 ) {
+                    $data = array_filter($data, function($item) {
+                        return $item['name'] != 'Tasks';
+                    });
                     $data[] = array (
                         'name' => 'Tasks',
                         'title' => translate('Задачи'),
                         'type' => 'tasks',
-                        'text' => $states,
-                        'group' => TOOLTIP_GROUP_TRACE
+                        'text' => $states
                     );
                 }
             }
@@ -186,37 +165,6 @@ class TooltipProjectService extends TooltipService
             'text' => $uid->getUidWithCaption($anchor_it),
             'group' => 0
         );
-    }
-    
-    private function buildLifecycle( $object_it )
-    {
-    	$object = $object_it->object;
-    	
-     	if ( ! $object instanceof MetaobjectStatable ) return array();
-		if ( $object->getStateClassName() == '' ) return array();
-     	 
-		$data = array(
-		    'title' => translate('Состояние'),
-            'state' => $this->getAttributeValue($object_it, 'State', '')
-        );
-
- 	 	$reason = getFactory()->getObject('pm_StateObject');
- 	 	$reason->addSort( new \SortReverseKeyClause() );
- 	 	$reason_it = $reason->getByRefArray(
- 	 		array ( 'ObjectId' => $object_it->getId(),
- 	 			    'ObjectClass' => $object->getStatableClassName() ), 1
- 	 	);
-	 	if ( $reason_it->count() < 1 ) return $data;
-	 	
-		$transition_it = $reason_it->getRef('Transition');
-		if ( $transition_it->count() < 1 ) return $data;
-		
-		$data['name'] = preg_replace('/%1/', $transition_it->getDisplayName(), text(904));
-		$data['text'] = $reason_it->getHtml('Comment');
-		$data['group'] = TOOLTIP_GROUP_WORKFLOW;
-        $data['type'] = 'state';
-
-		return $data;
     }
     
     private function buildComments( $object_it )

@@ -4,7 +4,7 @@ use Devprom\ServiceDeskBundle\Service\UserService;
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  */
-class UserServiceTest extends PHPUnit_Framework_TestCase {
+class UserServiceTest extends \PHPUnit\Framework\TestCase {
 
     /** @var  PHPUnit_Framework_MockObject_MockObject */
     private $mailer;
@@ -34,9 +34,6 @@ class UserServiceTest extends PHPUnit_Framework_TestCase {
             ->will($this->returnCallback(function() {
                 return new Devprom\ServiceDeskBundle\Entity\User();
             }));
-        $this->userManager->expects($this->any())
-            ->method("refreshUser")
-            ->will($this->returnArgument(0));
         $this->userManager->expects($this->any())
             ->method("updatePassword")
             ->will($this->returnCallback(function($user) {

@@ -1,5 +1,4 @@
 <?php
-
 include_once "ModelValidatorType.php";
 
 class ModelValidatorTypeFloat extends ModelValidatorType
@@ -11,7 +10,7 @@ class ModelValidatorTypeFloat extends ModelValidatorType
 	
 	public function validate( & $value )
 	{
-		if ( $value == '' ) return true;
+        if ( in_array($value, array('','NULL')) ) return true;
 
 		$match = array();
 		if ( preg_match(SystemDateTime::getTimeParseRegex(), $value, $match) and count($match) > 1 ) return true;

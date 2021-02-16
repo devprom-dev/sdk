@@ -9,30 +9,33 @@ class LicensePermissionIterator extends OrderedIterator
 
         $license_it = getFactory()->getObject('LicenseInstalled')->getAll();
         $options = $license_it->getOptions();
-        if ( $options['users'] > 0 )
-        {
-            $licensedUsers = $user->getRegistry()->Count(
-                array(
-                    new FilterAttributeNotNullPredicate('IsReadonly'),
-                    new FilterHasNoAttributePredicate('IsReadonly', 'Y'),
-                    new UserStatePredicate('nonblocked')
-                )
-            );
+
+        foreach( preg_split('/,/', $options['options']) as $option ) {
+            list($permission, $users) = preg_split('/:/', $option);
+            if ( $permission == $this->getId() && $users > 0 ) {
+                $licensedUsers = $user->getRegistry()->Count(
+                    array(
+                        new FilterSearchAttributesPredicate($this->getId(), array('IsReadonly')),
+                        new UserStatePredicate('nonblocked')
+                    )
+                );
+                $licensedUsers += $user->getRegistry()->Count(
+                    array(
+                        new FilterAttributePredicate('IsReadonly', 'N'),
+                        new UserStatePredicate('nonblocked')
+                    )
+                );
+                return $this->getLicenses() - $licensedUsers;
+            }
         }
-        else {
-            $licensedUsers = $user->getRegistry()->Count(
-                array(
-                    new FilterSearchAttributesPredicate($this->getId(), array('IsReadonly')),
-                    new UserStatePredicate('nonblocked')
-                )
-            );
-            $licensedUsers += $user->getRegistry()->Count(
-                array(
-                    new FilterAttributePredicate('IsReadonly', 'N'),
-                    new UserStatePredicate('nonblocked')
-                )
-            );
-        }
+
+        $licensedUsers = $user->getRegistry()->Count(
+            array(
+                new FilterAttributeNotNullPredicate('IsReadonly'),
+                new FilterHasNoAttributePredicate('IsReadonly', 'Y'),
+                new UserStatePredicate('nonblocked')
+            )
+        );
         return $this->getLicenses() - $licensedUsers;
     }
 

@@ -20,7 +20,7 @@ class InstallLicenseForm extends AdminForm
 	function getAttributes()
 	{
 		$attributes = parent::getAttributes();
-		
+
 		$attributes[] = 'UserInfo';
 		
 		return $attributes;
@@ -32,7 +32,8 @@ class InstallLicenseForm extends AdminForm
 		{
 		    case 'UserInfo':
 		    	return 'custom';
-		    			
+            case 'LicenseKey':
+                return 'largetext';
 			default:
 				return parent::getAttributeType( $attribute );
 		}
@@ -85,17 +86,14 @@ class InstallLicenseForm extends AdminForm
 	{
 	    $attrs = array('InstallationUID', 'LicenseKey', 'UserInfo');
 	    
-	    $object = $this->getObject();
-	    
-	    if ( $object->IsAttributeVisible( 'LicenseValue' ) )
-	    {
+	    if ( $this->getObject()->IsAttributeVisible( 'LicenseValue' ) ) {
 	        $attrs[] = 'LicenseValue';
 	    }
 	    
 		return in_array($attribute, $attrs); 	
 	}
 	
-	function IsAttributeModifable( $attribute )
+	function IsAttributeModifiable( $attribute )
 	{
 		return !in_array($attribute, array('InstallationUID'));
 	}

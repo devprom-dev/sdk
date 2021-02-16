@@ -34,8 +34,8 @@ public class ScrumIssueViewPage extends RequestViewPage
     }
 
     public void editDescription(String text) {
-        driver.findElement(By.xpath("//*[contains(@id,'pm_ChangeRequestDescription')]/p")).click();
-        WebElement textField = driver.findElement(By.xpath("//*[contains(@id,'pm_ChangeRequestDescription')]/p")); 
+        driver.findElement(By.xpath("//*[contains(@id,'pm_ChangeRequestDescription') and contains(@class,'wysiwyg-text')]/p")).click();
+        WebElement textField = driver.findElement(By.xpath("//*[contains(@id,'pm_ChangeRequestDescription') and contains(@class,'wysiwyg-text')]/p"));
                 ((JavascriptExecutor) driver).executeScript("arguments[0].innerHTML = '"+text+"';", textField);
     }
     

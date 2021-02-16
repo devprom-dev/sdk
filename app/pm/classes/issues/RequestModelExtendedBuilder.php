@@ -1,7 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once "persisters/RequestSpentTimePersister.php";
-include_once "persisters/RequestQuestionsPersister.php";
 include_once "persisters/IssueUsedByPersister.php";
 include "persisters/RequestTasksDetailPersister.php";
 
@@ -19,7 +18,7 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
 		}
 
         if ( $methodology_it->HasTasks() && $methodology_it->TaskEstimationUsed() ) {
-            $object->addAttribute( 'TasksPlanned', 'FLOAT', text(2532), !$methodology_it->RequestEstimationUsed(), false);
+            $object->addAttribute( 'TasksPlanned', 'FLOAT', text(2532), false, false);
             $object->setAttributeEditable('TasksPlanned', false);
             $object->addAttributeGroup('TasksPlanned', 'workload');
             $object->addAttributeGroup('TasksPlanned', 'hours');
@@ -27,15 +26,19 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
             if ( !$methodology_it->RequestEstimationUsed() ) {
                 $object->addAttributeGroup('TasksPlanned', 'display-name');
             }
-            $object->addPersister( new RequestTasksDetailPersister(array('Question')) );
+            $object->addPersister( new RequestTasksDetailPersister() );
         }
-
-		$object->addPersister( new RequestQuestionsPersister(array('Question')) );
         $this->removeAttributes( $object, $methodology_it );
 
         $object->addAttribute( 'ProjectPage', 'REF_ProjectPageId', translate('База знаний'), false);
         $object->addAttributeGroup('ProjectPage', 'trace');
+        $object->addAttributeGroup('ProjectPage', 'non-form');
         $object->addPersister( new IssueUsedByPersister() );
+
+        foreach ( array('Spent') as $attribute ) {
+            $object->addAttributeGroup($attribute, 'workload');
+            $object->addAttributeGroup($attribute, 'hours');
+        }
 	}
 
     private function removeAttributes( $object, $methodology_it )

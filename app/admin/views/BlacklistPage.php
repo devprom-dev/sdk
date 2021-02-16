@@ -1,5 +1,5 @@
 <?php
-
+include_once SERVER_ROOT_PATH."admin/methods/UnBlockUserWebMethod.php";
 include ('BlacklistTable.php');
 
 class BlackPage extends AdminPage
@@ -14,7 +14,7 @@ class BlackPage extends AdminPage
 		return new BlackTable($this->getObject());
 	}
 
-	function getForm()
+	function getEntityForm()
 	{
 		return null;
 	}

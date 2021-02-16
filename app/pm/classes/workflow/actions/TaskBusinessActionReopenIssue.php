@@ -18,13 +18,15 @@ class TaskBusinessActionReopenIssue extends BusinessActionWorkflow
 		getFactory()->resetCachedIterator($request);
 
 		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
+
+        if ( getSession()->IsRDD() && $request_it->object instanceof Issue ) return true;
 		if ( !in_array($request_it->get('State'), $request_it->object->getTerminalStates()) ) return true;
 		
 		$service = new WorkflowService($request_it->object);
 		$service->moveToState(
 				$request_it, 
 				array_shift($request_it->object->getNonTerminalStates()), 
-				str_replace('%2', $object_it->get('StateName'), 
+				str_replace('%2', $object_it->getStateIt()->get('Caption'),
 						str_replace('%1', $object_it->object->getDisplayName(), text(1931))
 				)
 		);

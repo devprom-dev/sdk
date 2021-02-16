@@ -1,6 +1,6 @@
 <?php
 
-class PriorityIterator extends OrderedIterator
+class PriorityIterator extends CacheableIterator
 {
  	function get( $attr )
  	{

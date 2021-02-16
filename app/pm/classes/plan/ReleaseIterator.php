@@ -1,49 +1,13 @@
 <?php
+include_once "IterationDatesIterator.php";
 
-class ReleaseIterator extends OrderedIterator
+class ReleaseIterator extends IterationDatesIterator
 {
- 	function ReleaseIterator( $object ) 
- 	{
-		parent::OrderedIterator( $object );
-	}
-	
-	function getPrevIt()
-	{
-		$sql = " SELECT v.* " .
-				"  FROM pm_Version v" .
-				" WHERE v.Caption < '".$this->get('Caption')."'".
-				"   AND v.Project = ".$this->get('Project').
-				" ORDER BY v.Caption DESC ".
-				" LIMIT 1 ";
-				
-		return $this->object->createSQLIterator($sql);
-	}
-	
 	function getVelocity()
 	{
 		return round($this->get('Velocity'), 1);
 	}
 	
-	function getLeftDurationEstimation()
-	{
-		$velocity = $this->getVelocity();
-		if ( $velocity <= 0 )
-		{
-			return 0;
-		}
-		
-		$project_it = $this->getRef('Project');
-		$methodology_it = $project_it->getMethodologyIt(); 
-		
-		if ( $methodology_it->HasFixedRelease() )
-		{
-			$velocity /= $methodology_it->getReleaseDuration() * 
-				$project_it->getDaysInWeek();
-		}
-		
-		return $this->getTotalWorkload() / $velocity;
-	}
-
 	function getInitialBurndownMetrics()
 	{
 		$methodology_it = $this->getRef('Project')->getMethodologyIt();
@@ -121,28 +85,6 @@ class ReleaseIterator extends OrderedIterator
 		return $it->get('diff');
 	}
 
-	function getInterval( $interval )
-	{
-		if ( !is_object($this->object->interval_it) )
-		{
-			$this->object->cacheDeps();
-		}
-		
-		$this->object->interval_it->moveTo('pm_VersionId', $this->getId());
-		return $this->object->interval_it->get($interval);
-	}
-	
-	function hasMetrics()
-	{
-		$sql = " SELECT COUNT(1) cnt " .
-		 	   "   FROM pm_VersionMetric m " .
-		 	   "  WHERE m.Version = " .$this->getId();
-
-		$it = $this->createSQLIterator($sql);
-		
-		return $it->get('cnt') > 0;		
-	}
-	
 	function storeMetrics()
 	{
 		$project_it = getSession()->getProjectIt();
@@ -251,17 +193,6 @@ class ReleaseIterator extends OrderedIterator
         }
 	}
 	
-	function getMetricsDate()
-	{
-		$sql = " SELECT MAX(m.RecordModified) LastDate " .
-			   "   FROM pm_VersionMetric m, pm_Version v " .
-			   "  WHERE m.Version = ".$this->getId();
-			   
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->getDateTimeFormat('LastDate');
-	}
-
 	function storeBurndownSnapshot()
 	{
 		$project_it = getSession()->getProjectIt();
@@ -352,12 +283,12 @@ class ReleaseIterator extends OrderedIterator
 
 	function getStartDate()
 	{
-		return $this->getDateFormat('StartDate');
+		return $this->getDateFormatted('StartDate');
 	}
 	
 	function getFinishDate()
 	{
-		return $this->getDateFormat('FinishDate');
+		return $this->getDateFormatted('FinishDate');
 	}
 	
 	function getIterationIt()
@@ -369,56 +300,6 @@ class ReleaseIterator extends OrderedIterator
 		$iteration->defaultsort = 'StartDate ASC';
 		
 		return $iteration->getInArray('Version', $ids);
-	}
-	
-	function getRecentBuildIt()
-	{
-		global $model_factory;
-		
-		$sql = 
-			" SELECT b.* " .
-			"   FROM pm_Build b" .
-			"  WHERE b.Version = ".$this->getId().
-			"  ORDER BY b.Caption DESC" .
-			"  LIMIT 1";
-			
-		$build = $model_factory->getObject('pm_Build');
-		return $build->createSQLIterator( $sql );
-	}
-	
-	function getRecentIterationIt()
-	{
-		global $model_factory;
-		
-		$iteration = $model_factory->getObject('pm_Release');
-		$iteration->defaultsort = 'FinishDate DESC';
-		
-		return $iteration->getByRefArray(
-			array( 'Version' => $this->getId()), 1);
-	}
-
-	function getNextIterationStart()
-	{
-		global $model_factory;
-		
-		$iteration = $model_factory->getObject('Iteration');
-		
-		$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-		
-		$iteration->addFilter( new IterationReleasePredicate($this->getId()) );
-		
-		$iteration->addSort( new SortAttributeClause('StartDate.D') );
-		
-		$iteration_it = $iteration->getAll();
-
-		if ( $iteration_it->count() < 1 )
-		{
-			return $this->getDateFormat('EstimatedStartDate');
-		}
-		else
-		{
-			return date( 'Y-m-j', strtotime('1 day', strtotime( $iteration_it->get('FinishDate') ) ) );
-		}
 	}
 	
 	function IsCurrent()
@@ -444,22 +325,6 @@ class ReleaseIterator extends OrderedIterator
 		return $this->object->createSQLIterator(
 		        " SELECT TO_DAYS(NOW()) - TO_DAYS('".$this->get('EstimatedFinishDate')."') Offset "
             )->get('Offset') > 0;
-	}
-
-	function IsEmpty()
-	{
-		global $model_factory;
-		$iteration = $model_factory->getObject('Iteration');
-		
-		$result = $iteration->getByRefArrayCount(
-			array('Version' => $this->getId() ) ) < 1;
-			
-		$build = $model_factory->getObject('pm_Build');
-		
-		$result &= $build->getByRefArrayCount(
-			array('Version' => $this->getId() ) ) < 1;
-
-		return $result;
 	}
 
 	function getPlannedTotalWorkload()

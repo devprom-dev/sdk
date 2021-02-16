@@ -17,7 +17,7 @@ class EntryController extends MainController
     	}
 
     	if ( getSession()->getUserIt()->getId() < 1 ) {
-    		return new RedirectResponse('/login');
+    		return new RedirectResponse('/logoff');
     	}
 
     	return $this->redirect($_SERVER['ENTRY_URL']);

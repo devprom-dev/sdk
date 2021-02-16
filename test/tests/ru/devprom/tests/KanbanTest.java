@@ -7,6 +7,7 @@ import org.testng.annotations.Test;
 import ru.devprom.helpers.DataProviders;
 import ru.devprom.items.KanbanTask;
 import ru.devprom.items.Project;
+import ru.devprom.items.RTask;
 import ru.devprom.items.Template;
 import ru.devprom.pages.PageBase;
 import ru.devprom.pages.ProjectNewPage;
@@ -19,6 +20,7 @@ import ru.devprom.pages.kanban.KanbanTaskStateEditPage;
 import ru.devprom.pages.kanban.KanbanTaskViewPage;
 import ru.devprom.pages.kanban.KanbanTasksPage;
 import ru.devprom.pages.kanban.KanbanTasksStatesPage;
+import ru.devprom.pages.project.tasks.TasksPage;
 
 public class KanbanTest extends ProjectTestBase {
 	Project kanbanProject;
@@ -40,12 +42,12 @@ public class KanbanTest extends ProjectTestBase {
 	@Test
 	public void taskAssignTest(){
 		(new PageBase(driver)).gotoProject(kanbanProject);
-		KanbanTasksPage ktp = (new KanbanPageBase(driver)).gotoKanbanTasks();
+		KanbanTasksPage ktp = (new KanbanPageBase(driver)).gotoBackLog();
 		KanbanTaskNewPage ktnp = ktp.addNewTask();
 		KanbanTask task = new KanbanTask("TestTask"+DataProviders.getUniqueString());
 		task.setOwner(user);
 		ktp = ktnp.createTask(task);
-		ktp = (new KanbanPageBase(driver)).gotoKanbanTasks();
+		ktp = (new KanbanPageBase(driver)).gotoBackLog();
 		Assert.assertTrue(ktp.isTaskPresent(task.getId()), "Задача не найдена в списке задач пользователя " + user);
 	}
 	
@@ -63,30 +65,28 @@ public class KanbanTest extends ProjectTestBase {
             String template = "Task Template "+DataProviders.getUniqueString();
 			//создаем новую Задачу
             (new PageBase(driver)).gotoProject(kanbanProject);
-			KanbanTasksPage ktp = (new KanbanPageBase(driver)).gotoKanbanTasks();
+			KanbanTasksPage ktp = (new KanbanPageBase(driver)).gotoBackLog();
 			KanbanTaskNewPage ktnp = ktp.addNewTask();
 			KanbanTask task = new KanbanTask("TestTask"+DataProviders.getUniqueString());
 			task.setDescription(description);
 			task.setPriority(KanbanTask.getRandomPriority());
 			task.setOwner(user);
 			ktp = ktnp.createTask(task);
-			ktp = (new KanbanPageBase(driver)).gotoKanbanTasks();
+			ktp = (new KanbanPageBase(driver)).gotoBackLog();
 			
 			//Создаем Шаблон на основе новой задачи
 			KanbanTaskViewPage ktvp = ktp.clickToTask(task.getId());
 			ktvp = ktvp.saveTemplate(template);
 			
 			//Создаем новую Задачу по шаблону, считываем параметры по умолчанию
-			ktp = ktvp.gotoKanbanTasks();
-			//TODO разобраться почему не читает список шаблонов
-			//Assert.assertTrue(ktp.getTemplatesList().contains(template), "Не найден шаблон с именем "+template);
+			ktp = ktvp.gotoBackLog();
 			ktnp = ktp.addNewTaskUserType(template);
 			String descriptionT = ktnp.readDescription();
 			String priorityT = ktnp.readPriority();
 			String ownerT = ktnp.readOwner();
 		    KanbanTask templateTask = new KanbanTask(ktnp.readName());
 			ktnp.saveTask(templateTask);
-			Assert.assertEquals(templateTask.getName(), task.getName(), "В шаблоне неверно сохранено имя Задачи");
+			Assert.assertEquals(templateTask.getName(), template, "В шаблоне неверно сохранено имя Задачи");
 			Assert.assertEquals(descriptionT, task.getDescription(), "В шаблоне неверно сохранено Описание");
 			Assert.assertEquals(priorityT, task.getPriority(), "В шаблоне неверно сохранен Приоритет");
 			Assert.assertEquals(ownerT, task.getOwner(), "В шаблоне неверно сохранен Исполнитель");
@@ -104,11 +104,11 @@ public class KanbanTest extends ProjectTestBase {
 		(new KanbanPageBase(driver)).gotoMethodology().checkIsTasks().save();
 		
 		//Создаем новую задачу 
-		KanbanTasksPage ktp = (new KanbanPageBase(driver)).gotoKanbanTasks();
+		KanbanTasksPage ktp = (new KanbanPageBase(driver)).gotoBackLog();
 		KanbanTaskNewPage ktnp = ktp.addNewTask();
 		KanbanTask task = new KanbanTask("TestTask"+DataProviders.getUniqueString());
 		ktp = ktnp.createTask(task);
-		ktp = (new KanbanPageBase(driver)).gotoKanbanTasks();
+		ktp = (new KanbanPageBase(driver)).gotoBackLog();
 		ktp.showAll();
 		
 		//Создаем подзадачу
@@ -123,11 +123,13 @@ public class KanbanTest extends ProjectTestBase {
         ktvp = ktep.subtaskExecute(1.0);
         
         //Проверяем статус подзадачи
-        boolean isExecuted = ktvp.getSubTaskState(subtask.getName()).equals("Выполнена");
-        
+		TasksPage tasksList = ktvp.openRelatedTasksList();
+		RTask[] tasks = tasksList.readAllTasks();
+		Assert.assertNotEquals(0, tasks.length, "Задачи в списке не найдены");
+
         //Выключаем подзадачи в проекте
         ktvp.gotoMethodology().uncheckIsTasks().save();
-        Assert.assertTrue(isExecuted, "Статус задачи не 'Выполнена'");
+        Assert.assertTrue(tasks[0].getState().equals("Выполнена"), "Статус задачи не 'Выполнена'");
 	}
 	
 
@@ -139,7 +141,7 @@ public class KanbanTest extends ProjectTestBase {
 		KanbanTask task = new KanbanTask("TestTask"+DataProviders.getUniqueString());
 		
 		//создаем новую Задачу
-		KanbanTasksPage ktp = (new KanbanPageBase(driver)).gotoKanbanTasks();
+		KanbanTasksPage ktp = (new KanbanPageBase(driver)).gotoBackLog();
 		KanbanTaskNewPage ktnp = ktp.addNewTask();
 		ktp = ktnp.createTask(task);
 		
@@ -150,7 +152,7 @@ public class KanbanTest extends ProjectTestBase {
 		ktsp = ktsep.saveChanges();
 		
 		//создаем задачу
-		ktp = ktsp.gotoKanbanTasks();
+		ktp = ktsp.gotoBackLog();
 		ktnp = ktp.addNewTask();
 		boolean isRequired = ktnp.isRequired("Тип");
 		ktp = ktnp.cancel();

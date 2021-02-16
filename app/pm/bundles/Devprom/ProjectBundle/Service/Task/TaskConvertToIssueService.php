@@ -6,9 +6,11 @@ use PhpImap\Exception;
 class TaskConvertToIssueService
 {
     private $factory = null;
+    private $targetClassName = null;
 
-    function __construct( \ModelFactory $factory ) {
+    function __construct( \ModelFactory $factory, $targetClassName = 'Request' ) {
         $this->factory = $factory;
+        $this->targetClassName = $targetClassName;
     }
 
     function convert( \TaskIterator $taskIt )
@@ -130,7 +132,7 @@ class TaskConvertToIssueService
                 array_merge( $data,
                     array(
                         'ChangeRequest' => $requestIt->getId(),
-                        'Type' => 'product'
+                        'Type' => REQUEST_TRACE_PRODUCT
                     )
                 )
             );
@@ -154,7 +156,7 @@ class TaskConvertToIssueService
                 }
             }
         }
-        return $this->factory->getObject('Request')->getRegistry()->Create($parms);
+        return $this->factory->getObject($this->targetClassName)->getRegistry()->Create($parms);
     }
 
     function mapToIssue( $parms )

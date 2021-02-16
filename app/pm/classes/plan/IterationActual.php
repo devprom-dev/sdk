@@ -9,11 +9,14 @@ class IterationActual extends Metaobject
 	}
 
 	function createIterator() {
-        return new IterationDatesIterator($this);
+        return new IterationIterator($this);
     }
 
-    function getPage()
-    {
-        return getSession()->getApplicationUrl($this).'plan/hierarchy?';
+    function IsDictionary() {
+        return true;
+    }
+
+    function getPage() {
+        return getSession()->getApplicationUrl($this).'iterations?';
     }
 }

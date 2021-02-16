@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 
 class FieldWikiPageTrace extends FieldHierarchySelector
@@ -10,6 +9,7 @@ class FieldWikiPageTrace extends FieldHierarchySelector
     function __construct( $object, $formId, $attributes = null ) {
         $this->form_id = $formId;
         parent::__construct($object, $attributes);
+        $this->setMultiselect();
     }
 
 	public function getFormId()
@@ -27,7 +27,6 @@ class FieldWikiPageTrace extends FieldHierarchySelector
     	$snapshot_it = getFactory()->getObject('Snapshot')->getRegistry()->Query(
 			array (
 				new FilterAttributePredicate('ObjectClass', get_class($this->getObject())),
-				new FilterAttributePredicate('Type', 'none'),
 				new FilterVpdPredicate()
 			)
 		);
@@ -43,23 +42,9 @@ class FieldWikiPageTrace extends FieldHierarchySelector
 			$snapshot_it->moveNext();
 		}
 
-    	$this->setOnSelectCallback("buildSnapshotSelect('#".$this->getId()."', '".$this->getFormId()."','".$this->baseline_attribute."', [".join(',',$data)."])");
     	$this->setAdditionalAttributes( array('DocumentId') );
-		$this->setCrossProject();
+        $this->setSystemAttribute('realtraces');
 
     	parent::draw();
-    	
-		$field = new FieldDictionary( $snapshot_it->object );
-		$field->setName( preg_replace('/_.+/', '_'.$this->baseline_attribute, $this->getName()) );
-		$field->setId($this->getId().$this->baseline_attribute);
-	    
-		echo '<div style="display:none;">';
-			echo '<div>';
-				echo $snapshot_it->object->getDisplayName();
-			echo '</div>';
-			echo '<div>';
-				$field->draw();
-			echo '</div>';
-		echo '</div>';
     }
 }

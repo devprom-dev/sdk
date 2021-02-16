@@ -37,7 +37,6 @@ abstract class BaseEntity {
      */
     protected $version;
 
-
     /**
      * @ORM\PrePersist
      */

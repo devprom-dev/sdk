@@ -1,20 +1,14 @@
 <?php
-
-include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.php";
-
 include_once "WebMethod.php";
 
 class ProcessEmbeddedWebMethod extends WebMethod
 {
-     function decode( $value )
-     {
+     function decode( $value ) {
 		 return EnvironmentSettings::getBrowserPostUnicode() ? IteratorBase::utf8towin($value) : $value;
      }
      
  	function execute_request()
  	{
- 		 global $_REQUEST, $_FILES, $model_factory;
-
  		 $indexes = array();
  		 
          foreach( array_keys($_REQUEST) as $key )
@@ -78,7 +72,7 @@ class ProcessEmbeddedWebMethod extends WebMethod
 		 {
 		 	 $_FILES['File'] = $_FILES[$file_field];
 		 	
-			 $temp_file = $model_factory->getObject('cms_TempFile');
+			 $temp_file = getFactory()->getObject('cms_TempFile');
 			 $tmp_pathinfo = pathinfo($_FILES[$file_field]['tmp_name']);
 			 
 			 $file_title = $_FILES[$file_field]['name'];
@@ -115,58 +109,61 @@ class ProcessEmbeddedWebMethod extends WebMethod
 			
 	 		if ( $object_class != '' && $object_id != '' )
 	 		{
-		 		$anchor = $model_factory->getObject($object_class);
-		 		
+		 		$anchor = getFactory()->getObject($object_class);
 		 		$anchor_it = $anchor->getExact($object_id);
 	 		}
 
-	 		$object = $model_factory->getObject($classname);
-	 		 
+	 		$object = getFactory()->getObject($classname);
 		 	$it = $object->createIterator();
 	 			
-	 		$fields = array_filter(preg_split('/,/', $_REQUEST['embeddedFields'.$i]), function($value) use($prefix)
-	 		{
+	 		$fields = array_filter(preg_split('/,/', $_REQUEST['embeddedFields'.$i]), function($value) use($prefix) {
 	 			return array_key_exists($prefix.$value, $_REQUEST); 
 	 		});
 
-	 		foreach ( $fields as $field )
-	 		{
+	 		foreach ( $fields as $field ) {
 	 		    $attrs[$field] = $this->decode($_REQUEST[$prefix.$field]);
 	 		}
 
-	 		if ( is_object($anchor_it) )
-	 		{
-				$anchor_field = $_REQUEST['embeddedAnchor'.$i];  
-		 		
+            $anchor_field = $_REQUEST['embeddedAnchor'.$i];
+            if ( is_object($anchor_it) ) {
 				$attrs[$anchor_field] = $anchor_it->getId();
-				
 				$object->setAttributeType($anchor_field, 'REF_'.get_class($anchor_it->object).'Id');
 	 		}
+	 		else {
+                $attrs[$anchor_field] = 1;
+            }
 
 		 	$result = array();
-
-	 		if ( is_object($anchor_it) )
+            if ( is_object($anchor_it) )
 	 		{
-	 			$mapper = new ModelDataTypeMapper();
-	 			
-	 			$mapper->map( $object, $attrs );
-
-	 			$id = $object->add_parms( $attrs );
-
-	 			$it = $object->getExact($id);
-	 			
-	 			$result['id'] = $id;
+                try {
+                    $it = getFactory()->createEntity($object, $attrs);
+                    $result['id'] = $it->getId();
+                }
+                catch( \Exception $e ) {
+                    echo \JsonWrapper::encode(array(
+                        'error' => $e->getMessage()
+                    ));
+                    return;
+                }
 	 		}
 	 		else
 	 		{
-	 		    foreach( $attrs as $field => $data )
-	 		    {
-	 			    $attrs[$field] = htmlentities($data);
-	 			    $attrs[$field] = $attrs[$field] == 'NULL' ? '' : $attrs[$field];
-	 		    }
+                try {
+                    $mapper = new \ModelDataTypeMapper();
+                    $mapper->map($object, $attrs);
+                }
+                catch( \Exception $e ) {
+                    echo \JsonWrapper::encode(array(
+                        'error' => $e->getMessage()
+                    ));
+                    return;
+                }
 
-	 			$mapper = new ModelDataTypeMapper();
-	 			$mapper->map( $object, $attrs );
+                foreach( $attrs as $field => $data ) {
+                    $attrs[$field] = htmlentities($data);
+                    $attrs[$field] = $attrs[$field] == 'NULL' ? '' : $attrs[$field];
+                }
 	 		    $it->setData( $attrs );
 
 	 			$result['id'] = 0; 
@@ -193,17 +190,17 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 		{
 	 			case 'WikiPageFile':
 	 			case 'BlogPostFile':
-	 			    $result['file'] = IteratorBase::wintoutf8($it->get_native('ContentExt'));
-		 			$result['name'] = IteratorBase::wintoutf8($it->get_native('ContentExt'));
-			 		$result['caption'] = IteratorBase::wintoutf8($it->get_native('ContentExt').' ('.$it->getFileSizeKb('Content').' Kb)');
-					$result['url'] = IteratorBase::wintoutf8($it->getFileUrl());
+	 			    $result['file'] = $it->get_native('ContentExt');
+		 			$result['name'] = $it->get_native('ContentExt');
+			 		$result['caption'] = $it->get_native('ContentExt').' ('.$it->getFileSizeKb('Content').' Kb)';
+					$result['url'] = $it->getFileUrl();
 					break;
 
 	 			case 'pm_Attachment':
-		 			$result['file'] = IteratorBase::wintoutf8($it->get_native('FileExt'));
-		 			$result['name'] = IteratorBase::wintoutf8($it->get_native('FileExt'));
-			 		$result['caption'] = IteratorBase::wintoutf8($it->get_native('FileExt').' ('.$it->getFileSizeKb('File').' Kb)');
-					$result['url'] = IteratorBase::wintoutf8($it->getFileUrl());
+		 			$result['file'] = $it->get_native('FileExt');
+		 			$result['name'] = $it->get_native('FileExt');
+			 		$result['caption'] = $it->get_native('FileExt').' ('.$it->getFileSizeKb('File').' Kb)';
+					$result['url'] = $it->getFileUrl();
 					break;
 	 		}
 

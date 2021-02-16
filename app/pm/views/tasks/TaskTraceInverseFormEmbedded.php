@@ -59,11 +59,26 @@ class TaskTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
 
  	function getActions( $object_it, $item )
  	{
+ 	    $actions = parent::getActions($object_it, $item);
+
  		$task_it = $this->getTargetIt( $object_it );
  		$form = new TaskForm(getFactory()->getObject('Task'));
 		$form->show($task_it);
- 		$form->getRenderParms();
- 		return $form->getActions();
+ 		$moreActions = $form->getMoreActions();
+ 		$workflowActions = $form->getTransitionActions();
+
+ 		if ( count($moreActions) > 0 ) {
+            $actions = array_merge(
+                $moreActions, array(array()), $actions
+            );
+        }
+        if ( count($workflowActions) > 0 ) {
+            $actions = array_merge(
+                $workflowActions, array(array()), $actions
+            );
+        }
+
+ 		return $actions;
  	}
 
 	function getListItemsAttribute() {

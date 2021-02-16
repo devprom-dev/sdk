@@ -1,6 +1,6 @@
 <?php
 
-class   ReportSetting extends PageListSetting
+class ReportSetting extends PageListSetting
 {
     function __construct( $report_uid )
     {
@@ -10,16 +10,6 @@ class   ReportSetting extends PageListSetting
     function getReport()
     {
         return $this->report_uid;
-    }
-
-    function setFilters( $filters_array )
-    {
-        $this->filters = $filters_array;
-    }
-    
-    function getFilters()
-    {
-        return $this->filters;
     }
 
     function setRowsNumber( $rows )
@@ -57,12 +47,7 @@ class   ReportSetting extends PageListSetting
     }
     
     protected $sorts = array();
-    
-    protected $filters = array();
-    
     protected $rows;
-    
     protected $report_uid;
-    
     protected $sections = array();
 }

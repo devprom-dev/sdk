@@ -11,15 +11,8 @@ class SearchTable extends PMPageTable
 	{
 		return array(
             $this->buildTypeFilter(),
-            $this->buildFilterState(),
-		    $this->buildSearchFilter()
+            $this->buildFilterState()
 		);
-	}
-
-	function buildSearchFilter() {
-		$search = new FilterTextWebMethod( text(2246), 'search-keywords' );
-		$search->setStyle( 'width:640px' );
-		return $search;
 	}
 
 	function buildTypeFilter() {
@@ -34,20 +27,15 @@ class SearchTable extends PMPageTable
         return $filter;
     }
 
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
-		$values = $this->getFilterValues();
 		return array_merge(
+		    parent::getFilterPredicates( $values ),
 			array (
-				new FilterAttributePredicate( 'Caption', $values['search-keywords'] ),
 				new FilterAttributePredicate( 'entityId', $values['artifacts'] ),
                 new StateCommonPredicate($values['state'])
 			)
 		);
-	}
-	
-	function getFiltersDefault() {
-	    return array('search-keywords', 'artifacts', 'state');
 	}
 	
 	function getSortFields() {

@@ -24,7 +24,11 @@ class RequestSDLCModelTest extends DevpromSDLCTestCase
         
         // entity mocks
 
-        $entity = $this->getMock('Request', array('getExact','moveToState','getStates'));
+        $entity = $this->getMockBuilder(Request::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getExact','moveToState','getStates'])
+            ->getMock();
+
         $entity->expects($this->any())->method('getStates')->will( $this->returnValue(
             array (
                 'submitted',
@@ -43,8 +47,11 @@ class RequestSDLCModelTest extends DevpromSDLCTestCase
                 ) 
         ));
 
-        $task = $this->getMock('Task', array('createSQLIterator'));
-        
+        $task = $this->getMockBuilder(Task::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['createSQLIterator'])
+            ->getMock();
+
         $task->expects($this->any())->method('createSQLIterator')->will( $this->returnValue(
                  $task->createCachedIterator(array (
                          array (
@@ -54,8 +61,11 @@ class RequestSDLCModelTest extends DevpromSDLCTestCase
                  ))
         ));
 
-        $release = $this->getMock('Release', array('getExact'));
-        
+        $release = $this->getMockBuilder(Release::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getExact'])
+            ->getMock();
+
         $release->expects($this->any())->method('getExact')->will( $this->returnValue(
                  $release->createCachedIterator(array (
                          array (
@@ -65,8 +75,11 @@ class RequestSDLCModelTest extends DevpromSDLCTestCase
                  ))
         ));
         
-        $stage = $this->getMock('Stage', array('getExact'));
-        
+        $stage = $this->getMockBuilder(Stage::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getExact'])
+            ->getMock();
+
         $stage->expects($this->any())->method('getExact')->will( $this->returnValue(
                  $stage->createCachedIterator(array (
                          array ()
@@ -83,7 +96,7 @@ class RequestSDLCModelTest extends DevpromSDLCTestCase
         ));
     }
 
-    function testRequestUpdateClosedInVersionByPlannedRelease()
-    {
+    function testDummy() {
+        $this->assertTrue(true);
     }
 }

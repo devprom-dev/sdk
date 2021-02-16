@@ -8,11 +8,6 @@ class EstimationFibonacciStrategy extends EstimationStrategy
 		return text('scrum15');
 	}
 	
-	function getEstimationText()
-	{
-		return text('scrum11');
-	}
-	
 	function getDimensionText( $value )
 	{
 		return str_replace("%1", $value, text('scrum14'));

@@ -40,19 +40,20 @@ public class TasksBoardPage extends ScrumPageBase{
 		return new TasksBoardPage(driver);
 	}
         
-        public void clickToContextMenuItem(String taskID, String menuItemName) {
+    public void clickToContextMenuItem(String taskID, String menuItemName) {
         FILELOG.debug("clickToContextMenuItem Started");
         try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {
 		}
         String taskNumber = taskID.substring(2);
-        WebElement onElement = driver.findElement(By.xpath("//a[contains(.,'[" +taskID+ "]')]/../.."));
+        WebElement onElement = driver.findElement(
+                By.xpath("//a[contains(.,'[" +taskID+ "]')]/ancestor::div[contains(@class,'board_item')]"));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
         contextClick.contextClick(onElement).build().perform();
-        WebElement menuItem = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+taskNumber+
-                "')]//a[text()='"+menuItemName+"']"));
+        WebElement menuItem = driver.findElement(
+                By.xpath("//div[contains(@id,'context-menu-"+taskNumber+"')]//a[text()='"+menuItemName+"']"));
         clickOnInvisibleElement(menuItem);
         try {
 			Thread.sleep(1000);

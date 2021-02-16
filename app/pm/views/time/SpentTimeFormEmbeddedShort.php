@@ -36,7 +36,7 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
                 'items' => array(
                     array(
                         'uid' => 'activity-edit',
-                        'url' => $moduleIt->getUrl('activitytask='.\TextUtils::buildIds($ids[$key])),
+                        'url' => $moduleIt->getUrl('ids='.\TextUtils::buildIds($ids[$key])),
                         'name' => translate('Редактировать')
                     )
                 )
@@ -53,7 +53,7 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 		echo '<span>';
             parent::drawAddButton( $view, $tabindex );
             if ( count($lines) > 0 ) {
-                $url = $moduleIt->getUrl('activitytask='.\TextUtils::buildIds($object_it->idsToArray()));
+                $url = $moduleIt->getUrl('ids='.\TextUtils::buildIds($object_it->idsToArray()));
                 echo '<a class="dashed embedded-add-button" target="_blank" href="'.$url.'" tabindex="-1">';
                     echo translate('подробнее');
                 echo '</a>';
@@ -62,7 +62,7 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 
         if ( $this->showAutoTimeButtons ) {
             echo '<span class="auto-time-panel embedded-add-button">';
-                $this->drawAutoTimes();
+                $this->drawAutoTimes(true);
             echo '</span>';
         }
 	}

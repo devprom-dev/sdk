@@ -29,21 +29,15 @@ abstract class SetTagsWebMethod extends WebMethod
         $request = $this->getObject();
         $request->removeNotificator( 'EmailNotificator' );
 
-        $request_it = $request->getExact( \TextUtils::parseIds($ids) );
+        $request_it = $request->getExact($ids);
         while ( !$request_it->end() )
         {
             $parms = array (
-                $this->getAttribute() => $request_it->getId(),
+                $request_tag->getGroupKey() => $request_it->getId(),
                 'Tag' => $value
             );
 
-            $mapper = new ModelDataTypeMapper();
-            $mapper->map( $request_tag, $parms );
-
-            $request_tag_it = $request_tag->getByAK( $request_it->getId(), $parms['Tag'] );
-            if ( $request_tag_it->count() < 1 ) {
-                $request_tag->add_parms($parms);
-            }
+            getFactory()->mergeEntity($request_tag, $parms);
 
             $request_it->moveNext();
         }
@@ -56,7 +50,7 @@ abstract class SetTagsWebMethod extends WebMethod
         $request = $this->getObject();
         $request->removeNotificator( 'EmailNotificator' );
 
-        $request_it = $request->getExact( \TextUtils::parseIds($ids) );
+        $request_it = $request->getExact($ids);
         while ( !$request_it->end() )
         {
             $request_tag->removeTags( $request_it->getId() );

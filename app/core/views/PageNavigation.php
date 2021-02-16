@@ -71,11 +71,11 @@ class PageNavigation
         $sprites_on_row = floor(32767 / $size);
         $row = floor($user_it->getId() / $sprites_on_row);
         $column = $user_it->getId() - $row * $sprites_on_row - 1;
-        $timestamp = filemtime(SERVER_ROOT_PATH."images/userpics-middle.png");
+        $timestamp = getSession()->getUserPicTimestamp();
 
         return array (
             'class' => 'header_popup',
-            'title' => '<span class="profile-avatar" style="background: url(\'/images/userpics-middle.png?v='.$timestamp.'\') no-repeat -'.($column * $size).'px -'. ($row * $size).'px;" title="'.text(2637).'"></span>',
+            'title' => '<span class="profile-avatar" style="background: url(\'/images/userpics-middle.png?v='.$timestamp.'\') no-repeat -'.($column * $size).'px '. (max(0,-1 * $row * $size)).'px;" title="'.text(2637).'"></span>',
             'items' => $actions,
         );
     }
@@ -87,7 +87,7 @@ class PageNavigation
             array(),
             array (
                 'name' => text('guide.support'),
-                'click' => "javascript: workflowModify({'form_url':'/widget/support/".$language."','class_name':'','entity_ref':'','object_id':'','form_title':'".text('guide.support')."','can_delete':'false','can_modify':'false','delete_reason':null,'width':520}, donothing);"
+                'click' => "javascript: workflowModify({'form_url':'/widget/support/".$language."','class_name':'','entity_ref':'','object_id':'','can_delete':'false','can_modify':'false','delete_reason':null,'width':520}, donothing);"
             )
         );
     }
@@ -96,12 +96,13 @@ class PageNavigation
     {
         $programs = array();
         $projects = array();
+        $sortIndex = 0;
 
         if ( getFactory()->getObject('User')->getAttributeType('GroupId') != '' )
         {
             $program_it = getFactory()->getObject('Program')->getRegistry()->Query(
                 array(
-                    new ProjectAccessiblePredicate(getSession()->getUserIt())
+                    new ProjectAccessibleActiveVpdPredicate()
                 )
             );
 
@@ -109,9 +110,7 @@ class PageNavigation
             {
                 $query_parms = array (
                     new ProjectStatePredicate('active'),
-                    new FilterInPredicate(preg_split('/,/', $program_it->get('LinkedProject'))),
-                    new SortAttributeClause('Importance'),
-                    new SortAttributeClause('Caption')
+                    new FilterInPredicate(preg_split('/,/', $program_it->get('LinkedProject')))
                 );
 
                 if ( $program_it->get('IsParticipant') < 1 ) {
@@ -124,29 +123,26 @@ class PageNavigation
 
                 while ( !$linked_it->end() )
                 {
-                    if ( $program_it->getId() == $linked_it->getId() )
-                    {
+                    if ( $program_it->getId() == $linked_it->getId() ) {
                         $linked_it->moveNext();
                         continue;
                     }
 
                     $projects[$program_it->get('CodeName')][$linked_it->get('CodeName')] = array (
                         'name' => $linked_it->getDisplayName(),
-                        'url' => '/pm/'.$linked_it->get('CodeName')
+                        'url' => '/pm/'.$linked_it->get('CodeName'),
+                        'sort' => $sortIndex++
                     );
-
                     $linked_it->moveNext();
                 }
 
-                if ( count($projects[$program_it->get('CodeName')]) > 0 )
-                {
+                if ( count($projects[$program_it->get('CodeName')]) > 0 ) {
                     $programs[$program_it->get('CodeName')] = array (
                         'name' => $program_it->getDisplayName(),
                         'url' => '/pm/'.$program_it->get('CodeName'),
                         'uid' => 'program-portfolio'
                     );
                 }
-
                 $program_it->moveNext();
             }
         }
@@ -166,9 +162,7 @@ class PageNavigation
                     ? getFactory()->getObject('Project')->getRegistry()->Query(
                         array (
                             new ProjectStatePredicate('active'),
-                            new FilterInPredicate(preg_split('/,/', $portfolio_it->get('LinkedProject'))),
-                            new SortAttributeClause('Importance'),
-                            new SortAttributeClause('Caption')
+                            new FilterInPredicate(preg_split('/,/', $portfolio_it->get('LinkedProject')))
                         )
                     )
                     : getFactory()->getObject('Project')->getEmptyIterator();
@@ -180,7 +174,8 @@ class PageNavigation
                     }
                     $projects[$portfolio_it->get('CodeName')][$linked_it->get('CodeName')] = array (
                         'name' => $linked_it->getDisplayName(),
-                        'url' => '/pm/'.$linked_it->get('CodeName')
+                        'url' => '/pm/'.$linked_it->get('CodeName'),
+                        'sort' => $sortIndex++
                     );
                     $linked_it->moveNext();
                 }
@@ -194,7 +189,6 @@ class PageNavigation
                     'uid' => 'program-portfolio'
                 );
             }
-
             $portfolio_it->moveNext();
         }
 
@@ -212,7 +206,8 @@ class PageNavigation
         {
             $projects[''][$linked_it->get('CodeName')] = array (
                 'name' => $linked_it->getDisplayName(),
-                'url' => '/pm/'.$linked_it->get('CodeName')
+                'url' => '/pm/'.$linked_it->get('CodeName'),
+                'sort' => $sortIndex++
             );
             $linked_it->moveNext();
         }
@@ -264,6 +259,12 @@ class PageNavigation
             }
         }
 
+        foreach( $projects as $portolio => $group ) {
+            usort($projects[$portfolio], function($left, $right) {
+                return $left['sort'] > $right['sort'];
+            });
+        }
+
         return array (
             'programs' => $programs,
             'portfolios' => $portfolios,
@@ -313,7 +314,7 @@ class PageNavigation
         if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED ) {
             $modules['/admin/module/ee/usergroup'] = translate('user.groups.name');
         }
-        $modules['/admin/'] = translate('Администрирование');
+        $modules['/admin/activity.php'] = translate('Администрирование');
         if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED ) {
             $modules['/admin/module/ee/projectgroup'] = translate('portfolios.name');
         }

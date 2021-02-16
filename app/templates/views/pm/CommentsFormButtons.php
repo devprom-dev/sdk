@@ -10,4 +10,3 @@ echo $view->render('core/FormAsyncButtons.php', array(
 
 echo '<input class="btn btn-link btn-sm" type="button" onclick="javascript: hideCommentForm()" value="'.translate('Отмена').'">';
 echo '<div class="clear-fix"></div>';
-echo '<br/>';

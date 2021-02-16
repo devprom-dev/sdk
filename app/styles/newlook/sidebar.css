@@ -1,9 +1,6 @@
 /* Sidebar Navigation */
 #sidebar {
     display: block;
-    float: left;
-    position: relative;
-    z-index: 16;
     margin-left: 0;
 }
 
@@ -27,10 +24,6 @@
 }
 #sidebar > ul.vertical-menu-short > li.active {
     background-color: #414d5d;
-}
-
-#sidebar > ul.vertical-menu-short > li.root:first-child {
-    padding-top: 2px;
 }
 
 #sidebar > ul > li > a {
@@ -60,20 +53,13 @@
     background: url("/images/menu-active-short.png") no-repeat scroll right center !important;
 }
 
-#main-sidebar ul > li.setup {
-    position: fixed;
-}
 #main-sidebar ul > li#settings {
-    bottom: 120px;
+    margin-top: 12px;
+    border-top: 1px solid #737c86;
 }
-#main-sidebar ul > li#setup {
-    bottom: 80px;
-}
-#main-sidebar ul > li#minimize {
-    bottom: 40px;
-}
-#main-sidebar ul > li#minimize a {
-    border-bottom: none;
+#main-sidebar ul > li#settings a {
+    border-radius: initial;
+    margin-left: -1px;
 }
 
 #sidebar > ul > li > a > .label {
@@ -198,9 +184,17 @@
     border-bottom:none;
     margin:0;
     margin-left: 45px;
-    padding-top: 43px;
     width:160px;
     background-color: #f0f3f8;
+    overflow-x:hidden;
+}
+#sidebar.no-areas ul.vertical-menu {
+    margin:0;
+    width:205px;
+}
+
+#sidebar>ul.vertical-menu>li:first-child {
+    padding-top: 43px;
 }
 #sidebar ul.vertical-menu.sticked {
     margin-top: 0;
@@ -210,26 +204,21 @@
     border-right: none;
 }
 #sidebar ul.vertical-menu-short {
+    border-bottom:none;
     width: 45px;
     margin:0;
-    margin-top: 39px;
-    border-bottom: none;
+    position: absolute;
+    background-color: #767f89;
+    overflow:hidden;
+}
+#sidebar ul.vertical-menu-short li:first-child {
+    padding-top: 39px;
 }
 #sidebar ul.vertical-menu-short li.setup {
     background-color: inherit;
 }
 #sidebar ul.vertical-menu-short li.setup a {
     border: none;
-}
-
-
-#main-sidebar {
-    display: block;
-    float: left;
-    position: relative;
-    width: 100%;
-    z-index: 16;
-    margin-left: 0;
 }
 
 #main-sidebar > ul {
@@ -242,16 +231,18 @@
     display: block;
     position: relative;
 }
-#main-sidebar > ul > li:hover {
+#main-sidebar > ul > li.dropdown:hover {
     background-color: #5f666e;
 }
 #main-sidebar ul.modules {
     border-top:none;
     border-bottom:none;
     margin:0;
-    margin-top: 40px;
-    padding-top: 60px;
     width: 45px;
+    overflow: hidden;
+}
+#main-sidebar ul.modules li:first-child {
+    padding-top: 100px;
 }
 #main-sidebar > ul > li a {
     padding: 10px 7px;

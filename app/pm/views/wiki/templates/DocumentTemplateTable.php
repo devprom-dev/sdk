@@ -7,10 +7,6 @@ class DocumentTemplateTable extends PMPageTable
 		return new DocumentTemplateList($this->getObject());
 	}
 
-	function getFilterActions() {
-		return array();
-	}
-
 	function getNewActions() {
 		return array();
 	}

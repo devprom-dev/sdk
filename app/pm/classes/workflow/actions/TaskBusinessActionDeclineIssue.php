@@ -1,7 +1,5 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
-
 include_once "BusinessActionWorkflow.php";
 
 class TaskBusinessActionDeclineIssue extends BusinessActionWorkflow
@@ -22,6 +20,8 @@ class TaskBusinessActionDeclineIssue extends BusinessActionWorkflow
  		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
 
         if ( $request_it->object->getAttributeType('OpenTasks') == '' ) return true;
+        if ( getSession()->IsRDD() && $request_it->object instanceof Issue ) return true;
+
 		$task_it = $request_it->getRef('OpenTasks');
 		
 		// if there is failed task then decline issue
@@ -37,7 +37,7 @@ class TaskBusinessActionDeclineIssue extends BusinessActionWorkflow
  	}
  	
  	function getDisplayName() {
- 		return text(1169);
+ 		return text(2823);
  	}
 } 
  

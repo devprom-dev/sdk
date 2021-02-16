@@ -3,10 +3,6 @@ include (dirname(__FILE__).'/../methods/c_project_methods.php');
 
 class ProjectForm extends AdminPageForm
 {
-	function __construct( $object ) {
-		parent::__construct( $object );
-	}
-
 	function getRenderParms()
     {
         $object = $this->getObject();

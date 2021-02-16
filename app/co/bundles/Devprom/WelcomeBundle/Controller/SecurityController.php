@@ -26,8 +26,13 @@ class SecurityController extends PageController
             : $request->query->get('redirect');
 
         $url_parts = parse_url($redirect);
-        if ( in_array(trim($url_parts['path'],'/'), array('login','logoff')) ) {
+        $path = trim($url_parts['path'],'/');
+        if ( in_array($path, array('login','logoff')) ) {
             $redirect = '';
+        }
+        elseif( $path == 'auth' ) {
+            $command = new LoginUserService();
+            return $this->replyError( $command->getResultDescription(LoginUserService::WRONG_PASSWORD) );
         }
         else {
             $query_parts = array();
@@ -161,7 +166,7 @@ class SecurityController extends PageController
     {
         if ( $request->request->get('email') == '' ) return $this->replyError(text(219));
 
-        $service = new RestorePasswordService(getFactory(), $this, getSession());
+        $service = new RestorePasswordService(getFactory(), getSession());
         try {
             return $this->replySuccess(
                 $service->execute(strtolower(trim($request->request->get('email'))))

@@ -5,6 +5,7 @@ include "FlotChartLeadAndCycleTimeWidget.php";
 class LeadAndCycleTimeChart extends PMPageChart
 {
 	private $widget = null;
+	private $iterator = null;
 
  	function __construct( $object )
  	{
@@ -12,21 +13,34 @@ class LeadAndCycleTimeChart extends PMPageChart
 		$this->widget = new FlotChartLeadAndCycleTimeWidget();
  	}
 
-	function getChartWidget()
-	{
-		$this->widget->setIterator(
-			$this->getObject()->getRegistry()->Query(
-				array_merge(
-					array(
-						new FilterVpdPredicate()
-					),
-					$this->getTable()->getFilterPredicates(),
-					$this->getSorts()
-				)
-			)
-		);
+	function getChartWidget() {
+		$this->widget->setIterator($this->iterator);
 		return $this->widget;
 	}
+
+    function buildData( $aggs )
+    {
+ 	    $this->iterator = $this->getObject()->getRegistry()->Query(
+            array_merge(
+                array(
+                    new FilterVpdPredicate()
+                ),
+                $this->getTable()->getFilterPredicates($this->getTable()->getFilterValues()),
+                $this->getSorts()
+            )
+        );
+
+        $data = array();
+ 	    while( !$this->iterator->end() ) {
+ 	        $data[$this->iterator->getId()] = array(
+ 	            'data' => $this->iterator->get('LifecycleDuration')
+            );
+            $this->iterator->moveNext();
+        }
+        $this->iterator->moveFirst();
+
+        return $data;
+    }
 
 	protected function getDemoData($aggs)
 	{
@@ -72,7 +86,25 @@ class LeadAndCycleTimeChart extends PMPageChart
         return array();
     }
 
-	function drawLegend( $data, & $aggs )
+    function getAggregateBy() {
+ 	    return "LifecycleDuration";
+    }
+
+    function getAggregator() {
+ 	    return "SUM";
+    }
+
+    function getGroup() {
+        return $this->getObject()->getClassName().'Id';
+    }
+
+    function getSorts() {
+        return array(
+            $this->getTable()->getSortAttributeClause('FinishDate')
+        );
+    }
+
+    function drawLegend( $data, & $aggs )
 	{
 	}
 }

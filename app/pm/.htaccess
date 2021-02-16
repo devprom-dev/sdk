@@ -5,14 +5,14 @@ RewriteBase /pm
 
 RewriteRule ^([^/]+)/menu/?(rest/)?(.*)$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/comments/([^/]+)/([^/]+)$ comments.php?project=$1&class=$2&object=$3&formonly=true [L,QSA]
-RewriteRule ^([^/]+)/(comment|upload|projects|whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treegrid|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
+RewriteRule ^([^/]+)/(roadmap|form|dashboard|iterations|releases|comment|upload|projects|whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treegrid|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)$ page.php?namespace=$2&module=$3&project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)/(.+)$ page.php?namespace=$2&module=$3&project=$1&report=$4 [L,QSA]
 RewriteRule ^_images/([^/]+)$ /images/$1 [L]
 RewriteRule ^images/([^/]+)$ /images/$1 [L]
 
-RewriteRule ^([^/]+)/I-([0-9]+)$ $1/issues/board?mode=request&class=metaobject&entity=pm_ChangeRequest&pm_ChangeRequestId=$2&pm_ChangeRequestaction=view [L,NC,QSA]
-RewriteRule ^([^/]+)/T-([0-9]+)$ $1/tasks/board?class=metaobject&entity=pm_Task&pm_TaskId=$2&pm_Taskaction=view [L,NC,QSA]
+RewriteRule ^([^/]+)/(I-([0-9]+))$ $1/issues/board?mode=request&class=metaobject&entity=pm_ChangeRequest&pm_ChangeRequestId=$3&pm_ChangeRequestaction=view&uid=$2 [L,NC,QSA]
+RewriteRule ^([^/]+)/(T-([0-9]+))$ $1/tasks/board?class=metaobject&entity=pm_Task&pm_TaskId=$3&pm_Taskaction=view&uid=$2 [L,NC,QSA]
 RewriteRule ^([^/]+)/([a-z]{1}-[0-9]+)/?(\d+)?$ goto.php?project=$1&uid=$2&baseline=$3 [L,NC,QSA]
 
 RewriteRule ^([^/]+)/time/([^/]+)/([^/]+)$ spenttime.php?project=$1&class=$2&object=$3&formonly=true [L,QSA]
@@ -20,7 +20,6 @@ RewriteRule ^([^/]+)/features/(list|trace|chart)$ functions.php?project=$1&view=
 RewriteRule ^([^/]+)/features/(list|trace|chart)/([^/]+)$ functions.php?project=$1&view=$2&report=$3 [L,QSA]
 RewriteRule ^([^/]+)/issues/(backlog|list|trace|chart|board|import)$ requests.php?project=$1&view=$2 [L,QSA]
 RewriteRule ^([^/]+)/issues/(backlog|list|trace|chart|board|import)/([^/]+)$ requests.php?project=$1&view=$2&report=$3 [L,QSA]
-RewriteRule ^([^/]+)/versioning/revisions/?([^/]+)?$ snapshots.php?project=$1&object=$2 [L,QSA]
 RewriteRule ^([^/]+)/tasks/(list|trace|chart|board)$ planning.php?project=$1&view=$2 [L,QSA]
 RewriteRule ^([^/]+)/tasks/(list|trace|chart|board)/([^/]+)$ planning.php?project=$1&view=$2&report=$3 [L,QSA]
 RewriteRule ^([^/]+)/project/reports/(.+)$ index.php?project=$1&mode=reports [L,QSA]
@@ -35,71 +34,6 @@ RewriteRule ^([^/]+)/plan/(metrics|hierarchy|milestone)$ project.php?project=$1&
 RewriteRule ^([^/]+)/plan/(metrics|hierarchy|milestone)/([^/]+)$ project.php?project=$1&mode=$2&report=$3 [L,QSA]
 RewriteRule ^([^/]+)/knowledgebase/(tree|files|templates)/?([^/]+)?$ knowledgebase.php?project=$1&view=$2&report=$3 [L,QSA]
 RewriteRule ^([^/]+)/profile/?$ profile.php?project=$1 [L,QSA]
-
-RewriteCond %{REQUEST_URI} functions\.php 
-RewriteCond %{QUERY_STRING} view=(\w+) 
-RewriteRule ^([^/]+)/functions\.php $1/features/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} requests\.php 
-RewriteCond %{QUERY_STRING} view=list 
-RewriteCond %{QUERY_STRING} kind=(\w+)
-RewriteRule ^([^/]+)/requests\.php $1/issues/list/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} requests\.php 
-RewriteCond %{QUERY_STRING} view=(\w+) 
-RewriteRule ^([^/]+)/requests\.php $1/issues/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} planning\.php 
-RewriteCond %{QUERY_STRING} view=list 
-RewriteCond %{QUERY_STRING} kind=(\w+)
-RewriteRule ^([^/]+)/planning\.php $1/tasks/list/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} planning\.php 
-RewriteCond %{QUERY_STRING} view=(\w+) 
-RewriteRule ^([^/]+)/planning\.php $1/tasks/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} index\.php 
-RewriteCond %{QUERY_STRING} mode=dicts
-RewriteCond %{QUERY_STRING} dict=(\w+)
-RewriteRule ^([^/]+)/index\.php $1/project/dicts/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} index\.php 
-RewriteCond %{QUERY_STRING} mode=reports
-RewriteCond %{QUERY_STRING} pmreportcategory=(\w+)
-RewriteRule ^([^/]+)/index\.php $1/project/reports/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} index\.php 
-RewriteCond %{QUERY_STRING} mode=workflow
-RewriteCond %{QUERY_STRING} dict=(\w+)
-RewriteRule ^([^/]+)/index\.php $1/project/workflow/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} index\.php 
-RewriteCond %{QUERY_STRING} mode=(dicts|question|reports|log|blog|scrum|tags|versionsettings|settings|methodology|workflow) 
-RewriteRule ^([^/]+)/index\.php $1/project/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} participants\.php 
-RewriteCond %{QUERY_STRING} mode=(list|rights|invite|mail|find|spenttime) 
-RewriteRule ^([^/]+)/participants\.php $1/participants/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} project\.php 
-RewriteCond %{QUERY_STRING} mode=(meeting|metrics|hierarchy|milestone) 
-RewriteRule ^([^/]+)/project\.php $1/plan/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} knowledgebase\.php 
-RewriteCond %{QUERY_STRING} view=(tree|templates) 
-RewriteRule ^([^/]+)/knowledgebase\.php $1/knowledgebase/%1 [R=301,L,NC,E=nocache:1]
-
-RewriteCond %{REQUEST_URI} helpfiles\.php 
-RewriteCond %{QUERY_STRING} wiki_id=(\w+)
-RewriteRule ^([^/]+)/helpfiles\.php $1/module/helpdocs/docs?page=%1&document=%1 [R=301,L,NC,E=nocache:1]
-
-RewriteRule ^([^/]+)/functions\.php $1/features/list [R=301,L,NC]
-RewriteRule ^([^/]+)/requests\.php $1/issues/list [R=301,L,NC]
-RewriteRule ^([^/]+)/planning\.php $1/tasks/list [R=301,L,NC]
-RewriteRule ^([^/]+)/tasks\.php $1/tasks/list/my [R=301,L,NC]
-RewriteRule ^([^/]+)/participants\.php $1/participants/list [R=301,L,NC]
-RewriteRule ^([^/]+)/projects\.php $1/plan/hierarchy [R=301,L,NC]
-RewriteRule ^([^/]+)/knowledgebase\.php $1/knowledgebase/tree [R=301,L,NC]
 
 RewriteRule ^([a-zA-Z0-9\-\_]+)\/?$ $1/index.php?tab=entry [L,QSA,NC]
 RewriteRule ^([^/]+)/([^/]+)$ $2?project=$1 [L,QSA]

@@ -6,7 +6,7 @@ class StateSharedVpdPredicate extends FilterPredicate
  	
  	function StateSharedVpdPredicate ( $object )
  	{
- 		parent::FilterPredicate( 'vpd' );
+ 		parent::__construct( 'vpd' );
  		$this->shared = $object;
  	}
  	

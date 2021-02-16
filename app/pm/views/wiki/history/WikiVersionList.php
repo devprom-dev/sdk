@@ -60,17 +60,15 @@ class WikiVersionList extends PMStaticPageList
             $url = $documentIt->getViewUrl();
         }
 
-        ob_start();
-            parent::drawGroup($group_field, $object_it);
-            $baseline = ob_get_contents();
-        ob_end_clean();
+        $baseline = $object_it->get($group_field);
 
         $text = '<a href="'.$url.'&baseline='.$object_it->getId().'">';
         $text .= $documentIt->getDisplayName() . ' / '.$baseline;
         $text .= '</a>';
 
-        echo '<i class="icon-tasks"></i> &nbsp; ';
+        echo '<div style="display: inline-block;">';
         echo preg_replace('/%2/', $this->lastBaseline[$documentIt->getId()], preg_replace('/%1/', $text, text(2243)));
+        echo '</div>';
 
         $this->lastBaseline[$documentIt->getId()] = $baseline;
     }

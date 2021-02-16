@@ -103,9 +103,9 @@ class SortAttributeClause extends SortClauseBase
 	 			{
 	 				$ref = $object->getAttributeObject($attr);
 
-					if ( $ref instanceof Metaobject && $ref->getEntity()->get('IsDictionary') == 'Y' )
+					if ( $ref instanceof Metaobject && $ref->IsDictionary() )
 					{
-						$alt_sort_column = $ref->getAttributeType('Caption') != "" ? 'Caption' : $ref->getIdAttribute();
+						$alt_sort_column = $ref->IsAttributeStored('Caption') ? 'Caption' : $ref->getIdAttribute();
 						return " IFNULL((SELECT IFNULL(s.OrderNum, s.".$alt_sort_column.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr."), ".$this->valueInsteadOfNull.") ".$sort_type." ";
 					}
 
@@ -117,6 +117,14 @@ class SortAttributeClause extends SortClauseBase
                     }
 
 					$sorts = is_array($this->referenceSorts[$attr]) ? $this->referenceSorts[$attr] : $ref->getSortDefault();
+					if ( is_array($this->referenceSorts[$attr]) ) {
+					    $referenceSort = array_shift(array_values($this->referenceSorts[$attr]));
+					    if ( $referenceSort instanceof SortAttributeClause ) {
+					        $sortType = $referenceSort->getSortType();
+                        }
+                    }
+					if ( $sortType == '' ) $sortType = $this->getSortType();
+
 					if ( count($sorts) > 0 && $ref->getEntityRefName() != $object->getEntityRefName() )
 					{
                         $titleSortFound = false;
@@ -127,7 +135,7 @@ class SortAttributeClause extends SortClauseBase
 							}
 						}
 						if ( !$titleSortFound && $ref->IsAttributeStored('Caption') ) {
-							$sort = new SortAttributeClause('Caption');
+							$sort = new SortAttributeClause('Caption' . ($sortType == 'ASC' ? '.A' : '.D'));
 							$sort->setObject($ref);
 							$sorts[] = $sort;
 						}
@@ -147,7 +155,7 @@ class SortAttributeClause extends SortClauseBase
 							if ( strpos($clause, 'SELECT') === false ) {
                                 $sort->setAlias('s');
 								$clause = preg_replace('/\s(ASC|DESC)\s/i', '', $sort->clause());
-								$sort_clauses[] = " (SELECT ".$clause." FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort->getSortType();
+								$sort_clauses[] = " (SELECT ".$clause." FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sortType;
 							}
 							else {
                                 $clause = str_replace('FROM ', 'FROM ' . $ref->getClassName()." e, ", $clause);

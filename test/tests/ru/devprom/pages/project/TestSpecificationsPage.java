@@ -20,7 +20,7 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
 	
 	public TestScenarioViewPage clickToTestScenario(String id){
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'testingdocsrootlist1_row_')]/td[@id='uid']/a[contains(@href,'"
+				By.xpath("//tr[@role='row']/td[@id='uid']/a[contains(@href,'"
 						+ id + "')]")).click();
 		return new TestScenarioViewPage(driver);
 	}

@@ -45,14 +45,15 @@ class SystemDateTime
 		}
 	}
 	
-	static public function convertToServerTime( $date, $format = 'Y-m-d H:i:s' )
+	static public function convertToServerTime( $date, $format = 'Y-m-d H:i:s', $tz = null )
 	{
 		if ( $date == '' ) return $date;
+		if ( !$tz ) $tz = EnvironmentSettings::getClientTimeZone();
 
 		try
 		{
 			// convert from client's time to UTC+0
-			$time = new DateTime($date, EnvironmentSettings::getClientTimeZone());
+			$time = new DateTime($date, $tz);
 			
 			$time->setTimezone(new DateTimeZone("UTC"));
 
@@ -101,6 +102,16 @@ class SystemDateTime
         $value = preg_replace(
             '/last-week/',
             $language->getPhpDate( strtotime('-1 week', strtotime(date('Y-m-j'))) ),
+            $value
+        );
+        $value = preg_replace(
+            '/last-quarter/',
+            $language->getPhpDate( strtotime('-3 month', strtotime(date('Y-m-j'))) ),
+            $value
+        );
+        $value = preg_replace(
+            '/last-year/',
+            $language->getPhpDate( strtotime('-1 year', strtotime(date('Y-m-j'))) ),
             $value
         );
         $value = preg_replace(

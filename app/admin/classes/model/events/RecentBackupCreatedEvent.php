@@ -1,7 +1,5 @@
 <?php
 
-
-
 class RecentBackupCreatedEvent extends SystemTriggersBase
 {
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 

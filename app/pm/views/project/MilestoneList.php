@@ -14,7 +14,7 @@ class MilestoneList extends PMPageList
 				echo $object_it->get('Caption');
 				break;
 			case 'MilestoneDate':
-				echo $object_it->getDateFormat('MilestoneDate').' '.$this->getMilestoneDate($object_it);
+				echo $object_it->getDateFormatted('MilestoneDate').' '.$this->getMilestoneDate($object_it);
 				break;
 			default:
 				parent::drawCell( $object_it, $attr );	

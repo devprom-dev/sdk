@@ -25,7 +25,7 @@
  		if ( !$methodology_it->HasTasks() && $object_it->get('ChangeRequest') > 0 )
  		{
  			$issue_it = $object_it->getRef('ChangeRequest');
- 			$uid = 'I-'.$issue_it->getId();
+ 			$uid = $issue_it->get('UID');
  		}
  		
  		break;

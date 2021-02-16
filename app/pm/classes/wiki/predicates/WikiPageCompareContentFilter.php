@@ -17,19 +17,22 @@ class WikiPageCompareContentFilter extends FilterPredicate
 
  	    if ( $this->objectIt->get('cms_SnapshotId') != '' ) {
             return
-                " AND NOT EXISTS (SELECT 1 FROM cms_SnapshotItem b, cms_SnapshotItemValue v " .
-                "  		       WHERE b.ObjectId = t.WikiPageId " .
+                " AND (NOT EXISTS (SELECT 1 FROM cms_SnapshotItem b, cms_SnapshotItemValue v, WikiPage p " .
+                "  		       WHERE b.ObjectId = p.WikiPageId " .
+                "		         AND p.UID = t.UID " .
                 "		         AND b.Snapshot = " .$this->objectIt->get('cms_SnapshotId').
                 "			     AND v.SnapshotItem = b.cms_SnapshotItemId " .
                 "			     AND v.ReferenceName = 'Content' ".
-                "                AND v.Value = t.Content ) ";
+                "                AND IFNULL(v.Value,'-') = IFNULL(t.Content,'-') ) ".
+                "       OR t.RecordVersion IS NULL) ";
         }
         else {
             return
-                " AND NOT EXISTS (SELECT 1 FROM WikiPage p " .
+                " AND (NOT EXISTS (SELECT 1 FROM WikiPage p " .
                 "  		       WHERE p.DocumentId = " . $this->objectIt->get('DocumentId').
                 "		         AND p.UID = t.UID " .
-                "			     AND p.Content = t.Content ) ";
+                "			     AND IFNULL(p.Content,'-') = IFNULL(t.Content,'-') ) ".
+                "       OR t.RecordVersion IS NULL)";
         }
  	}
 }

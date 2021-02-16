@@ -9,6 +9,6 @@ class ReleaseRecent extends Metaobject
 	}
 
     function createIterator() {
-        return new IterationDatesIterator($this);
+        return new ReleaseIterator($this);
     }
 }

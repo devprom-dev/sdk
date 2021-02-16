@@ -28,10 +28,10 @@ class PlanChartWidget extends FlotChartWidget
 		<link rel="stylesheet" href="/scripts/vis/vis.min.css?v=<?=$_SERVER['APP_VERSION']?>" />
 		<script src="/scripts/vis/moment-with-locales.min.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
 		<script src="/scripts/vis/vis.min.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
-		<script src="/scripts/vis/handlebars-v2.0.0.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
+		<script src="/scripts/vis/handlebars-v4.1.0.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
 	   	<script id="uid-template" type="text/x-handlebars-template">
 			<a class="with-tooltip" placement="bottom" info="/pm/{{project}}/tooltip/{{objectclass}}/{{objectid}}" href="/pm/{{project}}/{{letter}}-{{objectid}}">[{{letter}}-{{objectid}}]</a>
-			{{content}} 
+			{{{ content }}}
   		</script>
 	   	<script id="base-template" type="text/x-handlebars-template">
 			{{title}}
@@ -137,7 +137,6 @@ class PlanChartWidget extends FlotChartWidget
 			var options = {
 				 start: '<?=$this->start?>',
 				 end: '<?=$this->finish?>',
-                 zoomKey: 'ctrlKey',
 				 editable: {
 				 	 add: false,
 					 updateGroup: false,
@@ -146,7 +145,7 @@ class PlanChartWidget extends FlotChartWidget
 				 },
 				margin: {
 					item: {
-						horizontal: 0
+						horizontal: -1
 					}
 				},
 				groupOrder: 'index',
@@ -190,27 +189,16 @@ class PlanChartWidget extends FlotChartWidget
 			});
             timeline.on('click', function( data ) {
                 if ( data.item ) return;
-                $('tr[state][object-id]').show();
                 if ( data.what && data.what == 'background' ) {
                     if ( data.group.charAt(0) == 'R' ) {
-                        $('tr[state][object-id]').hide();
-                        $('tr[state="Release"][object-id="'+data.group.substring(1)+'"]').show();
+                        $(document).trigger("trackerItemSelected", [data.group.substring(1), false, 'Release']);
                     }
                 }
             });
             timeline.on('select', function (properties) {
-                if ( properties.items.length < 1 ) {
-                    $('tr[state][object-id]').show();
-                    return;
-                }
+                if ( properties.items.length < 1 ) return;
                 var parts = (properties.items + "").split(':');
-                if ( parts[0] == 'Milestone' ) {
-                    $('tr[state][object-id]').show();
-                    return;
-                }
-
-                $('tr[state][object-id]').hide();
-                $('tr[state="'+parts[0]+'"][object-id="'+parts[1]+'"]').show();
+                $(document).trigger("trackerItemSelected", [parts[1], false, parts[0]]);
             });
 	   	</script>
 	   	<?php
@@ -236,7 +224,6 @@ class PlanChartWidget extends FlotChartWidget
 
         $index = 1;
         $project_it = $this->getProjectIt($this->projects);
-
         while( !$project_it->end() )
         {
             $projectTitle = count($this->projects) > 1
@@ -275,6 +262,39 @@ class PlanChartWidget extends FlotChartWidget
                     }
                     $this->iterator->moveNext();
                 }
+
+                if ( !$foundRelease ) {
+                    $this->iterator->moveFirst();
+                    $releases = array();
+                    while( !$this->iterator->end() ) {
+                        if ( $this->iterator->get('ObjectClass') == 'Iteration' && $this->iterator->get('VPD') == $project_it->get('VPD') ) {
+                            if ( $this->iterator->get('Release') > 0 ) {
+                                $releases[] = $this->iterator->get('Release');
+                            }
+                        }
+                        $this->iterator->moveNext();
+                    }
+
+                    if ( count($releases) > 0 ) {
+                        $releaseIt = getFactory()->getObject('Release')->getRegistry()->Query(
+                            array(
+                                new FilterInPredicate($releases)
+                            )
+                        );
+                        while( !$releaseIt->end() ) {
+                            $id = 'R'.$releaseIt->getId();
+                            $groups[$id] = array (
+                                'id' => $id,
+                                'content' => $projectTitle == ''
+                                    ? translate('Релиз') . ' ' . $releaseIt->get('Caption')
+                                    : $projectTitle . ': ' . translate('Релиз') . ' ' . $releaseIt->get('Caption'),
+                                'index' => $index++
+                            );
+                            $foundRelease = true;
+                            $releaseIt->moveNext();
+                        }
+                    }
+                }
             }
 
             if ( !$foundRelease ) {
@@ -301,19 +321,21 @@ class PlanChartWidget extends FlotChartWidget
 	    	}
     	}
 
+    	$ids = $this->iterator->idsToArray();
+    	if ( count($ids) < 1 ) $ids = array(0);
 		$release_it = getFactory()->getObject('Release')->getRegistry()->Query(
 			array(
-				new FilterInPredicate($this->iterator->idsToArray())
+				new FilterInPredicate($ids)
 			)
 		);
     	$iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
     		array(
-    			new FilterInPredicate($this->iterator->idsToArray())
+    			new FilterInPredicate($ids)
 			)
 		);
 		$milestone_it = getFactory()->getObject('Milestone')->getRegistry()->Query(
 			array(
-				new FilterInPredicate($this->iterator->idsToArray())
+				new FilterInPredicate($ids)
 			)
 		);
 		$issues = array_filter(
@@ -330,14 +352,15 @@ class PlanChartWidget extends FlotChartWidget
 			)
 		);
 
+		$uid = new \ObjectUID();
     	$items = array();
     	while( !$this->iterator->end() )
     	{
     		$item = array (
 				'id' => $this->iterator->get('ObjectClass').':'.$this->iterator->getId(),
 				'content' => $this->iterator->getHtmlDecoded('Caption'),
-				'start' => date('Y-m-d H:i:s', strtotime('+9 hours', strtotime($this->iterator->getDateFormatUser('StartDate', '%Y-%m-%d')))),
-				'startText' => getSession()->getLanguage()->getDateFormattedShort($this->iterator->get('StartDate')),
+				'start' => date('Y-m-d\TH:i:s', strtotime('+9 hours', strtotime($this->iterator->getDateFormatUser('StartDate', '%Y-%m-%d')))),
+				'startText' => $this->iterator->getDateFormattedShort('StartDate'),
 				'objectid' => $this->iterator->getId(),
 				'objectclass' => $this->iterator->get('ObjectClass'),
 				'template' => 'base-template',
@@ -369,8 +392,8 @@ class PlanChartWidget extends FlotChartWidget
 						}
 					}
 
-					$item['end'] = date('Y-m-d H:i:s', strtotime('+20 hours', strtotime($release_it->getDateFormatUser('EstimatedFinishDate', '%Y-%m-%d'))));
-					$item['endText'] = getSession()->getLanguage()->getDateFormattedShort($release_it->get('EstimatedFinishDate'));
+					$item['end'] = date('Y-m-d\TH:i:s', strtotime('+20 hours', strtotime($release_it->getDateFormatUser('EstimatedFinishDate', '%Y-%m-%d'))));
+					$item['endText'] = $release_it->getDateFormattedShort('EstimatedFinishDate');
                     $item['group'] = $methodology_it->HasPlanning() ? 'R'.$release_it->getId() : 'P'.$this->iterator->get('Project');
 
 					if ( $methodology_it->HasVelocity() ) {
@@ -407,9 +430,9 @@ class PlanChartWidget extends FlotChartWidget
 
 					$item['template'] = $iteration_it->get('PlannedCapacity') > 5 || $iteration_it->IsFinished()
 											? 'iteration-template-long' : 'iteration-template';
-					$item['end'] = date('Y-m-d H:i:s', strtotime('+20 hours', strtotime($iteration_it->getDateFormatUser('EstimatedFinishDate', '%Y-%m-%d'))));
-					$item['endText'] = getSession()->getLanguage()->getDateFormattedShort($iteration_it->get('EstimatedFinishDate'));
-                    $item['group'] = $methodology_it->HasReleases() ? 'R'.$iteration_it->get('Version') : 'P'.$this->iterator->get('Project');
+					$item['end'] = date('Y-m-d\TH:i:s', strtotime('+20 hours', strtotime($iteration_it->getDateFormatUser('EstimatedFinishDate', '%Y-%m-%d'))));
+					$item['endText'] = $iteration_it->getDateFormattedShort('EstimatedFinishDate');
+                    $item['group'] = $methodology_it->HasReleases() ? 'R'.$this->iterator->get('Release') : 'P'.$this->iterator->get('Project');
 					$item['className'] = 'hie-iteration';
 
 					if ( $iteration_it->IsFinished() ) {
@@ -455,7 +478,7 @@ class PlanChartWidget extends FlotChartWidget
 			    		)
 			    	);
 			    	$item['letter'] = 'M';
-			    	$item['start'] = $this->iterator->get('FinishDate');
+			    	$item['start'] = $this->iterator->getDateFormatUser('FinishDate', '%Y-%m-%dT%H:%M:%S');
 			    	$item['template'] = 'uid-template';
                     $item['group'] = 'P'.$this->iterator->get('Project');
 
@@ -465,6 +488,9 @@ class PlanChartWidget extends FlotChartWidget
 					$method = new ModifyAttributeWebMethod($milestone_it, 'MilestoneDate', '{{start}}');
 					$method->setCallback('donothing');
 					$item['modifyUrl'] = $method->getJSCall();
+
+                    $info = $uid->getUIDInfo($milestone_it, true);
+                    $item['content'] = $info['caption'];
 
 					unset($item['end']);
 			    	break;
@@ -479,7 +505,7 @@ class PlanChartWidget extends FlotChartWidget
 
     protected function getIterationMetrics( $object_it, $methodology_it )
 	{
-		$strategy = $methodology_it->getEstimationStrategy();
+		$strategy = $methodology_it->getIterationEstimationStrategy();
 
 		list( $capacity, $maximum, $actual_velocity, $estimation ) = $object_it->getRealBurndownMetrics();
 		if ( $estimation == '' ) $estimation = 0;

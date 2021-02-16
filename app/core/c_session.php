@@ -34,14 +34,13 @@ class SessionBase
     protected $auth_factory_it;
     protected $builders_cache = array();
     protected $accessibleVpds = array();
-    protected $terminateCallbacks = array();
+    protected $userPicTimestamp = 0;
  	
  	function __construct( $factory = null, $builders = null, $language = null, $cache_service = null )
  	{
  		global $session;
  		
  		$session = $this;
-        $this->finalize();
 
  		$this->builders = array_merge(
  				is_array($builders) ? $builders : array(),
@@ -63,11 +62,8 @@ class SessionBase
  		$this->language = $language;
  		
  		$this->configure();
+ 		$this->userPicTimestamp = \EnvironmentSettings::getUserPicTimestamp();
  	}
-
- 	public function finalize() {
-        register_shutdown_function(array($this, 'terminate'));
-    }
 
  	function __sleep() {
         return array (
@@ -79,7 +75,6 @@ class SessionBase
     function __wakeup() {
         global $session;
         $session = $this;
-        $this->finalize();
         $this->buildFactories();
     }
 
@@ -90,21 +85,6 @@ class SessionBase
     function getId() {
         return $this->id;
     }
-
-    public function addCallbackDelayed( $parms, $callback ) {
- 	    $key = md5(serialize($parms));
- 	    $this->terminateCallbacks[$key] = function() use ($parms, $callback) {
-            call_user_func( $callback, $parms );
-        };
-    }
-
-    public function terminate()
-	{
-	    foreach( $this->terminateCallbacks as $callback ) {
-	        call_user_func( $callback );
-        }
-		$this->builders = array();
-	}
 
 	protected function buildFactories()
     {
@@ -126,9 +106,12 @@ class SessionBase
  	{
  		$this->builders = array_merge($this->builders, $this->createBuilders());
 		if ( $this->getSite() != '' ) {
-			$this->builders = array_merge($this->builders, getFactory()->getPluginsManager()->getSectionBuilders($this->getSite()));
+			$this->builders = array_merge(
+			    $this->builders,
+                getFactory()->getPluginsManager()->getSectionBuilders($this->getSite())
+            );
 		}
-
+        $this->builders = array_merge($this->builders, $this->createLatestBuilders());
         $this->buildFactories();
  		$this->builders_cache = array();
  	}
@@ -353,6 +336,11 @@ class SessionBase
             new BulkActionBuilderCommon()
         );
  	}
+
+ 	function createLatestBuilders()
+    {
+        return array();
+    }
  	
  	function getBuilders( $interface_name = '' )
  	{
@@ -398,6 +386,10 @@ class SessionBase
  	{
  		return 'co';
  	}
+
+ 	public function getUserPicTimestamp() {
+ 	    return $this->userPicTimestamp;
+    }
 }
   
 function getSession()

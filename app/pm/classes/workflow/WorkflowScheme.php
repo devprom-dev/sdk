@@ -1,6 +1,7 @@
 <?php
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
+include_once SERVER_ROOT_PATH . "pm/classes/project/predicates/ProjectActiveVpdPredicate.php";
 
 class WorkflowScheme
 {
@@ -21,59 +22,63 @@ class WorkflowScheme
 		static::$singleInstance = null;
 	}
 
-	public function getStateIt( $object ) {
-		$data = $this->getStatesCache($object);
-		if ( !is_array($data['states']) ) {
-			return $this->getStateObject($object)->getEmptyIterator();
-		}
-		else {
-			return $this->getStateObject($object)->createCachedIterator(
-                array_values($data['states'])
-			);
-		}
+	protected function getStateData($object)
+    {
+        if ( $object instanceof StatableIterator ) {
+            $data = $this->states[$object->get('VPD')][$object->object->getStatableClassName()];
+            $object = $object->object;
+        } else {
+            $data = $this->states[$object->getVpdValue()][$object->getStatableClassName()];
+        }
+        if ( count($data) < 1 ) {
+            $data = array();
+            $stateIt = $this->getStateObject($object)->getAll();
+            while( !$stateIt->end() ) {
+                $data['states'][$stateIt->get('ReferenceName')] = $stateIt->getData();
+                if ( $stateIt->get('IsTerminal') == 'Y' ) {
+                    $data['terminal'][$stateIt->get('ReferenceName')] = $stateIt->getData();
+                }
+                $stateIt->moveNext();
+            }
+        }
+        return $data;
+    }
+
+	public function getStateIt( $object )
+    {
+        $data = $this->getStateData($object);
+	    if ( $object instanceof StatableIterator ) {
+            $object = $object->object;
+        }
+        return $this->getStateObject($object)->createCachedIterator(
+            array_values($data['states'])
+        );
 	}
 
-	public function getStates( $object ) {
-		if ( array_key_exists(get_class($object), $this->stateRefNames) ) {
-			return $this->stateRefNames[get_class($object)];
-		}
-		$data = $this->getStatesCache($object);
-		return $this->stateRefNames[get_class($object)] = array_unique(
-			array_map(function($row) { return $row['ReferenceName']; }, $data['states'])
-		);
+	public function getStates( $object )
+    {
+	    $data = $this->getStateData($object);
+        return array_keys($data['states']);
 	}
 
-	public function getNonTerminalStates( $object ) {
-		if ( array_key_exists(get_class($object), $this->stateRefNames) ) {
-			return array_diff($this->stateRefNames[get_class($object)], $this->stateRefTerminalNames[get_class($object)]);
-		}
-		$data = $this->getStatesCache($object);
-		if ( !is_array($data['states']) ) return array();
-		if ( !is_array($data['terminal']) ) return array();
+	public function getNonTerminalStates( $object )
+    {
+        $data = $this->getStateData($object);
 		return array_diff(
-			array_map(function($row) { return $row['ReferenceName']; }, $data['states']),
-			array_map(function($row) { return $row['ReferenceName']; }, $data['terminal'])
+			array_keys($data['states']),
+			array_keys($data['terminal'])
 		);
 	}
 
-	public function getTerminalStateIt( $object ) {
-		$data = $this->getStatesCache($object);
-		return $this->getStateObject($object)->createCachedIterator(array_values($data['terminal']));
+	public function getTerminalStates( $object )
+    {
+        $data = $this->getStateData($object);
+        return array_keys($data['terminal']);
 	}
 
-	public function getTerminalStates( $object ) {
-		if ( array_key_exists(get_class($object), $this->stateRefTerminalNames) ) {
-			return $this->stateRefTerminalNames[get_class($object)];
-		}
-		$data = $this->getStatesCache($object);
-		if ( !is_array($data['terminal']) ) return array();
-		return $this->stateRefTerminalNames[get_class($object)] = array_unique(
-			array_map(function($row) { return $row['ReferenceName']; }, $data['terminal'])
-		);
-	}
-
-	public function getStateAttributeIt( $object, $state = '' ) {
-		$data = $this->getStatesCache($object);
+	public function getStateAttributeIt( $object, $state = '' )
+    {
+        $data = $this->getStateData($object);
 		$states = $data['states'];
 		if ( count($states) < 1 ) {
 			return $this->stateAttribute->getEmptyIterator();
@@ -83,53 +88,44 @@ class WorkflowScheme
 				array_map(function($row) { return $row['ReferenceName']; }, $data['states'])
 			);
 		}
-		else {
-            $state = count($object->getVpds()) > 1 ? $object->getVpdValue().$state : $state;
-        }
-		return $this->stateAttribute->createCachedIterator(
-			is_array($data['stateattrs'][$state]) ? $data['stateattrs'][$state] : array()
-		);
+		$stateId = $states[$state]['pm_StateId'];
+		if ( $stateId == '' ) $stateId = 0;
+		return $this->stateAttribute->getRegistry()->Query(
+		    array(
+		        new FilterAttributePredicate('State', $stateId)
+            )
+        );
 	}
 
-	public function getStatePredicateIt( $object, $state = '' )
-	{
-		$data = $this->getStatesCache($object);
-		$result = is_array($data['predicates']) && count($data['predicates']) > 0
-			? array_values(call_user_func_array('array_merge', $data['predicates']))
-			: array();
-		usort($result, function( $left, $right ) {
- 			return $left['Transition'] > $right['Transition'] ? 1 : -1;
-		});
-		return $this->rule->createCachedIterator($result);
-	}
+    public function getTransitionPredicateIt( $transitionIt )
+    {
+        $it = $this->transitionPredicate->getRegistry()->Query(
+                array(
+                    new FilterAttributePredicate('Transition', $transitionIt->getId())
+                )
+            );
+        return $this->rule->getExact($it->fieldToArray('Predicate'));
+    }
 
 	public function getStateTransitionIt( $object, $states = array() )
 	{
-		$this->transition->setStateAttributeType($this->getStateObject($object));
-		$data = $this->getStatesCache($object);
-		if ( !is_array($states) ) {
-			return $this->transition->createCachedIterator(
-			    array_values($data['transitions'][$states])
-            );
-		}
-		else {
-			$result = array();
-			foreach( $data['transitions'] as $state => $transitions ) {
-				if ( in_array($state, $states) ) $result = array_merge($result, $transitions);
-			}
-			return $this->transition->createCachedIterator($result);
-		}
+        return $this->transition->getRegistry()->Query(
+            array(
+                new FilterVpdPredicate($object->getVpdValue()),
+                new TransitionStateClassPredicate($object->getStatableClassName()),
+                new TransitionSourceStatePredicate(join(',', $states))
+            )
+        );
 	}
 
 	public function getTransitionIt( $object )
 	{
-		$this->transition->setStateAttributeType($this->getStateObject($object));
-		$data = $this->getStatesCache($object);
-		return $this->transition->createCachedIterator(
-			is_array($data['transitions']) && count($data['transitions']) > 0
-				? array_values(call_user_func_array('array_merge', $data['transitions']))
-				: array()
-		);
+        return $this->transition->getRegistry()->Query(
+            array(
+                new FilterVpdPredicate($object->getVpdValue()),
+                new TransitionStateClassPredicate($object->getStatableClassName())
+            )
+        );
 	}
 
 	public function invalidate() {
@@ -140,95 +136,25 @@ class WorkflowScheme
  	{
 		$this->cacheObjects();
 
-        $vpds = array(
-            getSession()->getProjectIt()->get('VPD')
-        );
-        if ( getSession() instanceof PMSession ) {
-            $vpds = array_merge(
-                $vpds, getSession()->getLinkedIt()->fieldToArray('VPD')
-            );
-        }
 		$state_it = getFactory()->getObject('StateBase')->getRegistry()->Query(
 			array (
-				new FilterVpdPredicate(join(',',$vpds)),
+			    new ProjectActiveVpdPredicate(),
 				new SortOrderedClause()
 			)
 		);
-		$stateattr_it = $this->stateAttribute->getRegistry()->Query(
-			array (
-				new FilterAttributePredicate('State', $state_it->idsToArray())
-			)
-		);
-		$stateattr_it->buildPositionHash(array('State'));
-
-		$transition_it = $this->transition->getRegistry()->Query(
-			array (
-                new FilterVpdPredicate(join(',',$vpds)),
-				new TransitionSourceStateSort(),
-				new TransitionTargetStateSort()
-			)
-		);
-		$transition_it->buildPositionHash(array('SourceState'));
-
-		$attribute_it = getFactory()->getObject('TransitionAttribute')->getRegistry()->Query(
-			array (
-				new FilterAttributePredicate('Transition', $transition_it->idsToArray()),
-				new TransitionAttributeSortClause()
-			)
-		);
-		$attribute_it->buildPositionHash(array('Transition'));
-		$predicate_it = getFactory()->getObject('TransitionPredicate')->getRegistry()->Query(
-			array (
-				new FilterAttributePredicate('Transition', $transition_it->idsToArray()),
-				new TransitionAttributeSortClause()
-			)
-		);
-		$predicate_it->buildPositionHash(array('Transition'));
 
 		while( !$state_it->end() )
 		{
 			$k1 = $state_it->get('VPD');
 			$k2 = $state_it->get('ObjectClass');
 
-			$this->states[$k1][$k2]['states'][$state_it->get('ReferenceName')] = $state_it->getData();
+			$this->states[$k1][$k2]['states'][$state_it->get('ReferenceName')] =
+                array_filter($state_it->getData(), function ($k) { return !is_numeric($k); }, ARRAY_FILTER_USE_KEY);
 
 			if ( $state_it->get('IsTerminal') == 'Y' ) {
-				$this->states[$k1][$k2]['terminal'][$state_it->get('ReferenceName')] = $state_it->getData();
+				$this->states[$k1][$k2]['terminal'][$state_it->get('ReferenceName')] =
+                    array_filter($state_it->getData(), function ($k) { return !is_numeric($k); }, ARRAY_FILTER_USE_KEY);
 			}
-
-			$stateattr_it->moveTo('State', $state_it->getId());
-			while( $stateattr_it->get('State') == $state_it->getId() )
-			{
-				$this->states[$k1][$k2]['stateattrs'][$state_it->get('ReferenceName')][] = $stateattr_it->getData();
-				$stateattr_it->moveNext();
-			}
-
-			$transition_it->moveTo('SourceState', $state_it->getId());
-			while( $transition_it->get('SourceState') == $state_it->getId() )
-			{
-				$this->states[$k1][$k2]['transitions'][$state_it->get('ReferenceName')][] = $transition_it->getData();
-
-				$attribute_it->moveTo('Transition', $transition_it->getId());
-				while( $attribute_it->get('Transition') == $transition_it->getId() ) {
-					$this->states[$k1][$k2]['attributes'][$transition_it->getId()][] = $attribute_it->getData();
-					$attribute_it->moveNext();
-				}
-
-				$predicate_it->moveTo('Transition', $transition_it->getId());
-				while( $predicate_it->get('Transition') == $transition_it->getId() ) {
-					$this->states[$k1][$k2]['predicates'][$transition_it->getId()][] =
-						array_merge(
-							$predicate_it->getRef('Predicate')->getData(),
-							array (
-								'Transition' => $transition_it->getId()
-							)
-						);
-					$predicate_it->moveNext();
-				}
-
-				$transition_it->moveNext();
-			}
-
 			$state_it->moveNext();
 		}
  	}
@@ -238,42 +164,9 @@ class WorkflowScheme
 		if ( array_key_exists($key, $this->stateObjects) ) {
 			return $this->stateObjects[$key];
 		}
-		$object = $object->getStateClassName() != ''
-			? getFactory()->getObject($object->getStateClassName())
-			: getFactory()->getObject('entity');
-		return $this->stateObjects[$key] = $object;
-	}
-
-	protected function getStatesCache( $object ) {
-		$vpds = $object->getVpds();
-		$class = strtolower(get_class($object));
-		if ( count($vpds) < 1 ) {
-			return $this->states[$object->getVpdValue()][$class];
-		}
-		elseif ( count($vpds) == 1 ) {
-			return $this->states[array_pop($vpds)][$class];
-		}
-		else {
-			$data = array(
-				'states' => array(),
-				'terminal' => array(),
-				'transitions' => array(),
-				'stateattrs' => array(),
-				'predicates' => array()
-			);
-			foreach( $vpds as $vpd ) {
-				if ( !is_array($this->states[$vpd]) ) continue;
-				foreach( array('states','transitions','terminal','stateattrs','predicates') as $type ) {
-					if ( !is_array($this->states[$vpd][$class][$type]) ) continue;
-					foreach( $this->states[$vpd][$class][$type] as $key => $value ) {
-						foreach( $value as $valueKey => $valueItem ) {
-							$data[$type][$vpd.$key][$valueKey] = $valueItem;
-						}
-					}
-				}
-			}
-			return $data;
-		}
+		return $this->stateObjects[$key] = $object->getStateClassName() != ''
+                    ? getFactory()->getObject($object->getStateClassName())
+                    : getFactory()->getObject('entity');
 	}
 
 	protected function __construct()
@@ -283,7 +176,7 @@ class WorkflowScheme
 	}
 
 	public function __sleep() {
-		return array('states','stateRefNames','stateRefTerminalNames');
+		return array('states');
 	}
 
 	public function __wakeup() {
@@ -294,6 +187,7 @@ class WorkflowScheme
 		$this->stateAttribute = getFactory()->getObject('StateAttribute');
 		$this->rule = getFactory()->getObject('StateBusinessRule');
 		$this->transition = getFactory()->getObject('Transition');
+        $this->transitionPredicate = getFactory()->getObject('TransitionPredicate');
 	}
 
 	protected static function getFileName() {
@@ -301,12 +195,11 @@ class WorkflowScheme
 	}
 
 	private $transition = null;
+	private $transitionPredicate = null;
 	private $rule = null;
 	private $stateAttribute = null;
 	private $stateObjects = array();
 	private $states = array();
-	private $stateRefNames = array();
-	private $stateRefTerminalNames = array();
 	private static $singleInstance = null;
 }
 

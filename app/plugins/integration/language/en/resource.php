@@ -27,5 +27,12 @@ $plugin_text_array = array
     23 => 'External artifacts',
     24 => 'Data import from tracker',
     25 => 'Unable to import data from the tracker, please check connection parameters',
-    26 => 'Data (first %1 records) were imported successfully. Futher data will be imported and updated periodically. You can specify integation settings in the project settings area.'
+    26 => 'Data (first %1 records) were imported successfully. Futher data will be imported and updated periodically. You can specify integation settings in the project settings area.',
+    27 => 'Project ID',
+    28 => 'Queue length',
+    29 => 'Sync date and time',
+    30 => 'Username or personal authentication token',
+    31 => 'Password (if required)',
+    32 => 'Enter application web address and port if required, e.g. https://{server:port}/tfs/{collection}',
+    33 => 'Instead of user name you can specify Personal Access Token, you should not specify password in the case'
 );

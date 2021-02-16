@@ -5,7 +5,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleAc
 class AutocompleteWebMethod extends WebMethod
 {
  	var $method_name, $object, $title;
- 	
+
  	function AutocompleteWebMethod ( $object = null, $title = '' )
  	{
  		$this->method_name = md5(get_class($object).$this->getMethodName());
@@ -35,7 +35,7 @@ class AutocompleteWebMethod extends WebMethod
 	{
 		return $this->getTitle();
 	}
-	
+
  	function exportHeaders()
  	{
 		header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
@@ -48,31 +48,38 @@ class AutocompleteWebMethod extends WebMethod
 		$object_uid = new ObjectUid;
  	    
 		$result = array();
+        $project_it = getSession()->getProjectIt();
 		
  	    while( !$object_it->end() )
 	    {
-	    	$caption = $object_uid->getUidTitle($object_it);
-	    	
 	        if ( $object_uid->hasUid($object_it) )
  			{
- 			    $info = $object_uid->getUIDInfo($object_it);
+ 			    $info = $object_uid->getUIDInfo($object_it, true);
+                $caption = '[' . $info['uid']. '] ' . $info['caption'];
  			    $completed = $info['completed'];
  			}
  			else
  			{
+                $caption = $object_it->getDisplayNameSearch();
  				$completed = false;
  			}
-	    	
+
+ 			if ( $object_it->object->getEntityRefName() != 'pm_Project' ) {
+                if ( $object_it->get('VPD') != '' && $project_it->get('VPD') != $object_it->get('VPD') ) {
+                    $code_name = $object_it->get('ProjectCodeName');
+                    if ( $code_name != '' ) $caption = '{'.$code_name.'} ' . $caption;
+                }
+            }
+
  			 $result_item = array (
  			    'id' => html_entity_decode($object_it->getId(), ENT_COMPAT | ENT_HTML401, 'utf-8'),
- 			    'label' => TextUtils::stripAnyTags(html_entity_decode($caption, ENT_COMPAT | ENT_HTML401, 'utf-8')),
+ 			    'label' => \TextUtils::skipHtmlTag('span', html_entity_decode($caption, ENT_COMPAT | ENT_HTML401, 'utf-8')),
  			    'completed' => $completed
  			);
  			
  			foreach( preg_split('/,/', $attributes) as $attribute )
  			{
  				if ( $object_it->get($attribute) == '' && $object_it->object->getAttributeType($attribute) == '' ) continue;
- 				
  				$result_item[$attribute] = $object_it->get($attribute);
  			}
  			
@@ -80,8 +87,8 @@ class AutocompleteWebMethod extends WebMethod
 	        
 	        $object_it->moveNext();
 	    }
-	    
-	    return $result;
+
+        return $result;
  	}
  	
  	function execute_request()
@@ -89,10 +96,14 @@ class AutocompleteWebMethod extends WebMethod
 		$object_uid = new ObjectUid;
 		
 		$attributes = preg_split('/,/', $_REQUEST['attributes']);
-		
 		if ( $_REQUEST['attributes'] == '' || count($attributes) < 1 ) $attributes = array('Caption');
 
- 		$object = getFactory()->getObject($_REQUEST['class']);
+        $className = getFactory()->getClass($_REQUEST['class']);
+        if ( !class_exists($className) ) return '';
+
+        if ( $className == 'Build' ) $className = 'BuildActual';
+
+ 		$object = getFactory()->getObject($className);
  		$queryParms = array();
 
 		if ( $object->getVpdValue() != '' ) {
@@ -101,10 +112,14 @@ class AutocompleteWebMethod extends WebMethod
                 : new FilterVpdPredicate();
 		}
 
+		if ( in_array('realtraces', $attributes) ) {
+            $queryParms[] = new FilterAttributeNullPredicate('Includes');
+        }
+
  		if ( is_a($object, 'MetaobjectStatable') && $object->getStateClassName() != '' ) {
 			$queryParms[] = new SortMetaStateClause();
  		}
-		if ( in_array('cross', $attributes) ) {
+		if ( in_array('cross', $attributes) && $object->getVpdValue() != '' ) {
 			$queryParms[] = new SortProjectSelfFirstClause();
 			$queryParms[] = new SortProjectImportanceClause();
 		}

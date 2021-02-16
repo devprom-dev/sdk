@@ -12,10 +12,8 @@ class Version20150408160123 extends AbstractMigration
 {
     public function up(Schema $schema)
     {
-        try {
+        if (!$schema->getTable('cms_ExternalUser')->hasColumn('Description')) {
             $this->addSql('ALTER TABLE cms_ExternalUser ADD Description TEXT');
-        }
-        catch(Exception $e) {
         }
     }
 

@@ -1,4 +1,6 @@
 <?php
+include_once "AccessRightTypeNonePredicate.php";
+include_once "AccessRightProjectRolePredicate.php";
 
 class ProjectAccessiblePredicate extends FilterPredicate
 {
@@ -11,14 +13,8 @@ class ProjectAccessiblePredicate extends FilterPredicate
 	
  	function _predicate( $filter )
  	{
-		if ( !defined('PERMISSIONS_ENABLED') ) return " AND 1 = 1 ";
-
 		$user_id = $this->user_it->getId();
 		if ( $user_id == '' ) $user_id = 0;
-
-		$accessPolicy = new CoAccessPolicy(getFactory()->getCacheService(), 'apps/'.$this->user_it->getId());
-        $allProjectsModuleIt = getFactory()->getObject('Module')->getExact('ee/allprojects');
-        if ( $accessPolicy->can_read($allProjectsModuleIt) ) return " AND 1 = 1 ";
 
         $hiddenLinkedVpds = getFactory()->getObject('pm_AccessRight')->getRegistry()->Query(
                 array(

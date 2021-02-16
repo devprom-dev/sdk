@@ -10,7 +10,7 @@ use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  */
-class YamlSettingsStorageTest extends \PHPUnit_Framework_TestCase {
+class YamlSettingsStorageTest extends \PHPUnit\Framework\TestCase {
 
     const SETTINGS_DIR = "@DevpromServiceDeskBundle/Tests/Service/";
     const EXISTING_SETTINGS_FILE_NAME = "test_settings.yml";

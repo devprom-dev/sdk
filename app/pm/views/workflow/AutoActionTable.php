@@ -11,21 +11,27 @@ class AutoActionTable extends SettingsTableBase
         return array_merge(
             parent::getFilters(),
             array(
-                new FilterObjectMethod(getFactory()->getObject('AutoActionEvent'), translate('Событие'), 'eventType'),
-                new FilterTextWebMethod(text(2508), 'search')
+                new FilterObjectMethod(getFactory()->getObject('AutoActionEvent'), translate('Событие'), 'eventType')
             )
         );
     }
 
-    function getFilterPredicates()
+    function getFilterPredicates( $values )
     {
-        $values = $this->getFilterValues();
         return array_merge(
-            parent::getFilterPredicates(),
+            parent::getFilterPredicates( $values ),
             array(
-                new FilterSearchAttributesPredicate($values['search'], array('Caption')),
                 new FilterAttributePredicate('EventType', $values['eventType'])
             )
+        );
+    }
+
+    function getSortFields()
+    {
+        return array_diff(
+            parent::getSortFields(),
+            $this->getObject()->getAttributesByGroup('actions'),
+            $this->getObject()->getAttributesByGroup('task')
         );
     }
 }

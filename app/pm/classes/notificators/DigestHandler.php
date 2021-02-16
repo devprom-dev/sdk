@@ -58,14 +58,14 @@ class DigestHandler extends EmailNotificatorHandler
 		
 		while ( !$log_it->end() )
 		{
-			$date_formatted = getSession()->getLanguage()->getDateFormatted($log_it->get('ChangeDate'));
+			$date_formatted = $log_it->getDateFormatted('ChangeDate');
 			$anchor_it = $log_it->getObjectIt();
 
 			$dates[$date_formatted][$log_it->get('AuthorName')][] = array (
 				'action' => $log_it->get('ChangeKind'),
 				'entity' => $anchor_it->object->getDisplayName(),
-				'title' => $log_it->getHtml('Caption'),
-				'content' => $log_it->getHtml('Content'),
+				'title' => $log_it->getHtmlDecoded('Caption'),
+				'content' => $log_it->getHtmlDecoded('Content'),
 				'time' => getSession()->getLanguage()->getTimeFormatted($log_it->get('RecordCreated'))
 			);
 			

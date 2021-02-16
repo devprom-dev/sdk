@@ -4,6 +4,9 @@ class RequestIterationsPersister extends ObjectSQLPersister
 {
 	function map( & $parms )
 	{
+        if ( array_key_exists('Release',$parms) ) {
+            $parms['Iteration'] = $parms['Release'];
+        }
 		if ( !array_key_exists('Iteration',$parms) ) return;
 
         if ( $parms['Iteration'] != '' ) {

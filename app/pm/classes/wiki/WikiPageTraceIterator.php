@@ -1,6 +1,5 @@
 <?php
-
-include_once "WikiPageDisplayRules.php";
+use Devprom\ProjectBundle\Service\Widget\WidgetService;
 
 class WikiPageTraceIterator extends OrderedIterator
 {
@@ -9,7 +8,7 @@ class WikiPageTraceIterator extends OrderedIterator
     }
 
  	function getDisplayName() {
-		return WikiPageDisplayRules::getTraceDisplayName($this, $this->getRef($this->getDisplayNameReference()));
+		return WidgetService::getTraceDisplayName($this, $this->getRef($this->getDisplayNameReference()));
  	}
 
  	function getTraceDisplayName()

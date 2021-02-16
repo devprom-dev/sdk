@@ -5,6 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.JavascriptExecutor;
+import ru.devprom.pages.CKEditor;
 
 import java.util.List;
 
@@ -18,33 +19,33 @@ public class EditIssuePage extends ServicedeskPage {
     }
 
     public EditIssuePage enterIssueTitle(String issueTitle) {
-        WebElement caption = driver.findElement(By.id("issue_caption"));
+        WebElement caption = driver.findElement(By.id("issue_form_caption"));
         caption.clear();
         caption.sendKeys(issueTitle);
         return this;
     }
 
     public EditIssuePage enterIssueDescription(String issueDescription) {
-        WebElement description = driver.findElement(By.id("issue_description"));
-        description.clear();
-        description.sendKeys(issueDescription);
+        WebElement description = driver.findElement(By.id("issue_form_description"));
+        CKEditor we = (new CKEditor(driver));
+        we.changeText(issueDescription);
         return this;
     }
 
     public EditIssuePage selectPriority(String newPriority) {
-        Select select = new Select(driver.findElement(By.xpath("//*[@id='issue_severity']")));
+        Select select = new Select(driver.findElement(By.xpath("//*[@id='issue_form_severity']")));
         select.selectByVisibleText(newPriority);
         return this;
     }
 
     public EditIssuePage selectType(String newType) {
-        Select select = new Select(driver.findElement(By.xpath("//*[@id='issue_issueType']")));
+        Select select = new Select(driver.findElement(By.xpath("//*[@id='issue_form_issueType']")));
         select.selectByVisibleText(newType);
         return this;
     }
 
     public EditIssuePage selectProduct(String newProduct) {
-        Select select = new Select(driver.findElement(By.xpath("//*[@id='issue_product']")));
+        Select select = new Select(driver.findElement(By.xpath("//*[@id='issue_form_product']")));
         select.selectByVisibleText(newProduct);
         return this;
     }
@@ -56,15 +57,15 @@ public class EditIssuePage extends ServicedeskPage {
     }
 
     public String getDifferentProduct() {
-        return getFirstNotSelectedOption("issue_product");
+        return getFirstNotSelectedOption("issue_form_product");
     }
 
     public String getDifferentPriority() {
-        return getFirstNotSelectedOption("issue_severity");
+        return "Обычная";
     }
 
     public String getDifferentType() {
-        return getFirstNotSelectedOption("issue_issueType");
+        return getFirstNotSelectedOption("issue_form_issueType");
     }
 
 

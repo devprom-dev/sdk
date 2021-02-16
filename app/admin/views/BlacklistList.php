@@ -1,7 +1,5 @@
 <?php
 
-include ('methods/c_user_methods.php');
-
 class BlacklistList extends PageList
 {
 	function IsNeedToDisplayLinks( )
@@ -41,12 +39,11 @@ class BlacklistList extends PageList
 		return $actions;
 	}
 
-	function getColumns()
-	{
-		$this->object->addAttribute('Date', '', translate('Дата'), true);
-
-		return parent::getColumns();
-	}
+	function extendModel()
+    {
+        parent::extendModel();
+        $this->getObject()->addAttribute('Date', '', translate('Дата'), true);
+    }
 
 	function drawCell( $object_it, $attr )
 	{

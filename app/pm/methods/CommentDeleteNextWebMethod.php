@@ -4,7 +4,7 @@ class CommentDeleteNextWebMethod extends WebMethod
 {
     var $comment_it, $control_id;
  	
- 	function CommentDeleteNextWebMethod ( $comment_it = null, $control = 0 )
+ 	function __construct ( $comment_it = null, $control = 0 )
  	{
  		$this->comment_it = $comment_it;
 		$this->control_id = $control;
@@ -15,10 +15,6 @@ class CommentDeleteNextWebMethod extends WebMethod
 		return text(2185);
 	}
 
-	function getWarning() {
-        return text(636);
-	}
-	
 	function hasAccess()
 	{
  		$project_roles = getSession()->getRoles();
@@ -54,10 +50,14 @@ class CommentDeleteNextWebMethod extends WebMethod
 			$comment->delete($comment_it->getId());
 			$comment_it->moveNext();
 		}
+
+        if ( class_exists('UndoWebMethod') && UndoLog::Instance()->valid($this->comment_it) ) {
+            $method = new UndoWebMethod(ChangeLog::getTransaction());
+            $method->setCookie();
+        }
  	}
 
- 	function getRedirectUrl()
- 	{
+ 	function getRedirectUrl() {
  		return 'function(){ refreshCommentsThread(\''.$this->control_id.'\'); }';
  	}
 }

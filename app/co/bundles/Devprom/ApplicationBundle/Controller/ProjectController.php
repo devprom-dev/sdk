@@ -124,7 +124,7 @@ class ProjectController extends PageController
     public function welcomeAction(Request $request)
     {
         if ( is_object($response = $this->checkUserAuthorized($request)) ) return $response;
-        
+
     	return $this->responsePage( new \ProjectWelcomePage() );
     }
 }

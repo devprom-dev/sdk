@@ -2,14 +2,7 @@
 
 class TaskTypeForm extends PMPageForm
 {
- 	function buildModelValidator()
- 	{
- 		$validator = parent::buildModelValidator();
- 		$validator->addValidator( new ModelValidatorUnique(array('ReferenceName')) );
- 		return $validator;
- 	}
-	
-	function IsAttributeVisible( $attr_name ) 
+	function IsAttributeVisible( $attr_name )
  	{
  		switch ( $attr_name )
  		{

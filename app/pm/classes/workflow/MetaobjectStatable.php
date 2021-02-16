@@ -13,8 +13,7 @@ class MetaobjectStatable extends Metaobject
  	    parent::__construct($class, $registry, $metadata_cache);
  	}
  
- 	function getStatableClassName()
- 	{
+ 	function getStatableClassName() {
  		return strtolower(get_class($this));
  	}
  	
@@ -34,23 +33,6 @@ class MetaobjectStatable extends Metaobject
  			default:
  				return 'pm_State';
  		}
- 	}
- 	
- 	function getStates( $vpd = '' )
-    {
-        if ( $vpd != '' ) {
-            $stateBase = new StateBase();
-            return $stateBase->getRegistry()->Query(
-                array(
-                    new StateClassPredicate($this->getStatableClassName()),
-                    new FilterVpdPredicate($vpd),
-                    new SortOrderedClause()
-                )
-            )->fieldToArray('ReferenceName');
-        }
-        else {
-            return WorkflowScheme::Instance()->getStates($this);
-        }
  	}
  	
  	function getTerminalStates() {
@@ -88,26 +70,39 @@ class MetaobjectStatable extends Metaobject
 		 		return parent::getAttributeObject( $attr );
 		}
 	}
-	
+
+	function getStates() {
+        return WorkflowScheme::Instance()->getStates($this);
+    }
+
 	//----------------------------------------------------------------------------------------------------------
 	function add_parms( $parms )
 	{
-		if ( count($this->getStates()) > 0 ) {
-			// workflow is defined
-            if ( $parms['Project'] != '' ) {
-                $prject_it = getFactory()->getObject('Project')->getExact($parms['Project']);
+	    $states = WorkflowScheme::Instance()->getStates($this);
+        if ( !in_array($parms['State'], $states) ) $parms['State'] = array_shift($states);
+
+		if ( count($states) > 0 ) {
+            $projectIt = getSession()->getProjectIt();
+            if ( $parms['Project'] != '' && $parms['Project'] != $projectIt->getId() ) {
+                $projectIt = getFactory()->getObject('Project')->getExact($parms['Project']);
+                $parms['State'] = $this->reMapState($projectIt->get('VPD'), $parms['State']);
             }
-            else {
-                $prject_it = getSession()->getProjectIt();
-            }
-			$parms['State'] = $this->reMapState($prject_it->get('VPD'), $parms['State']);
 		}
+
 		return parent::add_parms( $parms );
 	}
 
 	protected function reMapState( $vpd, $state )
 	{
-        $states = $this->getStates($vpd);
+        $stateBase = new StateBase();
+        $states = $stateBase->getRegistry()->Query(
+                array(
+                    new StateClassPredicate($this->getStatableClassName()),
+                    new FilterVpdPredicate($vpd),
+                    new SortOrderedClause()
+                )
+            )->fieldToArray('ReferenceName');
+
 		if ( $state == '' ) {
 			$state = array_shift($states);
 		}
@@ -122,7 +117,8 @@ class MetaobjectStatable extends Metaobject
 			}
 		}
         if ( $state == '' ) {
-			throw new Exception('Unable assing empty state to the object');
+			throw new Exception('Unable assing empty state to the object - ' .
+                var_export(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), true));
 		}
 		return $state;
 	}
@@ -147,9 +143,9 @@ class MetaobjectStatable extends Metaobject
 		else if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] )
 		{
             $wasState = $parms['State'];
-			$parms['State'] = $this->reMapState(
-			    $parms['VPD'] != '' ? $parms['VPD'] : $object_it->get('VPD'), $parms['State']
-            );
+            if ( $parms['VPD'] != '' && $parms['VPD'] != $object_it->get('VPD') ) {
+                $parms['State'] = $this->reMapState( $parms['VPD'], $parms['State'] );
+            }
 			if ( $wasState != '' && $object_it->get('State') != $parms['State'] ) {
 				$this->moveToState($object_it, $parms);
 			}
@@ -190,7 +186,7 @@ class MetaobjectStatable extends Metaobject
         $state_it = getFactory()->getObject($this->getStateClassName())->getRegistry()->Query(
 			array(
 				new FilterAttributePredicate('ReferenceName', $parms['State']),
-				new FilterVpdPredicate($object_it->get('VPD'))
+				new FilterVpdPredicate($parms['VPD'] != '' ? $parms['VPD'] : $object_it->get('VPD'))
 			)
         );
         if ( $state_it->getId() < 1 ) throw new Exception('Unable assing empty state to the object');
@@ -220,7 +216,9 @@ class MetaobjectStatable extends Metaobject
 		}
 
         $objectstate = getFactory()->getObject('pm_StateObject');
-        $stateobject_it = $objectstate->getRegistry()->Query(
+		$soRegistry = $objectstate->getRegistry();
+        $soRegistry->setLimit(1);
+        $stateobject_it = $soRegistry->Query(
             array (
                 new FilterAttributePredicate('ObjectId', $object_it->getId()),
                 new FilterAttributePredicate('ObjectClass', $this->getStatableClassName()),

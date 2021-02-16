@@ -12,11 +12,7 @@ class TimeSpentEvent extends SystemTriggersBase
 		);
 		if ( $task_it->get('ChangeRequest') != '' ) {
 		    $requestId = $task_it->get('ChangeRequest');
-            getSession()->addCallbackDelayed(
-                array(
-                    'RequestMetrics' => $requestId
-                ),
-                function() use ( $requestId ) {
+            register_shutdown_function(function() use ( $requestId ) {
                     $service = new StoreMetricsService();
                     $request = new Request();
 

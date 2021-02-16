@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."pm/views/communications/ProjectLogTable.php";
+include_once SERVER_ROOT_PATH."pm/methods/WikiFilterHistoryFormattingWebMethod.php";
 include "WikiHistoryList.php";
 
 class WikiHistoryTable extends ProjectLogTable
@@ -9,7 +10,7 @@ class WikiHistoryTable extends ProjectLogTable
 	public function __construct( $object )
 	{
         $this->pageObject = $object;
-		parent::__construct(getFactory()->getObject('ChangeLog'));
+		parent::__construct(getFactory()->getObject('ChangeLogAggregated'));
 	}
 	
 	function buildObjectIt()
@@ -21,6 +22,7 @@ class WikiHistoryTable extends ProjectLogTable
                 ->getRegistry()->Query(
 				    array (
 				        new ParentTransitiveFilter($object_it->getId()),
+                        new FilterAttributePredicate('DocumentId', $object_it->get('DocumentId')),
                         new SortDocumentClause()
                     )
 				);
@@ -38,41 +40,70 @@ class WikiHistoryTable extends ProjectLogTable
 	{
 		$filters = parent::getFilters();
 		
-		foreach( $filters as $key => $filter )
-		{
-			if ( in_array($filter->getValueParm(), array('requirement','object')) )
-			{
+		foreach( $filters as $key => $filter ) {
+			if ( in_array($filter->getValueParm(), array('requirement','object')) ) {
 				unset($filters[$key]);
 			}
 		}
-		
+
+        $branchIt = getFactory()->getObject('WikiPageBaseline')->getRegistry()->Query(
+            array(
+                new FilterAttributePredicate('ObjectId', $this->getObjectIt()->get('DocumentId')),
+                new FilterAttributePredicate('ObjectClass', get_class($this->getObjectIt()->object))
+            )
+        );
+		$filters[] = $this->buildToBaselineFilter($branchIt);
+        $filters[] = $this->buildFromBaselineFilter($branchIt);
+
 		return array_merge( 
-				array (
-						new WikiFilterHistoryFormattingWebMethod()
-				),
-				$filters
+            array (
+            ),
+            $filters
 		);
 	}
 
-    function buildStartFilter()
+	function buildFromBaselineFilter($branchIt)
     {
-        $filter = new ViewStartDateWebMethod();
-        $filter->setDefault('');
+        $filter = new FilterObjectMethod($branchIt->copyAll(), text(2914), 'frombaseline');
+        $filter->setType('singlevalue');
+        $filter->setHasAny(false);
+        $filter->setHasNone(false);
         return $filter;
     }
 
-	function getFilterPredicates()
-	{
-		$object_it = $this->getObjectIt();
+    function buildToBaselineFilter($branchIt)
+    {
+        $filter = new FilterObjectMethod($branchIt->copyAll(), text(2915), 'tobaseline');
+        $filter->setType('singlevalue');
+        $filter->setHasAny(false);
+        $filter->setHasNone(false);
+        return $filter;
+    }
 
+    function buildStartFilter() {
+        $filter = new ViewStartDateWebMethod();
+        return $filter;
+    }
+
+	function getFilterPredicates( $values )
+	{
 		$predicates = array();
-		if ( $object_it->get('ParentPage') != '' ) {
-            $predicates[] = new FilterAttributeNotNullPredicate('Content');
+
+		$items = \TextUtils::parseFilterItems($values['frombaseline']);
+		if ( count($items) > 0 ) {
+            $branchIt = getFactory()->getObject('Snapshot')->getExact($items[0]);
+            $predicates[] = new ChangeLogStartFilter(SystemDateTime::convertToClientTime($branchIt->get('RecordModified')));
+        }
+
+        $items = \TextUtils::parseFilterItems($values['tobaseline']);
+        if ( count($items) > 0 ) {
+            $branchIt = getFactory()->getObject('Snapshot')->getExact($items[0]);
+            $predicates[] = new ChangeLogFinishFilter(SystemDateTime::convertToClientTime($branchIt->get('RecordModified')));
         }
 
 		return array_merge(
 		    array_filter(
-				parent::getFilterPredicates(),
+				parent::getFilterPredicates( $values ),
 				function($predicate) {
 					return !$predicate instanceof ChangeLogVisibilityFilter;
 				}
@@ -124,5 +155,10 @@ class WikiHistoryTable extends ProjectLogTable
 
     function buildQuickReports()
     {
+    }
+
+    function getDetails()
+    {
+        return array();
     }
 }

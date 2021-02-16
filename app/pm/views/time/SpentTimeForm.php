@@ -29,7 +29,7 @@ class SpentTimeForm extends PMPageForm
 		switch ( $attr_name ) 
 		{
 		    case 'LeftWork':
-		    	return getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed();
+		    	return getSession()->getProjectIt()->getMethodologyIt()->IsLeftWorkVisible();
 		    default:
 		    	return parent::IsAttributeVisible($attr_name);
 		}
@@ -89,22 +89,13 @@ class SpentTimeForm extends PMPageForm
     {
         switch( $attr ) {
             case 'Participant':
-                return new FieldParticipantDictionary();
+                if ( $this->getEditMode() ) {
+                    return new FieldParticipantDictionary();
+                } else {
+                    return parent::createFieldObject($attr);
+                }
             default:
                 return parent::createFieldObject($attr);
         }
     }
-
-    function drawScripts()
-	{
-		?>
-		<script type="text/javascript">
-			$(document).ready( function() {
-				$('#<?=$this->getId()?> #pm_ActivityCapacity').on('keydown', function() {
-					updateLeftWork($(this), $('#<?=$this->getId()?> #pm_ActivityLeftWork'));
-				});	
-			});
-		</script>
-		<?php
-	}
 }

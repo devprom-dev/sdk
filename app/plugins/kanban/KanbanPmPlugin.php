@@ -36,24 +36,27 @@ class KanbanPmPlugin extends PluginPMBase
 
 		if ( !$this->checkSpecialFeatures() ) return $modules;
 
-		$modules['requests'] =
- 				array(
- 					'includes' => array( 'kanban/views/KanbanRequestPage.php' ),
- 					'classname' => 'KanbanRequestPage',
- 				    'title' => text('kanban17'),
- 					'description' => text('kanban29'),
- 				    'AccessEntityReferenceName' => 'pm_ChangeRequest',
- 					'area' => FUNC_AREA_MANAGEMENT,
-					'icon' => 'icon-th-large'
- 					);
-		
+		if ( !getSession()->IsRDD() ) {
+            $modules['requests'] =
+                array(
+                    'includes' => array( 'kanban/views/KanbanRequestPage.php' ),
+                    'classname' => 'KanbanRequestPage',
+                    'title' => text('kanban17'),
+                    'description' => text('kanban29'),
+                    'AccessEntityReferenceName' => 'pm_ChangeRequest',
+                    'area' => FUNC_AREA_MANAGEMENT,
+                    'icon' => 'icon-th-large'
+                );
+        }
+
  		return $modules;
  	}
 
  	function getBuilders()
  	{
         $builders = array(
-            new RequestKanbanMetadataBuilder()
+            new RequestKanbanMetadataBuilder(),
+            new StateKanbanMetadataBuilder()
         );
 
         if ( !$this->checkSpecialFeatures() ) return $builders;
@@ -63,12 +66,7 @@ class KanbanPmPlugin extends PluginPMBase
             array (
                 new ReportsKanbanBuilder( getSession() ),
                 new FunctionalAreaMenuKanbanBuilder(),
-
-                // model extenders
-                new StateKanbanMetadataBuilder(),
-
                 // widgets
-                new KanbanTourScriptBuilder(getSession()),
                 new KanbanIssueStateBusinessRuleBuilder(),
                 new KanbanTaskStateBusinessRuleBuilder()
             )
@@ -82,12 +80,9 @@ class KanbanPmPlugin extends PluginPMBase
      	    if ( !$this->checkSpecialFeatures() ) return;
 
      	    $object = $list->getObject();
-     	    
-     	    $object->setAttributeVisible('Progress', true); 
-
-     	    $object->setAttributeVisible('Deadlines', false); 
-     	    
-     	    $object->setAttributeVisible('Description', false); 
+     	    $object->setAttributeVisible('Progress', true);
+     	    $object->setAttributeVisible('Deadlines', false);
+     	    $object->setAttributeVisible('Description', false);
  	    }
  	}
 

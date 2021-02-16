@@ -2,13 +2,6 @@
 
 class ProjectRoleForm extends PMPageForm
 {
-	function ProjectRoleForm() 
-	{
-		global $model_factory;
-		
-		parent::PMPageForm( $model_factory->getObject('pm_ProjectRole') );
-	}
-
 	function validateInputValues( $id, $action )
 	{
 	    global $model_factory;

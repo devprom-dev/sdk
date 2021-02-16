@@ -27,9 +27,7 @@ class FieldWikiTrace extends FieldForm
 
  	function setFilters( & $trace )
  	{
- 		$trace->disableVpd();
- 		
-		$trace->addFilter( 
+		$trace->addFilter(
 			new FilterAttributePredicate( 'SourcePage',  
 				is_object($this->object_it) ? $this->object_it->getId() : 0 ) );
  	}
@@ -52,9 +50,11 @@ class FieldWikiTrace extends FieldForm
 	
 	function drawBody( $view = null )
 	{
-		$this->setFilters( $this->getTrace() );
-		
-		$form = $this->getForm( $this->getTrace() );
+	    $trace = $this->getTrace();
+		$this->setFilters($trace);
+        $trace->disableVpd();
+
+		$form = $this->getForm( $trace );
  		$form->setTraceObject( $this->trace_object );
  			
 		$object_it = $this->getObjectIt();

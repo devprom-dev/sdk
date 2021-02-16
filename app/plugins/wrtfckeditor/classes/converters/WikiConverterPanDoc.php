@@ -1,6 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."core/classes/export/WikiIteratorExport.php";
-include "WikiConverterPreviewExt.php";
+include_once "WikiConverterPreviewExt.php";
 
 abstract class WikiConverterPanDoc extends WikiIteratorExport
 {
@@ -8,8 +8,7 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
 
     function __construct( $iterator )
     {
-        parent::IteratorExport($iterator);
-
+        parent::__construct($iterator);
         $this->htmlPath = \TextUtils::pathToUnixStyle(tempnam(SERVER_FILES_PATH, "pandochtml"));
         $this->outputPath = \TextUtils::pathToUnixStyle(tempnam(SERVER_FILES_PATH, "pandocoutput"));
     }
@@ -71,17 +70,15 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
             $requiredParms .= ' --dpi=100';
         }
 
-        $command = 'pandoc '.$requiredParms.' '.$templateParm.' '.$this->getToParms().' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$this->outputPath.'" "'.$this->htmlPath.'" 2>&1';
+        $command = $requiredParms.' '.$templateParm.' '.$this->getToParms().' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$this->outputPath.'" "'.$this->htmlPath.'"';
         Logger::getLogger('Commands')->info(get_class($this).': '.$command);
 
-        putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
-        $result = shell_exec($command);
-
-        if ( $result != "" ) {
-            Logger::getLogger('Commands')->error(get_class($this).': '.$result);
-            if ( stripos($result, 'skipping.') === false && stripos($result, 'warning') === false ) {
-                throw new Exception($result);
-            }
+        try {
+            \FileSystem::execPanDoc($command);
+        }
+        catch( \Exception $e ) {
+            Logger::getLogger('Commands')->error(get_class($this).': '.$e->getMessage());
+            throw $e;
         }
 
         if ( $templateParm != '' && $templateId != '' ) {
@@ -106,19 +103,13 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
 	protected function getVersion()
     {
         if ( $this->pandocVersion != '' ) return $this->pandocVersion;
-
-        putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
-        $command = 'pandoc -v 2>&1';
-        Logger::getLogger('Commands')->info(get_class($this).': '.$command);
-        $result = shell_exec($command);
-        Logger::getLogger('Commands')->info($result);
-        return $this->pandocVersion = array_pop(
-            preg_split('/\s+/',
-                array_shift(
-                    preg_split('/[\r\n]/', $result)
-                )
-            )
-        );
+        try {
+            return $this->pandocVersion = \FileSystem::execPanDoc();
+        }
+        catch( \Exception $e ) {
+            \Logger::getLogger('System')->error($e->getMessage());
+            return $this->pandocVersion = '0';
+        }
     }
 
 	protected function getDefaultTemplatePath() {
@@ -147,7 +138,10 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
             }
         }
         $content = join('dummy="', $colspanParts);
+
         $content = \TextUtils::removeHtmlTag('colgroup', $content);
+        $content = \TextUtils::skipHtmlTag('tbody', $content);
+        $content = \TextUtils::skipHtmlTag('thead', $content);
     }
 
     abstract protected function getToParms();

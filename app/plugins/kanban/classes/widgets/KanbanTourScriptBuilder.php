@@ -15,7 +15,6 @@ class KanbanTourScriptBuilder extends ScriptBuilder
 
         $project_it = $this->session->getProjectIt();
         if ( $project_it->get('Tools') != 'kanban_ru.xml' ) return;
-        if ( $project_it->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) return;
 
         $requirements = false;
         $testing = false;

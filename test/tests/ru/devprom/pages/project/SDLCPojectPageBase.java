@@ -28,12 +28,7 @@ import ru.devprom.pages.project.requests.RequestsTypesPage;
 import ru.devprom.pages.project.requirements.RequirementsPage;
 import ru.devprom.pages.project.requirements.RequirementsTypesPage;
 import ru.devprom.pages.project.requirements.TraceMatrixPage;
-import ru.devprom.pages.project.settings.MethodologyPage;
-import ru.devprom.pages.project.settings.MySettingsPage;
-import ru.devprom.pages.project.settings.ProjectMembersPage;
-import ru.devprom.pages.project.settings.SaveTemplatePage;
-import ru.devprom.pages.project.settings.TerminologyPage;
-import ru.devprom.pages.project.settings.TextTemplatesPage;
+import ru.devprom.pages.project.settings.*;
 import ru.devprom.pages.project.tasks.TasksBoardPage;
 import ru.devprom.pages.project.tasks.TasksPage;
 import ru.devprom.pages.project.tasks.TasksStatePage;
@@ -164,15 +159,15 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	// АНАЛИЗ И ПРОЕКТИРОВАНИЕ menu items
 	// root items
 	// Документы
-	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[text()='Документы требований']")
+	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@uid='requirements-docs']")
 	protected WebElement requirementsDocsItem;
 
 	// Разделы требований
-	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[text()='Реестр требований']")
+	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@uid='requirementsnotimpl']")
 	protected WebElement requirementsListItem;
-	
+
 	// Матрица трассируемости
-	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[text()='Матрица трассируемости']")
+	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@uid='requirementsmatrix']")
 	protected WebElement traceMatrixListItem;
  
 	// Left menu head items for АНАЛИЗ И ПРОЕКТИРОВАНИЕ
@@ -219,7 +214,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	// КОНТРОЛЬ КАЧЕСТВА menu items
 
-	@FindBy(xpath = ".//ul[@id='menu_qa']//a[@uid='testing-list']")
+	@FindBy(xpath = ".//ul[@id='menu_qa']//a[@uid='testingdocinprogress']")
 	protected WebElement testScenariosItem;
 	
 	@FindBy(xpath = ".//ul[@id='menu_qa']//a[@uid='testing-docs']")
@@ -249,7 +244,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	protected WebElement tagsItem;
 
 	// Участники
-	@FindBy(xpath = ".//a[@uid='permissions-participants']")
+	@FindBy(xpath = "//div[contains(@class,'project-settings')]//a[@uid='permissions-participants']")
 	protected WebElement participantsListItem;
 
 	// Тип требования
@@ -284,7 +279,10 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	@FindBy(xpath = ".//a[@uid='process-import']")
 	protected WebElement loadTemplateItem;
-	
+
+	@FindBy(xpath = ".//a[@uid='dicts-projectrole']")
+	protected WebElement projectRolesItem;
+
 	@FindBy(xpath = ".//a[@uid='process-export']")
 	protected WebElement saveTemplateItem;
 	
@@ -328,7 +326,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 		manageLink.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(boardItem));
 		boardItem.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//table[contains(@id,'requestboard')]"))));
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//table[@id='requestboard1']"))));
 		return new RequestsBoardPage(driver);
 	}
 	
@@ -358,26 +356,26 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	public TasksBoardPage gotoTasksBoard() {
 		manageLink.click();
 		clickOnInvisibleElement(tasksBoardItem);
-		return new TasksBoardPage(driver);
+		TasksBoardPage page = new TasksBoardPage(driver);
+		page.showAll();
+		return page;
 	}
 	
 	public RequestsStatePage gotoRequestsStatePage() {
 		gotoSettingsPage();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(requestsStateItem));
-		requestsStateItem.click();
+		clickOnInvisibleElement(requestsStateItem);
 		return new RequestsStatePage(driver);
 	}
 
 	public TasksStatePage gotoTasksStatePage() {
 		gotoSettingsPage();
-		tasksStateItem.click();
+		clickOnInvisibleElement(tasksStateItem);
 		return new TasksStatePage(driver);
 	}
 
 	public AttributeSettingsPage gotoAttributeSettings() {
 		gotoSettingsPage();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(dictsAttrItem));
-		dictsAttrItem.click();
+		clickOnInvisibleElement(dictsAttrItem);
 		return new AttributeSettingsPage(driver);
 	}
 	
@@ -413,9 +411,9 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	public String[] getTagsList() {
 		String youCameFrom = driver.getCurrentUrl();
 		gotoSettingsPage();
-		tagsItem.click();
+		clickOnInvisibleElement(tagsItem);
 		String[] tagsList = new String[driver.findElements(
-				By.xpath("//tr[contains(@id,'taglist1_row_')]")).size()];
+				By.xpath("//tr[contains(@id,'taglist1_row_')]//td[@id='caption']")).size()];
 		for (int i = 0; i < tagsList.length; i++) {
 			tagsList[i] = driver
 					.findElements(
@@ -480,21 +478,20 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	public RequirementsTypesPage gotoRequirementsTypes() {
 		gotoSettingsPage();
-		requirementTypeItem.click();
+		clickOnInvisibleElement(requirementTypeItem);
 		return new RequirementsTypesPage(driver);
 	}
 	
 	public RequestsTypesPage gotoRequestsTypes() {
 		gotoSettingsPage();
-		requestTypeItem.click();
+		clickOnInvisibleElement(requestTypeItem);
 		return new RequestsTypesPage(driver);
 	}
 	
 	
 	public ProjectCommonSettingsPage gotoCommonSettings(){
 		gotoSettingsPage();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(commonSettingsItem));
-		commonSettingsItem.click();
+		clickOnInvisibleElement(commonSettingsItem);
 		return new ProjectCommonSettingsPage(driver);
 	}
 	
@@ -519,14 +516,20 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	}
 	
 	public TimetablePage gotoTimetablePage(){
-		manageLink.click();
-		if (!spentTimeItem.isDisplayed())
-			reportsMenu.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(spentTimeItem));
-		spentTimeItem.click();
+		clickOnInvisibleElement(driver.findElement(By.xpath("//a[@uid='activitiesreport']")));
 		return new TimetablePage(driver);
 	}
-	
+
+	public TimetablePage gotoTasksTimetablePage(){
+		clickOnInvisibleElement(driver.findElement(By.xpath("//a[@uid='activitiesreport']")));
+		clickOnInvisibleElement(driver.findElement(By.id("activitiesreporttasks")));
+		return new TimetablePage(driver);
+	}
+
+	public void gotoCodeArea() {
+		devLink.click();
+	}
+
 	public RepositoryFilesPage gotoRepositoryFilesPage(){
 		devLink.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(repositoryFilesItem));
@@ -559,8 +562,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	public TerminologyPage gotoTerminologyPage() {
 		gotoSettingsPage();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(terminologyItem));
-		terminologyItem.click();
+		clickOnInvisibleElement(terminologyItem);
 		return new TerminologyPage(driver);
 	}
 	
@@ -577,8 +579,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	public LinkedProjectsPage gotoLinkedProjects() {
 		gotoSettingsPage();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(linkedProjectsItem));
-		linkedProjectsItem.click();
+		clickOnInvisibleElement(linkedProjectsItem);
 		return new LinkedProjectsPage(driver);
 	}
 	
@@ -608,8 +609,6 @@ public RequestViewPage searchByRequestId(String id) {
 	searchInput.sendKeys(id);
 	searchBtn.click();
 	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//ul[contains(@class,'breadcrumb')]/li/a[text()='Доска пожеланий']")));
-		
-		
 		return new RequestViewPage(driver);
 	}
 
@@ -698,47 +697,48 @@ public MethodologyPage gotoMethodologyPage() {
 
 public SaveTemplatePage gotoSaveTemplatePage() {
 	gotoSettingsPage();
-	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(saveTemplateItem));
-	saveTemplateItem.click();
+	clickOnInvisibleElement(saveTemplateItem);
 	return new SaveTemplatePage(driver);
 }
 
 public LoadTemplatePage gotoLoadTemplatePage() {
 	gotoSettingsPage();
-	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(loadTemplateItem));
-	loadTemplateItem.click();
+	clickOnInvisibleElement(loadTemplateItem);
 	return new LoadTemplatePage(driver);
 }
 
-public SaveReportPage saveReport(){
-	clickOnInvisibleElement(saveReportBtn);
-	return new SaveReportPage(driver);
-}
+	public ProjectRolePage gotoProjectRolesPage() {
+		gotoSettingsPage();
+		clickOnInvisibleElement(projectRolesItem);
+		return new ProjectRolePage(driver);
+	}
+
+	public SaveReportPage saveReport() {
+		clickOnInvisibleElement(saveReportBtn);
+		return new SaveReportPage(driver);
+	}
 
 
-public String readFilterCaption(String filter){
-	return driver.findElement(By.xpath("//div[contains(@class,'filter')]//a[@uid='"+filter+"']")).getText();
-}
+	public String readFilterCaption(String filter){
+		return driver.findElement(By.xpath("//div[contains(@class,'filter')]//a[@uid='"+filter+"']")).getText();
+	}
 
+	public boolean isColumnPresent(String column){
+		return !driver.findElements(By.xpath("//table//th[@uid='"+column+"']")).isEmpty();
+	}
 
-public boolean isColumnPresent(String column){
-	return !driver.findElements(By.xpath("//table//th[@uid='"+column+"']")).isEmpty();
-}
+	public boolean isFilterPresent(String filter){
+		return !driver.findElements(By.xpath("//div[contains(@class,'filter')]//*[@uid='"+filter+"']")).isEmpty();
+	}
 
+	public MySettingsPage gotoMySettingsPage() {
+		gotoSettingsPage();
+		clickOnInvisibleElement(mySettingsItem);
+		return new MySettingsPage(driver);
+	}
 
-public boolean isFilterPresent(String filter){
-	return !driver.findElements(By.xpath("//div[contains(@class,'filter')]//*[@uid='"+filter+"']")).isEmpty();
-}
-
-public MySettingsPage gotoMySettingsPage() {
-	gotoSettingsPage();
-	mySettingsItem.click();
-	return new MySettingsPage(driver);
-}
-
-public void savePageSettins(){
-	clickOnInvisibleElement(driver.findElement(By.id("personal-persist")));
-	asterixBtn.click();
-}
-
+	public void savePageSettins(){
+		clickOnInvisibleElement(driver.findElement(By.id("personal-persist")));
+		asterixBtn.click();
+	}
 }

@@ -5,6 +5,8 @@ namespace Devprom\ServiceDeskBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use FOS\UserBundle\Model\User as BaseUser;
 use Doctrine\ORM\Mapping as ORM;
+use FR3D\LdapBundle\Model\LdapUserInterface;
+use FR3D\LdapBundle\Model;
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
@@ -16,7 +18,7 @@ use Doctrine\ORM\Mapping as ORM;
  *      @ORM\AttributeOverride(name="usernameCanonical", column=@ORM\Column(type="string", name="username_canonical", length=255, unique=false))
  * })
  **/
-class User extends BaseUser {
+class User extends BaseUser implements LdapUserInterface {
 
     /**
      * @ORM\Id
@@ -31,6 +33,12 @@ class User extends BaseUser {
      * @var string
      */
     protected $language;
+
+    /**
+     * @ORM\Column(type="string", name="dn")
+     * @var string
+     */
+    protected $dn;
 
     /**
      * @ORM\OneToOne(targetEntity="Company")
@@ -86,13 +94,29 @@ class User extends BaseUser {
     }
 
     /**
+     * @return string
+     */
+    public function getDn() : ?string
+    {
+        return $this->dn;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setDn($value)
+    {
+        $this->dn = $value;
+    }
+
+    /**
      * @return Company
      */
     public function getCompany()
     {
         return $this->company;
     }
-    
+
     public function isCredentialsNonExpired()
     {
     	return true;

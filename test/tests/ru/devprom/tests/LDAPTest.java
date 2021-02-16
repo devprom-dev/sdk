@@ -33,7 +33,8 @@ public class LDAPTest extends TestBase {
 		//Setup attributes for login and mail
 		iflp.setupAttributes("uid", "mail");
 		//select the user from LDAP tree
-		iflp.selectUserToImport(Configuration.getLDAPUser());
+		Thread.sleep(5000);
+		iflp.selectUserToImport("system administrator");
 		iflp.importUsers();
 		UsersListPage ulp = iflp.completeImport(false);
 		//Open the imported user details 

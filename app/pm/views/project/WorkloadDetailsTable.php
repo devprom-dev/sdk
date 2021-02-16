@@ -15,7 +15,7 @@ class WorkloadDetailsTable extends PMPageTable
 		return parent::getSortDefault( $sort_parm );
 	}
 
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
 		return array(
 			new FilterInPredicate($_REQUEST['users'])

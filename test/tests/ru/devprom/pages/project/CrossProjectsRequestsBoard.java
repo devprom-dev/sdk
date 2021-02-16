@@ -35,7 +35,7 @@ public class CrossProjectsRequestsBoard extends SDLCPojectPageBase {
     public CrossProjectsRequestsBoard moveToAnotherProject(String requestNumericId, String projectName, int column){
     	int row=0;
     	
-    	List<WebElement> rows = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='info']"));
+    	List<WebElement> rows = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[@class='info']"));
     	for (int i=0; i<rows.size();i++){
     	if (rows.get(i).getText().contains(projectName)) row = i + 1;
     	}
@@ -47,7 +47,7 @@ public class CrossProjectsRequestsBoard extends SDLCPojectPageBase {
       	 WebElement element = driver.findElement(By.xpath("//div[@object='"+requestNumericId+"']"));
            String srow = String.valueOf(row);
            String scolumn = String.valueOf(column);
-           WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]"));
+           WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]"));
            mouseMove(element);
            new Actions(driver).dragAndDrop(element, onElement).build().perform();
            mouseMove(onElement);
@@ -57,14 +57,14 @@ public class CrossProjectsRequestsBoard extends SDLCPojectPageBase {
 			}
           driver.navigate().refresh();
            (new WebDriverWait(driver, waiting)).until(ExpectedConditions
-   				.presenceOfElementLocated(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]//div[@object='"+requestNumericId+"']"))); 
+   				.presenceOfElementLocated(By.xpath("//table[@id='requestboard1']//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]//div[@object='"+requestNumericId+"']")));
       	 return new CrossProjectsRequestsBoard(driver);
       }
       
        public boolean isRequestInSection(String requestNumericId,  String projectName, int column){
     		int row=0;
         	
-        	List<WebElement> rows = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='info']"));
+        	List<WebElement> rows = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[@class='info']"));
         	for (int i=0; i<rows.size();i++){
         	if (rows.get(i).getText().contains(projectName)) row = i + 1;
         	}
@@ -76,22 +76,6 @@ public class CrossProjectsRequestsBoard extends SDLCPojectPageBase {
          	String srow = String.valueOf(row);
            String scolumn = String.valueOf(column);
            
-          return (!driver.findElements(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]//div[@object='"+requestNumericId+"']")).isEmpty());
+          return (!driver.findElements(By.xpath("//table[@id='requestboard1']//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]//div[@object='"+requestNumericId+"']")).isEmpty());
        }
-
-       public CrossProjectsRequestsBoard turnOnFilter(String filterEngName, String value){
-    		String code = "filterLocation.turnOn('"+filterEngName+"', '"+value+"', 0)";
-			filterBtn.click();
-			((JavascriptExecutor) driver).executeScript(code);
-			filterBtn.click();
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-    	   
-    	   return new CrossProjectsRequestsBoard(driver);
-       }
-       
-       
 }

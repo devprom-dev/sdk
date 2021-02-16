@@ -16,20 +16,14 @@ class FieldUID extends FieldShortText
 	{
 		$uid = new ObjectUID();
 		$info = $uid->getUIDInfo($this->object_it);
-		echo '<div class="input-block-level well well-text">';
-		    echo '<span class="pull-left">';
-			    echo $view->render('core/Clipboard.php', array ('url' => $info['url'], 'uid' => $info['uid']));
-            echo '</span>';
-            if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->object_it->object, 'State') ) {
-                echo '<span class="pull-right uid-state">';
-                    echo $view->render('pm/StateColumn.php', array (
-                        'color' => $this->object_it->get('StateColor'),
-                        'name' => $this->object_it->get('StateName'),
-                        'terminal' => $this->object_it->get('StateTerminal') == 'Y',
-                        'actions' => $this->form->getTransitionActions()
-                    ));
-                echo '</span>';
+        echo '<span class="input-block-level well well-text uid-state">';
+            echo $view->render('core/Clipboard.php', array ('url' => $info['url'], 'uid' => "{" . $info['project'] . "} " . $info['uid']));
+            if ( $this->object_it->object instanceof MetaobjectStatable && getFactory()->getAccessPolicy()->can_modify_attribute($this->object_it->object, 'State') ) {
+                echo $view->render('pm/StateColumn.php', array (
+                    'stateIt' => $this->object_it->getStateIt(),
+                    'actions' => $this->form->getTransitionActions()
+                ));
             }
-        echo '</div>';
+        echo '</span>';
 	}
 }

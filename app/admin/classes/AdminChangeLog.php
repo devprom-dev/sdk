@@ -22,14 +22,11 @@ class AdminChangeLog extends Metaobject
 
 	function resetFilters()
 	{
-	    global $model_factory;
-	    
 	    parent::resetFilters();
 
         $notificator = new AdminChangeLogNotificator();
 	            
-        $log = $model_factory->getObject('ObjectChangeLog');
-        
+        $log = getFactory()->getObject('ObjectChangeLog');
 		$this->addFilter( new ChangeLogObjectFilter( join(',',$notificator->getEntities()) ) );
 	}
 	

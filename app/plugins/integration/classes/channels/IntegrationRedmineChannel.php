@@ -19,6 +19,7 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         $issues = array();
         $hours = array();
         $nextTimestamp = '';
+        $mapping = $this->getMapping();
 
         try {
             $leftItems = $limit;
@@ -75,18 +76,30 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
                 foreach( $result['issues'] as $issue ) {
                     if ( $nextTimestamp == '' ) $nextTimestamp = $issue['updated_on'];
 
-                    $class = 'Request';
+                    $redmineIssueType = array($issue['tracker']['name']);
+                    $mappedIssueTypes = array_map(
+                        function($item) {
+                            return array_shift($item);
+                        }, $mapping['Request']['Type']['mapping']);
+                    $mappedTaskTypes = array_map(
+                        function($item) {
+                            return array_shift($item);
+                        }, $mapping['Task']['TaskType']['mapping']);
+
+                    $class = count(array_intersect($redmineIssueType, $mappedIssueTypes)) > 0
+                        ? 'Request'
+                        : (count(array_intersect($redmineIssueType, $mappedTaskTypes)) > 0
+                            ? 'Task'
+                            : 'Request');
+
                     $id = $issue[$this->getKeyField()];
-                    $item = $issues[$issue[$this->getKeyField()]] = array (
+                    $item = $issues[$id] = array (
                         'class' => $class,
                         'id' => $id
                     );
 
                     $issueDetails = $this->jsonGet('/issues/'.$id.'.json?include=journals,attachments', array());
-                    $issues = array_merge( $issues,
-                        $this->getReferenceItems($issueDetails, $item, $timestamp)
-                    );
-
+                    $issues += $this->getReferenceItems($issueDetails, $item, $timestamp);
                 }
                 if ( $result['limit'] > 0 ) {
                     $leftItems -= min($result['total_count'], $result['limit']);
@@ -125,6 +138,7 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         catch( \Exception $e ) {
         }
 
+        ksort($issues);
         return array(
             array_merge(
                 $releases, $issues, $hours
@@ -133,22 +147,8 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         );
     }
 
-    protected function buildIdUrl( $url, $id ) {
-        return str_replace(
-            '{project}', $this->getObjectIt()->get('ProjectKey'),
-                str_replace('{id}', $id, $url)
-        );
-    }
-
     protected function getUserEmailAttribute() {
         return 'mail';
-    }
-
-    protected function getHeaders()
-    {
-        return array (
-            "Content-Type: application/json"
-        );
     }
 
     public function readItem($mapping, $class, $id, $parms = array())
@@ -162,7 +162,7 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
                     })
                 );
                 if ( count($comment) < 1 ) return array();
-                return $this->mapToInternal(
+                return $this->mapToInternal( $class, $id,
                     array_merge($comment, $parms),
                     $mapping,
                     function($data, $attribute) {
@@ -179,9 +179,9 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         }
     }
 
-    public function mapToInternal($source, $mapping, $getter)
+    public function mapToInternal($class, $id, $source, $mapping, $getter)
     {
-        $data = parent::mapToInternal($source, $mapping, $getter);
+        $data = parent::mapToInternal($class, $id, $source, $mapping, $getter);
 
         foreach( $data as $attribute => $value ) {
             if ( $attribute == 'File' ) {
@@ -198,9 +198,9 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         return $data;
     }
 
-    public function mapFromInternal($source, $mapping, $setter)
+    public function mapFromInternal($class, $id, $source, $mapping, $setter)
     {
-        $put = parent::mapFromInternal($source, $mapping, $setter);
+        $put = parent::mapFromInternal($class, $id, $source, $mapping, $setter);
 
         foreach( $put['issue'] as $item => $value ) {
             switch($item) {

@@ -30,15 +30,22 @@ class IssueController extends Controller
      */
     public function createAction(Request $request)
     {
-    	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+    	if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
     	
     	$vpds = $this->getProjectVpds();
-        
-    	$issue = new Issue();
-        $form = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $vpds, $this->getUser(), true), $issue);
-        $form->bind($request);
+        if ( count($vpds) < 1 ) {
+            return $this->redirect($this->generateUrl('issue_list'));
+        }
 
-        if ($form->isValid()) {
+    	$issue = new Issue();
+        $form = $this->createForm( IssueFormType::class, $issue, array(
+                'vpds' => $vpds,
+                'user' => $this->getUser(),
+                'allowAttachment' => true
+            ));
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->getIssueService()->saveIssue($issue, $this->getUser());
             if ($issue->getNewAttachment()) {
                 $this->getAttachmentService()->save($issue->getNewAttachment(), $issue);
@@ -48,8 +55,8 @@ class IssueController extends Controller
             return $this->redirect($this->generateUrl('issue_show', array('id' => $issue->getId())));
         }
         else {
-            $this->get('logger')->err($form->getErrorsAsString());
-            throw $this->createNotFoundException('Unable append Issue entity.');
+            $this->get('logger')->err($form->getErrors());
+            throw new \LogicException('Unable append Issue entity.');
         }
 
         return array(
@@ -67,26 +74,33 @@ class IssueController extends Controller
      */
     public function newAction( Request $request )
     {
-    	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+    	if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
     	
-        $issue = $this->getIssueService()->getBlankIssue($this->getProjectVpds());
         $vpds = $this->getProjectVpds();
+        if ( count($vpds) < 1 ) {
+            return $this->redirect($this->generateUrl('issue_list'));
+        }
+
         if ( $request->get('project') != '' ) {
             $vpds = array_intersect($vpds, array($request->get('project')));
         }
-        $form = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $vpds, $this->getUser(), true), $issue);
-
-        if ( count($vpds) > 1 ) {
+        else {
             try {
-                $numberOfProjects = count($form->get('product')->getConfig()->getOption('choice_list')->getValues());
                 $maxProducts = $this->container->getParameter('max_products_in_combo');
-                if ( $maxProducts != '' && $numberOfProjects > $maxProducts ) {
+                if ( $maxProducts != '' && count($vpds) > $maxProducts ) {
                     return $this->redirect($this->generateUrl('select_product'));
                 }
             }
             catch( \Exception $e ) {
             }
         }
+
+        $issue = $this->getIssueService()->getBlankIssue($vpds);
+        $form = $this->createForm( IssueFormType::class, $issue, array(
+                'vpds' => $vpds,
+                'user' => $this->getUser(),
+                'allowAttachment' => true
+            ));
 
         return $this->render('Issue/new.html.twig', array(
             'issue' => $issue,
@@ -103,11 +117,11 @@ class IssueController extends Controller
      */
     public function showAction($id)
     {
-    	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+    	if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
     	
         $issue = $this->getIssueService()->getIssueById($id);
         if (!$issue) {
-            throw $this->createNotFoundException('Unable to find Issue entity.');
+            throw new \LogicException('Unable to find Issue entity.');
         }
 
         $this->checkUserIsAuthorized($issue);
@@ -115,10 +129,10 @@ class IssueController extends Controller
 
         $this->getIssueService()->clearNotifications($issue, $this->getUser());
 
-        return array(
+        return $this->render('Issue/show.html.twig', array(
             'issue' => $issue,
             'comment_form' => $commentForm->createView(),
-        );
+        ));
     }
 
     /**
@@ -130,25 +144,22 @@ class IssueController extends Controller
      */
     public function editAction($id)
     {
-    	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+    	if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
     	
         $issue = $this->getIssueService()->getIssueById($id);
         if (!$issue) {
-            throw $this->createNotFoundException('Unable to find Issue entity.');
+            throw new \LogicException('Unable to find Issue entity.');
         }
 
         $this->checkUserIsAuthorized($issue);
         $issue->setCaption(TextUtil::unescapeHtml($issue->getCaption()));
+        $issue->setDescription(TextUtil::unescapeHtml($issue->getDescription()));
 
-        // убираем экранирвание html разметки от Девпрома
-        $descr = TextUtil::unescapeHtml($issue->getDescription());
-        // убираем всю html разметку от Девпрома
-        $descr = strip_tags($descr);
-        // убираем экранирование html разметки из Сервисдеска
-        $descr = TextUtil::unescapeHtml($descr);
-        $issue->setDescription($descr);
-
-        $editForm = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $this->getProjectVpds(), $this->getUser(), false), $issue);
+        $editForm = $this->createForm(IssueFormType::class, $issue, array(
+                'vpds' => array($issue->getVpd()),
+                'user' => $this->getUser(),
+                'allowAttachment' => false
+            ));
 
         $this->getIssueService()->clearNotifications($issue, $this->getUser());
 
@@ -166,26 +177,31 @@ class IssueController extends Controller
      */
     public function updateAction(Request $request, $id)
     {
-    	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+    	if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
     	
         $issue = $this->getIssueService()->getIssueById($id);
-
         if (!$issue) {
-            throw $this->createNotFoundException('Unable to find Issue entity.');
+            throw new \LogicException('Unable to find Issue entity.');
         }
 
         $this->checkUserIsAuthorized($issue);
 
-        $editForm = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $this->getProjectVpds(), $this->getUser()), $issue);
-        $editForm->bind($request);
+        $editForm = $this->createForm( IssueFormType::class, $issue, array(
+                'method' => 'put',
+                'vpds' => $this->getProjectVpds(),
+                'user' => $this->getUser(),
+                'allowAttachment' => false
+            ));
+
+        $editForm->handleRequest($request);
 
         if ($editForm->isValid()) {
             $this->getIssueService()->saveIssue($issue, $this->getUser());
             return $this->redirect($this->generateUrl('issue_show', array('id' => $id)));
         }
         else {
-            $this->get('logger')->err($editForm->getErrorsAsString());
-            throw $this->createNotFoundException('Unable update Issue entity.');
+            $this->get('logger')->err((string) $editForm->getErrors(true, false));
+            throw new \LogicException('Form is not valid.');
         }
 
         return array(
@@ -202,29 +218,23 @@ class IssueController extends Controller
      */
     public function addCommentAction(Request $request, $issueId)
     {
-    	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+    	if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
     	
         $issue = $this->getIssueService()->getIssueById($issueId);
         if (!$issue) {
-            throw $this->createNotFoundException('Unable to find Issue entity.');
+            throw new \LogicException('Unable to find Issue entity.');
         }
 
         $this->checkUserIsAuthorized($issue);
 
         $issueComment = new IssueComment();
         $commentForm = $this->getCommentForm($issueComment);
-        $commentForm->bind($request);
+        $commentForm->handleRequest($request);
 
-        if ($commentForm->isValid()) {
-            $this->getIssueService()->saveComment($issueComment, $issue, $this->getUser());
-            return $this->redirect($this->generateUrl('issue_show', array('id' => $issueId)));
-        }
-        else {
-            $this->get('logger')->err($commentForm->getErrorsAsString());
-            throw $this->createNotFoundException('Unable append comment to Issue entity.');
-        }
+        $this->getIssueService()->saveComment($issueComment, $issue, $this->getUser());
+        return $this->redirect($this->generateUrl('issue_show', array('id' => $issueId)));
 
-        return $this->render("DevpromServiceDeskBundle:Issue:show.html.twig", array(
+        return $this->render("Issue/show.html.twig", array(
             'issue' => $issue,
             'comment_form' => $commentForm->createView(),
         ));
@@ -233,34 +243,35 @@ class IssueController extends Controller
     /**
      * Lists all Issue entities.
      *
-     * @Route("/issues/{filter}/{sortColumn}/{sortDirection}", name="issue_list", requirements={"filter" = "my|company"}, defaults={"filter" = "my", "sortColumn" = "issue.createdAt", "sortDirection" = "desc"})
+     * @Route("/issues/{filter}/{state}/{sortColumn}/{sortDirection}", name="issue_list", requirements={"filter" = "my|company"}, defaults={"filter" = "my", "state" = "open", "sortColumn" = "issue.createdAt", "sortDirection" = "desc"})
      * @Method("GET")
      * @Template()
      */
-    public function indexAction($filter, $sortColumn, $sortDirection)
+    public function indexAction($filter, $state, $sortColumn, $sortDirection)
     {
-    	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+    	if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
 
         $company = $this->getUser()->getCompany();
     	if ( $filter == 'my' || (is_object($company) && $company->getSeeCompanyIssues() != 'Y') )
     	{
 	        $issues = $this->getIssueService()->getIssuesByAuthor(
-	            $this->getUser()->getEmail(), $sortColumn, $sortDirection
+	            $this->getUser()->getEmail(), $sortColumn, $sortDirection, $state
 	        );
     	}
     	else
     	{
 	        $issues = $this->getIssueService()->getIssuesByCompany(
-	            $this->getUser()->getEmail(), $sortColumn, $sortDirection
+	            $this->getUser()->getEmail(), $sortColumn, $sortDirection, $state
 	        );
     	}
 
-        return array(
+        return $this->render('Issue/index.html.twig', array(
             'issues' => $issues,
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
-        	'issuesFilter' => $filter
-        );
+            'issuesFilter' => $filter,
+            'state' => $state
+        ));
     }
 
     /**
@@ -268,17 +279,19 @@ class IssueController extends Controller
      *
      * @Route("/products", name="select_product")
      * @Method("GET")
-     * @Template()
+     * @Template("DevpromServiceDeskBundle:Issue:product.html.twig")
      */
     public function productAction()
     {
-        if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+        if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
 
-        $issue = $this->getIssueService()->getBlankIssue($this->getProjectVpds());
-        $form = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $this->getProjectVpds(), $this->getUser(), true), $issue);
+        $projects = $this->get('doctrine.orm.entity_manager')
+            ->getRepository('DevpromServiceDeskBundle:Project')
+            ->findBy(
+                array('vpd' => $this->getProjectVpds()),
+                array('importance' => 'ASC', 'name' => 'ASC')
+            );
 
-        $projects = $this->get('doctrine.orm.entity_manager')->getRepository('DevpromServiceDeskBundle:Project')
-            ->findBy(array('vpd' => $this->getProjectVpds()));
         return array(
             'projects' => $projects
         );
@@ -287,15 +300,13 @@ class IssueController extends Controller
     protected function getProjectVpds()
     {
     	$customer_vpds = array();
-    	if ( $this->getUser()->getCompany() ) {
+    	if ( is_object($this->getUser()) && $this->getUser()->getCompany() ) {
 	    	foreach($this->getUser()->getCompany()->getProjects() as $project_ref) {
 	    		$customer_vpds[] = $project_ref->getProject()->getVpd();
 	    	}
     	}
-        $intersection = array_intersect($customer_vpds, $this->container->getParameter('supportProjectVpds'));
-        if ( count($intersection) > 0 ) return $intersection;
-
-    	return $this->container->getParameter('supportProjectVpds');
+        if ( count($customer_vpds) > 0 ) return $customer_vpds;
+    	return $this->container->getParameter('commonProjectVpds');
     }
     
     /**
@@ -305,8 +316,9 @@ class IssueController extends Controller
     protected function getCommentForm($issueComment)
     {
         return $this->createFormBuilder($issueComment)
-            ->add("text", "textarea", array(
-                'label' => false
+            ->add("text", 'Symfony\Component\Form\Extension\Core\Type\TextareaType', array(
+                'label' => false,
+                'attr' => ['rows' => 10]
             ))
             ->getForm();
     }

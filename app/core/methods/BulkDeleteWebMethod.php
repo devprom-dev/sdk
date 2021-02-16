@@ -1,5 +1,4 @@
 <?php
-
 include_once "WebMethod.php";
 
 class BulkDeleteWebMethod extends WebMethod
@@ -11,16 +10,13 @@ class BulkDeleteWebMethod extends WebMethod
 		if ( $object instanceof Metaobject ) {
             $this->object = $object;
         }
-		$this->setRedirectUrl('donothing');
 	}
 	
- 	function getCaption()
- 	{
+ 	function getCaption() {
  		return translate('Удалить');
  	}
 
-	function getDescription()
-	{
+	function getDescription() {
 		return text(911); 	
 	}
 
@@ -35,13 +31,21 @@ class BulkDeleteWebMethod extends WebMethod
 		if ( $_REQUEST['class'] == '' || $_REQUEST['ids'] == '' ) throw new Exception('Required parameters missed');
 		
 		$class = getFactory()->getClass($_REQUEST['class']);
-		
-		if ( !class_exists($class) ) throw new Exception('Unknown class name given: '.$class); 
-		
-		$object = getFactory()->getObject($class);
-		
+		if ( !class_exists($class) ) throw new Exception('Unknown class name given: '.$class);
+
+        $object = getFactory()->getObject($class);
+
 		$ids = TextUtils::parseIds(trim($_REQUEST['ids'], '-'));
-		$object_it = $object->getExact($ids);
+		$parms = array(
+		    new \FilterInPredicate($ids),
+            new \FilterVpdPredicate()
+        );
+
+        if ( count($object->getAttributesByGroup('hierarchy-parent')) > 0 ) {
+            $parms[] = new \SortIndexClause();
+        }
+
+		$object_it = $object->getRegistry()->Query($parms);
 
         if ( $object instanceof Project ) {
             echo JsonWrapper::encode(
@@ -54,12 +58,13 @@ class BulkDeleteWebMethod extends WebMethod
             exit();
         }
 
-		while ( !$object_it->end() )
-		{
-		    if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) throw new Exception(text(1927));
-		    
+		while ( !$object_it->end() ) {
+		    if ( !getFactory()->getAccessPolicy()->can_delete($object_it) )
+		        throw new Exception(text(1927));
+
 			$object_it->delete();
-			
+
+			\ZipSystem::sendResponse();
 			$object_it->moveNext();
 		}
 

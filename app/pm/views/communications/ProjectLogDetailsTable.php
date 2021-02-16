@@ -16,7 +16,7 @@ class ProjectLogDetailsTable extends PMPageTable
 		return 10;
 	}
 
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
         $filters = array(
             new ChangeLogActionFilter( $_REQUEST['action'] ),
@@ -31,4 +31,8 @@ class ProjectLogDetailsTable extends PMPageTable
         }
         return $filters;
 	}
+
+    function getTemplate() {
+        return "core/PageTableDetailsBody.php";
+    }
 }

@@ -7,16 +7,12 @@ framework:
     validation:      { enable_annotations: true }
     templating: 
       engines: ['twig','php'] 
+
 fos_rest:
     body_listener: true
     routing_loader:
         default_format: json
-assetic:
-    read_from:            "%kernel.root_dir%/../../../../public"
-    debug:	%kernel.debug%
-    use_controller: true
-    filters:
-        cssrewrite: ~
+
 monolog:
     handlers:
         applog:

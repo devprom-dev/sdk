@@ -2,6 +2,7 @@
 
 namespace plugins\support\classes;
 
+use CustomizableObjectSet;
 use DevpromTestCase;
 use PhpImap\IncomingMail;
 use MailboxMessage;
@@ -21,8 +22,7 @@ include_once SERVER_ROOT_PATH . "/core/classes/user/User.php";
  */
 class MailboxScannerTest extends DevpromTestCase {
 
-    /** @var  PHPUnit_Framework_MockObject_MockObject */
-    private $commentMock, $attachmentMock, $watcherMock, $watcherIterator, $requestMock,
+    private $commentMock, $attachmentMock, $watcherMock, $requestMock,
         $userItMock, $requestItMock, $userServiceMock, $objectUID, $projectIt;
 
     private $session;
@@ -30,20 +30,35 @@ class MailboxScannerTest extends DevpromTestCase {
     /** @var  MockScannerBuilder */
     private $mockScannerBuilder;
 
-    public function setUp() {
+    public function setUp()
+    {
         parent::setUp();
-        //$this->markTestSkipped("Невозможно поддерживать");
-        $this->commentMock = $this->getMock("Comment", array("add_parms"));
-        $this->attachmentMock = $this->getMock("Attachment");
 
-        $this->userServiceMock = $this->getMock("UserService", array("authorizeExistingUser", "isServicedeskProject"));
+        $this->commentMock = $this->getMockBuilder(\Comment::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['add_parms'])
+            ->getMock();
+
+        $this->attachmentMock = $this->getMockBuilder(\Attachment::class)
+            ->setConstructorArgs(array())
+            ->getMock();
+
+        $this->userServiceMock = $this->getMockBuilder(UserService::class)
+            ->setConstructorArgs(array())
+            ->setMethods(["authorizeExistingUser", "isServicedeskProject"])
+            ->getMock();
+
         $this->userServiceMock->expects($this->any())->method("isServicedeskProject")->will($this->returnValue(false));
         $this->userServiceMock->expects($this->any())->method('authorizeExistingUser')->will(
             $this->returnValue(
                 (new \User())->getEmptyIterator()
             ));
 
-        $this->requestMock = $this->getMock("Request", array("add_parms", "getExact", "getByRefArray", "createSQLIterator", "getTerminalStates"));
+        $this->requestMock = $this->getMockBuilder(\Request::class)
+            ->setConstructorArgs(array())
+            ->setMethods(["add_parms", "getExact", "getByRefArray", "createSQLIterator", "getTerminalStates"])
+            ->getMock();
+
         $this->requestMock->expects($this->any())->method('add_parms')->will($this->returnValue(1));
         $this->requestMock->expects($this->any())->method('getExact')->will(
         		$this->returnValue(
@@ -55,15 +70,19 @@ class MailboxScannerTest extends DevpromTestCase {
         		));
         $this->requestMock->expects($this->any())->method('createSQLIterator')->will(
         		$this->returnValue(
-        				$this->requestMock->createCachedIterator(array(
+                    $this->requestMock->createCachedIterator(array(
         						array( 
         								'Caption' => "Existing request",
         								'pm_ChangeRequestId' => '1'
         						)))
         		));
-
         $this->requestItMock = $this->requestMock->createSQLIterator('');
-        $this->watcherMock = $this->getMock("Watcher", array("add_parms", "createSQLIterator"), array($this->requestMock->createSQLIterator('')));
+
+        $this->watcherMock = $this->getMockBuilder(\Watcher::class)
+            ->setConstructorArgs(array($this->requestMock->createSQLIterator('')))
+            ->setMethods(["add_parms", "createSQLIterator"])
+            ->getMock();
+
         $this->project = $this->watcherMock;
         $this->user = $this->watcherMock;
         
@@ -81,16 +100,26 @@ class MailboxScannerTest extends DevpromTestCase {
             )
         ));
                 
-        $this->project = $this->getMock('Project', array('createIterator'));
+        $this->project = $this->getMockBuilder(\Project::class)
+            ->setConstructorArgs(array())
+            ->setMethods(["createIterator"])
+            ->getMock();
 
-        $this->projectIt = $this->getMock("ProjectIterator", array('getProjectIt','getMailboxIterator'), array($this->project));
+        $this->projectIt = $this->getMockBuilder(\ProjectIterator::class)
+            ->setConstructorArgs(array($this->project))
+            ->setMethods(['getProjectIt','getMailboxIterator'])
+            ->getMock();
+
         $this->projectIt->expects($this->any())->method('getProjectIt')->will($this->returnValue($this->projectIt));
         $this->projectIt->expects($this->any())->method('getMailboxIterator')->will($this->returnValue($this->projectIt));
 
-        $this->projectIt->expects($this->any())->method('getId')->will($this->returnValue(5));
         $this->session = $this->getSessionObject();
 
-        $this->objectUID = $this->getMock("ObjectUID", array("getUIDInfo","getProject","getObjectIt"));
+        $this->objectUID = $this->getMockBuilder(\ObjectUID::class)
+            ->setConstructorArgs(array(''))
+            ->setMethods(["getUIDInfo","getProject","getObjectIt"])
+            ->getMock();
+
         $this->objectUID->expects($this->any())->method("getUIDInfo")->will($this->returnValue(array()));
         $this->objectUID->expects($this->any())->method("getProject")->will($this->returnValue($this->projectIt));
 
@@ -229,8 +258,8 @@ class MockScannerBuilder {
      * @return MockScannerBuilder
      */
     public function forInternalUser() {
-        $this->userServiceMock->expects(\PHPUnit_Framework_TestCase::any())
-            ->method("authorizeExistingUser")->will(\PHPUnit_Framework_TestCase::returnValue($this->userItMock));
+        $this->userServiceMock->expects(\PHPUnit\Framework\TestCase::any())
+            ->method("authorizeExistingUser")->will(\PHPUnit\Framework\TestCase::returnValue($this->userItMock));
         return $this;
     }
 
@@ -238,10 +267,8 @@ class MockScannerBuilder {
      * @return MockScannerBuilder
      */
     public function receivedMailWithIssueIdInSubject() {
-        $this->objectUID->expects(\PHPUnit_Framework_TestCase::any())->method("getObjectIt")
-            ->with(\PHPUnit_Framework_TestCase::equalTo("I-1"))->will(\PHPUnit_Framework_TestCase::returnValue($this->requestItMock));
-        $this->objectUID->expects(\PHPUnit_Framework_TestCase::any())->method("isValidUID")
-            ->with(\PHPUnit_Framework_TestCase::equalTo("I-1"))->will(\PHPUnit_Framework_TestCase::returnValue(true));
+        $this->objectUID->expects(\PHPUnit\Framework\TestCase::any())->method("getObjectIt")
+            ->with(\PHPUnit\Framework\TestCase::equalTo("I-1"))->will(\PHPUnit\Framework\TestCase::returnValue($this->requestItMock));
         return $this;
     }
 

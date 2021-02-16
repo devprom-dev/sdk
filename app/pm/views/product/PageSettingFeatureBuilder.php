@@ -27,13 +27,5 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
             )
         );
         $settings->add( $setting );
-
-        $setting = new PageTableSetting('FunctionTable');
-		$setting->setFilters(
-				array (
-						'state', 'tag', 'type', 'importance', 'parent'
-				)
-        );
-        $settings->add( $setting );
     }
 }

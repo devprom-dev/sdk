@@ -49,31 +49,15 @@ class DictionaryItemsList extends PMPageList
 
 	function drawCell( $object_it, $attr )
 	{
-		$session = getSession();
-		
 		switch ( $attr )
 		{
-			case 'Transitions':
-				$transition_it = $object_it->getTransitionIt();
-				
-				while ( !$transition_it->end() )
-				{
-					$action = getFactory()->getAccessPolicy()->can_modify($transition_it) ? 'show' : 'view';
-					
-					echo '<div class="line">';
-						echo $transition_it->getFullName();
-						echo ' <a href="'.$session->getApplicationUrl().'project/dicts?entity=Transition&pm_TransitionId='.$transition_it->getId().'&pm_Transitionaction='.$action.'">';
-							echo '<img src="/images/pencil.png" style="margin-bottom:-3px;">';
-						echo '</a>';
-					echo '</div>';
-					
-					$transition_it->moveNext();
-				}
-				
-				break;
-				
 			case 'EntityReferenceName':
-				echo $object_it->getEntityDisplayName(); 
+			    if ( getSession()->IsRDD() && $object_it->get($attr) == 'request' ) {
+                    echo translate('Доработка');
+                }
+			    else {
+                    echo $object_it->getEntityDisplayName();
+                }
 				break;
 				
 			default:

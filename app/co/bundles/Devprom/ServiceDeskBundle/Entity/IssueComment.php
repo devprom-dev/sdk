@@ -72,6 +72,19 @@ class IssueComment extends BaseEntity
      */
     private $isprivate = 'N';
 
+    /**
+     * @ORM\Column(type="string", name="EmailMessageId")
+     * @var string
+     */
+    private $emailMessageId;
+
+    /**
+     * @ORM\OneToOne(targetEntity="IssueComment")
+     * @ORM\JoinColumn(name="PrevComment", referencedColumnName="CommentId")
+     * @var IssueComment
+     */
+    private $parentComment;
+
     function __construct()
     {
         $this->attachments = new ArrayCollection();
@@ -230,5 +243,37 @@ class IssueComment extends BaseEntity
         return $this->attachments->matching(
             Criteria::create()->where(Criteria::expr()->in("ObjectClass", array("comment","Comment")))
         )->toArray();
+    }
+
+    /**
+     * @param string $text
+     */
+    public function setEmailMessageId($text)
+    {
+        $this->emailMessageId = $text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEmailMessageId()
+    {
+        return html_entity_decode($this->emailMessageId);
+    }
+
+    /**
+     * @param IssueComment $value
+     */
+    public function setParentComment($value)
+    {
+        $this->parentComment = $value;
+    }
+
+    /**
+     * @return IssueComment
+     */
+    public function getParentComment()
+    {
+        return $this->parentComment;
     }
 }

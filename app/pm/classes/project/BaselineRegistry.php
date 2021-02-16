@@ -7,20 +7,28 @@ class BaselineRegistry extends ObjectRegistrySQL
         $snapshot = getFactory()->getObject('cms_Snapshot');
 
 	    $sqls = array(
-	        "SELECT t.Stage pm_VersionId, CONCAT(t.CaptionPrefix,t.CaptionType) Caption, t.VPD, 0 OrderNum, t.Version, t.Release
-		 	   FROM ".getFactory()->getObject('Stage')->getRegistry()->getQueryClause()." t",
-
-            "SELECT t.Caption, t.Caption, t.VPD, 10, NULL, NULL
+            "SELECT IFNULL(t.Stage, t.Caption) pm_VersionId, t.Caption, t.VPD, 10 OrderNum
 		 	   FROM cms_Snapshot t
-		 	  WHERE t.Type = 'branch' ".$snapshot->getVpdPredicate('t')." AND t.Stage IS NULL"
+		 	  WHERE (t.Type IS NOT NULL OR t.ObjectClass IN ('Requirement','TestScenario','HelpPage')) ".$snapshot->getVpdPredicate('t')
         );
 
-	    if ( defined('ISSUE_AS_BASELINE') ) {
+	    if ( (!defined('PLAN_AS_BASELINE') || PLAN_AS_BASELINE == 'true') and class_exists('Issue') ) {
             $sqls[] =
-                "SELECT CONCAT('I-', t.pm_ChangeRequestId), CONCAT('I-', t.pm_ChangeRequestId, ' ', t.Caption), t.VPD, t.OrderNum, NULL, NULL 
-                   FROM pm_ChangeRequest t WHERE t.Type IS NULL AND t.FinishDate IS NULL ";
+                "SELECT t.Stage pm_VersionId, CONCAT(t.CaptionPrefix,t.CaptionType) Caption, t.VPD, 10 OrderNum
+		 	       FROM ".getFactory()->getObject('Stage')->getRegistry()->getQueryClause()." t
+		 	      WHERE NOT EXISTS (SELECT 1 FROM cms_Snapshot s WHERE s.Stage = t.Stage)
+		 	        AND ('".SystemDateTime::date('Y-m-d')."' <= IFNULL(t.FinishDate, NOW()) OR (t.UncompletedIssues + t.UncompletedTasks) > 0) ";
+
         }
 
-		return " ( " . join(' UNION ', $sqls) . " ) ";
+	    if ( defined('ISSUE_AS_BASELINE') and class_exists('Issue') ) {
+            $issue = getFactory()->getObject('Issue');
+            $sqls[] =
+                "SELECT IF(t.UID IS NULL, CONCAT('I-', t.pm_ChangeRequestId), t.UID), IF(t.UID IS NULL, CONCAT('I-', t.pm_ChangeRequestId, ' ', t.Caption),CONCAT(t.UID, ' ', t.Caption)), t.VPD, t.OrderNum 
+                   FROM pm_ChangeRequest t 
+                WHERE t.Type IS NULL AND t.FinishDate IS NULL ".$issue->getVpdPredicate('t');
+        }
+
+		return " ( " . join(' UNION ', $sqls) . " ORDER BY 2 ) ";
 	}
 }

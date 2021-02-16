@@ -10,17 +10,17 @@ class WorkItemStatePredicate extends FilterPredicate
             'final' => 'Y'
         );
 		$values = array();
-		foreach( preg_split('/[-,]/', $filter) as $value ) {
+		foreach( \TextUtils::parseItems($filter) as $value ) {
 		    if ( $map[$value] == '' ) continue;
             $values[] = $map[$value];
         }
 
         $predicates = array();
         if ( in_array('N', $values) ) {
-            $predicates[] = $this->getAlias().".StateObject IS NULL AND ".$this->getAlias().".FinishDate IS NULL";
+            $predicates[] = $this->getAlias().".StartDate IS NULL AND ".$this->getAlias().".FinishDate IS NULL";
         }
         if ( in_array('I', $values) ) {
-            $predicates[] = $this->getAlias().".FinishDate IS NULL";
+            $predicates[] = $this->getAlias().".StartDate IS NOT NULL AND ".$this->getAlias().".FinishDate IS NULL";
         }
         if ( in_array('Y', $values) ) {
             $predicates[] = $this->getAlias().".FinishDate IS NOT NULL";

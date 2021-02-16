@@ -43,7 +43,7 @@ public class UserAttributesTest extends ProjectTestBase {
 
 
 	/** This method tests a new user attribute for Request of "Ошибка" type */
-	@Test
+	@Test(description="S-1570")
 	public void testCreateNewErrorAttribute() {
 		
 		PageBase page = new PageBase(driver);
@@ -112,7 +112,7 @@ public class UserAttributesTest extends ProjectTestBase {
 	
 	
 	/**   This method tests a new user attribute for Requirement */
-	@Test
+	@Test(description="S-1571")
 	public void testCreateNewRequirementAttribute() {
 		
 		PageBase page = new PageBase(driver);
@@ -161,7 +161,7 @@ public class UserAttributesTest extends ProjectTestBase {
 
 	/**   The methods tries creates user attribute with name "type" and checks that 
 	 * system doesn't allow to create it, because of it has name used for system attribute  */
-	@Test
+	@Test(description="S-1683")
 	public void disallowDuplicateSystemAttributes() {
         String referenceName = "type";
 		 
@@ -194,10 +194,10 @@ public class UserAttributesTest extends ProjectTestBase {
 	 * S-1780
 	 * @throws Exception 
 	 */
-	@Test
+	@Test(description="S-1780")
 	public void checkUserFieldsVisibilityOnChangeState() throws Exception {
         PageBase page = new PageBase(driver);
-		
+
 		//New SDLC Project
 		String p = DataProviders.getUniqueString();
 			Project project = new Project("SDLCProject"+p, "sdlcproject"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
@@ -294,7 +294,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		rp = rnp.createCRShort(request2);
 		
 		RequestsBoardPage rbp = rp.gotoRequestsBoard();
-		rbp = rbp.addGrouppingByUserAttribute(attribute);
+		rbp.setupGrouping(attribute);
 		List<String> firstGroup = rbp.getListOfRequestsInGroup(user1.getUsernameLong());
 		Assert.assertTrue(firstGroup.contains(request1.getId()), "Первая группа не содержит первое пожелание");
 		Assert.assertFalse(firstGroup.contains(request2.getId()), "Первая группа содержит второе пожелание");
@@ -302,14 +302,13 @@ public class UserAttributesTest extends ProjectTestBase {
 		Assert.assertTrue(secondGroup.contains(request2.getId()), "Вторая группа не содержит второе пожелание");
 		Assert.assertFalse(secondGroup.contains(request1.getId()), "Вторая группа содержит первое пожелание");
 		
-		rbp.addFilter(attribute);
-		rbp.turnOnFilter(user1.getUsernameLong(), attributeName);
+		rbp.setFilter(attribute, Integer.toString(user1.id));
 		Assert.assertTrue(rbp.isRequestPresent(request1.getId()), "Не видно первое пожелание после фильтрации");
 		Assert.assertFalse(rbp.isRequestPresent(request2.getId()), "Видно второе пожелание после фильтрации");		
 	}
 	
 	@Test(description="S-2006")
-	public void dragCustomAttributeTOGroup() throws Exception {
+	public void dateAttributesdragCustomAttributeTOGroup() throws Exception {
 
 		PageBase page = new PageBase(driver);
 		//New SDLC Project
@@ -353,7 +352,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		RequestViewPage rvp = rep.saveEdited();
 		rbp = rvp.gotoRequestsBoard();
 		
-		rbp = rbp.setupGrouping("new");
+		rbp.setupGrouping("new");
 		List<String> sections = rbp.getAllGroupingSections();
 		Assert.assertTrue(sections.contains("Новый: Первое значение"), "На странице нет группы 'Новый: Первое значение'");
 

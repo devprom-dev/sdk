@@ -1,5 +1,4 @@
 <?php
-
 include "FormTransitionAttributeEmbedded.php";
 
 class FieldTransitionAttribute extends FieldForm
@@ -7,45 +6,39 @@ class FieldTransitionAttribute extends FieldForm
  	var $object_it;
  	var $state_it;
  	
- 	function FieldTransitionAttribute ( $object_it )
- 	{
+ 	function __construct( $object_it ) {
  		$this->object_it = $object_it;
  	}
  	
- 	function setStateIt( $state_it )
- 	{
+ 	function setStateIt( $state_it ) {
  	    $this->state_it = $state_it;
  	}
  	
- 	function render( $view )
- 	{
+ 	function render( $view ) {
  	    $this->draw( $view );
  	}
  	
  	function draw( $view = null )
  	{
- 		global $model_factory;
-
-		$anchor = $model_factory->getObject( 'TransitionAttribute' );
-		
+		$anchor = getFactory()->getObject( 'TransitionAttribute' );
 		$anchor->setStateIt( $this->state_it );
 		
-		if ( is_object($this->object_it) )
-		{
-			$anchor->addFilter( new FilterAttributePredicate('Transition', $this->object_it->getId()) );
+		if ( is_object($this->object_it) ) {
+            $anchorIt = $anchor->getRegistry()->Query(
+                array(
+                    new FilterAttributePredicate('Transition', $this->object_it->getId()),
+                    new TransitionAttributeEntityAttributesPredicate()
+                )
+            );
 		}
-		else
-		{
-			$anchor->addFilter( new FilterAttributePredicate('VPD', '-') );
+		else {
+            $anchorIt = $anchor->getEmptyIterator();
 		}
-		
-		$anchor->addFilter( new TransitionAttributeEntityAttributesPredicate() );
 
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
-	 		$form = new FormTransitionAttributeEmbedded( $anchor, 'Transition' );
+	 		$form = new FormTransitionAttributeEmbedded( $anchorIt, 'Transition' );
 	 		$form->setReadonly( $this->readOnly() );
-	 			
-	 		$form->draw( $view );
+            $form->draw( $view );
  		echo '</div>';
  	}
 }

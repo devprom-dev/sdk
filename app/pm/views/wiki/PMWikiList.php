@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Widget\WidgetService;
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/persisters/WikiPageDocumentGroupPersister.php";
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/persisters/WikiPageUsedByPersister.php";
 include_once SERVER_ROOT_PATH . "pm/views/ui/WorkflowProgressFrame.php";
@@ -6,21 +7,50 @@ include "fields/FieldWikiEstimation.php";
 
 class PMWikiList extends PMPageList
 {
- 	var $version_it, $form, $form_render_parms;
 	private $displayContent = false;
+	private $inlineSectionNumber = false;
 	private $searchText = '';
     private $workflowFrame = null;
     private $typeField = null;
+    private $baselineIt = null;
 
-	function retrieve()
+    function extendModel()
+    {
+        if ( $this->getObject()->getStateClassName() != '' ) {
+            $this->getObject()->addAttribute('Readiness', '', translate('Готовность'), false, false, '',
+                $this->getObject()->getAttributeOrderNum('State') + 1);
+        }
+
+        parent::extendModel();
+    }
+
+    function retrieve()
 	{
+        $this->workflowFrame = new WorkflowProgressFrame(
+            $this->getObject(), str_replace('/docs', '/list', $this->getObject()->getPage())
+        );
+
 	    $this->getObject()->addPersister( new WikiPageDocumentGroupPersister() );
 		if ( $this->displayContent ) {
 			$this->getObject()->setRegistry( new WikiPageRegistryContent($this->getObject()) );
 		}
 
         if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'PageType') ) {
-            $this->typeField = new FieldReferenceAttribute($this->getObject()->getEmptyIterator(), 'PageType');
+            $this->typeField = new FieldReferenceAttribute(
+                $this->getObject()->getEmptyIterator(),
+                'PageType',
+                $this->getObject()->getAttributeObject('PageType')
+            );
+        }
+
+        $filterValues = $this->getFilterValues();
+        $baseline = $this->getTable()->getBaselineObject();
+        $baselines = \TextUtils::parseFilterItems($filterValues['branch']);
+        if ( count($baselines) > 0 ) {
+            $this->baselineIt = $baseline->getExact($baselines);
+        }
+        else {
+            $this->baselineIt = $baseline->getEmptyIterator();
         }
 
 		parent::retrieve();
@@ -69,41 +99,66 @@ class PMWikiList extends PMPageList
                 else {
                     $title = $this->getTitle($object_it);
                 }
-				if ( $object_it->get('BrokenTraces') != "" ) {
-					$title = $this->getRenderView()->render('pm/WikiPageBrokenIcon.php',
-						array (
-							'id' => $object_it->getId(),
-							'url' => getSession()->getApplicationUrl($object_it)
-						)
-					).$title;
+				if ( $object_it->get('Suspected') > 0 ) {
+                    $title = WidgetService::getHtmlBrokenIcon($object_it->getId(), getSession()->getApplicationUrl($object_it)) . $title;
 				}
-				if ( $this->displayContent && $object_it->get('Content') != '' ) {
-					echo '<h5 class="bs">'.$title.'</h5>';
-				}
-				else {
-					echo $title;
-				}
+
+				if ( $this->inlineSectionNumber ) {
+                    $title = $object_it->get('SectionNumber') . ' &nbsp; ' . $title;
+                }
+
+				if ( strpos($title, $object_it->getHtmlDecoded('DocumentVersion')) === false && $object_it->get('ParentPage') == '' && $object_it->get('DocumentVersion') != '' ) {
+				    echo '[' . $object_it->get('DocumentVersion') . '] ';
+                }
+
+    			echo $title;
+
                 if ( $this->checkColumnHidden('Tags') && $object_it->get('Tags') != '' ) {
                     echo ' ';
                     $this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
                 }
 				if ( $this->displayContent ) {
                     $filterValues = $this->getFilterValues();
-                    if ( $filterValues['compareto'] != '' ) {
-                        $compareIt = $this->getObject()->getRegistry()->Query(
-                            array(
-                                new FilterAttributePredicate('UID', $object_it->get('UID')),
-                                new WikiPageBranchFilter($filterValues['compareto'])
-                            )
+
+                    $content = $object_it->get('Content');
+                    if ( $filterValues['branch'] != '' ) {
+                        $snapshot = new WikiPageComparableSnapshot(
+                            $object_it->get('DocumentId') == '' ? $object_it : $object_it->getRef('DocumentId')
                         );
-                        echo '<div class="reset wysiwyg">';
-                        $field = new FieldCompareToContent($object_it->copy(),$compareIt);
-                        $field->draw();
-                        echo '</div>';
+                        $snapshotIt = $snapshot->getAll();
+                        $snapshotIt->moveToId($filterValues['branch']);
+                        if ( $snapshotIt->getId() != '' ) {
+                            $registry = new WikiPageRegistryComparison($this->getObject());
+                            $registry->setPageIt($object_it);
+                            $registry->setBaselineIt($snapshotIt);
+                            $content = $registry->Query()->get('Content');
+                        }
                     }
-                    else if ( trim($object_it->get('Content')," \r\n") != '' ) {
+
+                    if ( $filterValues['compareto'] != '' ) {
+                        $snapshot = new WikiPageComparableSnapshot(
+                            $object_it->get('DocumentId') == '' ? $object_it : $object_it->getRef('DocumentId')
+                        );
+                        $snapshotIt = $snapshot->getAll();
+                        $snapshotIt->moveTo('Caption', $filterValues['compareto']);
+                        if ( $snapshotIt->getId() != '' ) {
+                            $registry = new WikiPageRegistryComparison($this->getObject());
+                            $registry->setPageIt($object_it);
+                            $registry->setBaselineIt($snapshotIt);
+                            $compareToPageIt = $registry->Query();
+                            if ( $compareToPageIt->getId() != '' ) {
+                                echo '<div class="reset wysiwyg">';
+                                    $field = new FieldCompareToContent($object_it,
+                                        html_entity_decode($content), $compareToPageIt->getHtmlDecoded('Content'));
+                                    $field->draw();
+                                echo '</div>';
+                                break;
+                            }
+                        }
+                    }
+                    if ( trim($object_it->get('Content')," \r\n") != '' ) {
                         $field = new FieldWYSIWYG($object_it->get('ContentEditor'));
-                        $field->setValue($object_it->get('Content'));
+                        $field->setValue($content);
                         $field->setObjectIt($object_it);
                         $field->setSearchText($this->searchText);
                         $field->drawReadonly();
@@ -140,28 +195,19 @@ class PMWikiList extends PMPageList
                 }
 				break;
 
-            case 'State':
-                echo '<table class="state-rich"><tr>';
-                echo '<td style="vertical-align: top;">';
-                    parent::drawCell($object_it, $attr);
-                echo '</td>';
-                    if ( $object_it->get('ParentPage') == '' && $object_it->get('TotalCount') > 0 ) {
-                        echo '<td>';
-                        $object = getFactory()->getObject(get_class($this->getObject()));
-                        $object->addFilter( new WikiDocumentWaitFilter($object_it->getId()) );
-                        $aggregateFunc = new AggregateBase( 'State', 'WikiPageId', 'COUNT' );
-                        $object->addAggregate($aggregateFunc);
-                        $agg_it = $object->getAggregated('t', array(new SortAttributeClause('State')));
-                        if ( $agg_it->count() > 1 ) {
-                            $this->workflowFrame->draw(
-                                $agg_it,
-                                $aggregateFunc,
-                                '&type=all&document='.$object_it->getId()
-                            );
-                        }
-                        echo '</td>';
-                    }
-                echo '</tr></table>';
+            case 'Readiness':
+                echo '<div class="state-rich">';
+                    $object = getFactory()->getObject(get_class($this->getObject()));
+                    $object->addFilter( new WikiDocumentFilter($object_it) );
+                    $aggregateFunc = new AggregateBase( 'State', 'WikiPageId', 'COUNT' );
+                    $object->addAggregate($aggregateFunc);
+                    $agg_it = $object->getAggregated('t', array(new SortAttributeClause('State')));
+                    $this->workflowFrame->draw(
+                        $agg_it,
+                        $aggregateFunc,
+                        '&type=all&document='.$object_it->getId()
+                    );
+                echo '</div>';
                 break;
 
 			case 'Dependency':
@@ -234,7 +280,6 @@ class PMWikiList extends PMPageList
 	{
 		$fields = array_diff(
 			parent::getGroupFields(),
-			$this->getObject()->getAttributesByGroup('source-attribute'),
 		    array (
 				'Watchers', 'Attachments'
 			)
@@ -242,7 +287,8 @@ class PMWikiList extends PMPageList
 		return array_merge(
 		    $fields,
             array (
-                'RecordModified'
+                'RecordModified',
+                'DocumentVersion'
             )
         );
 	}
@@ -281,6 +327,9 @@ class PMWikiList extends PMPageList
  	        case 'Progress':
  	        case 'Stage':
  	            return '5%';
+
+            case 'Readiness':
+                return '110';
  	        
  	        default:
  	            return parent::getColumnWidth( $column );
@@ -289,10 +338,6 @@ class PMWikiList extends PMPageList
 
 	function getRenderParms()
 	{
-        $this->workflowFrame = new WorkflowProgressFrame(
-            $this->getObject(), str_replace('/docs', '/list', $this->getObject()->getPage())
-        );
-
         $parms = parent::getRenderParms();
 
 		$values = $this->getFilterValues();
@@ -300,8 +345,10 @@ class PMWikiList extends PMPageList
 		if ( in_array($values['search'], array('','all','none')) ) {
 			$values['search'] = '';
 		}
+
 		$this->searchText = $values['search'];
-		$this->displayContent = !in_array($this->searchText, array('','all','hide')) || parent::getColumnVisibility('Content');
+		$this->displayContent = count(\TextUtils::parseFilterItems($this->searchText)) > 0
+            || parent::getColumnVisibility('Content') || count(\TextUtils::parseFilterItems($values['compareto'])) > 0;
 
         if ( parent::getColumnVisibility('Estimation') ) {
             $this->estimation_field = new FieldWikiEstimation($this->getObject());
@@ -313,4 +360,9 @@ class PMWikiList extends PMPageList
 			)
 		);
 	}
+
+	function getObjectBaselineIt( $objectIt ) {
+        $this->baselineIt->moveTo('ObjectId', $objectIt->getId());
+        return $this->baselineIt->copy();
+    }
 }

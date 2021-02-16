@@ -10,11 +10,6 @@ class ProjectModelExtendedBuilder extends ObjectModelBuilder
 
         $object->setAttributeVisible('StartDate', true);
         $object->setAttributeVisible('FinishDate', true);
-        $object->setAttributeCaption('Rating', translate('Скорость'));
-        $object->setAttributeEditable('Rating', false);
-        $object->setAttributeVisible('Rating', true);
-        $object->setAttributeOrderNum('Rating', 300);
-        $object->setAttributeDescription('Rating', text(2284));
 
         $object->addAttribute( 'Features', 'REF_FeatureId', text(2613), false );
         $object->addAttribute( 'SpentHours', 'INTEGER', text(2614), false );
@@ -22,5 +17,9 @@ class ProjectModelExtendedBuilder extends ObjectModelBuilder
         $object->addAttribute( 'SpentHoursWeek', 'INTEGER', text(2615), false );
         $object->addAttributeGroup('SpentHoursWeek', 'hours');
         $object->addPersister( new ProjectDashboardPersister() );
+
+        foreach( array('WikiEditorClass','DaysInWeek', 'Rating', 'ProjectKey') as $attribute ) {
+            $object->addAttributeGroup($attribute, 'additional');
+        }
     }
 }

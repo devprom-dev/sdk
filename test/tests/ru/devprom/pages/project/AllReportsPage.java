@@ -30,7 +30,7 @@ public class AllReportsPage extends SDLCPojectPageBase {
 	
 	public List<Report> getAllReportsList(){
 	    List<Report> result = new ArrayList<Report>();
-		List <WebElement> list = driver.findElements(By.xpath("//table[@id='reportlist1']/tbody/tr[contains(@id,'reportlist1_row_')]/td[@id='caption']//img/following-sibling::a"));
+		List <WebElement> list = driver.findElements(By.xpath("//table[@id='reportlist1']//tr[contains(@id,'reportlist1_row_')]/td[@id='caption']//img/following-sibling::a"));
 	    for (WebElement reportlink:list){
 	    	result.add(new Report(reportlink));
 	    }
@@ -39,7 +39,7 @@ public class AllReportsPage extends SDLCPojectPageBase {
 
 	public boolean checkReport(Report report){
 		
-		driver.findElement(By.xpath("//table[@id='reportlist1']/tbody/tr[contains(@id,'reportlist1_row_')]/td[@id='caption']//a[text()='"+ report.name +"']")).click();
+		driver.findElement(By.xpath("//table[@id='reportlist1']//tr[contains(@id,'reportlist1_row_')]/td[@id='caption']//a[text()='"+ report.name +"']")).click();
 		try {
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.id("page-content")));
 		}

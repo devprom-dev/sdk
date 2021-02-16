@@ -19,16 +19,17 @@ class FieldAutoCompleteObject extends Field
  	{
  	    $this->object = $object;
  	    
- 		if ( is_array($attributes) )
- 		{
+ 		if ( is_array($attributes) ) {
  			$this->attributes = $attributes;
  		}
- 		else
- 		{
+ 		else {
  			$this->attributes = array( 'Caption' );
  		}
 
  		$this->additional_attributes = $this->object->getAttributesByGroup('search-attributes');
+ 		if ( !defined('PERMISSIONS_ENABLED') ) {
+ 		    $this->setCrossProject();
+        }
  		
  		parent::__construct();
  	}
@@ -84,6 +85,15 @@ class FieldAutoCompleteObject extends Field
 	{
 		$this->attributes[] = 'cross';
 	}
+
+	function setSystemAttribute($attribute) {
+        $this->attributes[] = $attribute;
+    }
+
+	function removeCrossProject() {
+ 	    $index = array_search('cross', $this->attributes);
+ 	    if ( $index ) unset($this->attributes[$index]);
+    }
 
 	function getCrossProject()
 	{
@@ -141,10 +151,11 @@ class FieldAutoCompleteObject extends Field
 		$registry = $this->getObject()->getRegistry();
  	    if ( $this->search_enabled )
  	    {
-	 	    $ids = array_filter(preg_split('/,/',$value), function($id) {
-	 	    			return is_numeric($id);
-	 	    		});
+	 	    $ids = \TextUtils::parseIds($value);
 	 	    if ( count($ids) > 0 ) {
+                if ( $this->getObject() instanceof MetaobjectCacheable ) {
+                    return $this->getObject()->getExact($ids);
+                }
 	 	    	return $registry->Query(
 					array (
 						new FilterInPredicate($ids)
@@ -165,6 +176,9 @@ class FieldAutoCompleteObject extends Field
  	    }
  	    else
  	    {
+ 	        if ( $this->getObject() instanceof MetaobjectCacheable ) {
+                return $this->getObject()->getExact($value);
+            }
  	    	return $registry->Query(
 				array (
 					new FilterInPredicate($value)
@@ -188,7 +202,7 @@ class FieldAutoCompleteObject extends Field
 	    $uid = new ObjectUID;
 		$titles = array();
 		while( !$object_it->end() ) {
-			$titles[] = $uid->getUidTitle($object_it);
+			$titles[] = $uid->getUidWithCaption($object_it);
 			$object_it->moveNext();
 		}
 		return join('<br/>', $titles);
@@ -209,32 +223,30 @@ class FieldAutoCompleteObject extends Field
 			$text = $this->getTitle() != '' ? $this->getTitle() : text(868);
 			$displayValue = TextUtils::stripAnyTags($object_it->getDisplayName());
 
-			echo '<div class="autocomplete">';
-			 	echo '<input type="text" class="autocomplete-text input-block-level" id="'.$this->getName().'Text" auto-expand="'.($this->auto_expand?'true':'false').'" tabindex="'.$this->getTabIndex().'" style="'.$this->getStyle().'" placeholder="'.text(1338).'" default="'.$displayValue.'" value="'.$displayValue.'" '.($this->getRequired() ? 'required' : '').' multiple="'.var_export($this->multiple, true).'">';
-			 	echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$object_it->getId().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" project="'.$project.'">';
-			echo '</div>';
+            echo '<input type="text" class="autocomplete-text input-block-level" id="'.$this->getName().'Text" auto-expand="'.($this->auto_expand?'true':'false').'" tabindex="'.$this->getTabIndex().'" style="'.$this->getStyle().'" placeholder="'.text(1338).'" default="'.$displayValue.'" value="'.$displayValue.'" '.($this->getRequired() ? 'required' : '').' multiple="'.var_export($this->multiple, true).'">';
+            echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$object_it->getId().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" project="'.$project.'">';
 		}
  	}
 
  	function drawReadonly($view)
     {
-        echo '<div id="'.$this->getId().'" class="input-block-level well well-text">';
-        if ( $this->custom_text != '' )
-        {
-            echo $this->custom_text;
-        }
-        else
-        {
-            $object_it = $this->getObjectIt();
-            if ( $object_it->getId() != '' ) {
-                $uid = new ObjectUID;
-                echo $uid->getUidWithCaption($object_it, 50);
+        echo '<div id="'.$this->getId().'" class="autocomplete">';
+            if ( $this->custom_text != '' )
+            {
+                echo $this->custom_text;
             }
             else
             {
-                echo $this->getText();
+                $object_it = $this->getObjectIt();
+                if ( $object_it->getId() != '' ) {
+                    $uid = new ObjectUID;
+                    echo $uid->getUidWithCaption($object_it, 50);
+                }
+                else
+                {
+                    echo $this->getText();
+                }
             }
-        }
         echo '</div>';
         echo '<input type="hidden" name="'.$this->getName().'" value="'.$this->getEncodedValue().'">';
     }

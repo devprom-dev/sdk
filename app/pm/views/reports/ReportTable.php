@@ -1,29 +1,20 @@
 <?php
-
+include SERVER_ROOT_PATH . "pm/methods/ViewReportTypeWebMethod.php";
 include "ReportList.php";
 
 class ReportTable extends PMPageTable
 {
-	function getList()
-	{
+	function getList() {
 		return new ReportList( $this->getObject() );
 	}
 
 	function getFilters()
 	{
 		return array(
-		    $this->buildSearchFilter(),
 			$this->buildTypeFilter(),
 			$this->buildCategoryFilter(),
 			new ViewReportTypeWebMethod()
 		); 		
-	}
-
-	function buildSearchFilter() {
-		$search = new FilterTextWebMethod( text(1329), 'search-keywords' );
-		$search->setScript( 'filterReports( $(this).val() )' );
-		$search->setStyle( 'width:340px' );
-		return $search;
 	}
 
 	function buildCategoryFilter() {
@@ -39,23 +30,16 @@ class ReportTable extends PMPageTable
 		return $category;
 	}
 
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
-		$values = $this->getFilterValues();
-		
 		return array_merge(
-			parent::getFilterPredicates(),
+			parent::getFilterPredicates( $values ),
 			array (
 				new FilterAttributePredicate( 'Category', $values['pmreportcategory'] ),
 				new FilterAttributePredicate( 'Type', $values['reporttype'] ),
 				new FilterAttributePredicate( 'IsCustomized', $values['type'] )
 			)
 		);
-	}
-	
-	function getFiltersDefault()
-	{
-	    return array('search-keywords', 'reporttype', 'pmreportcategory');
 	}
 	
 	function getSortFields()
@@ -99,24 +83,10 @@ class ReportTable extends PMPageTable
         return 9999;
     }
 
-    function drawScripts()
-	{
-	    parent::drawScripts();
-	    
-	    ?>
-	    <script type="text/javascript">
-            var keywords_stored = '';
-
-            $().ready( function() {
-                window.setInterval(function() {
-                    if ( $('input[valueparm="search-keywords"]').val() != keywords_stored ) {
-                        keywords_stored = $('input[valueparm="search-keywords"]').val();
-                        $('input[valueparm="search-keywords"]').trigger('onchange');
-                    }
-                }, 200);
-            });
-        </script>
-	    
-	    <?php
-	}
+	function getRenderParms($parms)
+    {
+        $parms = parent::getRenderParms($parms);
+        $parms['filter_search']['script'] = "filterReports( $(this).val() )";
+        return $parms;
+    }
 } 

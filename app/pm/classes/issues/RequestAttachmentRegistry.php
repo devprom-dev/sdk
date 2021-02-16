@@ -7,7 +7,7 @@ class RequestAttachmentRegistry extends ObjectRegistrySQL
         return array_merge(
             parent::getFilters(),
             array (
-                new FilterAttributePredicate('ObjectClass', 'request')
+                new FilterAttributePredicate('ObjectClass', array('request','issue','increment'))
             )
         );
     }

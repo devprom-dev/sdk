@@ -1,13 +1,15 @@
 <?php
-
 include "SpentTimeIterator.php";
 include "SpentTimeRegistry.php";
+include "predicates/SpentTimeStatePredicate.php";
 
 class SpentTime extends Metaobject
 {
- 	var $view, $report_year, $report_month, $group;
- 	
+ 	private $report_year;
+ 	private $report_month;
+ 	private $group;
  	private $participant_filter = array();
+ 	private $rowsObject = null;
  	
  	function __construct() 
  	{
@@ -22,16 +24,6 @@ class SpentTime extends Metaobject
  		return new SpentTimeIterator( $this );
  	}
  	
- 	function setView( $view )
- 	{
- 		$this->view = $view;
- 	}
-
- 	function getView()
- 	{
- 		return $this->view;
- 	}
- 	
  	function setGroup( $group )
  	{
  	    $this->group = $group;
@@ -41,7 +33,15 @@ class SpentTime extends Metaobject
  	{
  	    return $this->group;
  	}
- 	
+
+ 	function setRowsObject( $object ) {
+ 	    $this->rowsObject = $object;
+    }
+
+    function getRowsObject() {
+ 	    return $this->rowsObject;
+    }
+
  	function setReportYear( $year )
  	{
  		$this->report_year = is_numeric($year) ? $year : date('Y');

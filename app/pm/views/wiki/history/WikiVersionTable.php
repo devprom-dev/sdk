@@ -37,10 +37,10 @@ class WikiVersionTable extends PMPageTable
 		return array();
 	}
 	
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
 		return array_merge(
-            parent::getFilterPredicates(),
+            parent::getFilterPredicates( $values ),
             array (
                 new FilterAttributePredicate('ObjectClass', get_class($this->pageObject)),
                 new FilterAttributePredicate('ObjectId', $this->getPageIt()->fieldToArray('DocumentId')),
@@ -81,8 +81,7 @@ class WikiVersionTable extends PMPageTable
         }
         else {
             $titleParms = array (
-                'navigation_url' => $this->getPageIt()->getViewUrl(),
-                'title' => str_replace('%1', $this->getPageIt()->getDisplayName(), text(2235))
+                'navigation_url' => $this->getPageIt()->getViewUrl()
             );
         }
 		return array_merge(
@@ -90,4 +89,9 @@ class WikiVersionTable extends PMPageTable
             $titleParms
 		);
 	}
+
+    function getDetails()
+    {
+        return array();
+    }
 }

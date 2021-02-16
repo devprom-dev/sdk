@@ -6,9 +6,11 @@ class FieldFeatureIssues extends FieldForm
 {
  	var $object_it;
  	private $issueIt = null;
+ 	private $requestObject = null;
  	
- 	function __construct( $object_it ) {
+ 	function __construct( $object_it, $requestObject ) {
  		$this->object_it = $object_it;
+ 		$this->requestObject = $requestObject;
  	}
 
  	function setIssueIt( $value ) {
@@ -21,7 +23,7 @@ class FieldFeatureIssues extends FieldForm
  	
  	function draw( $view = null )
  	{
- 		$task = getFactory()->getObject('pm_ChangeRequest');
+ 		$task = $this->requestObject;
  		$task->disableVpd();
 
  		$task->addFilter( new FilterAttributePredicate( 'Function',
@@ -33,7 +35,7 @@ class FieldFeatureIssues extends FieldForm
  		
  		echo '<div id="'.$this->getId().'" class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
  		    $form = new FormFeatureIssuesEmbedded( $task, 'Function' );
- 		    if ( is_object($this->object_it) && !$this->getEditMode() ) $form->setObjectIt($this->object_it);
+ 		    if ( is_object($this->object_it) ) $form->setObjectIt($this->object_it);
  		    $form->setReadonly( $this->readOnly() );
  		    $form->setTabIndex( $this->getTabIndex() );
 	 		

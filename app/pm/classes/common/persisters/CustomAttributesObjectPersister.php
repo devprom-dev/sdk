@@ -1,6 +1,7 @@
 <?php
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
+include_once "CustomAttributesPersister.php";
 
 class CustomAttributesObjectPersister extends CustomAttributesPersister
 {

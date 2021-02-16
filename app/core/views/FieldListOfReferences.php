@@ -31,12 +31,7 @@ class FieldListOfReferences extends Field
         ksort($uids);
 
         if ( count($ids) > 0 ) {
-            $widget_it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', get_class($this->object_it->object));
-            if ( $widget_it->getId() != '' ) {
-                $url = getFactory()->getObject($widget_it->get('ReferenceName'))->getExact($widget_it->getId())->getUrl(
-                    strtolower(get_class($this->object_it->object)).'='.\TextUtils::buildIds($this->object_it->idsToArray())
-                );
-            }
+            $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIt($this->object_it);
         }
 
         $html = join('<br/>', $uids);
@@ -59,8 +54,6 @@ class FieldListOfReferences extends Field
 
 	function render( $view )
 	{
-		echo '<div class="input-block-level well well-text">';
-            echo $this->getText();
-		echo '</div>';
+        echo $this->getText();
 	}
 }

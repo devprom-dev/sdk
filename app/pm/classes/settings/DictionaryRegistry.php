@@ -4,7 +4,7 @@ class DictionaryRegistry extends ObjectRegistrySQL
 {
 	private $entities = array();
 	
- 	function addEntity( & $object, $caption = '' )
+ 	function addEntity( $object, $caption = '' )
  	{
  		$this->entities[] = array (
  			'entityId' => get_class($object),

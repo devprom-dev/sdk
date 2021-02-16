@@ -78,12 +78,12 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
        	return $this->linked_settings_it;
 	}
 
-    protected function getProjectIt()
+    protected function getProjectIt( $projectIds )
     {
         if ( is_object($this->project_it) ) return $this->project_it;
         return $this->project_it = getFactory()->getObject('Project')->getRegistry()->Query(
             array(
-                new ProjectLinkedSelfPredicate()
+                new FilterInPredicate($projectIds)
             )
         );
     }
@@ -107,7 +107,22 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
 
         $skip_entities = array('pm_ProjectLink','pm_ProjectRole','pm_AccessRight','pm_ObjectAccess','cms_Resource', 'pm_Methodology');
 		if ( in_array($object->getEntityRefName(), $skip_entities) ) return $vpds;
-		
+
+		$projectIt = $this->getSession()->getProjectIt();
+        if ( $object instanceof Tag ) {
+            $projects = $projectIt->get('PortfolioProject');
+            if ( $projects != '' ) {
+                $vpds = array_merge(
+                    $vpds,
+                    getFactory()->getObject('Project')->getRegistry()->Query(
+                        array(
+                            new FilterInPredicate($projects)
+                        )
+                    )->fieldToArray('VPD')
+                );
+            }
+        }
+
 		$settings_it = $this->getSettingsIt();
 		if ( $settings_it->getId() < 1 ) return $vpds;
 
@@ -121,7 +136,7 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
             )
         );
 
-		$linked_it = $this->getProjectIt();
+		$linked_it = $this->getProjectIt($settings_it->fieldToArray('Project'));
         if ( $linked_it->getId() == '' ) return $vpds;
 
 		$settings_it->moveFirst();
@@ -130,6 +145,12 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
                 $linked_it->moveToId( $settings_it->get($fieldProject) );
                 if ( $linked_it->getId() != '' && $linked_it->getId() == $settings_it->get($fieldProject) ) {
                     if ( $this->getSharedSet()->sharedInProject( $object, $linked_it ) ) {
+                        if ( $object instanceof PMCustomAttribute && $projectIt->IsProgram() ) {
+                            continue;
+                        }
+                        if ( $object instanceof PMCustomAttributeValue && $projectIt->IsProgram() ) {
+                            continue;
+                        }
                         $shared_in_forward = in_array($settings_it->get($check_field), $toCheck['source'])
                             && $settings_it->get('Direction') == 'source';
                         if ( $shared_in_forward ) $vpds[] = $linked_it->get('VPD');

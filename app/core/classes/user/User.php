@@ -2,7 +2,6 @@
 include 'UserIterator.php';
 include "predicates/UserRolePredicate.php";
 include "predicates/UserSessionPredicate.php";
-include "predicates/UserIssuesAuthorPredicate.php";
 include "predicates/UserStatePredicate.php";
 include "predicates/UserSystemRolePredicate.php";
 include "predicates/UserAccessPredicate.php";
@@ -22,8 +21,8 @@ class User extends Metaobject
 	{
 		return new UserIterator( $this );
 	}
-	
-	function getPage() 
+
+	function getPage()
 	{
 		return '/admin/users.php?';
 	}
@@ -81,14 +80,11 @@ class User extends Metaobject
 		
 		if ( $invitation_it->count() > 0 )
 		{
-            $settings_it = getFactory()->getObject('cms_SystemSettings')->getAll();
-
 	   		$mail = new HtmlMailBox;
 	   		$author_it = $invitation_it->getRef('Author');
 	   		$mail->appendAddress($author_it->get('Email'));
 	   		$mail->setBody(str_replace('%1', $parms['Email'], text(239)).Chr(10));
 	   		$mail->setSubject( text(238) );
-	   		$mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
 			$mail->send();
 		}
 		
@@ -141,6 +137,7 @@ class User extends Metaobject
 	}
 	
 	function DeletesCascade( $object ) {
+ 	    if ( $object->getEntityRefName() == 'co_UserGroupLink' ) return true;
 		return false;
 	}
 }

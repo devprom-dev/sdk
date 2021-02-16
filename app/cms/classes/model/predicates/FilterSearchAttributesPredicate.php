@@ -10,19 +10,28 @@ class FilterSearchAttributesPredicate extends FilterPredicate
 		$this->attributes = $attributes;
 		parent::__construct($phrase);
 	}
-		
+
+    function check( $filter ) {
+        return addslashes($filter);
+    }
+
  	function _predicate( $filter )
  	{
 		$predicates = array();
 		foreach( $this->attributes as $attribute ) {
 			if ( $this->getObject()->getAttributeType($attribute) == '') continue;
 
-            $searchString = $filter;
+            $searchString = trim($this->getObject()->formatValueForDb($attribute, trim($filter)), "'");
+            if ( $searchString == '' ) continue;
+
             if ( $this->getObject()->getAttributeType($attribute) == 'wysiwyg' ) {
                 $searchString = htmlentities($searchString);
             }
 
-			if ( $attribute == 'Content' && !$this->getObject()->getRegistry() instanceof WikiPageRegistryVersion ) {
+            $skipMatch = $this->getObject()->getRegistry() instanceof WikiPageRegistryVersion
+                || $this->getObject()->getEntityRefName() == 'ObjectChangeLog';
+
+			if ( $attribute == 'Content' && !$skipMatch ) {
 				$words = array_map(
 					function($word) {
                         return preg_replace('/@/', '*', trim(addslashes($word),'+-').'*');
@@ -42,6 +51,19 @@ class FilterSearchAttributesPredicate extends FilterPredicate
 			}
 		}
 
-		return count($predicates) < 1 ? " AND 1 = 2 " : " AND (".join(' OR ', $predicates).") ";
+        $clauses = array();
+        foreach( SearchRules::getSearchItems($filter, getSession()->getLanguageUid()) as $word ) {
+            $clauses[] = " av.StringValue LIKE '%".addslashes($word)."%' OR av.TextValue LIKE '%".addslashes($word)."%' ";
+        }
+
+        if ( count($clauses) > 0 ) {
+            $predicates[] = " EXISTS (SELECT 1 FROM pm_CustomAttribute at, pm_AttributeValue av
+                                      WHERE at.EntityReferenceName = '".strtolower(get_class($this->getObject()))."'
+                                        AND at.pm_CustomAttributeId = av.CustomAttribute
+                                        AND av.ObjectId = t.".$this->getObject()->getIdAttribute()."
+                                        AND (".join(" OR ", $clauses).") ) ";
+        }
+
+        return count($predicates) < 1 ? " AND 1 = 2 " : " AND (".join(' OR ', $predicates).") ";
  	}
 }

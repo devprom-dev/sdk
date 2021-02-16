@@ -1,7 +1,5 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
-include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageComparableSnapshot.php";
 
 class CompareDocumentsWebMethod extends WebMethod
 {
@@ -32,7 +30,7 @@ class CompareDocumentsWebMethod extends WebMethod
  		if ( count($ids) != 2 )
  		{
  			echo JsonWrapper::encode(
- 					array('message' => IteratorBase::wintoutf8(text(1714)))
+ 					array('message' => text(1714))
  			);
  			
  			return;
@@ -53,7 +51,7 @@ class CompareDocumentsWebMethod extends WebMethod
  		if ( $snapshot_it->getId() == '' )
  		{
  			echo JsonWrapper::encode(
- 					array('message' => IteratorBase::wintoutf8(text(1715)))
+ 					array('message' => text(1715))
  			);
  			
  			return;

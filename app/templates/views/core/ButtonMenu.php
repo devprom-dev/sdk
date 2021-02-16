@@ -1,5 +1,5 @@
 <div class="btn-group pull-left last">
-    <a class="btn btn-sm dropdown-toggle btn-info" uid="<?=$uid?>" href="#" data-toggle="dropdown">
+    <a class="btn btn-sm dropdown-toggle btn-info" uid="<?=$uid?>" data-toggle="dropdown">
         <?=$title?>
         <span class="caret"></span>
     </a>

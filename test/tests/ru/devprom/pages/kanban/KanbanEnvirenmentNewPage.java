@@ -10,6 +10,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import ru.devprom.pages.CKEditor;
 
 /**
  *
@@ -23,9 +24,6 @@ public class KanbanEnvirenmentNewPage extends KanbanPageBase{
     @FindBy(xpath = ".//*[@id='pm_EnvironmentServerAddress']")
 	protected WebElement addresField;
     
-    @FindBy(xpath = ".//*[@id='pm_EnvironmentDescription']")
-	protected WebElement descriptionField;
-    
     @FindBy(xpath = ".//*[@id='pm_EnvironmentSubmitBtn']")
 	protected WebElement saveBtn;
 
@@ -33,16 +31,14 @@ public class KanbanEnvirenmentNewPage extends KanbanPageBase{
         super(driver);
     }
 
-    public void createEnvironment(String name, String adress, String description)
+    public void createEnvironment(String name, String address, String description)
     {
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(nameField));
         nameField.clear();
         nameField.sendKeys(name);
         addresField.clear();
-        addresField.sendKeys(adress);
-        descriptionField.clear();
-        descriptionField.sendKeys(description);
+        addresField.sendKeys(address);
+        (new CKEditor(driver)).changeText(description);
         submitDialog(saveBtn);
     }
-    
 }

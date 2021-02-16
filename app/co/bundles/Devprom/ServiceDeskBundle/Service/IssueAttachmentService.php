@@ -29,8 +29,8 @@ class IssueAttachmentService {
         $attachment->setObjectClass('request');
         $attachment->setVpd($issue->getVpd());
         $attachment->setFilePath(SERVER_FILES_PATH . "/pm_Attachment/" . $storedFilename);
-
         $attachment->getFile()->move(SERVER_FILES_PATH . "/pm_Attachment/", $storedFilename);
+        $attachment->setFileSize(filesize(SERVER_FILES_PATH . "/pm_Attachment/" . $storedFilename));
 
         $this->em->persist($attachment);
         $this->em->flush();

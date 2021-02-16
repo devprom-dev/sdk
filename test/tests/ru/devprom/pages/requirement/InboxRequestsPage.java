@@ -10,7 +10,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import ru.devprom.pages.kanban.KanbanTaskNewPage;
-import ru.devprom.pages.kanban.KanbanTaskViewPage;
+import ru.devprom.pages.project.requests.RequestViewPage;
 
 /**
  *
@@ -39,9 +39,9 @@ public class InboxRequestsPage extends RequirementBasePage{
         return id; 
     }
 
-    public IssueViewPage clickOnWish(String id) {
+    public RequestViewPage clickOnWish(String id) {
         driver.findElement(By.xpath("//*[@id='uid']/a[contains(.,'"+id+"')]")).click();
-        return new IssueViewPage(driver);
+        return new RequestViewPage(driver);
     }
     
     

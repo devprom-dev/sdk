@@ -16,17 +16,19 @@ class EstimationNoneStrategy extends EstimationStrategy
 	
 	function getEstimation( $object = null, $estimation = 'Estimation', $group = 'Project' )
 	{
-		if ( !is_object($object) ) $object = getFactory()->getObject('pm_ChangeRequest');
-		$estimation = 'Priority';
+		if ( !is_object($object) ) {
+		    $object = getFactory()->getObject('pm_ChangeRequest');
+        }
 
-		$sum_aggregate = new AggregateBase( $group, $estimation, $this->getEstimationAggregate() );
+		$sum_aggregate = new AggregateBase( $group, $object->getIdAttribute(), $this->getEstimationAggregate() );
 		$object->addAggregate( $sum_aggregate );
 		$request_it = $object->getAggregated();
 
 		$data = array();
 		while ( !$request_it->end() )
 		{
-		    $data[$request_it->get( $sum_aggregate->getAttribute() )] = $request_it->get( $sum_aggregate->getAggregateAlias() );
+		    $data[$request_it->get( $sum_aggregate->getAttribute() )] =
+                $request_it->get( $sum_aggregate->getAggregateAlias() );
 		    $request_it->moveNext();
 		}
 		return $data;
@@ -46,11 +48,6 @@ class EstimationNoneStrategy extends EstimationStrategy
 		}
 
 		return array($total_open, 100);
-	}
-	
-	function getEstimationText()
-	{
-		return text(1098);
 	}
 	
 	function getDimensionText( $value )

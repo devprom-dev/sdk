@@ -1,5 +1,4 @@
 <?php
-
 include_once "FunctionalAreaMenuCommonBuilder.php";
 
 class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilder
@@ -13,8 +12,8 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
  	    
 		$module = $model_factory->getObject('Module');
 		$report = $model_factory->getObject('PMReport');
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
+
+        $menus['quick']['items'][] = $module->getExact('dashboard')->buildMenuItem();
 		$menus['quick']['items'][] = $module->getExact('project-knowledgebase')->buildMenuItem();
         $menus['quick']['items'][] = $report->getExact('projectplan')->buildMenuItem();
         $menus['quick']['items'][] = $report->getExact('currenttasks')->buildMenuItem();
@@ -34,6 +33,7 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
  		// reports items
 		$items = array();
 
+        $items[] = $module->getExact('delivery')->buildMenuItem();
 		$items[] = $report->getExact('features-chart')->buildMenuItem();
 		$items[] = $report->getExact('activitiesreport')->buildMenuItem();
 

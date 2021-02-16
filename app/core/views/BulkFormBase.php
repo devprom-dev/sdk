@@ -9,6 +9,14 @@ class BulkFormBase extends AjaxForm
 		return 'bulkcomplete';
  	}
 
+ 	function extendModel()
+    {
+        parent::extendModel();
+        foreach( getFactory()->getPluginsManager()->getPluginsForSection(getSession()->getSite()) as $plugin ) {
+            $plugin->interceptMethodBulkFormExtendModel($this);
+        }
+    }
+
 	function getAttributes()
 	{
 		$attributes = $this->getActionAttributes();
@@ -22,11 +30,11 @@ class BulkFormBase extends AjaxForm
 		{
 			case 'ids':
 				return ''; 	
-
 			case 'operation':
 				return translate('Действие');
 
 			default:
+			    if ( !$this->showAttributeCaption() ) return '';
 				return parent::getName( $attribute );
 		}
 	}
@@ -60,7 +68,17 @@ class BulkFormBase extends AjaxForm
                 );
 
 			default:
-				return htmlentities($_REQUEST[$attribute]);
+			    $value = htmlentities($_REQUEST[$attribute]);
+			    if ( $value != '' ) return $value;
+
+			    if ( $this->getObject()->IsReference($attribute) ) {
+			        $ref = $this->getObject()->getAttributeObject($attribute);
+			        if ( $ref instanceof Project ) return $value;
+
+			        $persistedData = array_unique($this->getIt()->fieldToArray($attribute));
+			        if ( count($persistedData) == 1 ) return array_shift($persistedData);
+                }
+				return $value;
 		}
 	}
 	
@@ -83,6 +101,7 @@ class BulkFormBase extends AjaxForm
 		if ( !is_object($this->form) ) {
 			$this->form = $this->buildForm();
 			if ( is_object($this->form) ) {
+                $this->form->setPage($this->getPage());
 				$this->form->setObjectIt($this->getIt());
                 $this->form->getRenderParms();
 			}
@@ -104,7 +123,7 @@ class BulkFormBase extends AjaxForm
 			$this->object->setAttributeVisible(array_shift(array_values($attributes)), true);
 			return $attributes;
 		}
-		
+
 		$match = preg_match('/^Method:(.+)$/mi', $_REQUEST['operation'], $attributes);
 		if ( $match )
 		{
@@ -122,7 +141,7 @@ class BulkFormBase extends AjaxForm
 					$attrs[$pair[0]] = $pair[1];
 				}
 			}
-			
+
 			$attributes = array();
 			foreach( $attrs as $attribute => $value )
 			{
@@ -131,7 +150,14 @@ class BulkFormBase extends AjaxForm
 			    $this->object->setAttributeVisible( $attribute, true );
 			}
 
-			return $attributes;  
+            if ( $this->getMethod() == 'BulkDeleteWebMethod' && $attrs['class'] != '' )  {
+                $className = getFactory()->getClass($attrs['class']);
+                if ( class_exists($className) ) {
+                    $this->setObject(getFactory()->getObject($className));
+                }
+            }
+
+            return $attributes;
 		}
 		
 		return $attributes;
@@ -172,6 +198,8 @@ class BulkFormBase extends AjaxForm
 				);
 	    if ( in_array($attr, $system_attributes) ) return false;
 
+	    if ( !$this->getObject()->hasAttribute($attr) ) return true;
+
 	    $type = $this->getObject()->getAttributeType($attr);
 	    switch ( $type )
 	    {
@@ -180,7 +208,7 @@ class BulkFormBase extends AjaxForm
 	            return false;
 	    }
 
-	    return $this->getObject()->IsAttributeStored( $attr ) || $this->getObject()->getAttributeOrigin( $attr ) == ORIGIN_CUSTOM;
+	    return parent::IsAttributeModifiable( $attr );
 	}
 
 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
@@ -195,8 +223,8 @@ class BulkFormBase extends AjaxForm
 				$form = $this->getForm();
 				if ( is_object($form) )
 				{
-					$field = $form->createFieldObject($attribute);
-                    if ( !is_object($field) ) return;
+					$field = $form->createField($attribute);
+                    if ( !is_object($field) ) return parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 
 					$field->SetId($attribute);
 					$field->SetName($attribute);
@@ -204,12 +232,7 @@ class BulkFormBase extends AjaxForm
 					$field->SetTabIndex($tab_index);
 					$field->SetRequired($this->getObject()->IsAttributeRequired($attribute));
 					
-					if ( $this->showAttributeCaption() ) {
-						echo translate($this->getObject()->getAttributeUserName($attribute));
-					}
-					
-					if ( is_a($field, 'FieldForm') )
-					{
+					if ( is_a($field, 'FieldForm') ) {
 						echo '<span id="'.$field->getId().'" class="input-block-level well well-text" style="width:100%;height:auto;">';
 							$field->render($this->getView());
 						echo '</span>';
@@ -304,7 +327,20 @@ class BulkFormBase extends AjaxForm
 	function getEmptyIteratorMessage() {
  	    return text(2530);
     }
-	
+
+    function createFieldObject( $attribute_type, $name )
+    {
+        switch ( $attribute_type )
+        {
+            case 'char':
+                return !$this->showAttributeCaption()
+                    ? new FieldYesNo()
+                    : parent::createFieldObject( $attribute_type, $name );
+            default:
+                return parent::createFieldObject( $attribute_type, $name );
+        }
+    }
+
 	private $form = null;
 	private $visibleAttributes = array();
 }

@@ -40,6 +40,10 @@ class FieldCustomDictionary extends FieldDictionary
  			}
  			$this->attribute_it->moveNext();
  		}
+
+ 	    if ( in_array('multiselect',$object->getAttributeGroups($reference_name)) ) {
+ 	        $this->setMultiple(true);
+        }
  	}
  	
  	function getOptions()

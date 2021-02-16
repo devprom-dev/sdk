@@ -4,12 +4,10 @@ include_once SERVER_ROOT_PATH."core/classes/database/DALDummy.php";
 include_once SERVER_ROOT_PATH."core/classes/user/User.php";
 include_once SERVER_ROOT_PATH."core/classes/Resource.php";
 
-class DevpromTestCase extends PHPUnit_Framework_TestCase
+class DevpromTestCase extends \PHPUnit\Framework\TestCase
 {
     protected $dal_mock;
-    
     protected $access_policy;
-    
     protected $events_manager;
     
     function setUp()
@@ -18,46 +16,60 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
 
         // prepare DAL
         
-        $this->dal_mock = $this->getMock('DALDummy', array('Query', 'GetAffectedRows'), array(), '', false);
+        $this->dal_mock =
+            $this->getMockBuilder(DALDummy::class)
+                ->disableOriginalConstructor()
+                ->setMethods(['Query', 'GetAffectedRows'])
+                ->getMock();
         $this->dal_mock->expects($this->any())->method('GetAffectedRows')->will( $this->returnValue(1) );
         
         $ref = new \ReflectionProperty('DAL', 'singleInstance');
 		$ref->setAccessible(true);
 		$ref->setValue(null, $this->dal_mock);
 
-        $this->plugins_mock = $this->getMock('PluginsFactory', array('buildPlugins'), array(), '', false);
+        $this->plugins_mock =
+            $this->getMockBuilder(PluginsFactory::class)
+                ->disableOriginalConstructor()
+                ->setMethods(['buildPlugins'])
+                ->getMock();
+
         $ref = new \ReflectionProperty('PluginsFactory', 'singleInstance');
         $ref->setAccessible(true);
         $ref->setValue(null, $this->plugins_mock);
 
 		// prepare session
-		$this->access_policy = $this->getMock('AccessPolicy', array('check_access'), array(CacheEngineVar::Instance()));
+		$this->access_policy =
+            $this->getMockBuilder(AccessPolicy::class)
+                ->setConstructorArgs(array(CacheEngineVar::Instance()))
+                ->setMethods(["check_access"])
+                ->getMock();
         $this->access_policy->expects($this->any())->method('check_access')->will( $this->returnValue(true) );
 
-        $this->events_manager = $this->getMock('ModelEventsManager', array('getNotificators', 'notificationEnabled'));
-        $this->events_manager->expects($this->any())->method('notificationEnabled')->will( $this->returnValue(true) );
-        $this->events_manager->expects($this->any())->method('getNotificators')->will( $this->returnValue($this->getObjectNotificators()));
+        $this->events_manager =
+            $this->getMockBuilder(ModelEventsManager::class)
+                ->disableOriginalConstructor()
+                ->setMethods(['getNotificators', 'notificationEnabled'])
+                ->getMock();
+
+        $this->events_manager->expects($this->any())
+            ->method('notificationEnabled')->will( $this->returnValue(true) );
+        $this->events_manager->expects($this->any())
+            ->method('getNotificators')->will( $this->returnValue($this->getObjectNotificators()));
         
-        $model_factory = $this->getMock(
-        		'ModelFactoryProject', 
-        		array(
-        				'createInstance', 
-        				'getAccessPolicy', 
-        				'getEventsManager'
-        		),
-        		array (
-                    $this->plugins_mock,
-        			CacheEngineVar::Instance(),
-                    '',
-        			$this->access_policy,
-        			$this->events_manager
-        		)
-        );
+        $model_factory =
+            $this->getMockBuilder(ModelFactoryProject::class)
+                ->setConstructorArgs(array($this->plugins_mock, CacheEngineVar::Instance(), '', $this->access_policy, $this->events_manager))
+                ->setMethods(['createInstance', 'getAccessPolicy', 'getEventsManager'])
+                ->getMock();
 
         $model_factory->expects($this->any())->method('getAccessPolicy')->will( $this->returnValue($this->access_policy) );
         $model_factory->expects($this->any())->method('getEventsManager')->will( $this->returnValue($this->events_manager) );
         
-    	$auth_factory = $this->getMock('AuthenticationFactory', array('authorize'));
+    	$auth_factory =
+            $this->getMockBuilder(AuthenticationFactory::class)
+                ->disableOriginalConstructor()
+                ->setMethods(['authorize'])
+                ->getMock();
         $auth_factory->expects($this->any())->method('authorize')
             ->will($this->returnValue( 
             		(new UserIterator($this->getMockBuilder('User')->disableOriginalConstructor()->getMock()))
@@ -71,7 +83,8 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
     			->disableOriginalConstructor()
     			->setMethods(array('getAll'))
     			->getMock();
-        $resource_mock->expects($this->any())->method('getAll')->will( $this->returnValue($resource_mock->getEmptyIterator()) );
+        $resource_mock->expects($this->any())->method('getAll')
+            ->will( $this->returnValue($resource_mock->getEmptyIterator()) );
         
         $language = new Language();
         $session = new SessionBase($auth_factory, null, $language);

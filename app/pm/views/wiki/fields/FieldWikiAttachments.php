@@ -8,7 +8,6 @@ class FieldWikiAttachments extends FieldAttachments
         if ( $this->getObjectIt()->getId() > 0 ) {
             return getFactory()->getObject('WikiPageFile')->getRegistry()->Query(
                 array(
-                    new FilterVpdPredicate(),
                     new FilterAttributePredicate('WikiPage', $this->getObjectIt()->getId())
                 )
             );

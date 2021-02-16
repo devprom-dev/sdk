@@ -1,7 +1,8 @@
 <?php
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
+include_once SERVER_ROOT_PATH."pm/views/ui/FieldEditable.php";
 
-class FieldWYSIWYG extends Field
+class FieldWYSIWYG extends FieldEditable
 {
  	var $object_it;
  	var $editor;
@@ -115,10 +116,6 @@ class FieldWYSIWYG extends Field
         if ( !is_object($this->object_it) ) return parent::getText();
 
 		$editor = $this->getEditor();
-		if ( $editor->getMode() & WIKI_MODE_INPLACE_INPUT ) {
-			return parent::getText();
-		}
-		
 		$parser = $editor->getHtmlParser();
 		$parser->displayHints(true);
 		$parser->setObjectIt( $this->object_it );
@@ -142,18 +139,37 @@ class FieldWYSIWYG extends Field
             );
         }
 
-		$content = TextUtils::breakLongWords($content);
-
 		return $content;
 	}
 	
 	function drawReadonly()
 	{
-		echo '<div id="'.$this->getId().'" class="reset '.($this->getMode() & WIKI_MODE_INPLACE_INPUT ? 'wysiwyg-input' : 'wysiwyg').'" attributename="'.$this->getName().'" name="'.$this->getName().'">';
+	    if ( is_object($this->object_it) ) {
+	        $project = $this->object_it->get('ProjectCodeName');
+	        $objectclass = get_class($this->object_it->object);
+	        $objectid = $this->object_it->getId();
+	        if ( $this->object_it instanceof WikiPageIterator ) {
+                $annotation = $this->object_it->getAnnotationData();
+            }
+        }
+		echo '<div id="'.$this->getId().'" class="reset '.($this->getMode() & WIKI_MODE_INPLACE_INPUT ? 'wysiwyg-input' : 'wysiwyg').'" 
+		            attributename="'.$this->getName().'" 
+		            name="'.$this->getName().'"
+		            project="'.$project.'"
+		            objectclass="'.$objectclass.'"
+		            objectid="'.$objectid.'"
+		            annotation="'.htmlentities($annotation).'" >';
 		    echo $this->getMode() & WIKI_MODE_INPLACE_INPUT ? $this->getValue() : $this->getText();
 		echo '</div>';
 	}
-	
+
+	function contentEditable()
+    {
+        $value = parent::getValue();
+        return !preg_match(REGEX_INCLUDE_PAGE, $value)
+            && !preg_match(REGEX_INCLUDE_REVISION, $value);
+    }
+
 	function draw( $view = null )
 	{
 	    if ( $this->readOnly() ) {
@@ -161,8 +177,7 @@ class FieldWYSIWYG extends Field
             return;
         }
 
-	    $value = parent::getValue();
-		if ( !$this->getEditMode() && (preg_match(REGEX_INCLUDE_PAGE, $value) || preg_match(REGEX_INCLUDE_REVISION, $value)) ) {
+		if ( !$this->getEditMode() && !$this->contentEditable() ) {
 			$this->drawReadonly();
 			return;
 		}
@@ -184,14 +199,8 @@ class FieldWYSIWYG extends Field
 		$editor->draw( $this->getValue(), $this->getEditMode() );
 	}
 	
-	function drawScripts()
-	{
+	function drawScripts() {
 	    $editor = $this->getEditor();
-
 	    $editor->drawScripts();
-	}
-
-	function shrinkLongUrl( $match )
-	{
 	}
 }

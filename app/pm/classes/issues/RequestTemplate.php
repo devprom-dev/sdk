@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/templates/ObjectTemplate.php";
 
 class RequestTemplate extends ObjectTemplate
@@ -19,17 +18,27 @@ class RequestTemplate extends ObjectTemplate
 		$object = getFactory()->getObject($this->getTypeName());
 		
 		$attributes = array_diff(
-				array_keys($object->getAttributes()), 
-				$object->getAttributesByGroup('system'),
-				array( 'State', 'Project', 'RecordCreated', 'RecordModified', 'Author', 'OrderNum' )
+            array_keys($object->getAttributes()),
+            $object->getAttributesByGroup('system'),
+            $object->getAttributesByGroup('trace'),
+            array(
+                'Project', 'RecordCreated', 'RecordModified', 'Author',
+                'OrderNum', 'Tags', 'Tasks', 'Attachment', 'Deadlines', 'Watchers'
+            )
 		);
-		
+
+		foreach( $attributes as $key => $attribute ) {
+		    if ( !$object->getAttributeEditable($attribute) ) {
+		        unset($attributes[$key]);
+            }
+        }
+
 		return $attributes;
 	}
 	
 	function getDisplayName()
 	{
-		return text(1520);
+		return getSession()->IsRDD() ? text(3007) : text(1520);
 	}
 	
 	function getClassName()

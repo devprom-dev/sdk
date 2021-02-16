@@ -13,7 +13,7 @@ class PMPageNavigation extends PageNavigation
         $projectIt = getSession()->getProjectIt();
         if ( $projectIt->IsPortfolio() ) {
             $portfolio = getFactory()->getObject('co_ProjectGroup');
-            if ( getFactory()->getAccessPolicy()->can_modify($portfolio) )
+            if ( getFactory()->getAccessPolicy()->can_modify($portfolio) && getFactory()->getAccessPolicy()->can_modify($projectIt) )
             {
                 $method = new ObjectModifyWebMethod(
                     $portfolio->getExact($projectIt->get('ProjectGroupId'))
@@ -139,7 +139,7 @@ class PMPageNavigation extends PageNavigation
             'button_class' => 'btn-navbar btn-link',
             'icon' => 'icon-white icon-book',
             'id' => 'menu-kbs',
-            'url' => $module->getExact('project-knowledgebase')->getUrl('', $portfolioIt->getId() != '' ? $portfolioIt : null),
+            'url' => '/pm/' . ($portfolioIt->getId() != '' ? $portfolioIt->get('CodeName') : getSession()->getProjectIt()->get('CodeName')). '/knowledgebase/tree',
             'description' => translate('База знаний')
         );
 
@@ -169,13 +169,17 @@ class PMPageNavigation extends PageNavigation
     function getHelpActions()
     {
         $language = strtolower(getSession()->getLanguageUid());
-        $docs_url = defined('HELP_DOCS_URL') ? HELP_DOCS_URL : 'http://devprom.ru/docs';
+        $docs_url = \EnvironmentSettings::getHelpDocsUrl();
+
+        $docsMap = \EnvironmentSettings::getProcessDocsMap();
+        $processDocsUrl = $docsMap[getSession()->getProjectIt()->get('Tools')];
+
         return array_merge(
             array(
                 array (
                     'name' => text(2277),
                     'uid' => 'shortcuts-help',
-                    'click' => "javascript: workflowModify({'form_url':'/widget/shortcut/".$language."','class_name':'','entity_ref':'','object_id':'','form_title':'".text(2277)."','can_delete':'false','can_modify':'false','delete_reason':null}, donothing);",
+                    'click' => "javascript: workflowModify({'form_url':'/widget/shortcut/".$language."','class_name':'','entity_ref':'','object_id':'','can_delete':'false','can_modify':'false','delete_reason':null}, donothing);",
                 ),
                 array(),
                 array (
@@ -183,6 +187,14 @@ class PMPageNavigation extends PageNavigation
                     'click' => 'javascript:reStartTour();',
                 ),
                 array(),
+                ($processDocsUrl != ''
+                    ? array (
+                        'name' => text('guide.process'),
+                        'url' => $processDocsUrl,
+                        'target' => '_blank'
+                    )
+                    : array()
+                ),
                 ($docs_url != ''
                     ? array (
                         'name' => text('guide.userdocs'),
@@ -202,10 +214,9 @@ class PMPageNavigation extends PageNavigation
         $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
         $className = getFactory()->getClass('Issue');
-        if ($methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD && class_exists($className)) {
+        if (getSession()->IsRDD()) {
             $method = new ObjectCreateNewWebMethod(getFactory()->getObject($className));
             if ($method->hasAccess()) {
-                $method->setRedirectUrl('donothing');
                 $actions[] = array(
                     'name' => $method->getCaption(),
                     'url' => $method->getJSCall(
@@ -220,9 +231,7 @@ class PMPageNavigation extends PageNavigation
         }
 
         $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Request'));
-        if ( $method->hasAccess() )
-        {
-            $method->setRedirectUrl('donothing');
+        if ( $method->hasAccess() ) {
             $type_it = getFactory()->getObject('RequestType')->getRegistry()->Query(
                 array (
                     new FilterBaseVpdPredicate()
@@ -261,9 +270,7 @@ class PMPageNavigation extends PageNavigation
         }
 
         $method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Task'));
-        if ( $methodology_it->HasTasks() && $method->hasAccess() )
-        {
-            $method->setRedirectUrl('donothing');
+        if ( $methodology_it->HasTasks() && $method->hasAccess() ) {
             $actions[] = array (
                 'name' => $method->getObject()->getDisplayName(),
                 'url' => $method->getJSCall(
@@ -277,9 +284,7 @@ class PMPageNavigation extends PageNavigation
         }
 
         $method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Question'));
-        if ( $method->hasAccess() )
-        {
-            $method->setRedirectUrl('donothing');
+        if ( $method->hasAccess() ) {
             $actions[] = array (
                 'name' => $method->getObject()->getDisplayName(),
                 'url' => $method->getJSCall(
@@ -381,9 +386,10 @@ class PMPageNavigation extends PageNavigation
             }
         }
 
+        $parentIt = $project_it->getParentIt();
         $parms['current_project'] = $project_it->get('CodeName');
-        $parms['current_project_title'] = $project_it->getParentIt()->IsProgram()
-            ? $project_it->getParentIt()->getDisplayName() . '&nbsp; &#x279E; &nbsp;' . $project_it->getDisplayName()
+        $parms['current_project_title'] = $parentIt->getId() != '' && !in_array($parentIt->get('CodeName'), array('my','all'))
+            ? $parentIt->getDisplayName() . '&nbsp; &#x279E; &nbsp;' . $project_it->getDisplayName()
             : $project_it->getDisplayName();
 
         if ( $project_it->get('IsClosed') == 'Y' ) {
@@ -402,8 +408,6 @@ class PMPageNavigation extends PageNavigation
         if ( !getSession()->getProjectIt()->IsPortfolio() ) {
             $method->setRedirectUrl("function(){javascript:window.location='".getFactory()->getObject('Module')->getExact('permissions/participants')->get('Url')."'}");
         }
-
-        $method->setRedirectUrl('donothing');
         return $method->getJSCall();
     }
 }

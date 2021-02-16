@@ -31,35 +31,28 @@ class FlotChartLeadAndCycleTimeWidget extends FlotChartBarWidget
     function getValues()
     {
     	$data = $this->getData();
-
     	$bar_data = array();
-    	
     	$week_data = array();
-    	
-    	$y_values = array();
     	$x_values = array();
     	$poly_data = array();
 		$labels = array();
-    	
     	$urls = array();
     	
     	$index = 0;
-
 		foreach ( $data as $key => $item )
 		{
 			$week_data[strftime('%Y,%W', $key)][] = $item['data'];
 			
-		    $bar_data[] = array( $index, 0 );
-		    $bar_data[] = array( $index, max(round($item['data'],0), 0.5) );
-		    $y_values[] = $item['data'];
-		    $x_values[] = array($index,$index);
+		    $bar_data[$index] = array( $index, 0 );
+		    $bar_data[$index] = array( $index, max(round($item['data'],0), 0.5) );
+		    $x_values[$index] = array( $index, $index );
 
 			if ( $this->demo ) {
-				$labels[] = text('kanban31');
+				$labels[$index] = text('kanban31');
 			}
 			else {
-				$labels[] = 'I-'.$this->iterator->getId().' '.IteratorBase::wintoutf8($this->iterator->get('Caption'));
-				$urls[] = $this->iterator->getViewUrl();
+				$labels[$index] = $this->iterator->get('UID').' '.$this->iterator->get('Caption');
+				$urls[$index] = $this->iterator->getViewUrl();
 			}
 
 		    $this->iterator->moveNext();
@@ -68,15 +61,11 @@ class FlotChartLeadAndCycleTimeWidget extends FlotChartBarWidget
 		}
 		
 		$index = 0;
-
 		foreach ( $data as $key => $item )
 		{
 			$week_year = strftime('%Y,%W', $key);
-			
 			$average = round(array_sum($week_data[$week_year]) / (count($week_data[$week_year])), 1);
-			
-		    $poly_data[] = array( $index, $average );
-
+		    $poly_data[$index] = array( $index, $average );
 		    $index++;
 		}
 

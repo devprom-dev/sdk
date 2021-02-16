@@ -65,20 +65,7 @@ class AutoAction extends Metaobject
         if ( $parms['Conditions'] == '' ) {
             $this->serializeConditions($parms);
         }
-
- 		$result = parent::add_parms( $parms );
- 		
- 		if ( $result > 0 && in_array($parms['EventType'], array(AutoActionEventRegistry::CreateAndModify, AutoActionEventRegistry::CreateOnly)) )
- 		{
-	 		getFactory()->getObject('StateAction')->add_parms(
-	 				array (
-	 					'State' => WorkflowScheme::Instance()->getStateIt(getFactory()->getObject($this->getSubjectClassName()))->getId(),
-	 					'ReferenceName' => $parms['ReferenceName']  
-	 				)
-	 		);
- 		}
- 		
- 		return $result;
+ 		return parent::add_parms( $parms );
  	}
 
  	function modify_parms( $id, $parms )
@@ -146,7 +133,7 @@ class AutoAction extends Metaobject
  			$items[] = array (
  					'Condition' => $parms['Condition'.$i],
  					'Operator' => $parms['Operator'.$i],
- 					'Value' => IteratorBase::wintoutf8($parms['Value'.$i])
+ 					'Value' => $parms['Value'.$i]
  			);
  		}
  		if ( count($items) < 1 ) return;

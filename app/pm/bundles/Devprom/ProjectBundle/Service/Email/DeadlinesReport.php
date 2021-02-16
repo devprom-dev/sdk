@@ -17,13 +17,12 @@ class DeadlinesReport
     function send( $userIt )
     {
         $renderService = new RenderService(
-            getSession(), SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/Emails"
+            $this->session, SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/Emails"
         );
 
         $systemIt = getFactory()->getObject('cms_SystemSettings')->getAll();
 
         $mail = new \HtmlMailBox();
-        $mail->setFromUser($this->session->getUserIt());
         $mail->appendAddress( $userIt->get('Email') );
         $mail->setSubject( $systemIt->getDisplayName() . ': ' . text(2620) );
 
@@ -49,13 +48,15 @@ class DeadlinesReport
             'deadlines' => array()
         );
 
+        $object = getFactory()->getObject('WorkItem');
+        $object->disableVpd();
+
         $builders = array_merge(
-            getSession()->getBuilders('TaskViewModelBuilder'),
+            $this->session->getBuilders('TaskViewModelBuilder'),
             array(
                 new \TaskModelExtendedBuilder()
             )
         );
-        $object = getFactory()->getObject('WorkItem');
         foreach( $builders as $builder ) {
             $builder->build($object);
         }
@@ -63,18 +64,21 @@ class DeadlinesReport
         $uid = new \ObjectUID();
         $now = strtotime(\SystemDateTime::date());
         $dateTime = strftime('%Y-%m-%d', strtotime('4 days', $now));
+        $minTime = strftime('%Y-%m-%d', strtotime('-14 days', $now));
 
         $objectIt = $object->getRegistry()->Query(
             array(
                 new \FilterAttributePredicate('Assignee', $userIt->getId()),
+                new \FilterDateAfterPredicate('DueDate', $minTime),
                 new \FilterDateBeforePredicate('DueDate', $dateTime),
                 new \WorkItemStatePredicate('initial,progress'),
                 new \SortAttributeClause('DueDate.A'),
                 new \SortAttributeClause('Priority.A')
             )
         );
+
         while( !$objectIt->end() ) {
-            $dateText = $this->session->getLanguage()->getDateFormattedShort($objectIt->get('DueDate'));
+            $dateText = $objectIt->getDateFormattedShort('DueDate');
             $artefactIt = $objectIt->getObjectIt();
 
             $uidInfo = $uid->getUIDInfo($artefactIt, true);

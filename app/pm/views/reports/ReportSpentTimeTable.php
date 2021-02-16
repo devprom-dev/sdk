@@ -3,7 +3,9 @@ include "ActivitiesExcelIterator.php";
 
 class ReportSpentTimeTable extends PMPageTable
 {
-	function getList() {
+    private $rowsObject = null;
+
+	function getList($mode = '') {
 		return new ReportSpentTimeList( $this->getObject() );
 	}
 
@@ -12,33 +14,27 @@ class ReportSpentTimeTable extends PMPageTable
 		return array_merge(
 		    parent::getFilters(),
             array(
-                new ViewSpentTimeWebMethod(),
                 $this->buildStartFilter(),
                 new ViewFinishDateWebMethod(),
-                $this->buildUserFilter()
+                $this->buildUserFilter(),
+                $this->buildFilterState()
             )
 		);
 	}
 
-	function getFiltersDefault() {
-        return array('view', 'start', 'finish');
-    }
-
-    function getFilterPredicates()
+    function getFilterPredicates( $values )
 	{
-		$values = $this->getFilterValues();
-        $this->getObject()->setView( $values['view'] );
-		
  		$predicates = array(
  		    new FilterSubmittedAfterPredicate($values['start']),
-            new FilterSubmittedBeforePredicate($values['finish'])
+            new FilterSubmittedBeforePredicate($values['finish']),
+            new SpentTimeStatePredicate($values['state'])
         );
  		if ( !in_array($values['participant'], array('','all','none')) ) {
-			$predicates[] = new FilterAttributePredicate('SystemUser', preg_split('/,/', $values['participant']));
+			$predicates[] = new FilterAttributePredicate('SystemUser', $values['participant']);
  		}
 
  		return array_merge(
- 		    parent::getFilterPredicates(),
+ 		    parent::getFilterPredicates( $values ),
             $predicates
         );
 	}
@@ -47,11 +43,36 @@ class ReportSpentTimeTable extends PMPageTable
 	{
 		return array();
 	}
-	
+
+    function getRowsObject()
+    {
+        if ( is_object($this->rowsObject) ) return $this->rowsObject;
+
+        $values = $this->getFilterValues();
+        if ( $values['rowsobject'] != '' ) {
+            return $this->rowsObject = getFactory()->getObject($values['rowsobject']);
+        }
+
+        switch( $this->getReportBase() )
+        {
+            case 'activitiesreporttasks':
+                return $this->rowsObject = getFactory()->getObject('Task');
+            case 'activitiesreportincrements':
+                return $this->rowsObject = getFactory()->getObject('Increment');
+            case 'activitiesreportusers':
+                return $this->rowsObject = getFactory()->getObject('User');
+            case 'activitiesreportproject':
+                return $this->rowsObject = getFactory()->getObject('Project');
+            default:
+                return $this->rowsObject = getFactory()->getObject('Request');
+        }
+    }
+
 	function getActions()
 	{
 		$actions = array();
 		$values = $this->getFilterValues();
+        $values['rowsobject'] = get_class($this->getRowsObject());
 
 		$method = new ExcelExportWebMethod();
 		$actions[] = array(
@@ -84,36 +105,45 @@ class ReportSpentTimeTable extends PMPageTable
 
 	function buildStartFilter() {
         $filter = new ViewStartDateWebMethod();
-        $filter->setDefault(getSession()->getLanguage()->getPhpDate(strtotime('-3 weeks', strtotime(date('Y-m-j')))));
         return $filter;
+    }
+
+    function buildFilterValuesByDefault(&$filters)
+    {
+        $values = parent::buildFilterValuesByDefault($filters);
+        if ( !array_key_exists('start', $values) ) {
+            $values['start'] = getSession()->getLanguage()->getPhpDate(strtotime('-3 weeks', strtotime(date('Y-m-j'))));
+        }
+        return $values;
     }
 
     function buildUserFilter() {
 	    return new FilterObjectMethod(getFactory()->getObject('User'), '', 'participant');
     }
 
+    function buildFilterState($filterValues = array())
+    {
+        $filter = new FilterObjectMethod( getFactory()->getObject('StateCommon'), translate('Состояние'), 'state' );
+        $filter->setHasNone(false);
+        return $filter;
+    }
+
     protected function getFamilyModules( $module )
     {
-        switch( $module ) {
-            case 'project-spenttime':
-                return array (
-                    'worklog'
-                );
-            default:
-                return parent::getFamilyModules($module);
-        }
+        return array (
+            'worklog'
+        );
     }
 
     protected function getChartModules( $module )
     {
-        switch( $module ) {
-            case 'project-spenttime':
-                return array (
-                    'tasksplanbyfact',
-                    'activitieschart'
-                );
-            default:
-                return parent::getChartModules($module);
-        }
+        return array (
+            'tasksplanbyfact',
+            'activitieschart'
+        );
+    }
+
+    function getDetails() {
+        return array();
     }
 }

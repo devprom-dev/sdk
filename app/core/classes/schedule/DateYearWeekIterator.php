@@ -4,6 +4,6 @@ class DateYearWeekIterator extends OrderedIterator
 {
     function getDisplayName()
     {
-        return $this->getDateFormatShort('StartDate').' / '.$this->getDateFormatShort('FinishDate');
+        return $this->getDateFormattedShort('StartDate').' / '.$this->getDateFormattedShort('FinishDate');
     }
 }

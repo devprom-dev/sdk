@@ -17,11 +17,8 @@
 <? } ?>
 <?php $view['slots']->stop(); ?>
 <?php $view['slots']->start('ext_after'); ?>
-<? if ( TextUtils::versionToString($_SERVER['APP_VERSION']) < TextUtils::versionToString("3.5.39") ) { ?>
-	<script src="/cache-after?v=<?=$current_version?>&l=<?=$language_code?>&dpl=<?=$datelanguage?>" type="text/javascript" charset="UTF-8"></script>
-<? } ?>
 <?php if ( !defined('SEND_BUG_REPORTS') || SEND_BUG_REPORTS ) { ?>
-	<script src="/scripts/raven/raven.min.js?v=<?=$current_version?>" type="text/javascript" charset="UTF-8"></script>
+    <script src="/scripts/raven/raven.min.js?v=<?=$current_version?>" type="text/javascript" charset="UTF-8"></script>
 <?php }?>
 <script type="text/javascript">
 	devpromOpts.language = '<?=$language_code?>';
@@ -34,10 +31,10 @@
 	devpromOpts.plantUMLServer = '<?=(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : "")?>';
     devpromOpts.iid = "<?=$public_iid?>";
     devpromOpts.serviceUrl = "<?=(defined('SERVICE_URL') ? SERVICE_URL : 'devprom.ru')?>";
+    devpromOpts.uiExtensionsEnabled = <?=(!defined('UI_EXTENSION') || UI_EXTENSION ? 'true' : 'false' )?>;
     documentOptions.visiblePages = <?=(defined('DOC_VISIBLE_PAGES') ? DOC_VISIBLE_PAGES : "30")?>;
-    documentOptions.cachedPages = <?=(defined('DOC_CACHED_PAGES') ? DOC_CACHED_PAGES : "50")?>;
 	initializeApp();
-	<?php if ( !defined('UI_EXTENSION') || UI_EXTENSION ) { ?> makeUpApp(); <?php } ?>
+    makeUpApp();
 	<?php if ( !defined('SEND_BUG_REPORTS') || SEND_BUG_REPORTS ) { ?>
 	setUXData();
 	Raven.config(window.location.protocol+'//<?=(defined('DEVOPSKEY') ? DEVOPSKEY : 'af4078b6e4630da32f3c164d121ea2b1')?>@api.devopsboard.com/sentry/1', {
@@ -91,7 +88,7 @@ else {
 		<?php $view['slots']->output('ext_before'); ?>
 		<?php $view['slots']->output('_header'); ?>
 	</head>
-	<body>
+	<body class="<?=(defined('UI_EXTENSION') && UI_EXTENSION || !defined('UI_EXTENSION') ? 'app' : '')?>">
 	<div class="container-fluid <?= ($inside ? 'container-fluid-internal' : '') ?>">
 		<?php
 		$view['slots']->output('_content');

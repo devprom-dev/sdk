@@ -1,5 +1,7 @@
 <?php
+use Devprom\ProjectBundle\Service\Email\CommentNotificationService;
 use Devprom\ProjectBundle\Service\Files\UploadFileService;
+use Devprom\ProjectBundle\Service\Model\ModelChangeNotification;
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/validators/ModelProjectValidator.php";
@@ -19,11 +21,6 @@ class PMPageForm extends PageForm
     private $templateFields = array();
     private $allowChooseProject = false;
 
-    function PMPageForm($object)
-    {
-        parent::__construct($object);
-    }
-    
     function getId()
     {
     	return parent::getId().$this->getTransitionIt()->getId();
@@ -37,7 +34,7 @@ class PMPageForm extends PageForm
 
     function getIterator( $objectId )
     {
-        if ( $objectId > 0 ) {
+        if ( is_numeric($objectId) && $objectId > 0 ) {
             $objectIt = $this->getObject()->createCachedIterator(
                 array(
                     array(
@@ -51,12 +48,6 @@ class PMPageForm extends PageForm
         return parent::getIterator($objectId);
     }
 
-    function buildForm()
-    {
-        parent::buildForm();
-        $this->extendModel();
-    }
-    
     protected function extendModel()
     {
         $entities = TextTemplateEntityRegistry::getEntities();
@@ -171,11 +162,13 @@ class PMPageForm extends PageForm
         }
 	}
 
-    function getModelValidator()
-    {
-        $validator = parent::getModelValidator();
-        $validator->addValidator( new ModelProjectValidator() );
-        return $validator;
+    function getValidators() {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new ModelProjectValidator()
+            )
+        );
     }
 
     function persist()
@@ -219,64 +212,6 @@ class PMPageForm extends PageForm
 
     function persistTemporaryAttachments( $service, $objectIt ) {
         $service->attachTemporaryFiles($objectIt, 'File', getFactory()->getObject('pm_Attachment'));
-    }
-
-    function validateInputValues($id, $action)
-    {
-        $result = parent::validateInputValues($id, $action);
-
-        if ($result != '') return $result;
-
-        $object = $this->getObject();
-        
-        $attribute = getFactory()->getObject('pm_CustomAttribute');
-        
-        $it = $attribute->getByEntity($object);
-
-        $unique_attrs = array();
-        
-        $parms = $_REQUEST;
-        
-		$mapper = new ModelDataTypeMapper();
-	    
-		$mapper->map($object, $parms);
-        
-        while (!$it->end()) 
-        {
-            $value = $parms[$it->get('ReferenceName')];
-
-            if ($it->get('IsUnique') == 'Y' && $value != '') 
-            {
-                $unique_attrs[] = array(
-                        'ReferenceName' => $it->get('ReferenceName'),
-                        'AttributeType' => $it->get('AttributeType'),
-                        'Id' => $it->getId(),
-                        'DisplayName' => $it->getDisplayName(),
-                		'AttributeValue' => strtolower($value)
-                );
-            }
-            
-            $it->moveNext();
-        }
-
-        $value_object = getFactory()->getObject('pm_AttributeValue');
-        
-        foreach ($unique_attrs as $key => $attr) 
-        {
-            $field = $attribute->getAttributeObject('AttributeType')->getExact($attr['AttributeType'])->getValueColumn();
-
-            $attr_it = $value_object->getByRefArray( array(
-                		'CustomAttribute' => $attr['Id'],
-                        'LCASE(' . $field . ')' => $attr['AttributeValue']
-            ));
-
-            if ($attr_it->count() > 0 && $attr_it->get('ObjectId') != $id) 
-            {
-            	return str_replace('%1', $attr['DisplayName'], text(1176));
-            }
-        }
-
-        return $result;
     }
 
     function getDiscriminator()
@@ -401,28 +336,54 @@ class PMPageForm extends PageForm
 
             case 'State':
                 if ( $this->getObject() instanceof MetaobjectStatable ) {
-                    return new FieldState(getFactory()->getObject($this->getObject()->getStateClassName()));
+                    $field = new FieldState(getFactory()->getObject($this->getObject()->getStateClassName()));
+                    $field->setInstantiationAllowedOnly(true);
+                    return $field;
                 }
                 else {
                     return parent::createFieldObject($attr);
                 }
 
             case 'TransitionNotification':
-                $field = new FieldCheckNotifications($this->getTransitionIt());
+                $field = new FieldCheckNotifications();
                 if ( is_object($this->getObjectIt()) ) {
-                    $field->setAnchor($this->getObjectIt());
+                    $options = new CommentNotificationService($this->getObjectIt());
+                    $field->setEmails($options->getEmails());
+                    $field->setPrivate($options->getPrivate($this->getTransitionIt()));
+                }
+                return $field;
+
+            case 'Caption':
+                if ( !$this->getEditMode() ) {
+                    $field = new FieldTextEditable();
+                    $field->setObjectIt( $this->getObjectIt() );
+                }
+                else {
+                    $field = parent::createFieldObject($attr);
                 }
                 return $field;
 
             default:
-                if ( in_array('dictionary', $this->getObject()->getAttributeGroups($attr)) ) {
-                    return new FieldCustomDictionary(
-                        is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject(),
-                        $attr
-                    );
+                $attributeGroups = $this->getObject()->getAttributeGroups($attr);
+                if ( in_array('dictionary', $attributeGroups) ) {
+                    if ( $this->getAction() == 'view' && !in_array('multiselect', $attributeGroups) ) {
+                        return new FieldReferenceCustomAttribute(
+                            $this->getObjectIt(),
+                            $attr,
+                            new PMCustomDictionary($this->getObject(), $attr),
+                            array(),
+                            true
+                        );
+                    }
+                    else {
+                        return new FieldCustomDictionary(
+                            is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject(),
+                            $attr
+                        );
+                    }
                 }
 
-                if ( in_array('computed', $this->getObject()->getAttributeGroups($attr)) ) {
+                if ( in_array('computed', $attributeGroups) && is_object($this->getObjectIt()) ) {
                     return new FieldComputed($this->getObjectIt(), $attr);
                 }
 
@@ -447,6 +408,7 @@ class PMPageForm extends PageForm
                     else {
                         $field->setCssClassName( 'wysiwyg-text' );
                     }
+                    $field->setToolbar(WikiEditorBase::ToolbarFull);
                     return $field;
                 }
 
@@ -481,6 +443,16 @@ class PMPageForm extends PageForm
             default:
                 if ( $description == '' && $this->getEditMode() && $this->getObject()->getAttributeType($field_name) == 'wysiwyg' ) {
                     $description = str_replace('%1', getFactory()->getObject('Module')->getExact('dicts-texttemplate')->getUrl(), text(606));
+                }
+
+                $groups = $this->getObject()->getAttributeGroups($field_name);
+                if ( in_array('dictionary', $groups) ) {
+                    $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
+                    $it->moveTo('ReferenceName', $field_name);
+                    $method = new ObjectModifyWebMethod($it);
+                    if ( $method->hasAccess() ) {
+                        $description .= ' '.str_replace('%1', $method->getJSCall(), text(2183));
+                    }
                 }
                 return $description;
         }
@@ -521,7 +493,9 @@ class PMPageForm extends PageForm
         }
 
         return array_merge(parent::getRenderParms(), array(
-            'state_name' => is_object($object_it) && is_a($object_it, 'StatableIterator') && $object_it->IsTransitable() ? $object_it->getStateName() : "",
+            'state_name' => is_object($object_it) && is_a($object_it, 'StatableIterator') && $object_it->IsTransitable()
+                                ? $object_it->getStateIt()->get('Caption')
+                                : "",
             'form_class' => '',
             'showtabs' => $this->getTransitionIt()->getId() == '',
             'shortAttributes' => $this->getShortAttributes(),
@@ -680,15 +654,8 @@ class PMPageForm extends PageForm
 
     function render( $view, $parms )
     {
-        $object_it = $this->getObjectIt();
-        if ( is_object($object_it) && $object_it->getId() != "" && getSession()->getUserIt()->getId() != "" ) {
-            DAL::Instance()->Query(
-                " DELETE FROM ObjectChangeNotification 
-                   WHERE ObjectId = ".$object_it->getId()." 
-                     AND ObjectClass = '".get_class($object_it->object)."' 
-                     AND SystemUser = ".getSession()->getUserIt()->getId()
-            );
-        }
+        $service = new ModelChangeNotification();
+        $service->clearUser($this->getObjectIt(), getSession()->getUserIt(), array('commented'));
         parent::render( $view, $parms );
     }
 

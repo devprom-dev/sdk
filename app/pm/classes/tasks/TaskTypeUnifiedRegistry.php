@@ -9,9 +9,10 @@ class TaskTypeUnifiedRegistry extends ObjectRegistrySQL
 
         return "(
             SELECT DISTINCT
-                   t.ReferenceName as entityId,
+                   t.ReferenceName as pm_TaskTypeId,
                    t.ReferenceName,
                    t.Caption,
+                   t.ParentTaskType,
                    '".$this->getObject()->getVpdValue()."' VPD,
                    0 OrderNum
               FROM pm_TaskType t
@@ -20,6 +21,7 @@ class TaskTypeUnifiedRegistry extends ObjectRegistrySQL
             SELECT 'z',
                    'z',
                    '".getFactory()->getObject('Task')->getDisplayName()."',
+                   0,
                    '".$this->getObject()->getVpdValue()."' VPD,
                    0
              ORDER BY 1

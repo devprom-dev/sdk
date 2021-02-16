@@ -22,6 +22,7 @@ class FieldComputed extends Field
         $lines = array();
         $uids = array();
         $ids = array();
+        $vpds = array();
         $className = '';
         $limit = 20;
 
@@ -38,32 +39,37 @@ class FieldComputed extends Field
                     );
                 }
                 $ids[] = $computedItem->getId();
+                $vpds[] = $computedItem->get('VPD');
+            }
+        }
+		ksort($uids);
+
+		if ( count($ids) > 0 ) {
+            $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIds($className, $ids, $vpds);
+		}
+
+        $html = '';
+        if ( count($lines) > 0 ) {
+            $html .= join('<br/>', $lines);
+        }
+        else {
+            $html .= join('<br/>', $uids);
+            if ( $url != '' ) {
+                $text = count($result) > count($uids)
+                    ? str_replace('%1', count($result) - count($uids), text(2028))
+                    : text(2034);
+                $html .= '<br/><a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
             }
         }
 
-		ksort($uids);
-		if ( count($ids) > 0 ) {
-			$widget_it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', $className);
-			if ( $widget_it->getId() != '' ) {
-				$url = getFactory()->getObject($widget_it->get('ReferenceName'))->getExact($widget_it->getId())->getUrl(
-					strtolower($className).'='.\TextUtils::buildIds($ids)
-				);
-			}
-		}
-
-		echo '<div class="input-block-level well well-text">';
-            if ( count($lines) > 0 ) {
-                echo join('<br/>', $lines);
-            }
-            else {
-                echo join('<br/>', $uids);
-                if ( $url != '' ) {
-                    $text = count($result) > count($uids)
-                        ? str_replace('%1', count($result) - count($uids), text(2028))
-                        : text(2034);
-                    echo '<br/><a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
-                }
-            }
-		echo '</div>';
+        if ( $this->readOnly() )
+        {
+            echo '<span class="input-block-level well well-text" style="width:100%;height:auto;word-break: break-all;">';
+                echo $html;
+            echo '</span>';
+        }
+        else {
+            echo $html;
+        }
 	}
 }

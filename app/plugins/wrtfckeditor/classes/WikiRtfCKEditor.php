@@ -4,6 +4,7 @@ include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorBase.php";
 include 'WrtfCKEditorWikiParser.php';
 include 'WrtfCKEditorPageParser.php';
 include 'WrtfCKEditorHtmlParser.php';
+include 'WrtfCKEditorHtmlImportableParser.php';
 include "WrtfCKEditorComparerParser.php";
 include "WrtfCKEditorSupportParser.php";
 
@@ -36,60 +37,34 @@ class WikiRtfCKEditor extends WikiEditorBase
 
 	function getBaseParser( $original_editor = '' )
 	{
-	    $object_it = $this->getObjectIt();
-	     
-	    if ( $original_editor != '' )
-	    {
-	        $editor = $original_editor;
-	    }
-	    else if ( is_object($object_it) && $object_it->count() > 0 )
-	    {
-	     	$editor = strtolower($object_it->get('ContentEditor'));
-	    }
-	    
-	    if ( strtolower($editor) == 'wikisyntaxeditor' )
-	    {
-	        return new WrtfCKEditorWikiParser( $object_it );
-	    }
+        return new WrtfCKEditorHtmlParser( $this->getObjectIt() );
 	}
 	
  	function getPageParser( $original_editor = '' )
  	{
- 	    $base_editor = $this->getBaseParser($original_editor);
- 	    
- 	    if ( is_object($base_editor) ) return $base_editor;
- 	    
     	return new WrtfCKEditorPageParser( $this->getObjectIt() );
  	}
 
  	function getEditorParser( $original_editor = '' )
  	{
- 	    $base_editor = $this->getBaseParser($original_editor);
- 	    
- 	    if ( is_object($base_editor) ) return $base_editor;
- 	    
     	return new WrtfCKEditorPageParser( $this->getObjectIt() );
  	}
 
  	function getHtmlParser()
  	{
- 	    $base_editor = $this->getBaseParser();
- 	    
- 	    if ( is_object($base_editor) ) return $base_editor;
- 	    
     	return new WrtfCKEditorHtmlParser( $this->getObjectIt() );
  	}
+
+    function getHtmlImportableParser()
+    {
+        return new WrtfCKEditorHtmlImportableParser( $this->getObjectIt() );
+    }
 
  	function getComparerParser()
  	{
  		return new WrtfCKEditorComparerParser( $this->getObjectIt() );
  	}
  	
- 	function getTemplateCallback()
- 	{
- 		return "function(result) { pasteTemplate( '".$this->getFieldId()."', result ); }"; 
- 	}
-  	
   	function getAttachmentsCallback()
  	{
  		return "addImagesAutomatically";
@@ -99,9 +74,10 @@ class WikiRtfCKEditor extends WikiEditorBase
  	{
 		if ( is_object($this->getObjectIt()) && $this->getObjectIt()->getId() != '' ) {
 			$projectCodeName = $this->getObjectIt()->get('ProjectCodeName');
-		} else {
-			$projectCodeName = getSession()->getProjectIt()->get('CodeName');
 		}
+		if ( $projectCodeName == '' ) {
+            $projectCodeName = getSession()->getProjectIt()->get('CodeName');
+        }
 
 		$field = $this->getFieldName();
 
@@ -109,14 +85,31 @@ class WikiRtfCKEditor extends WikiEditorBase
 		
  		$rows = $this->getMinRows();
  		$height = $rows * 16.9;
-
-		$toolbar = $this->getToolbar() == self::ToolbarMini ? "'MiniToolbar'" : "'FullToolbar'";
-
+		$toolbar = $this->getToolbar() == self::ToolbarMini ? "MiniToolbar" : "FullToolbar";
  		$object_it = $this->getObjectIt();
- 		
  		$object_id = is_object($object_it) ? $object_it->getId() : '';
- 			
- 		$modify_url = getSession()->getApplicationUrl().'methods.php?method=modifyattributewebmethod';
+ 		$version = is_object($object_it) ? $object_it->get('RecordVersion') : '';
+
+ 		$attributes = array(
+            'modifyUrl' => getSession()->getApplicationUrl().'methods.php?method=modifyattributewebmethod',
+            'toolbar' => ($this->getMode() & WIKI_MODE_INPLACE_INPUT ? "" : $toolbar),
+            'objectId' => $object_id,
+            'id' => $id,
+            'objectClass' => get_class($this->getObject()),
+            'project' => $projectCodeName,
+            'annotation' => $object_it instanceof WikiPageIterator ? $object_it->getAnnotationData() : '',
+            'attributeName' => $field,
+            'tabindex' => $this->getTabIndex(),
+            'version' => $version,
+            'userHeight' => $height,
+            'appVersion' => $_SERVER['APP_VERSION']
+        );
+
+        $attributesAttr = implode(' ',
+            array_map( function ($k, $v) {
+                return $k .'="'. htmlspecialchars($v) .'"';
+                }, array_keys($attributes), $attributes
+        ));
 
 		?>
 		
@@ -125,24 +118,19 @@ class WikiRtfCKEditor extends WikiEditorBase
 			
 			<?php if ( !($this->getMode() & WIKI_MODE_INLINE) ) { ?>
 			
-			<textarea class="input-block-level wysiwyg <?=$this->getCssClassName()?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" rows="<?=($rows)?>" objectId="<?=$object_id?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" name="<?php echo $field; ?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></textarea>
-			
+			<textarea class="input-block-level wysiwyg <?=$this->getCssClassName()?>" <?=$attributesAttr?> rows="<?=($rows)?>" name="<?=$field;?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></textarea>
+
 			<?php } else { ?>
 			
 			<input type="hidden" id="<?php echo $id; ?>Value" name="<?php echo $field; ?>" value="<?=$content?>">
 
-			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="min-height:<?=$height?>px;" contenteditable="true" objectId="<?=$object_id?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
-			    <? 
-				        // decode is required because of edit mode is displayed like html (div)
-			        echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
-			    ?>
-			</div>
-			
+            <textarea class="input-block-level <?=$this->getCssClassName()?>" tabindex="<?php echo $this->getTabIndex(); ?>" name="<?=$field;?>" rows="<?=($rows)?>" <?=$attributesAttr?> <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></textarea>
+
 			<?php } ?>
 			
 			<?php } elseif ( $this->getMode() & WIKI_MODE_INPLACE_INPUT ) { ?>
 			
-			<div class="wysiwyg-text wysiwyg-input <?=$this->getCssClassName()?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
+			<div class="wysiwyg-text wysiwyg-input <?=$this->getCssClassName()?>" <?=$attributesAttr?> contenteditable="true" <?=($this->getRequired() ? 'required' : '')?> >
                 <? echo $content; ?>
             </div>
 			
@@ -151,50 +139,15 @@ class WikiRtfCKEditor extends WikiEditorBase
 			<?php if ( $content == '' ) { ?>
 			
 		    <div class="wysiwyg-welcome hidden-print" for-id="<?=$id?>"><?=text(1280)?></div>
-			
-			<?php } ?>
 
-			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="<?=$style?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
+            <?php } ?>
+
+			<div class="reset wysiwyg <?=$this->getCssClassName()?>" contenteditable="true" <?=$attributesAttr?> <?=($this->getRequired() ? 'required' : '')?> >
                 <? echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING); ?>
             </div>
 			
 			<?php } ?>
-
 		</div>
-
-		<script type="text/javascript">
-			$(document).ready( function() {
-				if ( $('#<?=$id?>').parents('#documentCache,.embedded_form').length < 1 ) {
-					setup<?=$id?>();
-				}
-		    });
-		    function setup<?=$id?>()
-		    {
-		    	if ( $('#<?=$id?>').is('.cke_editable') ) return;
-		    	if ( typeof setupWysiwygEditor == 'undefined' ) return;
-				if ( $('#<?=$id?>').is('.wysiwyg-text') ) {
-					$('#<?=$id?>.wysiwyg-text[contenteditable="true"]').parent()
-						.hover(function() {
-								if ( !$(this).find('.wysiwyg-text').is('.cke_focus') ) $(this).addClass('wysiwyg-hover');
-								$('.wysiwyg-welcome[for-id='+$(this).attr('id')+']').css('border-top', '2px solid white');
-							},
-							function() {
-								$(this).removeClass('wysiwyg-hover');
-								$('.wysiwyg-welcome[for-id='+$(this).attr('id')+']').css('border', 'none');
-							});
-				}
-				setupWysiwygEditor(
-	    			'<?=$id ?>', 
-	    			<?=($this->getMode() & WIKI_MODE_INPLACE_INPUT ? "''" : $toolbar) ?>, 
-				    '<?=$height ?>', 
-				    '<?=$modify_url ?>', 
-				    <?=JsonWrapper::encode(htmlentities(IteratorBase::wintoutf8($attachments_html), ENT_QUOTES | ENT_HTML401, 'UTF-8')) ?>, 
-				    '<?=$_SERVER['APP_VERSION'] ?>',
-					'<?=getSession()->getProjectIt()->get('CodeName')?>'
-				);
-		    }
-		</script>
-		
 		<?php
  	}
 }

@@ -1,5 +1,7 @@
 <?php
+use Devprom\ProjectBundle\Service\Email\CommentNotificationService;
 
+include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
 include_once "FieldCommentAttachments.php";
 include_once "FieldCheckNotifications.php";
  
@@ -7,7 +9,9 @@ class CommentForm extends PMForm
 {
  	var $control_uid;
  	var $anchor_it;
+ 	private $method = null;
  	private $prevCommentIt = null;
+ 	private $emails = array();
 
  	function __construct($object)
     {
@@ -34,25 +38,23 @@ class CommentForm extends PMForm
  	{
  		$this->control_uid = md5($object_it->object->getClassName().$object_it->getId().$_REQUEST['formonly']);
  		$this->anchor_it = $object_it;
+
+        $items = getFactory()->getEventsManager()->getNotificators('ServicedeskCommentEmailNotificator');
+        if ( count($items) > 0 && $this->anchor_it->object instanceof Request )
+        {
+            $notificator = array_shift($items);
+            $this->emails = $notificator->getEmails($this->anchor_it);
+        }
+
+        $this->method = new CommentWebMethod($this->anchor_it);
  	}
  	
- 	function getAnchorIt()
- 	{
- 		global $model_factory, $_REQUEST;
- 		
- 		if ( !is_object($this->anchor_it) )
- 		{
- 			$anchor = $model_factory->getObject($_REQUEST['objectclass']);
-	 		$this->anchor_it = $anchor->getExact($_REQUEST['object']);
- 		}
- 		
+ 	function getAnchorIt() {
  		return $this->anchor_it;
  	}
  	
  	function getCommandClass()
  	{
- 		global $_REQUEST;
-
  		$anchor_it = $this->getAnchorIt();
  		
  		$parms = '&ObjectId='.$anchor_it->getId().
@@ -61,8 +63,7 @@ class CommentForm extends PMForm
  		return 'managecomment'.$parms;
  	}
 
-	function getAttributes()
-	{
+	function getAttributes() {
 		return array('Caption', 'Attachments', 'Notification');
 	}
 	
@@ -75,8 +76,7 @@ class CommentForm extends PMForm
 		}
 	}
 
-	function IsAttributeRequired( $attribute )
-	{
+	function IsAttributeRequired( $attribute ) {
 		return false; 	
 	}
 
@@ -88,14 +88,24 @@ class CommentForm extends PMForm
 			case 'Attachments':
 				return true;
             case 'Notification':
-                return $this->prevCommentIt->get('IsPrivate') != 'Y';
+                return $_REQUEST['IsPrivate'] != 'Y' && $this->prevCommentIt->get('IsPrivate') != 'Y';
 			default:
 				return false; 	
 		}
 	}
 
-	function getButtonText()
-	{
+	function IsAttributeModifiable($attribute)
+    {
+        switch( $attribute ) {
+            case 'Caption':
+                if ( is_object($this->method) ) return $this->method->hasAccess();
+                return parent::IsAttributeModifiable($attribute);
+            default:
+                return parent::IsAttributeModifiable($attribute);
+        }
+    }
+
+    function getButtonText() {
         return translate('Сохранить');
 	}
 
@@ -122,7 +132,7 @@ class CommentForm extends PMForm
 				return 'wysiwyg'; 	
 			case 'Attachments':
             case 'Notification':
-				return 'files'; 	
+				return 'custom';
 			default:
 				return parent::getAttributeType( $attribute );
 		}
@@ -133,6 +143,7 @@ class CommentForm extends PMForm
         switch( $attribute ) {
             case 'Notification':
                 if ( $this->prevCommentIt->get('IsPrivate') != 'Y' ) {
+                    if ( $_REQUEST['IsPrivate'] == 'Y' ) return 'N';
                     return parent::getAttributeValue($attribute);
                 }
                 return 'N';
@@ -155,18 +166,14 @@ class CommentForm extends PMForm
 						$field->setObject( $this->getObject() );
 
 				$editor = $field->getEditor();
-				
 				$editor->setMode( WIKI_MODE_MINIMAL );
 						
 				$field->setTabIndex($tab_index);
 				$field->setValue($value);
 				$field->setName($attribute);
 				$field->setCssClassName( 'wysiwyg_bottom wysiwyg_right' );
-				
 				$field->setId('Caption'.$this->control_uid);
-				
 				$field->draw();
-				
 				break;
 			
 			case 'Attachments':
@@ -179,8 +186,9 @@ class CommentForm extends PMForm
 				break;
 
             case 'Notification':
+                $options = new CommentNotificationService($this->anchor_it);
                 $field = new FieldCheckNotifications();
-                $field->setAnchor($this->getAnchorIt());
+                $field->setEmails($options->getEmails());
                 $field->setTabIndex($tab_index);
                 $field->setName($attribute);
                 $field->draw($this->getView());

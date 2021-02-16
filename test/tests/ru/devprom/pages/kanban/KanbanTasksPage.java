@@ -16,6 +16,7 @@ import ru.devprom.items.Project;
 
 public class KanbanTasksPage extends KanbanPageBase {
 
+
 	public KanbanTasksPage(WebDriver driver) {
 		super(driver);
 	}
@@ -55,16 +56,6 @@ public class KanbanTasksPage extends KanbanPageBase {
 		return new KanbanTaskViewPage(driver);
 	}
 	
-	
-	public KanbanTasksPage showAll() {
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and @uid='state']"))
-				.click();
-		String code = "filterLocation.turnOn('state', 'all', 1)";
-		((JavascriptExecutor) driver).executeScript(code);
-		return new KanbanTasksPage(driver);
-	}
-	
 	public List<String> getTemplatesList(){
 		List<String> results = new ArrayList<String>();
 		List<WebElement> we = driver.findElements(By.xpath("//div[@id='main']//div[@class='btn-group']"
@@ -75,4 +66,5 @@ public class KanbanTasksPage extends KanbanPageBase {
 		
 		return results;
 	}
+
 }

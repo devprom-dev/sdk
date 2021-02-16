@@ -9,6 +9,7 @@ class FeatureType extends MetaobjectCacheable
  		parent::__construct('pm_FeatureType');
  		$this->setSortDefault( new SortOrderedClause() );
  		$this->setAttributeDescription('ChildrenLevels', text('1919'));
+        $this->setAttributeDescription('ReferenceName', text('2686'));
  	}
 
 	function createIterator() 

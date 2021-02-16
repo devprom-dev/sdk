@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/ObjectFactoryNotificator.php";
 
 define( 'TRIGGER_ACTION_ADD', 'add' );

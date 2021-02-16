@@ -5,37 +5,26 @@ class ActivitiesExcelIterator extends IteratorExportExcel
 {
  	private $row_it;
  	
- 	function ActivitiesExcelIterator( $iterator )
+ 	function __construct( $iterator )
  	{
  		$ids = $iterator->fieldToArray('ItemId');
+ 		if ( count($ids) < 1 ) $ids = array(0);
  		
  		$this->row_it = $this->getRowsObject()->getRegistry()->Query(
-	 				array (
-	 						new FilterInPredicate($ids)
-	 				)
+                array (
+                    new FilterInPredicate($ids)
+                )
  			);
  		$this->group_it = $this->getGroupObject()->getAll();
  		
  		$iterator->moveFirst();
- 		parent::IteratorExportExcel( $iterator );
+ 		parent::__construct( $iterator );
  	}
 
 	function getRowsObject()
 	{
 		if ( is_object($this->rows_object) ) return $this->rows_object;
-		switch( $_REQUEST['view'] )
-		{
-			case 'issues':
-				return getFactory()->getObject('Request');
-			case 'participants':
-				return getFactory()->getObject('User');
-			case 'projects':
-				return getFactory()->getObject('Project');
-			case 'tasks':
-				return getFactory()->getObject('Task');
-			default:
-				return getFactory()->getObject('Request');
-		}
+		return getFactory()->getObject($_REQUEST['rowsobject']);
 	}
 	
 	function getGroupObject()
@@ -55,8 +44,6 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  	function get( $field )
  	{
  		$iterator = $this->getIterator();
- 		$uid = new ObjectUID;
-
  		switch ( $field )
  		{
  			case 'ItemId':
@@ -72,12 +59,9 @@ class ActivitiesExcelIterator extends IteratorExportExcel
                     return $title;
  				}
  				break;
- 			
- 			case 'Total':
- 				return $iterator->get('Total') == 0 ? '' : str_replace(',', '.', $iterator->get('Total'));
- 				
+
  			default:
- 				return $iterator->get($field) == 0 ? '' : str_replace(',', '.', $iterator->get($field));
+ 				return parent::get($field);
  		}
  	}
  	

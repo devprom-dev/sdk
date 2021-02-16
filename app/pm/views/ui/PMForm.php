@@ -28,8 +28,7 @@ class PMForm extends AjaxForm
 	
 	function getAttributeType( $attribute )
 	{
-		if ( $this->customtypes[$attribute] == 'dictionary' )
-		{
+		if ( $this->customtypes[$attribute] == 'dictionary' ) {
 			return 'custom';
 		}
 
@@ -38,19 +37,13 @@ class PMForm extends AjaxForm
 	
 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
-		if ( $this->customtypes[$attribute] == 'dictionary' )
-		{
-			echo $this->getName($attribute);
-			
+		if ( $this->customtypes[$attribute] == 'dictionary' ) {
 			$field = new FieldCustomDictionary($this->getObject(), $attribute);
-			
 			$field->SetId($attribute);
 			$field->SetName($attribute);
 			$field->SetValue($value);
 			$field->SetTabIndex($tab_index);
-			
 			$field->draw();
-			
 			return;
 		}
 		

@@ -11,14 +11,19 @@ class SnapshotModelTest extends DevpromTestCase
     {
         parent::setUp();
         
-        $this->entity = $this->getMock('Snapshot', array('getRegistry'));
-        
-        $this->entity->expects($this->any())->method('getRegistry')->will( 
-        		$this->returnValue(
-                	$this->getMock('ObjectRegistrySQL', array('Query'), array($this->entity)) 
-        		)
+        $this->entity = $this->getMockBuilder(\Snapshot::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getRegistry'])
+            ->getMock();
+
+        $iteratorMock = $this->getMockBuilder(\ObjectRegistrySQL::class)
+            ->setConstructorArgs(array($this->entity))
+            ->setMethods(['Query'])
+            ->getMock();
+
+        $this->entity->expects($this->any())->method('getRegistry')->will(
+            $this->returnValue($iteratorMock)
         );
-        
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
                         array ( 'Snapshot', null, $this->entity )

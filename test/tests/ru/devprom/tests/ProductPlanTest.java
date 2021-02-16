@@ -20,17 +20,22 @@ public class ProductPlanTest extends ProjectTestBase {
 
 	/** The test creates 2 releases and 2 iterations for each of them*/
 	@Test
-	public void CreateProductPlan(){
-		String p = DataProviders.getUniqueStringAlphaNum();
+	public void CreateProductPlan()
+	{
+		Release release1 = new Release("1-Р+" + DataProviders.getUniqueStringAlphaNum(),
+				"Release for ProductPlanTest",DateHelper.getCurrentDate(),DateHelper.getDayAfter(13));
+		Release release2 = new Release("2-Р+" + DataProviders.getUniqueStringAlphaNum(),
+				"Release for ProductPlanTest",DateHelper.getDayAfter(14),DateHelper.getDayAfter(27));
 		
-		Release release1 = new Release("1-Р+" + p,"Release for ProductPlanTest",DateHelper.getCurrentDate(),DateHelper.getDayAfter(13));
-		Release release2 = new Release("2-Р+" + p,"Release for ProductPlanTest",DateHelper.getDayAfter(14),DateHelper.getDayAfter(27));
-		
-		Iteration iteration11 = new Iteration("-"+p,"Итерация для теста", DateHelper.getCurrentDate(), DateHelper.getDayAfter(7), release1.getNumber());
-		Iteration iteration12 = new Iteration("-1-"+p,"Итерация для теста", DateHelper.getDayAfter(7), DateHelper.getDayAfter(14), release1.getNumber());
+		Iteration iteration11 = new Iteration("-" + DataProviders.getUniqueStringAlphaNum(),
+				"Итерация для теста", DateHelper.getCurrentDate(), DateHelper.getDayAfter(7), release1.getNumber());
+		Iteration iteration12 = new Iteration("-1-" + DataProviders.getUniqueStringAlphaNum(),
+				"Итерация для теста", DateHelper.getDayAfter(7), DateHelper.getDayAfter(14), release1.getNumber());
 	
-		Iteration iteration21 = new Iteration("-"+p,"Итерация для теста", DateHelper.getDayAfter(14), DateHelper.getDayAfter(21), release2.getNumber());
-		Iteration iteration22 = new Iteration("-1-"+p,"Итерация для теста", DateHelper.getDayAfter(21), DateHelper.getDayAfter(28), release2.getNumber());
+		Iteration iteration21 = new Iteration("-" + DataProviders.getUniqueStringAlphaNum(),
+				"Итерация для теста", DateHelper.getDayAfter(14), DateHelper.getDayAfter(21), release2.getNumber());
+		Iteration iteration22 = new Iteration("-1-" + DataProviders.getUniqueStringAlphaNum(),
+				"Итерация для теста", DateHelper.getDayAfter(21), DateHelper.getDayAfter(28), release2.getNumber());
 	
 		PageBase page = new PageBase(driver);
 		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
@@ -68,6 +73,4 @@ public class ProductPlanTest extends ProjectTestBase {
 		Assert.assertEquals(rip.readIteration(iteration21.getReleaseName()+"."+iteration21.getName()), iteration21, "Ошибка в данных, отображаемых для Итерации " + iteration21.getReleaseName()+"."+iteration21.getName());
 		Assert.assertEquals(rip.readIteration(iteration22.getReleaseName()+"."+iteration22.getName()), iteration22, "Ошибка в данных, отображаемых для Итерации " + iteration22.getReleaseName()+"."+iteration22.getName());
 	}
-	
-	
 }

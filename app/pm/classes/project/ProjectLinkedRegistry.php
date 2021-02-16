@@ -31,8 +31,11 @@ class ProjectLinkedRegistry extends ObjectRegistrySQL
         $vpds = getSession()->getAccessibleVpds();
         if ( count($vpds) < 1 ) $vpds = array(0);
 
-		return array_merge(
-			parent::getFilters(),
+        $filters = array_filter(parent::getFilters(), function($item) {
+            return !$item instanceof FilterVpdPredicate && !$item instanceof FilterBaseVpdPredicate;
+        });
+
+		return array_merge( $filters,
 			array (
 				new FilterInPredicate($projects),
                 new FilterVpdPredicate($vpds)

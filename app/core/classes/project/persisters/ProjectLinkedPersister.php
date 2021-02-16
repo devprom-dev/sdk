@@ -11,14 +11,12 @@ class ProjectLinkedPersister extends ObjectSQLPersister
 			   "       FROM pm_Project pr, pm_ProjectLink pl " .
 			   "      WHERE pl.Target = pr.pm_ProjectId" .
 			   "        AND pl.Source = ".$this->getPK($alias).
-			   "		AND pl.LinkType = 1 ".
-			   "        AND IFNULL(pr.IsClosed, 'N') = 'N'), ".
+			   "		AND pl.LinkType = 1), ".
 			   "    (SELECT GROUP_CONCAT(CAST(pr.pm_ProjectId AS CHAR)) " .
 			   "       FROM pm_Project pr, pm_ProjectLink pl " .
 			   "      WHERE pl.Source = pr.pm_ProjectId" .
 			   "        AND pl.Target = ".$this->getPK($alias).
-			   "		AND pl.LinkType = 2 ".
-			   "        AND IFNULL(pr.IsClosed, 'N') = 'N'), ".
+			   "		AND pl.LinkType = 2), ".
 			   "    (SELECT GROUP_CONCAT(CAST(pr.pm_ProjectId AS CHAR)) " .
 			   "       FROM pm_Project pr, pm_Project pr2, pm_ProjectLink pl " .
 			   "      WHERE pl.Target = pr.pm_ProjectId" .
@@ -42,8 +40,7 @@ class ProjectLinkedPersister extends ObjectSQLPersister
             "       FROM co_ProjectGroupLink pg1, co_ProjectGroupLink pg2, pm_Project pr " .
             "      WHERE pg1.ProjectGroup = pg2.ProjectGroup" .
             "        AND pg1.Project = ".$this->getPK($alias).
-            "        AND pg2.Project = pr.pm_ProjectId".
-            "        AND IFNULL(pr.IsClosed, 'N') = 'N') PortfolioProject ";
+            "        AND pg2.Project = pr.pm_ProjectId) PortfolioProject ";
  	    
  		return $columns;
  	}

@@ -14,6 +14,7 @@ class ProjectTemplateLicensedPackagesPredicate extends FilterPredicate
 			'incidents_en.xml' => 'support',
 			'incidents_ru.xml' => 'support',
 			'reqs_ru.xml' => 'reqs',
+            'spec_ru.xml' => 'reqs',
             'sdlc_ru.xml' => 'reqs',
 			'testing_ru.xml' => 'qa',
 			'ticket_en.xml' => 'support',

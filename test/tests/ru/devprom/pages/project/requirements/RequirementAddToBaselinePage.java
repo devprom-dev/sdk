@@ -21,9 +21,6 @@ public class RequirementAddToBaselinePage extends SDLCPojectPageBase {
 	@FindBy (id="VersionText")
 	protected WebElement nameInput;
 	
-	@FindBy (id="CopyOption")
-	protected WebElement createCopyBox;
-	
 	@FindBy (id="Description")
 	protected WebElement descriptionInput;
 	
@@ -43,14 +40,11 @@ public class RequirementAddToBaselinePage extends SDLCPojectPageBase {
 		super(driver, project);
 	}
 
-	public RequirementViewPage addToBaseline(Requirement requirement, String baselineName){
-		return addToBaseline(requirement,baselineName,true);
-	}
-	public RequirementViewPage addToBaseline(Requirement requirement, String baselineName, boolean doBranch){
-		return addToBaseline(requirement, baselineName, baselineName, doBranch, "", "");
+	public RequirementViewPage Submit(Requirement requirement, String baselineName){
+		return Submit(requirement, baselineName, baselineName);
 	}
 	
-	public RequirementViewPage addToBaseline(Requirement requirement, String baselineName, String description, boolean isCopy, String version, String projectName)
+	public RequirementViewPage Submit(Requirement requirement, String baselineName, String description)
 	{
 		waitForDialog();
 		nameInput.sendKeys(baselineName);
@@ -60,35 +54,14 @@ public class RequirementAddToBaselinePage extends SDLCPojectPageBase {
 		}
 		nameInput.sendKeys(Keys.TAB);
 		if (!"".equals(description)) addDescription(description);
-		if (!"".equals(version)) selectVersion(version);
-		if (!"".equals(projectName)) selectProject(projectName);
-		if ( isCopy ) createCopyBox.click();
 		submitDialog(submitBtn);
 		String uid = "R-" + driver.findElement(
 				By.xpath("//tr[contains(@id,'pmwikidocumentlist1_row')]//div[contains(@class,'wysiwyg-text') and contains(.,'" + requirement.getName() + "')]")).getAttribute("objectid");
 		requirement.setId(uid);
 		return new RequirementViewPage(driver);
 	}
-	
+
 	public void addDescription(String description){
 		descriptionInput.sendKeys(description);
-	}
-	
-	public void selectVersion(String version){
-		(new Select(versionSelect)).selectByVisibleText(version);
-	}
-	
-	public void selectProject(String project){
-		projectInput.sendKeys(project);
-		autocompleteSelect(project);
-	}
-	
-	public List<String> getVersionsList() {
-		List<String> results = new ArrayList<String>();
-		List<WebElement> versionRows = driver.findElements(By.xpath("//select[@id='Snapshot']/option[not(@value='')]"));
-        for (WebElement row:versionRows){
-        	results.add(row.getText());
-        }
-        return results;
 	}
 }

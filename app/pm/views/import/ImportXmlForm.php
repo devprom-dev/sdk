@@ -2,10 +2,10 @@
 
 class ImportXmlForm extends PMForm
 {
- 	function getAddCaption()
- 	{
- 		return text(373);
- 	}
+    function getAddCaption()
+    {
+        return str_replace('%1', $this->getObject()->getDisplayName(), text(1722));
+    }
  	
  	function getCommandClass()
  	{
@@ -69,12 +69,6 @@ class ImportXmlForm extends PMForm
  	function getRedirectUrl()
 	{
 		return '';
-		
-		switch ( $this->getAction() )
-		{
-			case CO_ACTION_CREATE:
-				return 'requests.php'; 
-		}
 	}
 	
 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
@@ -121,14 +115,6 @@ class ImportXmlForm extends PMForm
 
         switch( $object->getClassName() )
         {
-            case 'WikiPage':
-                $iterator = 'WikiIteratorExportExcelText';
-                break;
-
-            case 'pm_ChangeRequest':
-                $iterator = 'IteratorExportExcel';
-                break;
-
             default:
                 $iterator = 'IteratorExportExcel';
                 break;

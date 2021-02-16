@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import ru.devprom.helpers.DataProviders;
 import ru.devprom.items.KanbanTask;
 import ru.devprom.items.Project;
 import ru.devprom.pages.CKEditor;
@@ -20,7 +21,10 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 
 	@FindBy(id = "pm_ChangeRequestCaption")
 	protected WebElement captionEdit;
-	
+
+	@FindBy(id = "pm_ChangeRequestState")
+	protected WebElement stateEdit;
+
 	@FindBy(id = "pm_ChangeRequestType")
 	protected WebElement typeSelect;
 	
@@ -35,7 +39,12 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 	
 	@FindBy(xpath = "//span[@name='pm_ChangeRequestTags']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTagsBtn;
+
+	// строка Задачи - "добавить"
+	@FindBy(xpath = "//span[@name='pm_ChangeRequestTasks']//a[contains(@class,'embedded-add-button')]")
+	protected WebElement addTasks;
 	
+	// кнопка Связи на вкладке Трассировки
 	@FindBy(xpath = "//span[@name='pm_ChangeRequestLinks']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addLinkedTasksBtn;
 	
@@ -75,25 +84,24 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 		return saveTask(task);
 	}
 	
-    public KanbanTasksPage saveTask(KanbanTask task){
-     (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(saveBtn));
-     submitDialog(saveBtn);
-     //read ID
-       (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='caption' and contains(.,'"+task.getName()+"')]")));
-     String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+task.getName()+"')]/preceding-sibling::td[@id='uid']/a")).getText();
-     task.setId(uid.substring(1, uid.length()-1));
-  return new KanbanTasksPage(driver);
+    public KanbanTasksPage saveTask(KanbanTask task)
+	{
+		 (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(saveBtn));
+		 submitDialog(saveBtn);
+		 //read ID
+		   (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='caption' and contains(.,'"+task.getName()+"')]")));
+		 String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+task.getName()+"')]/preceding-sibling::td[@id='uid']/a")).getText();
+		 task.setId(uid.substring(1, uid.length()-1));
+  		return new KanbanTasksPage(driver);
     }
-    
 
 	 public void addName(String name){
 	    	captionEdit.clear();
 	    	captionEdit.sendKeys(name);
-	    }
+	}
 	 
 	 public void addDescription(String description) {
-		(new CKEditor(driver)).typeText(description);
-            // driver.findElement(By.xpath("//div[contains(id,'pm_ChangeRequestDescription']")).sendKeys(description);
+		(new CKEditor(driver)).changeText(description);
      }
 	
     public void selectType(String type){
@@ -103,6 +111,10 @@ public class KanbanTaskNewPage extends KanbanPageBase {
     public void selectPriority(String priority) {
     	(new Select(prioritySelect)).selectByVisibleText(priority);
     }
+
+	public void selectState(String state) {
+		(new Select(stateEdit)).selectByVisibleText(state);
+	}
 	    
 	    public void addAuthor(String author){
 	    	authorSelect.clear();
@@ -113,6 +125,15 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 	    public void selectOwner(String owner){
     		(new Select(ownerSelect)).selectByVisibleText(owner);
     }
+
+    public  void setAddTasks(String name, String assignee, String type){
+		addTasks.click();
+		//строка Название у Задачи
+		driver.findElement(By.xpath("//input[@class='input-block-level']")).sendKeys(name);
+		//строка Тип у Задачи
+		Select selDr = new Select(driver.findElement(By.xpath("//select[@tabindex='106']")));
+		selDr.selectByVisibleText(type);
+	}
 	    
 		    public void addTag(String tag){
 		    	addTagsBtn.click();
@@ -177,7 +198,7 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 		   }
 		   public List<String> readWatchers(){
 			   List<String> results = new ArrayList<String>();
-				List<WebElement> we = driver.findElements(By.xpath("//input[@value='watcher']/following-sibling::div[contains(@id,'embeddedList')]//*[contains(@class,'title')]")); 
+				List<WebElement> we = driver.findElements(By.xpath("//input[@value='watcher']/following-sibling::div[contains(@id,'embeddedList')]//*[contains(@class,'title')]"));
 				   for (WebElement el:we){
 					   results.add(el.getText());
 				   }
@@ -207,7 +228,7 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 	public void saveTaskFromBoard(KanbanTask task)
 	{
         submitDialog(saveBtn);
-        By idLocator = By.xpath("//div[contains(.,'"+task.getName()+"')]/preceding-sibling::*/div/a");
+        By idLocator = By.xpath("//div[contains(.,'"+task.getName()+"')]/preceding-sibling::*//a[contains(@class,'uid')]");
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(idLocator));
         WebElement element = driver.findElement(idLocator);
         String uid = element.getText();

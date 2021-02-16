@@ -12,10 +12,9 @@ class TaskBoardPlanning extends TaskBoardList
 
     function buildBoardAttributeIterator()
     {
-        $values = array_filter($this->getFilterValues(), function($value) {
-            return !in_array($value, array('all','hide'));
+        $values = array_filter($this->getTable()->getPredicateFilterValues(), function($value) {
+            return !in_array($value, PageTable::FILTER_OPTIONS);
         });
-        $this->getTable()->parseFilterValues($values);
 
         $object = $this->getObject()->getAttributeObject($this->getBoardAttribute());
         $it = $object->getRegistry()->Query(
@@ -72,7 +71,7 @@ class TaskBoardPlanning extends TaskBoardList
     }
 
     function getBoardTitles() {
-        return array_values(array_unique($this->getBoardAttributeIterator()->fieldToArray('Caption')));
+        return $this->getBoardNames();
     }
 
     function getWatchedObjects()
@@ -136,7 +135,6 @@ class TaskBoardPlanning extends TaskBoardList
                 $this->getObject()->getAttributeObject($this->getBoardAttribute())->getExact($board_value)
             );
             if ( $method->hasAccess() ) {
-                $method->setRedirectUrl('donothing');
                 $actions = array_merge(
                     array (
                         array (
@@ -155,36 +153,32 @@ class TaskBoardPlanning extends TaskBoardList
 
     function drawHeader( $board_value, $board_title )
     {
-        echo '<div>';
-            if ( $board_value == array_pop($this->getBoardValues()) )
-            {
-                echo '<div style="display:table-cell;">';
-                    parent::drawHeader($board_value, $board_title);
-                echo '</div>';
-                $object = $this->getObject()->getAttributeObject($this->getBoardAttribute());
-                $method = new ObjectCreateNewWebMethod($object);
-                if ( $method->hasAccess() ) {
-                    echo '<div class="board-header-op"><a class="btn btn-xs btn-success" href="'.$method->getJSCall().'"><i class="icon icon-white icon-plus"></i></a></div>';
-                }
+        if ( $board_value == array_pop($this->getBoardValues()) )
+        {
+            parent::drawHeader($board_value, $board_title);
+            $object = $this->getObject()->getAttributeObject($this->getBoardAttribute());
+            $method = new ObjectCreateNewWebMethod($object);
+            if ( $method->hasAccess() ) {
+                echo '<div class="board-header-op"><a class="btn btn-xs btn-success" href="'.$method->getJSCall().'"><i class="icon icon-white icon-plus"></i></a></div>';
             }
-            else {
-                parent::drawHeader($board_value, $board_title);
-            }
-        echo '</div>';
+        }
+        else {
+            parent::drawHeader($board_value, $board_title);
+        }
+
         if ( $board_value > 0 ) {
             $object_it = $this->getObject()->getAttributeObject($this->getBoardAttribute())->getExact($board_value);
             if ( $object_it->getId() > 0 ) {
                 echo '<div class="board-header-details brd-head-details">';
-                    echo getSession()->getLanguage()->getDateFormattedShort($object_it->get('StartDate'))
-                        ." / "
-                        .getSession()->getLanguage()->getDateFormattedShort($object_it->get('FinishDate'));
+                    echo $object_it->getDateFormattedShort('StartDate') . " / " . $object_it->getDateFormattedShort('FinishDate');
                     echo '<br/>';
                     if ( getSession()->getProjectIt()->getMethodologyIt()->IsAgile() ) {
                         $strategy = new EstimationHoursStrategy();
                         list( $capacity, $maximum, $actual_velocity, $estimation ) = $object_it->getRealBurndownMetrics();
+                        $available = $capacity * $actual_velocity;
                         echo sprintf(
                             text(2189),
-                            $maximum > 0 ? $strategy->getDimensionText(round($maximum, 1)) : '0',
+                            $available > 0 ? $strategy->getDimensionText(round($available, 1)) : '0',
                             $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
                             $estimation > 0 ? $strategy->getDimensionText(round($estimation, 1)) : '0'
                         );
@@ -192,6 +186,10 @@ class TaskBoardPlanning extends TaskBoardList
                 echo '</div>';
             }
         }
+    }
+
+    function hasCellBasement() {
+        return true;
     }
 
     function drawCellBasement( $boardValue, $groupValue )

@@ -7,13 +7,15 @@ class ProjectExceptCurrentRegistry extends ObjectRegistrySQL
         $vpds = getSession()->getAccessibleVpds();
         if ( count($vpds) < 1 ) $vpds = array(0);
 
-		return array_merge(
-				parent::getFilters(),
-				array (
-                    new FilterVpdPredicate($vpds),
-                    new ProjectStatePredicate('active'),
-                    new FilterNotInPredicate(getSession()->getProjectIt()->getId())
-				)
+        $filters = array_filter(parent::getFilters(), function($item) {
+            return !$item instanceof FilterVpdPredicate && !$item instanceof FilterBaseVpdPredicate;
+        });
+		return array_merge( $filters,
+            array (
+                new FilterVpdPredicate($vpds),
+                new ProjectStatePredicate('active'),
+                new FilterNotInPredicate(getSession()->getProjectIt()->getId())
+            )
 		);
 	}
 }

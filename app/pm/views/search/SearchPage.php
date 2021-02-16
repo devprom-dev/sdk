@@ -10,4 +10,8 @@ class SearchPage extends PMPage
  	function getTable() {
  		return new SearchTable($this->getObject());
  	}
+
+ 	function getModule() {
+        return 'search';
+    }
 }

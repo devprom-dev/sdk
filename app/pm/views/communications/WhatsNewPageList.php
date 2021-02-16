@@ -38,46 +38,44 @@ class WhatsNewPageList extends PMPageList
                             echo $anchor_it->object->getDisplayName().': ';
                         }
                     }
-                }
-                else if ($object_it->get('EntityRefName') == 'cms_ExternalUser') {
-                    echo text(1360) . ': ';
-                }
-                else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest') {
+                    $uid->drawUidInCaption($anchor_it);
                 }
                 else {
-                    echo $anchor_it->object->getDisplayName().': ';
+                    if ($object_it->get('EntityRefName') == 'pm_ChangeRequest') {
+                    }
+                    else {
+                        echo $anchor_it->object->getDisplayName().': ';
+                    }
+                    parent::drawCell( $object_it, 'Caption' );
                 }
-
-                parent::drawCell( $object_it, 'Caption' );
 
                 if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
                     if ( $object_it->get('Content') != '' ) {
                         echo '<br/>'.$object_it->getHtmlDecoded('Content');
                     }
-                    echo $this->getRenderView()->render('core/CommentsIcon.php', array (
-                        'object_it' => $anchor_it,
-                        'redirect' => 'donothing'
-                    ));
-                }
 
+                    $method = new CommentWebMethod($anchor_it);
+                    if ( $method->hasAccess() ) {
+                        if ( preg_match('/O\-(\d+)\s/i', $object_it->get('Content'), $matches) ) {
+                            $commentId = $matches[1];
+                        }
+                        if ( $commentId > 0 ) {
+                            echo $this->getRenderView()->render('core/CommentsReplyIcon.php', array (
+                                'objectIt' => $anchor_it,
+                                'commentId' => $commentId
+                            ));
+                        }
+                        else {
+                            echo $this->getRenderView()->render('core/CommentsIcon.php', array (
+                                'object_it' => $anchor_it,
+                                'redirect' => 'donothing'
+                            ));
+                        }
+                    }
+
+                }
                 break;
-                echo '<br/>';
 
-                if ( strpos($object_it->get('Content'), '[url') !== false && $anchor_it->object instanceof WikiPage) {
-                    echo '<br/>'.str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$object_it->getDateTimeFormat('RecordModified'), text(2319));
-                }
-                else if ( $object_it->get('Content') != '' ) {
-                    echo '<br/>'.$object_it->getHtmlDecoded('Content');
-                }
-			    if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
-				    echo $this->getRenderView()->render('core/CommentsIcon.php', array (
-							'object_it' => $anchor_it,
-							'redirect' => 'donothing'
-					));
-			    }			    
-			    
-			    break;
-				
 			default:
 				parent::drawCell( $object_it, $attr );			
 		}
@@ -131,7 +129,6 @@ class WhatsNewPageList extends PMPageList
         }
 
         $method = new MarkChangesAsReadWebMethod();
-        $method->setRedirectUrl('function(){window.location.reload();}');
         $actions[] = array();
 		$actions[] = array(
 		    'name' => text(2463),

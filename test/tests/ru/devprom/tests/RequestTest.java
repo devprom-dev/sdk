@@ -17,7 +17,6 @@ import ru.devprom.helpers.Configuration;
 import ru.devprom.helpers.DataProviders;
 import ru.devprom.helpers.FileOperations;
 import ru.devprom.items.Document;
-import ru.devprom.items.ProductFunction;
 import ru.devprom.items.Project;
 import ru.devprom.items.RTask;
 import ru.devprom.items.Request;
@@ -39,8 +38,6 @@ import ru.devprom.pages.project.attributes.AttributeSettingsPage;
 import ru.devprom.pages.project.documents.DocumentNewPage;
 import ru.devprom.pages.project.documents.DocumentViewPage;
 import ru.devprom.pages.project.documents.DocumentsPage;
-import ru.devprom.pages.project.functions.FunctionNewPage;
-import ru.devprom.pages.project.functions.FunctionsPage;
 import ru.devprom.pages.project.requests.RequestDonePage;
 import ru.devprom.pages.project.requests.RequestEditPage;
 import ru.devprom.pages.project.requests.RequestNewPage;
@@ -106,8 +103,8 @@ public class RequestTest extends ProjectTestBase {
 	public void testRequestsPrintList() {
 		new PageBase(driver).gotoProject(webTest);
 		RequestsPage mip = (new SDLCPojectPageBase(driver)).gotoRequests();
-		mip.addColumn("Type");
 		mip.showAll();
+		mip.showColumn("Type");
 		Request[] requests = mip.readAllRequests();
 		Arrays.sort(requests);
 		FILELOG.debug("Requests: ");
@@ -137,8 +134,8 @@ public class RequestTest extends ProjectTestBase {
 	public void testRequestsPrintCards() {
 		new PageBase(driver).gotoProject(webTest);
 		RequestsPage mip = (new SDLCPojectPageBase(driver)).gotoRequests();
-		mip.addColumn("Type");
 		mip.showAll();
+		mip.showColumn("Type");
 		Request[] requests = mip.readAllRequests();
 		Arrays.sort(requests);
 		FILELOG.debug("Requests: ");
@@ -169,8 +166,8 @@ public class RequestTest extends ProjectTestBase {
 	public void exportToExcelTest() throws Exception {
 		new PageBase(driver).gotoProject(webTest);
 		RequestsPage mip = (new SDLCPojectPageBase(driver)).gotoRequests();
-		mip.addColumn("Type");
 		mip.showAll();
+		mip.showColumn("Type");
 		driver.navigate().refresh();
 		Request[] rExisted = mip.readAllRequests();
 		Arrays.sort(rExisted);
@@ -204,8 +201,8 @@ public class RequestTest extends ProjectTestBase {
 		RequestViewPage rvp;
 		FILELOG.debug(startFrom);
 		RequestsPage mip = (new SDLCPojectPageBase(driver)).gotoRequests();
-		mip.addColumn("Type");
 		mip.showAll();
+		mip.showColumn("Type");
 		rBefore = new ArrayList<Request>(Arrays.asList(mip.readAllRequests()));
 		for (int i = 0; i < deleteCount; i++) {
 			try {
@@ -221,7 +218,7 @@ public class RequestTest extends ProjectTestBase {
 			}
 			mip.showAll();
 		}
-		mip.addColumn("Type");
+		mip.showColumn("Type");
 		rAfter = new ArrayList<Request>(Arrays.asList(mip.readAllRequests()));
 		rBefore.removeAll(requestsDeleted);
 		Request[] requestsBefore = rBefore.toArray(new Request[0]);
@@ -333,6 +330,7 @@ public class RequestTest extends ProjectTestBase {
 				ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'comment-text') and contains(.,'"+image.getName()+"')]"))
 				);
         Assert.assertTrue(rvp.isPictureFromCommentOpens(image.getName()), "Изображение не открывается");
+		driver.navigate().to(Configuration.getBaseUrl());
 	}
 
 	/**
@@ -371,7 +369,7 @@ public class RequestTest extends ProjectTestBase {
 		RequestsStatePage rsp = (new SDLCPojectPageBase(driver))
 				.gotoRequestsStatePage();
 		TransitionEditPage adtdp = rsp.clickChangeTransition("Добавлено","Выполнить > Выполнено");
-		adtdp = adtdp.addPrecondition("Завершены блокирующие пожелания");
+		adtdp = adtdp.addPreconditionByValue("682809737");
 		adtdp.saveChanges();
 		rsp = new RequestsStatePage(driver);
 		RequestsPage mip = rsp.gotoRequests();
@@ -445,6 +443,7 @@ public class RequestTest extends ProjectTestBase {
 	@Test
 	public void resetFieldsOnTransitioningBetweenStates() throws InterruptedException {
 		new PageBase(driver).gotoProject(webTest);
+		String stageId = (new SDLCPojectPageBase(driver)).gotoReleasesIterations().getStageId("Релиз 0");
 		RequestsPage mip = (new SDLCPojectPageBase(driver)).gotoRequests();
 		Request testR = new Request("TestR" + DataProviders.getUniqueString(),
 				"description", Request.getHighPriority(), 10, "Доработка");
@@ -454,8 +453,7 @@ public class RequestTest extends ProjectTestBase {
 		rvp = rvp.includeToRelease("0");
 		mip = rvp.gotoRequests();
 		mip.showAll();
-		mip.addFilter("release");
-		mip.turnOnFilter("0", "Релиз");
+		mip.setFilter("release", stageId);
 		Assert.assertTrue(mip.isRequestPresent(testR.getId()));
 
 		rvp = mip.clickToRequest(testR.getId());
@@ -470,8 +468,7 @@ public class RequestTest extends ProjectTestBase {
 
 		mip = rvp.gotoRequests();
 		mip.showAll();
-		mip.addFilter("release");
-		mip.turnOnFilter("0", "Релиз");
+		mip.setFilter("release", stageId);
 		Assert.assertFalse(mip.isRequestPresent(testR.getId()));
 		
 		//cleanup
@@ -657,7 +654,7 @@ public class RequestTest extends ProjectTestBase {
 		mip.showAll();
 		rvp = mip.clickToRequest(testRequest.getId());
 		String[] testResults = rvp.readTestResults();
-		Assert.assertEquals(testResults.length, 4);
+		Assert.assertEquals(testResults.length, 2);
 		Assert.assertTrue(testResults[0].contains(testScenario.getName()));
 		Assert.assertTrue(testResults[0].contains("Провален"));
 		Assert.assertTrue(testResults[1].contains(testScenario.getName()));
@@ -728,7 +725,7 @@ public class RequestTest extends ProjectTestBase {
 		//Open the request list in default project and check the data in column
 		favspage = (SDLCPojectPageBase) rvp.gotoProject(webTest);
 				mip = favspage.gotoRequests();
-		        mip.addColumn("Links");
+		        mip.showColumn("Links");
 		       String linked = mip.getRequestProperty(request.getId(), "linked issues");
 		       Assert.assertEquals(linked, duplicated.getId());
 		       Assert.assertTrue(mip.isLinkedIssueCompleted(request.getId(), duplicated.getId()));
@@ -849,20 +846,21 @@ public class RequestTest extends ProjectTestBase {
 	 */
 	@Test
 	public void massCompletion() throws InterruptedException{
+		new PageBase(driver).gotoProject(webTest);
 		Request testRequest1 = createRequest();
 		Request testRequest2 = createRequest();
-		new PageBase(driver).gotoProject(webTest);
 		RequestsPage mip = new RequestsPage(driver);
 		mip.checkRequest(testRequest1.getId());
 		mip.checkRequest(testRequest2.getId());
 		mip = mip.massComplete("0.1", "Mass completion test");
-		mip = mip.selectFilterValue("state", "Не завершено");
+		mip.setFilter("state", "N,I");
 		Assert.assertFalse(mip.isRequestPresent(testRequest1.getId()), "Пожелание "+testRequest1.getId()+" обнаружено в списке невыполненных");
 		Assert.assertFalse(mip.isRequestPresent(testRequest2.getId()), "Пожелание "+testRequest2.getId()+" обнаружено в списке невыполненных");
 	}
 	
-	private Request createRequest() throws InterruptedException{
-	RequestsPage mip = (new SDLCPojectPageBase(driver)).gotoRequests();
+	private Request createRequest() throws InterruptedException
+	{
+			RequestsPage mip = (new SDLCPojectPageBase(driver)).gotoRequests();
 		
 			Request testRequest = new Request("TestCR-"
 					+ DataProviders.getUniqueString(),
@@ -882,8 +880,7 @@ public class RequestTest extends ProjectTestBase {
 			mip = rv.gotoRequests();
 			return testRequest;
 	}
-	
-	
+
 	/**Создает Пожелание, дублирует его в проект разработки, меняет состояние Пожелания на Запланировано
 	 * и проверяет, изменилось ли состояние дубликата, согласно настройкам системных действий
 	 */
@@ -919,8 +916,10 @@ public class RequestTest extends ProjectTestBase {
 	    
 		//Duplicate Task
 		srp = srp.duplicateInProject(srequest, devTest.getName());
+		driver.navigate().refresh();
 		SDLCPojectPageBase favspage = (SDLCPojectPageBase) srp.gotoProject(devTest);
 		RequestsPage mip = favspage.gotoRequests();
+		 driver.navigate().refresh();
 		Request duplicated = mip.findRequestByName(srequest.getName());
 	    
 	    //Set system action for planned
@@ -1003,7 +1002,7 @@ public class RequestTest extends ProjectTestBase {
 		
 		mip.gotoProject(webTest);
 		mip = (new SDLCPojectPageBase(driver)).gotoRequests();
-		mip = mip.showAll();
+		mip.showAll();
 		Assert.assertTrue(mip.isRequestPresentByName(request1.getName()), "В исходном проекте не обнаружено Пожелание " + request1);
 		Assert.assertTrue(mip.isRequestPresentByName(request2.getName()), "В исходном проекте не обнаружено Пожелание " + request2);
 	}
@@ -1065,7 +1064,7 @@ public class RequestTest extends ProjectTestBase {
 		
 		mip.gotoProject(webTest);
 		mip = (new SDLCPojectPageBase(driver)).gotoRequests();
-		mip = mip.showAll();
+		mip.showAll();
 		Assert.assertTrue(mip.isRequestPresentByName(request1.getName()), "В исходном проекте не обнаружено Пожелание " + request1);
 		Assert.assertTrue(mip.isRequestPresentByName(request2.getName()), "В исходном проекте не обнаружено Пожелание " + request2);
 		

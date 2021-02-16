@@ -11,7 +11,11 @@ class TaskTraceBase extends Metaobject
  	function __construct( ObjectRegistry $registry = null )
  	{
  		parent::Metaobject('pm_TaskTrace', $registry);
- 		
+
+        foreach( array('ObjectId','ObjectClass','Task') as $attribute ) {
+            $this->addAttributeGroup($attribute, 'alternative-key');
+        }
+
  		$object_class = $this->getObjectClass();
  		if ( $object_class != '' ) {
      		$this->setAttributeType('ObjectId', 'REF_'.$object_class.'Id');

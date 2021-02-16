@@ -8,6 +8,7 @@ class ChangeLogAggregated extends ChangeLog
     {
 		parent::__construct( new ChangeLogAggregatedRegistry($this) );
 		$this->addAttribute( 'ChangeDate', 'DATE', translate('Дата изменения'), false, false );
+        $this->addAttribute( 'ChangeKind', 'VARCHAR', translate('Вид изменения'), false, false );
 
    		$system_attributes = array (
 			'ObjectId',

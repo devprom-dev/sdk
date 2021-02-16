@@ -32,6 +32,10 @@ div.info-circle-icon{
     padding: 2px;
 }
 
+#menu-configurator table.table th {
+    padding: 8px;
+}
+
 #menu-configurator .menu-content > ul > li > div.menu-group-node{
     cursor: pointer;
 } 

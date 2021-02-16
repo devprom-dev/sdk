@@ -19,7 +19,7 @@ class TaskDatesPersister extends ObjectSQLPersister
 			"			) DueDate ";
 
          $columns[] =
-         	 "  IFNULL(LEAST(5, GREATEST(-1, YEARWEEK(IFNULL( t.FinishDate, ".
+         	 "  IFNULL(LEAST(5, YEARWEEK(IFNULL( t.FinishDate, ".
          	 "  		IFNULL( t.PlannedFinishDate, ".
          	 "				IFNULL( ".
          	 "						(SELECT i.FinishDate FROM pm_Release i WHERE i.pm_ReleaseId = t.Release), ".
@@ -27,7 +27,7 @@ class TaskDatesPersister extends ObjectSQLPersister
              "				) ".
          	 "			) ".
              "  	)  ".
-             "	) - YEARWEEK(IFNULL(t.FinishDate,NOW())))) + 2, 7) DueWeeks ";
+             "	) - YEARWEEK(IFNULL(t.FinishDate,NOW()))) + 2, 7) DueWeeks ";
 
  		return $columns;
  	}

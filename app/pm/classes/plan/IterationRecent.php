@@ -9,6 +9,10 @@ class IterationRecent extends Metaobject
 	}
 
     function createIterator() {
-        return new IterationDatesIterator($this);
+        return new IterationIterator($this);
+    }
+
+    function IsDictionary() {
+        return true;
     }
 }

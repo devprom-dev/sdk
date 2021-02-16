@@ -22,9 +22,4 @@ class RequestChart extends PMPageChart
 	{
 		return 'State';
 	}
-	
-	function getGroupFields() 
-	{
-		return array_merge( parent::getGroupFields(), array( 'ClosedInVersion', 'SubmittedVersion' ) );
-	}
 }

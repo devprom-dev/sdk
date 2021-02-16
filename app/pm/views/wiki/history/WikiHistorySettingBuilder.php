@@ -20,7 +20,6 @@ class WikiHistorySettingBuilder extends PageSettingBuilder
         $settings->add( $setting );
         
         $setting = new PageTableSetting('WikiHistoryTable');
-	    $setting->setFilters( array('formatting', 'action', 'participant', 'start') );
 	    $setting->setSorts( array('RecordModified.D') );
         $setting->setRowsNumber(5);
         $settings->add( $setting );

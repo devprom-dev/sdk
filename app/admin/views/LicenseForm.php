@@ -52,7 +52,7 @@ class LicenseForm extends AdminForm
         return parent::IsAttributeVisible( $attribute );
     }
 
-    function IsAttributeModifable( $attribute )
+    function IsAttributeModifiable( $attribute )
     {
         return false;
     }

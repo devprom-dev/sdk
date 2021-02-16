@@ -4,11 +4,10 @@
 
 class TextUtils
 {
-    const REGEX_SHRINK = '/(^|[^=]"|[^="])((http:|https:|ftp:|ftps:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]_]+[_\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im';
     const REGEX_SHARE = '/(\\\\)(\\\\[^<\s]+){2,}(\\\\)?/im';
 
     public static function breakLongWords( $content, $maxLength = 80 ) {
-        return join(' ', array_map(
+        return join('', array_map(
             function($line) use ($maxLength) {
                 return mb_strlen($line) > $maxLength && strpos($line, 'src="') === false && strpos($line, 'href="') === false
                     ? join('<', array_map(
@@ -72,22 +71,19 @@ class TextUtils
                 );
     }
 
-    public static function stripAnyTags( $text )
-    {
-        $text = preg_replace('/(?:<|&lt;)\/?([a-zA-Z]+) *[^<\/]*?(?:>|&gt;)/', '', self::removeHtmlEntities($text));
-        $text = preg_replace('/\s{3,}/', ' ', $text);
+    public static function stripAnyTags( $text ) {
+        $text = preg_replace(
+            '/(?:<|&lt;)\/?(a|p|div|br|h[\d]+|span|ul|ol|font|br|hr|table|tr|td|th|tbody|thead|button|iframe|html|body|link|script|style|i|b|del|strike)\s*[^>]*?(?:>|&gt;)/i',
+                '', self::removeHtmlEntities($text));
+        $text = preg_replace('/<img\s+[^>]+>/i', '', $text);
         return trim($text, ' '.PHP_EOL);
     }
 
     public static function getCleansedHtml( $body )
-    {
+   {
+        $body = preg_replace('/<!--[^-]+-->/', '', $body);
         $body = self::_getCleansedHtml(
-            self::_getCleansedHtml(
-                $body,
-                array(
-                    '/<!--/', '/-->/',
-                )
-            ),
+            $body,
             array(
                 '/<link[^>]*>/i',
                 '/<\/link>/i',
@@ -128,6 +124,27 @@ class TextUtils
             $cleansedBody .= array_pop($parts);
         }
         return $cleansedBody;
+    }
+
+    public static function getUnstyledHtml( $content )
+    {
+        return preg_replace(
+            array (
+                '/(<[^>]+)\s+style\s*=/i',
+                '/(<[^>]+)\s+class\s*=/i',
+                '/(<table[^>]+)/i',
+                '/(<\/?span[^>]*>)/i',
+                '/(&nbsp;|\xC2\xA0)/i',
+                '/preservedhtmlattribute/i',
+            ),
+            array (
+                '$1 was-style=',
+                '$1 was-class=',
+                '$1 border="1"',
+                '',
+                ' ',
+                'style'
+            ), $content);
     }
 
     public static function getValidHtml( $body )
@@ -219,11 +236,18 @@ class TextUtils
     }
 
     public function decodeHtml( $text ) {
-        return html_entity_decode( $text, ENT_QUOTES | ENT_HTML401, APP_ENCODING );
+        $text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML401, APP_ENCODING );
+        $text = preg_replace('/\x{00A0}/u', ' ', $text);
+        return $text;
+    }
+
+    public function getAlphaNumericPunctuationString( $text ) {
+        $text = preg_replace( "/[^\p{L}|\p{N}\+\-\&\(\)\=\@\/\.,:;_\{\}]+/u", " ", $text );
+        return preg_replace( "/[\p{Z}]{2,}/u", " ", $text );
     }
 
     public function getAlphaNumericString( $text ) {
-        $text = preg_replace( "/[^\p{L}|\p{N}\+\-\&\(\)\=\@\/\.,:;_\{\}]+/u", " ", $text );
+        $text = preg_replace( "/[^\p{L}|\p{N}\-\_\.\&\@]+/u", " ", $text );
         return preg_replace( "/[\p{Z}]{2,}/u", " ", $text );
     }
 
@@ -300,7 +324,14 @@ class TextUtils
 
     public static function parseIds( $text )
     {
-        if ( is_array($text) ) return $text;
+        if ( is_array($text) ) {
+            return array_filter(
+                $text,
+                function($value) {
+                    return is_numeric($value) && $value >= 0;
+                }
+            );
+        }
         if ( is_numeric($text) && $text > 0 ) return array($text);
 
         try {
@@ -320,17 +351,37 @@ class TextUtils
         );
     }
 
-    public static function parseItems( $text )
+    public static function parseItems( $text, $separators = ',' )
     {
-        if ( is_array($text) ) return $text;
-        if ( is_numeric($text) && $text > 0 ) return array($text);
+        if ( is_array($text) ) {
+            return array_filter($text, function($value) {
+                return $value != '';
+            });
+        }
+
+        if ( is_numeric($text) && $text > 0 ) return array(trim($text));
 
         return array_unique(
             array_filter(
-                preg_split('/[,]/', trim($text, ',') ),
+                array_map(
+                    function($item) {
+                        return trim($item);
+                    },
+                    preg_split('/['.preg_quote($separators).']/', trim($text, $separators) )
+                ),
                 function($value) {
                     return $value != '';
                 }
+            )
+        );
+    }
+
+    public static function parseFilterItems( $text, $separators = ',' )
+    {
+        return array_diff(
+            self::parseItems($text, $separators),
+            array(
+                'none', 'all', 'any', 'hide'
             )
         );
     }
@@ -352,6 +403,11 @@ class TextUtils
         return join('', $beforeTag);
     }
 
+    public static function skipHtmlTag( $tagName, $content )
+    {
+        return preg_replace('/<\/?' .$tagName. '[^>]*>/', '', $content);
+    }
+
     public static function checkDatabaseColumnName( $text ) {
         return preg_match("/^[a-zA-Z][a-zA-Z0-9\_]+$/i", $text);
     }
@@ -360,27 +416,6 @@ class TextUtils
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         $password = substr(str_shuffle($chars), 0, 12);
         return $password;
-    }
-
-    public static function shrinkLongUrl( $match )
-    {
-        $context = $match[1].$match[5];
-        if ( $context == '=""' || $context == '="">' ) return $match[0];
-
-        if ( $match[1] == '' ) {
-            $match[1] = '<a href="'.$match[2].'">';
-            $match[5] = '</a>';
-        }
-
-        $display_name = trim($match[2], "\.\,\;\:");
-
-        $shrink_length = 80;
-        if ( strlen($display_name) > $shrink_length )
-        {
-            $display_name = substr($display_name, 0, $shrink_length/2).'[...]'.
-                substr($display_name, strlen($display_name) - $shrink_length/2, $shrink_length/2);
-        }
-        return $match[1].$display_name.$match[5];
     }
 
     public static function shrinkLongShare( $match )
@@ -395,5 +430,55 @@ class TextUtils
         $text = preg_replace('/INTERNAL_TAG_IMG_START/', '<img ', $text);
         $text = preg_replace('/INTERNAL_TAG_IMG_END/', '>', $text);
         return $text;
+    }
+
+    public static function getNormalizedString( $text, $languageCode = 'en' )
+    {
+        return join(' ', array_diff(
+            preg_split('/\s+/u', self::getAlphaNumericString(self::stripAnyTags(mb_strtolower($text)))),
+            JsonWrapper::decode(
+                file_get_contents(SERVER_ROOT_PATH . 'lang/'.strtolower($languageCode).'/stopwords.json')
+            )
+        ));
+    }
+
+    public static function hasStopWords( $text, $languageCode = 'en' )
+    {
+        return count(array_intersect(
+            preg_split('/\s+/u', self::stripAnyTags(mb_strtolower($text))),
+            JsonWrapper::decode(
+                file_get_contents(SERVER_ROOT_PATH . 'lang/'.strtolower($languageCode).'/stopwords.json')
+            )
+        )) > 0;
+    }
+
+    public static function generateCodeName()
+    {
+        $animals = array( "Aardvark", "Albatross", "Alligator", "Alpaca", "Ant", "Anteater", "Antelope", "Ape", "Armadillo", "Baboon", "Badger", "Barracuda", "Bat", "Bear", "Beaver", "Bee", "Bison", "Boar", "Buffalo", "Butterfly", "Camel", "Capybara", "Cassowary", "Caterpillar", "Cattle", "Cheetah", "Chicken", "Chimpanzee", "Chinchilla", "Chough", "Clam", "Cobra", "Cockroach", "Cod", "Cormorant", "Coyote", "Crab", "Crane", "Crocodile", "Crow", "Curlew", "Deer", "Dinosaur", "Dog", "Dogfish", "Dolphin", "Donkey", "Dotterel", "Dove", "Dragonfly", "Duck", "Dugong", "Dunlin", "Eagle", "Echidna", "Eel", "Eland", "Elephant", "Elephant", "Elk", "Emu", "Falcon", "Ferret", "Finch", "Fish", "Flamingo", "Fly", "Fox", "Frog", "Gaur", "Gazelle", "Gerbil", "Giant", "Giraffe", "Gnat", "Gnu", "Goat", "Goose", "Goldfinch", "Goldfish", "Gorilla", "Goshawk", "Grasshopper", "Grouse", "Guanaco", "Guinea", "Guinea", "Gull", "Hamster", "Hare", "Hawk", "Migrating", "Hedgehog", "Heron", "Herring", "Hippopotamus", "Hornet", "Horse", "Human", "Hummingbird", "Hyena", "Ibex", "Ibis", "Jackal", "Jaguar", "Jay", "Jellyfish", "Kangaroo", "Kingfisher", "Koala", "Komodo", "Kookabura", "Kouprey", "Kudu", "Lapwing", "Lark", "Lemur", "Leopard", "Lion", "Llama", "Lobster", "Locust", "Loris", "Louse", "Lyrebird", "Magpie", "Mallard", "Also", "Manatee", "Mandrill", "Mantis", "Marten", "Meerkat", "Mink", "Mole", "Mongoose", "Monkey", "Moose", "Mouse", "Mosquito", "Mule", "Narwhal", "Newt", "Nightingale", "Octopus", "Okapi", "Opossum", "Oryx", "Ostrich", "Otter", "Owl", "Oyster", "Panther", "Parrot", "Partridge", "Peafowl", "Pelican", "Penguin", "Pheasant", "Pig", "Also", "Pigeon", "Polar", "Pony", "Porcupine", "Porpoise", "Prairie", "Quail", "Quelea", "Quetzal", "Rabbit", "Raccoon", "Rail", "Ram", "Also", "Rat", "Raven", "Red", "Red", "Reindeer", "Rhinoceros", "Rook", "Salamander", "Salmon", "Sand", "Sandpiper", "Sardine", "Scorpion", "Sea", "Sea", "Seahorse", "Seal", "Shark", "Sheep", "Also", "Shrew", "Skunk", "Snail", "Snake", "Sparrow", "Spider", "Spoonbill", "Squid", "Squirrel", "Starling", "Stingray", "Stinkbug", "Stork", "Swallow", "Swan", "Tapir", "Tarsier", "Termite", "Tiger", "Toad", "Trout", "Turkey", "Turtle", "Viper", "Vulture", "Wallaby", "Walrus", "Wasp", "Water", "Weasel", "Whale", "Wolf", "Wolverine", "Wombat", "Woodcock", "Woodpecker", "Worm", "Wren", "Yak", "Zebra");
+        $fruits = array("Apple", "Apricot", "Avocado", "Banana", "Breadfruit", "Bilberry", "Blackberry", "Blackcurrant", "Blueberry", "Boysenberry", "Cantaloupe", "Currant", "Cherry", "Cherimoya", "Cloudberry", "Coconut", "Cranberry", "Cucumber", "Damson", "Date", "Dragonfruit", "Durian", "Eggplant", "Elderberry", "Feijoa", "Fig", "Goji", "Gooseberry", "Grape", "Raisin", "Grapefruit", "Guava", "Huckleberry", "Honeydew", "Jackfruit", "Jambul", "Jujube", "Kiwi", "Kumquat", "Lemon", "Lime", "Loquat", "Lychee", "Mango", "Marionberry", "Melon", "Cantaloupe", "Honeydew", "Watermelon", "Mulberry", "Nectarine", "Nut", "Olive", "Orange", "Clementine", "Mandarine", "Tangerine", "Papaya", "Passionfruit", "Peach", "Pepper", "Pear", "Persimmon", "Physalis", "Plum", "Pineapple", "Pomegranate", "Pomelo", "Quince", "Raspberry", "Rambutan", "Redcurrant", "Salalberry", "Salmonberry", "Satsuma", "Starfruit", "Strawberry", "Tamarillo", "Tomato");
+        $nouns = array_merge($animals, $fruits);
+        srand();
+        return strtolower($nouns[rand(0, count($nouns) - 1)]);
+    }
+
+    public static function generatePassword() {
+        return substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-+{}[]()"),0,16);
+    }
+
+    public static function parseAttributeFilter( $value ) {
+        $attributeFilters = array();
+        foreach( explode(';', $value) as $filter ) {
+            list($filterName, $filterValue) = explode(':', $filter);
+            $attributeFilters[$filterName] = trim($filterValue);
+        }
+        return $attributeFilters;
+    }
+
+    public static function getPlantUMLUrl( $uml )
+    {
+        $uml = "@startuml".PHP_EOL."scale max 2048 width".PHP_EOL. $uml . "@enduml";
+        return
+            trim(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : 'http://plantuml.com', "/ ").
+            '/plantuml/img/'.encode64(gzdeflate($uml, 9));
     }
 }

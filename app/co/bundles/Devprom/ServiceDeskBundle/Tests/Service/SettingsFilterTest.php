@@ -2,12 +2,11 @@
 
 namespace Devprom\ServiceDeskBundle\Tests\Service;
 use Devprom\ServiceDeskBundle\Service\SettingsFilter;
-use PHPUnit_Framework_TestCase;
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  */
-class SettingsFilterTest extends PHPUnit_Framework_TestCase {
+class SettingsFilterTest extends \PHPUnit\Framework\TestCase {
 
     /**
      * @test

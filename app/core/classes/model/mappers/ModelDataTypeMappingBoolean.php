@@ -1,11 +1,9 @@
 <?php
-
 include_once "ModelDataTypeMapping.php";
 
 class ModelDataTypeMappingBoolean extends ModelDataTypeMapping
 {
-	public function applicable( $type_name )
-	{
+	public function applicable( $type_name ) {
 		return in_array($type_name, array('char'));
 	}
 	

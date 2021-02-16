@@ -17,10 +17,12 @@ class RenderService
 	public function __construct( $session, $additional_path = SERVER_ROOT_PATH )
 	{
 		$lang = strtolower($session->getLanguageUid());
+        $additional_path = rtrim($additional_path,"\\/");
 
 		$paths = array (
  			SERVER_ROOT_PATH.'co/bundles/Devprom/CommonBundle/Resources/views/Emails/'.$lang,
- 			rtrim($additional_path,"\\/").'/'.$lang
+            $additional_path,
+            $additional_path.'/'.$lang
  		);
 		foreach( $paths as $key => $value ) {
 			if ( !is_dir($value) ) unset($paths[$key]);

@@ -74,7 +74,7 @@
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function draw()
+	function draw( $view )
 	{
 		global $_REQUEST;
 		$offset = $_REQUEST['offset'];
@@ -307,13 +307,13 @@
 	function drawItem( $object_it )	{}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function drawNavigator( $b_top_navigator, $rowsLimit = '', $rowsActions = array() )
+	function drawNavigator( $view, $b_top_navigator, $rowsLimit = '' )
 	{
 		global $_REQUEST;
 		$offset = $_REQUEST['offset'];
 		$freshnews = 0;
 		// название страницы
-		$pagename = $this->getUrl();
+		$pagename = $this->getTable()->getPage()->getUrl();
 		// общее число страниц
         $pages = ($object_it->count() - $freshnews) / $this->getMaxOnPage();
         
@@ -696,7 +696,6 @@
 	//---------------------------------------------------------------------------------------------------------
 	function retrieve()
 	{
-		$this->setupColumns();
 		$this->it = $this->getIterator();
 	}
 	
@@ -717,15 +716,14 @@
 		{
 			default:
 				if ( $this->object->getAttributeType($attr) == 'char' ) return false;
-                if ( in_array('system', $this->object->getAttributeGroups($attr)) ) return false;
-                return $this->object->IsAttributeVisible( $attr );
+                return in_array($attr, $this->getColumnsRef());
 		}
 	}
 
 	//---------------------------------------------------------------------------------------------------------
 	function IsNeedToDisplayNumber()
 	{
-		return true;
+		return $_REQUEST['dashboard'] == '';
 	}
 
 	//---------------------------------------------------------------------------------------------------------
@@ -748,7 +746,7 @@
 	
 	function IsNeedToSelect()
 	{
-		return $this->IsNeedToDelete();
+		return $_REQUEST['dashboard'] == '' && $this->IsNeedToDelete();
 	}
 
 	function IsNeedToSelectRow( $object_it )
@@ -816,7 +814,7 @@
 				break;
 				
 			case 'date':
-				echo $object_it->getDateFormat($attr);
+				echo $object_it->getDateFormatted($attr);
 				break;
 
 			case 'datetime':
@@ -824,7 +822,7 @@
 				break;
 				
 			default:
-				echo $object_it->getHtml($attr);
+				echo Field::getHtmlValue($object_it->get($attr));
 		}
 	}
 
@@ -851,16 +849,14 @@
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function drawNavigator( $b_top_navigator, $rowsLimit = '', $rowsActions = array() )
+	function drawNavigator( $view, $b_top_navigator, $rowsLimit = '' )
 	{
-		// название страницы
-		$pagename = $this->getUrl();
-		
+
 		// общее число страниц
         $pages = $this->getPages();
         $totalItems = $this->getItemsCount($this->getIteratorRef());
         $offset_page = max(1, $this->getOffset() / $this->getMaxOnPage() - 3);
-        if ( $totalItems < $rowsLimit ) return;
+        if ( $totalItems < 5 ) return false;
 
 		echo '<div class="hover-holder">';
 		if ( $this->moreThanOnePage() ) {
@@ -868,28 +864,21 @@
             echo '<ul>';
             // выводим номера страниц
             if ($offset_page > 2) {
-                //echo '<div class="btn-group">';
-                $this->drawNavigatorItem(0, $pagename);
-                //	echo '</div>';
+                $this->drawNavigatorItem(0);
             } else {
                 $offset_page = 0;
             }
 
-            //echo '<div class="btn-group">';
             // выводим номера страниц
             for ($i = 0; $i < min($pages, 7); $i++) {
                 if ($i + $offset_page >= $pages) {
                     break;
                 }
-
-                $this->drawNavigatorItem($i + $offset_page, $pagename);
+                $this->drawNavigatorItem($i + $offset_page);
             }
-            //echo '</div>';
 
             if ($i + $offset_page < $pages) {
-                //echo '<div class="btn-group">';
-                $this->drawNavigatorItem($pages - 1, $pagename);
-                //echo '</div>';
+                $this->drawNavigatorItem($pages - 1);
             }
             echo '</ul></div>';
         }
@@ -900,9 +889,9 @@
                     echo preg_replace('/%1/', $totalItems, text(1884));
                 echo '</div>';
             echo '</div>';
-            echo $this->getRenderView()->render('pm/AttributeButton.php', array (
+            echo $view->render('pm/AttributeButton.php', array (
                 'data' => $rowsLimit > 9000 ? text(2627) : str_replace('%1', $rowsLimit, text(2626)),
-                'items' => $rowsActions,
+                'items' => $this->getRowsActions(),
                 'random' => 'pagination'
             ));
 		echo '</div>';
@@ -911,36 +900,25 @@
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function drawNavigatorItem( $i, $pagename )
+	function drawNavigatorItem( $i )
 	{
-		$pageurl = $pagename.(strpos($pagename, '?') !== false ? '&' : '?').
-			$this->offset_name.'='.($i * $this->getMaxOnPage());
-			
     	$current = $i * $this->getMaxOnPage() == $this->getOffset();
-    	
-    	//$class_name = $current ? "btn btn-sm btn-info" : "btn btn-sm";
-		//echo '<button class="'.$class_name.'" onclick="javascript: window.location=\''.$pageurl.'\';">'.round($i+1).'</button>';
-		
     	$class_name = $current ? "active" : "";
-    	
-		echo '<li class="'.$class_name.'"><a href="javascript: window.location=\''.urldecode($pageurl).'\';">'.round($i+1).'</a></li>';
+		echo '<li class="'.$class_name.'"><a href="javascript: filterLocation.setup(\''.$this->offset_name.'='.($i * $this->getMaxOnPage()).'\',1);">'.round($i+1).'</a></li>';
 	}	
 	
 	//---------------------------------------------------------------------------------------------------------
-	function setupColumns()
+	function getColumnFields()
 	{
-		$this->columns = $this->getColumns();
-	}
-	
-	//---------------------------------------------------------------------------------------------------------
-	function getColumns()
-	{
-		return array_keys($this->object->getAttributes());
+		return array();
 	}
 
 	//---------------------------------------------------------------------------------------------------------
 	function getColumnsRef()
 	{
+	    if ( count($this->columns) < 1 ) {
+	        $this->columns = array_unique($this->getColumnFields());
+        }
 		return $this->columns;
 	}
 
@@ -953,14 +931,14 @@
 	//---------------------------------------------------------------------------------------------------------
 	function getColumnWidth( $attr ) 
 	{
-		if ( $attr == 'Actions' )
-		{
-			return 90;
-		}
-		else
-		{
-			return '';
-		}
+	    switch($attr) {
+            case 'Actions':
+                return 90;
+            case 'Caption':
+//                return '40%';
+            default:
+                return '';
+        }
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
@@ -1058,7 +1036,7 @@
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function getGroupActions( $group_field, $object_it ) {
+	function getGroupActions( $ref_it ) {
 		return array();
 	}
 
@@ -1084,7 +1062,7 @@
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function draw()
+	function draw( $view )
 	{
 		global $_REQUEST, $list_view_id, $model_factory;
 
@@ -1211,7 +1189,7 @@
 						$group_field_value = $it->get($group_field);
 						if( $group_field_value != $group_field_prev_value ) 
 						{
-							$group_actions = $this->getGroupActions($group_field, $it);
+							$group_actions = $this->getGroupActions($it);
 							$background = $this->getGroupBackground($group_field, $it);
 						?>
 						<tr>
@@ -1319,6 +1297,20 @@
 	
 	function getNoItemsMessage()
 	{
+        $buttons = array();
+
+        $table = $this->getTable();
+        if ( is_object($table) && $_REQUEST['dashboard'] == '' ) {
+            foreach( $table->getActions() as $action ) {
+                if ( strpos($action['uid'], 'import') !== false ) {
+                    $buttons[] = '<a class="btn append-btn btn-sm btn-success" style="visibility:inherit;" href="'.$action['url'].'"><i class="icon-plus icon-white"></i>'.$action['name'].'</a>';
+                }
+            }
+        }
+        if ( count($buttons) > 0 ) {
+            return text(1312) . '<br/><br/>' . join(' ', $buttons);
+        }
+
 		return translate('Нет элементов');
 	}
 	
@@ -1333,6 +1325,29 @@
 		global $_REQUEST;
 		return $_REQUEST['to_delete_'.$object_it->getId()] == 'on';
 	}
+
+     function getRowsActions()
+     {
+         if ( !$this->HasRows() ) return array();
+         if ( $_REQUEST['rows'] == '' ) $_REQUEST['rows'] = $this->getMaxOnPage();
+
+         $rows_actions = array();
+         $rows = array( 5, 10, 20, 30, 45, 60, 100, 300, 500 );
+
+         foreach ( $rows as $value )
+         {
+             $script = "javascript: filterLocation.setup( 'rows=".$value."', 1 ); ";
+             $rows_actions[] = array ( 'url' => $script, 'name' => $value );
+         }
+
+         $script = "javascript: filterLocation.setup( 'rows=all', 1 ); ";
+
+         $rows_actions[] =
+             array (
+                 'url' => $script,
+                 'name' => '&infin;'
+             );
+
+         return $rows_actions;
+     }
  }
- 
-?>

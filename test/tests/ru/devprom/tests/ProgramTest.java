@@ -281,7 +281,7 @@ public class ProgramTest extends ProjectTestBase {
 		
 		
 		task = new KanbanTask("TestTask"+p);
-		KanbanTasksPage ktp = kpb.gotoKanbanTasks();
+		KanbanTasksPage ktp = kpb.gotoBackLog();
 		KanbanTaskNewPage ktnp = ktp.addNewTask();
 		ktp = ktnp.createTask(task);
 		KanbanTaskBoardPage ktbp = ktp.gotoKanbanBoard();
@@ -302,7 +302,7 @@ public class ProgramTest extends ProjectTestBase {
 		favspage =  mcp.close();
 		favspage.gotoCustomReport("favs", "", "Доска пожеланий");
 		CrossProjectsRequestsBoard cprb = new CrossProjectsRequestsBoard(driver);
-		cprb = cprb.turnOnFilter("priority", "all");
+		cprb.setFilter("priority", "all");
 		cprb = cprb.moveToAnotherProject(task.getNumericId(), scrumProject.getName(), 1);
 		Assert.assertTrue(cprb.isRequestInSection(task.getNumericId(), scrumProject.getName(), 1), "Пожелание не найдено в другом проекте после перемещения");
 	

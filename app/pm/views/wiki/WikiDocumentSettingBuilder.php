@@ -17,8 +17,8 @@ class WikiDocumentSettingBuilder extends PageSettingBuilder
         $setting = new PageListSetting('PMWikiDocumentList');
         $setting->setGroup( 'none' );
         $columns = array('Content', 'SectionNumber', 'Tags', 'PageType');
-        $setting->setVisibleColumns(
-            array_merge(
+        if ( $_REQUEST['viewmode'] == '' && count(\TextUtils::parseFilterItems($_REQUEST['affirmation'])) < 1 ) {
+            $columns = array_merge(
                 $columns,
                 array_diff(
                     array_filter($object->getAttributesByGroup('trace'), function($value) use($object) {
@@ -26,8 +26,12 @@ class WikiDocumentSettingBuilder extends PageSettingBuilder
                     }),
                     $object->getAttributesByGroup('source-attribute')
                 )
-            )
-        );
+            );
+        }
+        if ( count(\TextUtils::parseFilterItems($_REQUEST['affirmation'])) > 0 ) {
+            $columns[] = 'Workflow';
+        }
+        $setting->setVisibleColumns($columns);
         $settings->add( $setting );
         
         $setting = new PageTableSetting('PMWikiDocument');

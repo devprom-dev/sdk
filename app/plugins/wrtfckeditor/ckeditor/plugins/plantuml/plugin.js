@@ -51,25 +51,19 @@ CKEDITOR.plugins.add( 'plantuml',
 				
 				// Return a context menu object in an enabled, but not active state.
 				// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.html#.TRISTATE_OFF
-				if ( element && element.getName() == 'img' && !element.data( 'cke-realelement' ) )
+				if ( element && element.getName() == 'img' && element.getAttribute('src').indexOf("/plantuml/") != -1 )
 		 			return { umlItem : CKEDITOR.TRISTATE_OFF };
+
 				// Return nothing if the conditions are not met.
 		 		return null;
 			});
 		}
 		
-		editor.on( 'doubleclick', function( evt )
-        {
+		editor.on( 'doubleclick', function( evt ) {
             var element = evt.data.element;
-
-            if ( element.is('img') && element.getAttribute('alt') != "" && !element.data('cke-realelement') ) {
-            	try {
-            		$.base64.decode(element.getAttribute('alt'));
-			    	editor.openDialog('umlDialog');
-			    	evt.cancel();
-            	}
-            	catch(e) {
-            	}
+            if ( element.is('img') && element.getAttribute('src').indexOf("/plantuml/") != -1 ) {
+				editor.openDialog('umlDialog');
+				evt.cancel();
             }
         }, null, null, 0);
 		
@@ -114,9 +108,14 @@ CKEDITOR.plugins.add( 'plantuml',
 												timer: 0,
 												validate : CKEDITOR.dialog.validate.notEmpty(cket('uml-message-notempty')),
 												setup : function( element ) {
-													var alt = element.getAttribute("alt");
-													if (alt!=null) {
-														this.setValue(unescape($.base64.decode(alt)));
+													try {
+														this.setValue(decodeURIComponent($.base64.decode(element.getAttribute('uml'))));
+													}
+													catch(e) {
+														try {
+															this.setValue(unescape($.base64.decode(element.getAttribute('alt'))));
+														}
+														catch(e) {}
 													}
 													var self = this;
 													$(this.getInputElement().$)
@@ -135,11 +134,12 @@ CKEDITOR.plugins.add( 'plantuml',
 												},
 												commit : function( element ) {
 													var u = compress(this.getValue());
+													element.setAttribute( "uml", $.base64.encode(encodeURIComponent(this.getValue())));
 													u = editor.config.plantUMLServer + "/plantuml/img/"+u;
-													var altText = $.base64.encode(escape(this.getValue()));
-													element.setAttribute( "alt", altText );
 													element.setAttribute( "src", u );
 													element.setAttribute( "data-cke-saved-src", u );
+													element.removeAttribute( "data-cke-widget-data" );
+													element.removeAttribute( "alt" );
 												},
 												preview: function (element) {
 													var value = element.getValue();
@@ -221,9 +221,8 @@ CKEDITOR.plugins.add( 'plantuml',
 				{
 					// A dialog window object.
 					// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dialog.html 
-					var dialog = this,
-						plantuml = this.element;
-					
+					var dialog = this, plantuml = this.element;
+
 					// If we are not editing an existing element, insert a new one.
 					// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.editor.html#insertElement
 					if ( this.insertMode )
@@ -234,26 +233,6 @@ CKEDITOR.plugins.add( 'plantuml',
 				}
 			};
 		} );
-		
-		// See http://plantuml.sourceforge.net/qa/?qa=210/ckeditor-plugin-sometimes-doesnt-update-image-text-changes&show=211#a211
-		CKEDITOR.on('instanceReady2', function (ev) {
-                var editor = ev.editor,
-                    dataProcessor = editor.dataProcessor,
-                    htmlFilter = dataProcessor && dataProcessor.htmlFilter;
-            
-                htmlFilter.addRules( {
-                    elements : {
-                        $ : function( element ) {
-                            if ( element.name == 'img' ) {
-                                var imgsrc = element.attributes.src;
-        
-                                element.attributes.src = imgsrc;
-                                element.attributes['data-cke-saved-src'] = imgsrc;
-                            }
-                        }
-                    }
-                });
-            });
 	}
 } );
 
@@ -846,7 +825,7 @@ function zip_fill_window() {
 //	System.arraycopy(window, WSIZE, window, 0, WSIZE);
 	for(n = 0; n < zip_WSIZE; n++)
 	    zip_window[n] = zip_window[n + zip_WSIZE];
-      
+
 	zip_match_start -= zip_WSIZE;
 	zip_strstart    -= zip_WSIZE; /* we now have strstart >= MAX_DIST: */
 	zip_block_start -= zip_WSIZE;
@@ -1130,7 +1109,7 @@ function zip_qcopy(buff, off, buff_size) {
 //      System.arraycopy(qhead.ptr, qhead.off, buff, off + n, i);
 	for(j = 0; j < i; j++)
 	    buff[off + n + j] = zip_qhead.ptr[zip_qhead.off + j];
-	
+
 	zip_qhead.off += i;
 	zip_qhead.len -= i;
 	n += i;

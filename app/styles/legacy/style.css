@@ -771,13 +771,6 @@ div.note
     border:1px solid #9F6005;
 }
 
-.comments_section
-{
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid silver;
-}
-
 option.regular
 {
     padding:2pt;
@@ -1024,11 +1017,6 @@ div.change_body
 .formvalue-long
 {
     width: 100%;
-}
-
-.formvalue-short
-{
-    width: 140px;
 }
 
 .formvalueholder .autocomplete

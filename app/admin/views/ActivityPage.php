@@ -9,7 +9,7 @@ class ActivityPage extends AdminPage
  		return new ActivityTable(getFactory()->getObject('AdminChangeLog'));
  	}
 
-    function getForm()
+    function getEntityForm()
  	{
  		return null;
  	}

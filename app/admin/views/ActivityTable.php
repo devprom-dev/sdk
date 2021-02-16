@@ -16,21 +16,38 @@ class ActivityTable extends PageTable
 
     function getFilters()
 	{
-		$filters = array();
+		$filters = parent::getFilters();
 
 		$date = new FilterDateWebMethod();
 		$date->setValueParm( 'modified' );
 		$date->setCaption( translate('Изменено после') );
-		$date->setDefault(
-		    getSession()->getLanguage()->getPhpDate(strtotime('-4 weeks', strtotime(SystemDateTime::date('Y-m-j'))))
-		);
-		
+
 		$filters[] = $date; 
 		
 		return $filters;
 	}
-	
-	function getNewActions()
+
+	function getFilterPredicates($values)
+    {
+        return array_merge(
+            parent::getFilterPredicates($values),
+            array(
+                new FilterModifiedAfterPredicate($values['modified'])
+            )
+        );
+    }
+
+    function buildFilterValuesByDefault(&$filters)
+    {
+        $values = parent::buildFilterValuesByDefault($filters);
+        if ( !array_key_exists('modified', $values) ) {
+            $values['modified'] = getSession()->getLanguage()
+                ->getPhpDate(strtotime('-4 weeks', strtotime(SystemDateTime::date('Y-m-j'))));
+        }
+        return $values;
+    }
+
+    function getNewActions()
 	{
 	    return array();
 	}

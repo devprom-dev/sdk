@@ -9,7 +9,7 @@ class MailerPage extends AdminPage
         return new MailerForm( getFactory()->getObject('MailerSettings')->getAll() );
     }
 
-    function getForm()
+    function getEntityForm()
     {
         return null;
     }

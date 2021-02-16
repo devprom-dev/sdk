@@ -36,7 +36,7 @@ class ProfilePage extends PMPage
  		getFactory()->setAccessPolicy( $this->policy );
 	}
 	
- 	function getForm() 
+ 	function getEntityForm()
  	{
 		$object = getFactory()->getObject('pm_Participant');
 		$form = new ProfileForm($object);

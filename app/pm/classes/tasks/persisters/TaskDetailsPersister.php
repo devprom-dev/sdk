@@ -20,7 +20,16 @@ class TaskDetailsPersister extends ObjectSQLPersister
  		
  		$columns[] = " ( SELECT u.Caption FROM cms_User u WHERE u.cms_UserId = t.Assignee) TaskAssigneePhotoTitle ";
 
+        $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
+        if ( !$methodologyIt->TaskEstimationUsed() && $methodologyIt->IsEstimationHoursStrategy() ) {
+            $columns[] = " (SELECT r.EstimationLeft FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) LeftWork ";
+        }
+
  		return $columns;
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }
 

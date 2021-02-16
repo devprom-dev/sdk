@@ -1,5 +1,4 @@
 <?php
-include SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
 include 'TextChangesChart.php';
 
 class TextChangesChartTable extends PMPageTable
@@ -11,11 +10,6 @@ class TextChangesChartTable extends PMPageTable
         return new TextChangesChart( $this->getObject() );
     }
 
-    function getFiltersDefault()
-    {
-    	return array('any');
-    }
-    
     function getFilters()
     {
         $filters = array (
@@ -33,9 +27,8 @@ class TextChangesChartTable extends PMPageTable
     	return $filter;
     }
 
-    function getFilterPredicates()
+    function getFilterPredicates( $values )
     {
-        $values = $this->getFilterValues();
         return array_merge(
             array (
                 new FilterModifiedAfterPredicate( $values['start'] ),

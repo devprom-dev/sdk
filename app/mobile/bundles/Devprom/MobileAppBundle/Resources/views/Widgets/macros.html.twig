@@ -1,0 +1,14 @@
+{% macro hie_pages(pages) %}
+    {% import _self as macros %}
+    {% for page in pages %}
+        <li id="pg-{{ page.id }}" data-icon="{% if page.pages %}stack{% else %}line-note{% endif %}">
+            <h3>{{ page.title | raw }}</h3>
+            <ul>
+                {{ macros.hie_pages(page.pages) }}
+                <li>
+                    <div class="reset wysiwyg">{{ page.content | raw }}</div>
+                </li>
+            </ul>
+        </li>
+    {% endfor %}
+{% endmacro %}

@@ -22,4 +22,8 @@ class SystemLog extends Metaobject
 	{
 		return '/admin/log/?';
 	}
+
+	function getDisplayName() {
+        return text(1712);
+    }
 }

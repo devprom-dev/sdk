@@ -88,7 +88,7 @@ public class CKEditor {
 		editable.clear();
 		editable.sendKeys("#");
 		try {
-			Thread.sleep(4000);
+			Thread.sleep(6000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -170,7 +170,7 @@ public class CKEditor {
 				.xpath(".//div[@role='presentation']/iframe"));
 		driver.switchTo().frame(newFrame);
         WebElement editableArea = driver.findElement(By.xpath("//body"));
-        WebElement cell = driver.findElement(By.xpath("//body/table/tbody/tr["+row+"]/td["+column+"]"));
+        WebElement cell = driver.findElement(By.xpath("//body/table//tr["+row+"]/td["+column+"]"));
         cell.click();
         editableArea.sendKeys(text);
         driver.switchTo().defaultContent();

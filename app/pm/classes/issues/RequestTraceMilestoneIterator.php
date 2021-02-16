@@ -8,7 +8,7 @@ class RequestTraceMilestoneIterator extends RequestTraceBaseIterator
  	{
  		if ( $this->get('Deadline') != '' && $this->get('Deadline') != 'NULL' )
  		{
- 			return $this->getDateFormat('Deadline');
+ 			return $this->getDateFormatted('Deadline');
  		}
  		else
  		{

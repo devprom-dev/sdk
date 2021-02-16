@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/ChangeLogNotificator.php";
 
 class AdminChangeLogNotificator extends ChangeLogNotificator
@@ -18,7 +17,10 @@ class AdminChangeLogNotificator extends ChangeLogNotificator
             'pm_Project',
 			'cms_Backup',
 			'cms_Update',
-			'cms_BlackList'
+			'cms_BlackList',
+            'cms_ExternalUser',
+            'co_Company',
+            'Invitation'
         );
     }
     

@@ -1,19 +1,15 @@
 <?php
 include_once "WebMethod.php";
-include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectAffectedDatePersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/common/CustomAttributesModelBuilder.php";
 
 class ModifyAttributeWebMethod extends WebMethod
 {
  	var $object_it, $attribute, $value, $callback;
- 	
  	private $uid_service = null;
- 	
  	private $method_url = '';
- 	
  	private $method_script = '';
- 	
  	private $project = '';
  	
  	function __construct( $object_it = null, $attribute = '', $value = '')
@@ -25,10 +21,11 @@ class ModifyAttributeWebMethod extends WebMethod
  		$this->setValue($value);
  		$this->callback = "''";
  		$this->uid_service = new ObjectUID;
- 		$this->method_url = '/'.getSession()->getSite().'/';
+ 		$this->method_url = '/'.getSession()->getSite();
  		$this->project = getSession()->getProjectIt()->get('CodeName');
  		
  		$this->buildMethodScript();
+ 		$this->setCallback('devpromOpts.updateUI');
  	}
  	
  	function getValue()
@@ -65,9 +62,11 @@ class ModifyAttributeWebMethod extends WebMethod
  	{
  		if ( getSession()->getSite() == 'pm' ) {
  			$project_code = is_object($this->object_it) ? $this->object_it->get('ProjectCodeName') : $this->project;
+            $project_code .= '/';
  		}
  		 
- 		$method_url = $this->method_url.$project_code.'/methods.php?method='.get_class($this);
+ 		$method_url = rtrim($this->method_url,'/').
+            '/'.$project_code.'methods.php?method='.get_class($this);
  		
  		$this->method_script = "javascript: runMethod('".$method_url."', %data%, ".$this->callback.", '".$this->getWarning()."');";
  	}
@@ -85,6 +84,18 @@ class ModifyAttributeWebMethod extends WebMethod
  		
  		return $object->getDisplayName().': '.$object_it->getDisplayName();
  	}
+
+ 	function getUrl( $parms = array() )
+    {
+        return parent::getUrl(
+            array_merge($parms, array(
+                'class' => strtolower(get_class($this->object_it->object)),
+                'attribute' => $this->attribute,
+                'object' => $this->object_it->getId(),
+                'value' => $this->value
+            ))
+        );
+    }
 
  	function getJSCall( $parms = array() )
  	{
@@ -107,53 +118,78 @@ class ModifyAttributeWebMethod extends WebMethod
  	
  	function execute_request()
  	{
-		if ( $_REQUEST['class'] == '' || $_REQUEST['attribute'] == '' )
+		if ( $_REQUEST['class'] == '' || $_REQUEST['attribute'] == '' || $_REQUEST['object'] == '' )
 		{
-			echo '{"message":"denied"}';
-			return;
-		}
-		
-		if ( $_REQUEST['object'] == '' )
-		{
-			echo '{"message":"denied"}';
+			echo JsonWrapper::encode(array(
+                    'message' => "denied"
+                ));
 			return;
 		}
 
-		
 		$object = getFactory()->getObject($_REQUEST['class']);
 		if ( $object instanceof WikiPage ) {
 			$object->setRegistry( new WikiPageRegistryContent() );
 		}
+
+		// extend attributes defined by users
+        if ( is_numeric($_REQUEST['object']) && $_REQUEST['object'] > 0 ) {
+            $builder = new CustomAttributesModelBuilder($object->createCachedIterator(
+                array(
+                    array(
+                        $object->getIdAttribute() => $_REQUEST['object']
+                    )
+                )
+            ));
+            $builder->build($object);
+        }
+
 		$object_it = $object->getExact($_REQUEST['object']);
 
 		if ( $object_it->getId() == '' ) {
-			echo '{"message":"denied","description":"object is undefined"}';
+            echo JsonWrapper::encode(array(
+                "message" => "denied",
+                "description" => "object is undefined"
+            ));
 			return;
 		}
  	 	if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, $_REQUEST['attribute']) ) {
-			echo '{"message":"denied","description":"'.text(1062).'"}';
+            echo JsonWrapper::encode(array(
+                "message" => "denied",
+                "description" => text(1062)
+            ));
 			return;
 		}
 		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) {
-			echo '{"message":"denied","description":"'.text(1062).'"}';
+            echo JsonWrapper::encode(array(
+                "message" => "denied",
+                "description" => text(1062)
+            ));
 			return;
 		}
-		
+
+        $user_parms = $_REQUEST['parms'];
+        $parms = array (
+            $_REQUEST['attribute'] => $_REQUEST['value']
+        );
+
 		if ( $_REQUEST['value'] != '' && $object->IsReference($_REQUEST['attribute']) )
 		{
 	 		$attr_object = $object->getAttributeObject($_REQUEST['attribute']);
 	 		$attr_object_it = $attr_object->getExact(preg_split('/,/', $_REQUEST['value']));
 			if ( $attr_object_it->count() < 1 ) {
-				echo '{"message":"denied","description":"object is undefined"}';
+                echo JsonWrapper::encode(array(
+                    "message" => "denied",
+                    "description" => "object is undefined"
+                ));
 				return;
 			}
+
+            if ( $attr_object instanceof Release || $attr_object instanceof Iteration ) {
+                $refIt = $attr_object->getExact($_REQUEST['value']);
+                $parms['Project'] = $refIt->get('Project');
+            }
 		}
 		
-		$user_parms = $_REQUEST['parms'];
-		$parms = array (
-			$_REQUEST['attribute'] => $_REQUEST['value']
-		);
-
 		if ( !array_key_exists('OrderNum', $parms) ) {
 			$parms['OrderNum'] = $object_it->get('OrderNum');
 		}
@@ -163,7 +199,7 @@ class ModifyAttributeWebMethod extends WebMethod
 			$registry->setLimit(1);
 			
 			$filters = array (
-					new FilterBaseVpdPredicate()
+                new FilterBaseVpdPredicate()
 			);
 
 			if ( $_REQUEST['type'] == 'inc' )
@@ -200,27 +236,14 @@ class ModifyAttributeWebMethod extends WebMethod
 		
 		$parms = is_array($user_parms) ? array_merge($user_parms, $parms) : $parms;
 
-        $mapper = new ModelDataTypeMapper();
-        $mapper->map( $object, $parms );
-
-        if ( $object instanceof MetaobjectStatable and $object_it->getStateIt()->getId() != '' ) {
-            $model_builder = new WorkflowStateAttributesModelBuilder(
-                $object_it->getStateIt(), array_keys($parms)
-            );
-            $model_builder->build($object);
-        }
-
-        $validator = new ModelValidator();
-        $validator->addValidator(new ModelValidatorObligatory());
-        $validationResult = $validator->validate($object, $parms);
-        if ( $validationResult != "" ) {
-            echo JsonWrapper::encode(
-                array(
-                    'message' => 'denied',
-                    'description' => $validationResult
-                )
-            );
-            return;
+        if ( $object instanceof MetaobjectStatable ) {
+            unset($parms['State']);
+            if ( $object_it->getStateIt()->getId() != '' ) {
+                $model_builder = new WorkflowStateAttributesModelBuilder(
+                    $object_it->getStateIt(), array_keys($parms)
+                );
+                $model_builder->build($object);
+            }
         }
 
         // check if there are changes
@@ -228,7 +251,13 @@ class ModifyAttributeWebMethod extends WebMethod
 		foreach( $parms as $key => $value )
 		{
 			if ( $object_it->get_native($key) == $value ) continue;
-
+            if ( !$object->getAttributeEditable($key) ) {
+                echo JsonWrapper::encode(array(
+                    "message" => "denied",
+                    "description" => sprintf(text(3016), $object->getAttributeUserName($key))
+                ));
+                return;
+            }
 			$has_changes = true;
 			break;
 		}
@@ -237,9 +266,30 @@ class ModifyAttributeWebMethod extends WebMethod
 			$object->setNotificationEnabled(false);
 		}
 
+        if ( $_REQUEST['version'] > 0 && $_REQUEST['version'] < $object_it->get('RecordVersion') ) {
+            echo JsonWrapper::encode(
+                array(
+                    'message' => 'denied',
+                    'description' => text(612)
+                )
+            );
+            return;
+        }
+
 		if ( $has_changes )	{
-            $parms['WasRecordVersion'] = $object_it->get('RecordVersion');
-			$object->modify_parms($object_it->getId(), $parms);
+            try {
+                $parms['WasRecordVersion'] = $object_it->get('RecordVersion');
+                getFactory()->modifyEntity($object_it, $parms);
+            }
+            catch( \Exception $e ) {
+                echo JsonWrapper::encode(
+                    array(
+                        'message' => 'denied',
+                        'description' => $e->getMessage()
+                    )
+                );
+                return;
+            }
 		}
 
 		// flush notifications on changes
@@ -256,6 +306,10 @@ class ModifyAttributeWebMethod extends WebMethod
             )
         );
 
-		echo '{"message":"ok", "modified":"'.$object_it->get_native('AffectedDate').'"}';
+        echo JsonWrapper::encode(array(
+            "message" => "ok",
+            "modified" => $object_it->get_native('AffectedDate'),
+            "version" => $object_it->get_native('RecordVersion')
+        ));
  	}
 }

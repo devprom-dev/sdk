@@ -12,7 +12,7 @@ class ProjectTemplateArtefactsBuilderProduct extends ProjectTemplateSectionsRegi
 	
     public function build ( ProjectTemplateSectionsRegistry & $registry )
     {
-        $registry->addSectionItem('pm_Project', getFactory()->getObject('FeatureType'));
+        $registry->addSectionItem('Dictionaries', getFactory()->getObject('FeatureType'));
         $feature = getFactory()->getObject('Feature');
         $feature->addSort( new SortFeatureHierarchyClause() );
         $registry->addSectionItem('ProjectArtefacts', $feature);

@@ -10,20 +10,19 @@ class ProjectLogList extends PMPageList
 		$this->getObject()->setAttributeType( 'Author', 'REF_IssueAuthorId' );
  	}
 
+ 	function extendModel()
+    {
+        $this->getObject()->addAttribute('UserAvatar', '', translate('Автор'), true, false, '', 1);
+        $this->getObject()->setAttributeCaption( 'SystemUser', translate('Имя автора') );
+        $this->getObject()->setAttributeOrderNum( 'SystemUser', 2 );
+        parent::extendModel();
+    }
+
     function buildItemsHash($object, $predicates)
     {
         return '';
     }
 
-	function setupColumns()
-	{
-		$this->object->addAttribute('UserAvatar', '', translate('Автор'), true, false, '', 1);
-		$this->object->setAttributeCaption( 'SystemUser', translate('Имя автора') );
-		$this->object->setAttributeOrderNum( 'SystemUser', 2 );
-		
-		parent::setupColumns();
-	}
-	
 	function getSorts()
 	{
 		$sorts = parent::getSorts();
@@ -31,11 +30,8 @@ class ProjectLogList extends PMPageList
 		foreach( $sorts as $key => $sort ) {
 			if ( !$sort instanceof SortAttributeClause ) continue;
 			if ( in_array($this->getObject()->getAttributeType($sort->getAttributeName()), array('date','datetime')) ) {
-				$sorts[$key] = new SortChangeLogRecentClause();
+				$sorts[$key] = new SortChangeLogRecentClause($sort->getSortType());
 			}
-			if ( $sort->getAttributeName() == 'Content' ) {
-                $sorts[$key] = new SortChangeLogRecentClause();
-            }
 		}
 		
 		return $sorts;
@@ -94,38 +90,51 @@ class ProjectLogList extends PMPageList
                     }
                     echo '<br/>';
                 }
-                else if ($object_it->get('EntityRefName') == 'cms_ExternalUser')
-                {
-                    echo text(1360) . ': ';
+                else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest') {
                     parent::drawCell( $object_it, 'Caption' );
                 }
-                else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest')
-                {
-                    parent::drawCell( $object_it, 'Caption' );
-                }
-                else
-                    {
+                else {
                     echo $anchor_it->object->getDisplayName().': ';
                     parent::drawCell( $object_it, 'Caption' );
                 }
 
-                if ( strpos($object_it->get('Content'), '[url') !== false && $anchor_it->object instanceof WikiPage) {
-                    echo '<br/>'.str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$object_it->getDateTimeFormat('RecordModified'), text(2319));
+                $content = $object_it->get('Content');
+
+                if ( $anchor_it->object instanceof WikiPage ) {
+                    $content = preg_replace('/\[url=[^\]]+\]/i',
+                        str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$object_it->getDateTimeFormat('RecordModified'), text(2319)),
+                        $content);
                 }
-                else if ( $object_it->get('Content') != '' )
+
+                if ( $content != '' )
                 {
                     echo '<br/>';
                     $field = new FieldWYSIWYG();
                     $field->setObjectIt( $object_it );
-                    $field->setValue( $object_it->get('Content') );
+                    $field->setValue( $content );
                     $field->drawReadonly();
                 }
-			    if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
-				    echo $this->getRenderView()->render('core/CommentsIcon.php', array (
-							'object_it' => $anchor_it,
-							'redirect' => 'donothing'
-					));
-			    }			    
+			    if ( strpos($object_it->get('ChangeKind'), 'commented') !== false )
+			    {
+                    $method = new CommentWebMethod($anchor_it);
+                    if ( $method->hasAccess() ) {
+                        if ( preg_match('/O\-(\d+)\s/i', $content, $matches) ) {
+                            $commentId = $matches[1];
+                        }
+                        if ( $commentId > 0 ) {
+                            echo $this->getRenderView()->render('core/CommentsReplyIcon.php', array (
+                                'objectIt' => $anchor_it,
+                                'commentId' => $commentId
+                            ));
+                        }
+                        else {
+                            echo $this->getRenderView()->render('core/CommentsIcon.php', array (
+                                'object_it' => $anchor_it,
+                                'redirect' => 'donothing'
+                            ));
+                        }
+                    }
+			    }
 			    
 			    break;
 				
@@ -181,7 +190,7 @@ class ProjectLogList extends PMPageList
 	
 	function getColumnFields()
 	{
-		return array('Caption', 'UserAvatar', 'Content', 'SystemUser', 'RecordModified', 'Project');
+		return array('Caption', 'UserAvatar', 'Content', 'SystemUser', 'RecordModified', 'Project', 'ChangeKind');
 	}
 
 	function getItemActions($column_name, $object_it)

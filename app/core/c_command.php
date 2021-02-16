@@ -324,7 +324,7 @@
 		$this->_reply( 'redirect', $text, $url );
 	}
 
-	function replyResult( $is_error, $message, $object_id )
+	function replyResult( $is_error, $message, $object_id = '' )
 	{
 		$this->_reply( $is_error ? 'error' : 'success', $message, $object_id );
 	}
@@ -359,10 +359,14 @@
 		exit();		
 	}
 	
-	function replyResultBinary( $is_error, $message, $object_id )
+	function replyResultBinary( $is_error, $message, $object_id = '' )
 	{
 		$this->_reply( $is_error ? 'error' : 'success', $message, $object_id);  
 	}
+
+	function IsAuthenticationRequired() {
+ 	    return true;
+    }
  }
  
  function CommandFormErrorHandler ($errno, $errmsg, $filename, $linenum, $vars) 

@@ -48,12 +48,7 @@ if ( !DeploymentState::IsInstalled() ) {
      DALDummy::Instance()->Connect( '' );
 }
 else {
-	if ( function_exists('mysqli_connect') ) {
-		DALMySQLi::Instance()->Connect(new MySQLConnectionInfo( DB_HOST, DB_NAME, DB_USER, DB_PASS ));
-	}
-	else {
-		DALMySQL::Instance()->Connect(new MySQLConnectionInfo( DB_HOST, DB_NAME, DB_USER, DB_PASS ));
-	}
+    DALMySQLi::Instance()->Connect(new MySQLConnectionInfo( DB_HOST, DB_NAME, DB_USER, DB_PASS ));
 }
 
 if ( EnvironmentSettings::getProxyServer() != '' ) {
@@ -75,3 +70,5 @@ if ( EnvironmentSettings::getProxyServer() != '' ) {
         )
     );
 }
+
+ini_set('session.cookie_httponly', '1');

@@ -4,9 +4,7 @@ class WatcherUserPredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
-        $ids = \TextUtils::parseIds(
-            preg_replace('/user-id/i', getSession()->getUserIt()->getId(), $filter)
-        );
+        $ids = \TextUtils::parseIds($filter);
         if ( count($ids) < 1 ) return " AND 1 = 2 ";
 
  		$user_it = getFactory()->getObject('cms_User')->getRegistry()->Query(

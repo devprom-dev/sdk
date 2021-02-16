@@ -10,6 +10,7 @@ class Priority extends MetaobjectCacheable
  		
  		$this->setSortDefault( new SortOrderedClause() );
  		$this->setAttributeDescription( 'RelatedColor', text(1853) );
+        $this->addAttributeGroup('ReferenceName', 'alternative-key');
  	}
  	
 	function createIterator() 

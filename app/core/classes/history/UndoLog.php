@@ -29,6 +29,15 @@ class UndoLog
         $this->queue[$class_name][] = $object_it->copy()->serialize2Xml(array('file','image'));
     }
 
+    public function putReference( $object_it, $attribute )
+    {
+        $class_name = strtolower(get_class($object_it->object));
+        if ( $class_name == 'metaobject' ) {
+            $class_name = $object_it->object->getClassName();
+        }
+        $this->queue[$class_name][] = $object_it->copy()->serialize2Xml(array('file','image'), array($attribute));
+    }
+
     public function getPath( $transaction ) {
         if ( preg_match('/[a-z0-9A-Z]+/i', $transaction) < 1 ) return '';
         return $this->dirPath . '/' . $transaction;

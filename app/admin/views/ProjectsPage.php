@@ -12,7 +12,7 @@ class ProjectsPage extends AdminPage
 		return new ProjectTable($this->getObject());
 	}
 
-	function getForm() {
+	function getEntityForm() {
 		return new ProjectForm($this->getObject());
 	}
 }

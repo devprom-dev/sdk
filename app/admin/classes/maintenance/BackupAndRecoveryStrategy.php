@@ -60,20 +60,21 @@ class BackupAndRecoveryStrategy
 		else
 		{
 			$command = 'mysqldump --set-charset --default-character-set='.APP_CHARSET.' ' .
-				' --host='.DB_HOST.' --user='.DB_USER.' --password='.DB_PASS.
+				' --host='.DB_HOST.' --port=3306 --user='.DB_USER.' --password='.DB_PASS.
 				' --add-drop-table --force '.DB_NAME.' > '.
 				$sql_path.'devprom.sql';
 		}
 
 		$this->writeLog("Backup: ".$command);
-		
-		$result = shell_exec( $command );
 
-		$this->writeLog("Backup: database dumping result ".$result);
-		
-		$this->configure_database_file( $sql_path.'devprom.sql' );
-		
-		return true;
+        try {
+            $this->writeLog('Backup: ' . \FileSystem::execAndSendResponse($command));
+            $this->configure_database_file( $sql_path.'devprom.sql' );
+        }
+        catch( \Exception $e ) {
+            $this->errorLog("Backup: ".$e->getMessage());
+            throw $e;
+        }
  	}
  	
  	function configure_database_file( $path )
@@ -205,7 +206,6 @@ class BackupAndRecoveryStrategy
  	function recovery_unzip( $backup_file_name ) 
  	{
  		$this->writeLog("Recovery: unzip backup archive");
- 		
  		$this->unzip( SERVER_BACKUP_PATH, $backup_file_name );
  	} 
 
@@ -232,12 +232,14 @@ class BackupAndRecoveryStrategy
 		}
 
 		$this->writeLog($command);
-		
-		$result = shell_exec( $command );
-		
-		$this->writeLog($result);
-   	    
-   	    return $result;
+
+        try {
+            $this->writeLog('Recovery: ' . \FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog("Recovery: ".$e->getMessage());
+            throw $e;
+        }
 	}
 	
  	function recovery_files( $backup_file_name ) 
@@ -327,14 +329,14 @@ class BackupAndRecoveryStrategy
 				' --database='.DB_NAME.' -e "source '.$sql_path.'" 2>&1';
 		}
 
-		$this->writeLog($command."\n");
-
-		// execute sql script to update the database
-		$result = shell_exec( $command );
-		
-		$this->writeLog($result);
-   	    
-   	    return $result;
+        $this->writeLog($command);
+        try {
+            $this->writeLog('Update: ' . \FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog("Update: ".$e->getMessage());
+            throw $e;
+        }
 	}
 	
 	function update_htdocs() 
@@ -388,16 +390,17 @@ class BackupAndRecoveryStrategy
  			);
  				
 		$this->writeLog("Zip: ".$command);
- 		
- 		$result = shell_exec( $command );
 
-		$this->writeLog("Zip: ".$result);
- 		
-		// remove source backup files
-		$this->full_delete( SERVER_BACKUP_PATH.'devprom/' );
-		$this->full_delete( SERVER_BACKUP_PATH.'htdocs/' );
-		
-		return $result;
+        try {
+            $this->writeLog('Zip: ' . \FileSystem::execAndSendResponse($command));
+            // remove source backup files
+            $this->full_delete( SERVER_BACKUP_PATH.'devprom/' );
+            $this->full_delete( SERVER_BACKUP_PATH.'htdocs/' );
+        }
+        catch( \Exception $e ) {
+            $this->errorLog("Zip: ".$e->getMessage());
+            throw $e;
+        }
  	}
 
  	function full_zip( &$zip, $path, $zip_directory ) 
@@ -425,29 +428,25 @@ class BackupAndRecoveryStrategy
  	{
 		chdir($zip_file_directory);
 
-		if( preg_match('/[\\\\;:\\/{}()\s]+/', $zip_file_name ) > 0 )
-		{
+		if( preg_match('/[\\\\;:\\/{}()\s]+/', $zip_file_name ) > 0 ) {
 			 return text(1056);
 		}
 		
- 		if ( defined('UNZIP_COMMAND') )
- 		{
+ 		if ( defined('UNZIP_COMMAND') ) {
  			$command = str_replace('%1', $zip_file_name, UNZIP_COMMAND );
- 			
- 			$this->writeLog($command."\n");
-   	 		
- 			$result = shell_exec( $command );
  		}
- 		else
- 		{
+ 		else {
  			$command = 'unzip '.$zip_file_name;
-
- 			$this->writeLog($command."\n");
-   	 		
- 			$result = shell_exec($command);
  		}
- 		
- 		$this->writeLog($result);
+
+        $this->writeLog($command."\n");
+        try {
+            $this->writeLog('Unzip: ' . \FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog("Unzip: ".$e->getMessage());
+            throw $e;
+        }
  	}
  	
  	function full_copy( $source_path, $destination_path, $application = true ) 
@@ -485,6 +484,7 @@ class BackupAndRecoveryStrategy
                             $this->writeLog('Failed copying: '.var_export(error_get_last(), true));
                         }
                    }
+                   \ZipSystem::sendResponse();
                }
            }
            closedir($dh);
@@ -533,4 +533,17 @@ class BackupAndRecoveryStrategy
  			error_log('Unable initialize logger: '.$e->getMessage());
  		}
 	}
+
+    function errorLog( $message )
+    {
+        try {
+            if ( !is_object($this->log) ) {
+                $this->log = Logger::getLogger('Install');
+            }
+            $this->log->error( trim($message, chr(10).chr(13)) );
+        }
+        catch( Exception $e) {
+            error_log('Unable initialize logger: '.$e->getMessage());
+        }
+    }
 }

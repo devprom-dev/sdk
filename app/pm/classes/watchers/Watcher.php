@@ -82,6 +82,11 @@ class Watcher extends Metaobject
 	
 	function add_parms( $parms )
 	{
+	    if ( is_numeric($parms['SystemUser']) && $parms['SystemUser'] > 1000000 ) {
+	        $userIt = getFactory()->getObject('IssueAuthor')->getExact($parms['SystemUser']);
+	        $parms['Email'] = $userIt->get('Email');
+        }
+
 		if ( $parms['Email'] == '' && !is_numeric($parms['SystemUser']) ) {
 			$parms['Email'] = $parms['SystemUser'];
 			unset($parms['SystemUser']);

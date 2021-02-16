@@ -8,8 +8,8 @@ include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskTracePersister.ph
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskFactPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskColorsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
-include "persisters/WorkItemStatePersister.php";
 include "persisters/WorkItemCommentPersister.php";
+include "persisters/WorkItemStubFactPersister.php";
 
 class WorkItemRegistry extends ObjectRegistrySQL
 {
@@ -18,8 +18,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
 
     function getPersisters() {
         $result = array(
-            new EntityProjectPersister(),
-            new WorkItemStatePersister()
+            new EntityProjectPersister()
         );
         if ( $this->tracesIncluded ) {
             $result[] = new WorkItemCommentPersister();
@@ -45,6 +44,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
         $result = array (
             new RequestDueDatesPersister(),
             new RequestTagsPersister(),
+            new WorkItemStubFactPersister(),
             new RequestColorsPersister()
         );
         if ( $this->tracesIncluded ) {
@@ -63,8 +63,6 @@ class WorkItemRegistry extends ObjectRegistrySQL
 
  	function getQueryClause()
  	{
- 	    $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
-
  	    $request = getFactory()->getObject('Request');
 		$task = getFactory()->getObject('Task');
 		if ( !$this->getObject()->isVpdEnabled() ) {
@@ -82,7 +80,25 @@ class WorkItemRegistry extends ObjectRegistrySQL
             $persister->setObject($request);
             $issue_columns = array_merge($issue_columns, $persister->getSelectColumns('t'));
         }
-        $issue_columns[] = 't.Fact';
+
+        if ( defined('PERMISSIONS_ENABLED') ) {
+            $task_columns[] =
+                "( SELECT SUM(r.Capacity) " .
+                "  	 FROM pm_ParticipantRole r, pm_Participant n " .
+                " 	WHERE r.Participant = n.pm_ParticipantId " .
+                "     AND n.VPD = t.VPD ".
+                "     AND n.SystemUser = t.Assignee ) Capacity ";
+            $issue_columns[] =
+                "( SELECT SUM(r.Capacity) " .
+                "  	 FROM pm_ParticipantRole r, pm_Participant n " .
+                " 	WHERE r.Participant = n.pm_ParticipantId " .
+                "     AND n.VPD = t.VPD ".
+                "     AND n.SystemUser = t.Owner ) Capacity ";
+        }
+        else {
+            $task_columns[] = " (SELECT 8) Capacity ";
+            $issue_columns[] = " (SELECT 8) Capacity ";
+        }
 
 		$sql = "
 			SELECT t.pm_TaskId,
@@ -121,17 +137,15 @@ class WorkItemRegistry extends ObjectRegistrySQL
                      WHERE l.ChangeRequest = t.ChangeRequest
                        AND l.ObjectClass NOT IN ('Task')) IssueTraces") : "'' IssueTraces").",
 				   ".join(',',$task_columns).",
-				   CONCAT('T-', t.pm_TaskId) UID
+				   CONCAT('T-', t.pm_TaskId) UID,
+				   t.Caption CaptionNative
 			  FROM pm_Task t
 			 WHERE 1 = 1 ".$task->getVpdPredicate('t').$this->getInnerFilterPredicate($task,$this->getTaskFilters())."
 			   AND t.VPD IN (SELECT m.VPD FROM pm_Methodology m, pm_Project p 
-			                  WHERE m.IsTasks = 'Y' AND m.Project = p.pm_ProjectId AND IFNULL(p.IsClosed,'N') = 'N')
+			                  WHERE m.IsTasks = 'Y' AND m.Project = p.pm_ProjectId AND p.IsClosed = 'N')
 			 UNION
-			SELECT t.pm_ChangeRequestId, ".
-                   ($methodologyIt->get('IsRequirements') == \ReqManagementModeRegistry::RDD
-                        ? " IF(t.Type IS NULL, 'Issue', 'Increment') as ObjectClass "
-                        : " 'Request' as ObjectClass ").
-				   ",
+			SELECT t.pm_ChangeRequestId, 
+			       IF(LEFT(t.UID, 1) = 'U', 'Issue', 'Request') as ObjectClass,
 				   t.Priority,
 				   t.Caption,
 				   ".($this->descriptionIncluded ? "t.Description ": "'' Description").",
@@ -162,10 +176,11 @@ class WorkItemRegistry extends ObjectRegistrySQL
                      WHERE l.ChangeRequest = t.pm_ChangeRequestId
                        AND l.ObjectClass NOT IN ('Task', 'Milestone')) IssueTraces"):"'' IssueTraces").",
 				   ".join(',',$issue_columns).",
-				   t.UID
+				   t.UID,
+				   t.Caption CaptionNative
 			  FROM pm_ChangeRequest t
 			 WHERE 1 = 1 ".$request->getVpdPredicate('t').$this->getInnerFilterPredicate($request,$this->getIssueFilters())."
-			   AND t.VPD IN (SELECT p.VPD FROM pm_Project p WHERE IFNULL(p.IsClosed,'N') = 'N')
+			   AND t.VPD IN (SELECT p.VPD FROM pm_Project p WHERE p.IsClosed = 'N')
 		";
 
  	    return "(".$sql.")";

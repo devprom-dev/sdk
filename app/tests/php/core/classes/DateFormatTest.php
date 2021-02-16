@@ -4,7 +4,7 @@ include_once SERVER_ROOT_PATH.'lang/classes/DateFormatRussian.php';
 include_once SERVER_ROOT_PATH.'lang/classes/DateFormatEuropean.php';
 include_once SERVER_ROOT_PATH.'lang/classes/DateFormatAmerican.php';
 
-class DateFormatTest extends PHPUnit_Framework_TestCase
+class DateFormatTest extends \PHPUnit\Framework\TestCase
 {
 	public function testEuropeanFormatter()
 	{

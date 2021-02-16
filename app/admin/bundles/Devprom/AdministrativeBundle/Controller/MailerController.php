@@ -33,12 +33,11 @@ class MailerController extends BaseController
 
 		$settings = getFactory()->getObject('MailerSettings');
     	foreach( $settings->getAttributes() as $attribute => $data ) {
+    	    if ( !$request->request->has($attribute) ) continue;
     		$parms[$attribute] = $request->request->get($attribute);
     	}
 
-        $mapper = new \ModelDataTypeMapper();
-        $mapper->map( $settings, $parms );
-    	$settings->modify_parms($settings->getAll()->getId(), $parms);
+    	getFactory()->modifyEntity($settings->getAll(), $parms);
 
 		$command = new \ClearCache();
 		$command->install();
@@ -46,15 +45,7 @@ class MailerController extends BaseController
     	$test_email = $request->request->get("MailTestEmail");
     	if ( $test_email != '' )
     	{
-			$settings_it = getFactory()->getObject('SystemSettings')->getAll();
-
 			$mail = new \HtmlMailbox;
-			if ( $settings_it->get('AdminEmail') != '' ) {
-				$mail->setFrom($settings_it->getDisplayName() . ' <'.$settings_it->get('AdminEmail').'>');
-			}
-			else {
-				$mail->setFromUser(getSession()->getUserIt());
-			}
 			$mail->appendAddress($test_email);
 			$mail->setSubject(text(1523));
 			$mail->setBody(text(1524));

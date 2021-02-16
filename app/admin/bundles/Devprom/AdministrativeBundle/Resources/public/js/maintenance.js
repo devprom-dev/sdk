@@ -1,26 +1,32 @@
 function downloadUpdate()
 {
     var payed = window.location.protocol+"//"+devpromOpts.serviceUrl+"/download?payed&iid=%iid%";
+    var url = window.location.protocol+"//"+devpromOpts.serviceUrl+"/download?json&iid=%iid%";
     $.getJSON( payed, function( data ) {
         try {
             if ( !data.till || data.till < new Date().toJSON().split('T')[0] ) {
-                alert('%notpayed%');
+                reportError('%notpayed%');
                 return;
             }
-            var url = window.location.protocol+"//"+devpromOpts.serviceUrl+"/download?json&iid=%iid%";
             $.getJSON( url, function( data ) {
                 if ( data.length < 1 ) {
-                    alert('%error%');
+                    reportError('%error%');
                     return;
                 }
                 $.each( data, function(key, value) {
                     window.location = value.download_url + '&iid=%iid%';
                     return false;
                 });
+            })
+            .error(function (xhr, status, error) {
+                reportError(ajaxErrorExplain(xhr, error) + "\n\n" + url);
             });
         }
         catch(e) {
             alert('%error%');
         }
+    })
+    .error(function (xhr, status, error) {
+        reportError(ajaxErrorExplain(xhr, error) + "\n\n" + url);
     });
 }

@@ -14,21 +14,21 @@ import ru.devprom.pages.project.SDLCPojectPageBase;
 
 public class RequestNewPage extends SDLCPojectPageBase {
 
-	@FindBy(id = "pm_ChangeRequestCaption")
+	@FindBy(xpath = "//div[@id='modal-form']//*[@id='pm_ChangeRequestCaption']")
 	protected WebElement captionEdit;
 
 	@FindBy(xpath = "//div[contains(@id,'pm_ChangeRequestDescription')]")
 	protected WebElement descriptionEdit;
 
-	@FindBy(id = "pm_ChangeRequestType")
+	@FindBy(xpath = "//div[@id='modal-form']//*[@id='pm_ChangeRequestType']")
 	protected WebElement typesList;
 
-	@FindBy(id = "pm_ChangeRequestPriority")
+	@FindBy(xpath = "//div[@id='modal-form']//*[@id='pm_ChangeRequestPriority']")
 	protected WebElement priorityList;
 
-	@FindBy(id = "pm_ChangeRequestEstimation")
+	@FindBy(xpath = "//div[@id='modal-form']//*[@id='pm_ChangeRequestEstimation']")
 	protected WebElement estimationEdit;
-	
+
 	@FindBy(id = "pm_ChangeRequestSubmitBtn")
 	protected WebElement submitBtn;
 
@@ -37,7 +37,6 @@ public class RequestNewPage extends SDLCPojectPageBase {
 
 	public RequestNewPage(WebDriver driver) {
 		super(driver);
-
 	}
 
 	public RequestsPage createCRShort(Request request){
@@ -85,7 +84,7 @@ public class RequestNewPage extends SDLCPojectPageBase {
 	}
 
 	public void addWIKIDescription(String text){
-		driver.findElement(By.xpath("//form//textarea[contains(@id,'pm_ChangeRequestDescription')]")).sendKeys(text);
+		driver.findElement(By.xpath("//div[@id='modal-form']//textarea[contains(@id,'pm_ChangeRequestDescription')]")).sendKeys(text);
 	}
 	
 	public void close() {
@@ -109,18 +108,18 @@ public class RequestNewPage extends SDLCPojectPageBase {
 
 	public boolean isAttributePresent(String attrRefName){
 		clickMoreTab();
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//form//*[@name='"+attrRefName+"']")));
+		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='modal-form']//*[@name='"+attrRefName+"']")));
 		return true;
 	}
 	
 	public String checkSelectAttributeDefaultValue(String attrRefName){
 		clickMoreTab();
-		return driver.findElement(By.xpath("//form//select[@name='"+attrRefName+"']/option[@selected]")).getText().trim();
+		return driver.findElement(By.xpath("//div[@id='modal-form']//select[@name='"+attrRefName+"']/option[@selected]")).getText().trim();
 	}
 	
 	public void setUserStringAttribute(String attrRefName, String value) {
 		clickMoreTab();
-		By loc = By.xpath("//form//input[@name='"+attrRefName+"']");
+		By loc = By.xpath("//div[@id='modal-form']//input[@name='"+attrRefName+"']");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated(loc));
 		WebElement el = driver.findElement(loc);
 		el.clear();
@@ -130,14 +129,14 @@ public class RequestNewPage extends SDLCPojectPageBase {
 	
 	public void setUserOptionAttribute(String attrRefName, String value) {
 		clickMoreTab();
-		By loc = By.xpath("//form//select[@name='"+attrRefName+"']");
+		By loc = By.xpath("//div[@id='modal-form']//select[@name='"+attrRefName+"']");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated(loc));
 		new Select(driver.findElement(loc)).selectByValue(value);
 	}
 	
 	public void setUserOptionAttributeByVisibleText(String attrRefName, String visibleText) {
 		clickMoreTab();
-		By loc = By.xpath("//form//select[@name='"+attrRefName+"']");
+		By loc = By.xpath("//div[@id='modal-form']//select[@name='"+attrRefName+"']");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated(loc));
 		new Select(driver.findElement(loc)).selectByVisibleText(visibleText);
 	}
@@ -145,7 +144,7 @@ public class RequestNewPage extends SDLCPojectPageBase {
 
 	public void setUserAutocompleteAttribute(String attrRefName, String value) {
 		clickMoreTab();
-		WebElement element = driver.findElement(By.xpath("//form//input[@name='"+attrRefName+"']/preceding-sibling::input"));
+		WebElement element = driver.findElement(By.xpath("//div[@id='modal-form']//input[@name='"+attrRefName+"']/preceding-sibling::input"));
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(element));
         element.sendKeys(value);
         autocompleteSelect(value);

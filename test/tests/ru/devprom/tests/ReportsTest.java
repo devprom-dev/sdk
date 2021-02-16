@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.openqa.selenium.By;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -74,8 +73,7 @@ public class ReportsTest extends TestBase {
 						this.waterfallTemplateName));
 		SDLCPojectPageBase page =  (SDLCPojectPageBase) new PageBase(driver).gotoProject(webTest);		
 		RequestsPage mip = page.gotoRequests();
-		mip  = mip.selectFilterValue("state", "Все");
-		mip  = mip.selectFilterValue("state", "В релизе");
+		mip.setFilter("state", "inrelease");
 		SaveReportPage srp = mip.saveReport();
 		srp.saveReport(reportName, true, "");
 		
@@ -120,10 +118,9 @@ public class ReportsTest extends TestBase {
 						this.waterfallTemplateName));
 		SDLCPojectPageBase page =  (SDLCPojectPageBase) new PageBase(driver).gotoProject(webTest);		
 		RequestsPage mip = page.gotoRequests();
-		mip  = mip.selectFilterValue("state", "Все");
-		mip  = mip.selectFilterValue("state", "В релизе");
-		mip.addColumn("Attachment");
-		mip.addColumn("RecentComment");
+		mip.setFilter("state", "inrelease");
+		mip.showColumn("Attachment");
+		mip.showColumn("RecentComment");
 		SaveReportPage srp = mip.saveReport();
 		srp.saveReport(reportName, true, "");
 		

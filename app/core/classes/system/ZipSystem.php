@@ -46,4 +46,13 @@ class ZipSystem
         chdir($path);
         return shell_exec($command);
     }
+
+    static public function sendResponse( $seconds = 0 )
+    {
+        echo " ";
+        ob_flush();
+        flush();
+        if ( connection_aborted() ) exit();
+        if ( $seconds > 0 ) sleep($seconds);
+    }
 }

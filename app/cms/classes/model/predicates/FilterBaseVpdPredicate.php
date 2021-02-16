@@ -3,7 +3,7 @@
 class FilterBaseVpdPredicate extends FilterPredicate
 {
  	function FilterBaseVpdPredicate() {
- 		parent::FilterPredicate('base');
+ 		parent::__construct('base');
  	}
  	
   	function getPredicate( $filter = '' )

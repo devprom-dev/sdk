@@ -37,7 +37,7 @@ class AttributePermissionEntityRegistry extends ObjectRegistrySQL
             ),
         );
 
-        if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
+        if ( getSession()->IsRDD() ) {
             if ( class_exists('Issue') ) {
                 $data[] = array (
                     'entityId' => 'issue',

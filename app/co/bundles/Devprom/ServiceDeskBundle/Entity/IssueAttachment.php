@@ -54,6 +54,12 @@ class IssueAttachment extends BaseEntity {
     private $objectClass;
 
     /**
+     * @ORM\Column(type="integer", name="FileSize")
+     * @var string
+     */
+    private $fileSize;
+
+    /**
      * @Assert\NotBlank (message="attachment.no.file.error")
      * @var UploadedFile
      */
@@ -137,6 +143,22 @@ class IssueAttachment extends BaseEntity {
     public function getContentType()
     {
         return $this->contentType;
+    }
+
+    /**
+     * @param integer $value
+     */
+    public function setFileSize($value)
+    {
+        $this->fileSize = $value;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getFileSize()
+    {
+        return $this->fileSize;
     }
 
     /**

@@ -1,5 +1,4 @@
 <?php
-
 include_once "ProjectTemplateSectionsRegistryBuilder.php";
 
 class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectionsRegistryBuilder
@@ -14,7 +13,9 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
     public function build ( ProjectTemplateSectionsRegistry & $registry )
     {
     	$this->buildSettings($registry);
-    	
+
+        $this->buildDictionaries($registry);
+
     	$this->buildWidgets($registry);
     	
     	$this->buildPermissions($registry);
@@ -23,8 +24,8 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 
  		$registry->addSection(getFactory()->getObject('pm_CustomAttribute'), 'Attributes', array(), true, text(1080));
 
-    	$this->buildTemplates($registry);
- 		
+        $this->buildKnowledgebase($registry);
+
  		$this->buildArtefacts($registry);
 	}
    
@@ -36,21 +37,24 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	 	// methodology settings
 		$methodology = getFactory()->getObject('pm_Methodology');
 		$methodology->addFilter( new FilterAttributePredicate('Project', $this->session->getProjectIt()->getId() ) );
-	 	
-	 	$items = array( 
+
+	 	$items = array(
 	 		$project,
-            getFactory()->getObject('ProjectRoleInherited'),
-	 		getFactory()->getObject('pm_IssueType'),
-	 		getFactory()->getObject('TaskType'),
 	 		$methodology
 	 	);
-
-		$projectpage = getFactory()->getObject('ProjectPage');
-		$projectpage->addFilter( new WikiSectionFilter() );
-		$projectpage->addSort( new SortDocumentClause() );
-		$items[] = $projectpage;
-
  		$registry->addSection($registry, 'pm_Project', $items, true, text(734));
+    }
+
+    private function buildDictionaries( & $registry )
+    {
+        $items = array(
+            getFactory()->getObject('ProjectRoleInherited'),
+            getFactory()->getObject('pm_IssueType'),
+            getFactory()->getObject('TaskType'),
+            getFactory()->getObject('TextTemplate'),
+        );
+
+        $registry->addSection($registry, 'Dictionaries', $items, true, text(2844));
     }
 
     private function buildWidgets( & $registry )
@@ -64,43 +68,30 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
    		
 	 	// navigation settings
 	 	$workspace = getFactory()->getObject('Workspace');
-
 	 	$workspace_it = $workspace->getRegistry()->getDefault();
-	 	
 	 	$workspace->addFilter( new FilterInPredicate($workspace_it->idsToArray()) );
-	 		
-	 	$items[] = $workspace; 
+	 	$items[] = $workspace;
 
 	 	$workspace_menu = getFactory()->getObject('pm_WorkspaceMenu');
-	 	
 	 	$workspace_menu->addFilter( new FilterAttributePredicate('Workspace', $workspace_it->idsToArray()) );
 	 	$workspace_menu->addSort( new SortOrderedClause() );
-	 	
 	 	$items[] = $workspace_menu;
 	 	
 	 	$workspace_item = getFactory()->getObject('pm_WorkspaceMenuItem');
 	 	$workspace_item->addSort( new SortOrderedClause() );
-	 	
 	 	$workspace_item->addFilter( new FilterAttributePredicate('WorkspaceMenu', $workspace_menu->getAll()->idsToArray()) );
-	 	
 	 	$items[] = $workspace_item;
 
 	 	// settings for reports and modules
 	 	$usersettings = getFactory()->getObject('PMUserSettings');
 	 	$usersettings->setRegistry( new PMUserSettingsExportRegistry() );
-
 	 	$items[] = $usersettings;
-	 	
+
+        $items[] = getFactory()->getObject('DashboardItem');
+
  		$registry->addSection($registry, 'Widgets', $items, true, text(1832));
     }
    
-    private function buildTemplates( & $registry )
-    {
- 		$registry->addSection(
-            getFactory()->getObject('TextTemplate'), 'Templates', array(), true, text(733)
-   		);
-    }
-
     private function buildPermissions( & $registry )
     {
 	 	$items = array (
@@ -126,6 +117,16 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
             getFactory()->getObject('TaskTypeState')
         );
  		$registry->addSection($registry, 'Workflow', $items, true, text(894));
+    }
+
+    private function buildKnowledgebase( & $registry )
+    {
+        $projectpage = getFactory()->getObject('ProjectPage');
+        $projectpage->addFilter( new WikiSectionFilter() );
+        $projectpage->addSort( new SortDocumentClause() );
+        $items[] = $projectpage;
+
+        $registry->addSection($registry, 'Knowledgebase', $items, true, text(2836));
     }
 
 	private function buildArtefacts( & $registry )

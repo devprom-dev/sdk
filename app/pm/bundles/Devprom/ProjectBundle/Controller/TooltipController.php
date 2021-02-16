@@ -35,8 +35,7 @@ class TooltipController extends Controller
     	$service = new TooltipProjectService(
     			$request->get('classname'), 
             	$request->get('objects'),
-				strpos($request->getQueryString(), 'extended') !== false,
-            	$request->get('baseline')
+				strpos($request->getQueryString(), 'extended') !== false
 		);
 
         $response = $this->render( 'ProjectBundle:Tooltip:show.html.twig', $service->getData() );

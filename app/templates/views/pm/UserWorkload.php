@@ -1,6 +1,26 @@
-<?php 
+<?php
 
-$user_title = str_replace('%1', round($data['Planned'],1), str_replace('%2', round($data['LeftWork'],1), str_replace('%3', round($data['Fact'],1), text(1857)) ));
+$data['LeftWork'] = round($data['LeftWork'],1);
+if ( $capacity > 0 ) {
+    if ($data['LeftWork'] > $capacity) {
+        $data['LeftWork'] = '<span class="label label-important">' . $data['LeftWork'] . '</span>';
+    } else {
+        $data['LeftWork'] = '<span class="label label-success">' . $data['LeftWork'] . '</span>';
+    }
+}
+
+$user_title =
+    str_replace('%1',
+        round($data['Planned'],1),
+        str_replace('%2',
+            $data['LeftWork'],
+            str_replace('%3',
+                round($data['Fact'],1),
+                str_replace('%4',
+                    round($capacity,1),
+                    $capacity > 0 ? text(2685) : text(1857)) )));
+
+if ( $report_url != '' ) $user_title .= ' &nbsp; <a class="dashed" target="_blank" href="'.$report_url.'">'.translate('подробнее').'</a>';
 if ( $user == '' ) $user = text(1901);
 
 $iterations = array();
@@ -50,9 +70,9 @@ if ( is_array($data['Iterations']) ) {
 ?>
 
 <div class="user-workload">
-	<div class="cell"><b><?=$user?></b> <?=$user_title?></div>
+	<?=$user_title?>
 	<?php foreach( $iterations as $cell ) { ?>
-		<div class="cell"><?=$cell['name']?></div>
-		<div class="cell progress-cell" title="<?=$cell['title']?>"><a href="javascript:<?=$cell['url']?>"><?=$cell['progress']?></a></div>
+		<?=$cell['name']?>
+		<span class="progress-cell" title="<?=$cell['title']?>"><a href="javascript:<?=$cell['url']?>"><?=$cell['progress']?></a></span>
 	<?php } ?>
 </div>

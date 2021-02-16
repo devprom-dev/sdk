@@ -8,10 +8,12 @@ class CommentMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( !$metadata->getObject() instanceof Comment) return;
 
-        $metadata->addAttributeGroup('ObjectClass', 'system');
-        $metadata->addAttributeGroup('ObjectId', 'system');
-        $metadata->addAttributeGroup('PrevComment', 'system');
         $metadata->setAttributeType('Caption', 'WYSIWYG');
         $metadata->addPersister( new CommentAuthorPersister() );
+
+        foreach( array('EmailMessageId') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'system');
+        }
+        $metadata->addPersister( new CommentNewPersister() );
     }
 }

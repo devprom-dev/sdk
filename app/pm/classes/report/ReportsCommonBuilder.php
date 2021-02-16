@@ -13,23 +13,11 @@ class ReportsCommonBuilder extends ReportsBuilder
 		$request = getFactory()->getObject('pm_ChangeRequest');
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		$separateIssues = $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD;
+		$separateIssues = getSession()->IsRDD();
 		$project_it = getSession()->getProjectIt();
 
-		if ( $project_it->IsPortfolio() ) {
-            $terminal = array('Y');
-            $nonterminal = array('N','I');
-        }
-        else {
-            $terminal = array_merge(
-                $request->getTerminalStates(),
-                array('Y')
-            );
-            $nonterminal = array_merge(
-                $request->getNonTerminalStates(),
-                array('N','I')
-            );
-        }
+        $terminal = array('Y');
+        $nonterminal = array('N','I');
 
 		$module_it = $module->getExact('issues-backlog');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
@@ -56,7 +44,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				array ( 'name' => 'productbacklog',
 						'description' => text(819),
 						'category' => FUNC_AREA_MANAGEMENT,
-				        'query' => 'state='.array_shift(array_values($nonterminal)),
+				        'query' => 'state='.array_shift(array_values(\WorkflowScheme::Instance()->getNonTerminalStates($request))),
 				        'module' => $module_it->getId() )
 			);
 
@@ -452,12 +440,13 @@ class ReportsCommonBuilder extends ReportsBuilder
 			}
         }
 
-   		$object->addReport(
-   		        array ( 'name' => 'navigation-settings',
-   		                'title' => text(1326),
-   		                'category' => FunctionalAreaMenuSettingsBuilder::AREA_UID,
-   		                'module' => $module->getExact('menu')->getId() )
-   		);
+   		$object->addReport( array (
+   		    'name' => 'navigation-settings',
+            'title' => text(1326),
+            'description' => text(3009),
+            'category' => FunctionalAreaMenuSettingsBuilder::AREA_UID,
+            'module' => $module->getExact('menu')->getId()
+        ));
 		
 		$module_it = $module->getExact('project-knowledgebase');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
@@ -492,7 +481,7 @@ class ReportsCommonBuilder extends ReportsBuilder
     		
     		$object->addReport(
     		        array ( 'name' => 'discussions',
-    		                'title' => text(980),
+    		                'title' => text(2807),
     		                'description' => text(1409),
 						    'query' => 'action=commented&start=last-week',
     		                'category' => FUNC_AREA_MANAGEMENT,
@@ -504,11 +493,45 @@ class ReportsCommonBuilder extends ReportsBuilder
 		$module_it = $module->getExact('project-spenttime');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
-			$object->addReport(
-				array ( 'name' => 'activitiesreport',
-						'category' => FUNC_AREA_MANAGEMENT,
-				        'module' => $module_it->getId() )
-			);
+            if ( getFactory()->getAccessPolicy()->can_read($request) ) {
+                $object->addReport(array(
+                    'name' => 'activitiesreport',
+                    'category' => FUNC_AREA_MANAGEMENT,
+                    'module' => $module_it->getId()
+                ));
+
+                if ( getSession()->IsRDD() ) {
+                    $object->addReport(array(
+                        'name' => 'activitiesreportincrements',
+                        'title' => text(2912),
+                        'category' => FUNC_AREA_MANAGEMENT,
+                        'module' => $module_it->getId()
+                    ));
+                }
+            }
+
+            $object->addReport( array (
+                'name' => 'activitiesreportproject',
+                'title' => text(2909),
+                'category' => FUNC_AREA_MANAGEMENT,
+                'module' => $module_it->getId()
+            ));
+
+            if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task) ) {
+                $object->addReport( array (
+                    'name' => 'activitiesreporttasks',
+                    'title' => text(2910),
+                    'category' => FUNC_AREA_MANAGEMENT,
+                    'module' => $module_it->getId()
+                ));
+            }
+
+            $object->addReport( array (
+                'name' => 'activitiesreportusers',
+                'title' => text(2911),
+                'category' => FUNC_AREA_MANAGEMENT,
+                'module' => $module_it->getId()
+            ));
 		}
 
         $module_it = $module->getExact('worklog');
@@ -557,6 +580,19 @@ class ReportsCommonBuilder extends ReportsBuilder
                 'title' => text(2229),
                 'query' => 'reporttype=chart',
                 'icon' => 'icon-signal',
+                'category' => FUNC_AREA_MANAGEMENT,
+                'module' => $module_it->getId()
+            ));
+        }
+
+        $module_it = $module->getExact('project-question');
+        if ( getFactory()->getAccessPolicy()->can_read($module_it) )
+        {
+            $object->addReport( array (
+                'name' => 'closed-discussions',
+                'title' => text(2806),
+                'query' => 'state=resolved,Y',
+                'icon' => 'icon-question',
                 'category' => FUNC_AREA_MANAGEMENT,
                 'module' => $module_it->getId()
             ));

@@ -144,73 +144,25 @@ public class TasksPage extends SDLCPojectPageBase {
 		return spentList;
 	}
 
-	public TasksPage showAll() {
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and @uid='state']"))
-				.click();
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'Исполнитель')]"))
-				.click();
-		String code = "filterLocation.turnOn('state', 'all', 0)";
-		((JavascriptExecutor) driver).executeScript(code);
-		code = "filterLocation.turnOn('taskassignee', 'all', 0)";
-		((JavascriptExecutor) driver).executeScript(code);
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'Исполнитель')]"))
-				.click();
-	    try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		return new TasksPage(driver);
-	}
-	
-	
-	
-
 	public RTask[] readAllTasks() {
 		RTask[] tasksList = new RTask[driver.findElements(By.id("uid"))
 				.size()];
 		for (int i = 0; i < tasksList.length; i++) {
-			WebElement row = driver.findElement(By.id("tasklist1_row_"
-					+ (i + 1)));
+			WebElement row = driver.findElement(By.xpath("//tr[contains(@id,'_row_" + (i + 1) + "')]"));
 			String id = row.findElement(By.id("uid")).getText();
 			id = id.substring(1, id.length() - 1);
 			String name = row.findElement(By.id("caption")).getText();
 			String state = row.findElement(By.id("state")).getText();
 			String type = row.findElement(By.id("tasktype")).getText();
-			String priority = row.findElement(By.xpath(".//td[@id='priority']//a")).getText().trim();
+			String parts[] = row.findElement(By.xpath(".//td[@id='priority']//a")).getText().trim().split(" ");
+			String priority = parts[parts.length - 1];
 			tasksList[i] = new RTask(id, name, type, priority, state);
 		}
 		return tasksList;
 	}
 	
 	
-	public void addColumn(String columnname) {
-		String code = "filterLocation.showColumn('" + columnname + "', 0)";
-		filterBtn.click();
-		((JavascriptExecutor) driver).executeScript(code);
-		filterBtn.click();
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
 
-	public void removeColumn(String columnname) {
-		String code = "filterLocation.hideColumn('" + columnname + "', 0)";
-		filterBtn.click();
-		((JavascriptExecutor) driver).executeScript(code);
-		filterBtn.click();
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-		
 	public TaskPrintCardsPage clickPrintCards() {
 		actionsBtn.click();
 		printCardsBtn.click();
@@ -255,12 +207,11 @@ public class TasksPage extends SDLCPojectPageBase {
 	public void checkTask(String id) {
 		driver.findElement(
 				By.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a[contains(.,'"
-						+ id + "')]/../preceding-sibling::td/input[@class='checkbox']"))
+						+ id + "')]/../preceding-sibling::td/input[contains(@class,'checkbox')]"))
 				.click();		
 	}
 
-	
-public TasksPage addSpentRecord(Spent spent, String taskId){
+	public TasksPage addSpentRecord(Spent spent, String taskId){
 		WebElement spentRow = driver.findElement(By.xpath("//a[text()='["+taskId+"]']/../following-sibling::td[@id='spent']"));
 		spentRow.findElement(By.xpath(".//a[contains(@class,'embedded-add-button')]")).click();
 		spentRow.findElement(By.xpath(".//input[contains(@id,'_Capacity')]")).sendKeys(String.valueOf(spent.hours));
@@ -278,15 +229,6 @@ public TasksPage addSpentRecord(Spent spent, String taskId){
 		return (!driver.findElements(By.xpath("//td[@id='uid']/a[text()='["+taskId+"]']")).isEmpty() ||  !driver.findElements(By.xpath("//td[@id='uid']/a/strike[contains(.,'"	+ taskId + "')]")).isEmpty());
 	}
 	
-	
-	public TasksPage turnOffFilter(String filtername)  {
-			String script = "filterLocation.turnOn('"+filtername+"', 'all', 0);";
-			filterBtn.click();
-		((JavascriptExecutor) driver).executeScript(script);
-		filterBtn.click();
-		return new TasksPage(driver);
-	}
-
 	public TasksPage massChangeType(String type) {
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(massChangeBtn));
 		massChangeBtn.click();
@@ -298,5 +240,4 @@ public TasksPage addSpentRecord(Spent spent, String taskId){
 		submitDialog(driver.findElement(By.id("SubmitBtn")));		
 		return new TasksPage(driver);
 	}
-	 
 }

@@ -6,8 +6,12 @@ class ProjectMetricsModelBuilderDates extends ProjectMetricsModelBuilder
 {
 	function build( Metaobject $object )
 	{
-        $object->addAttribute('EstimatedFinishDate', 'INTEGER', '', false, false, text(2543));
+        $object->addAttribute('EstimatedFinishDate', 'DATE', '', false, false, text(2543));
         $object->addAttributeGroup('EstimatedFinishDate', 'metrics');
+
+        $object->addAttribute('ProjectVelocity', 'FLOAT', '', false, false, text(2284));
+        $object->addAttributeGroup('ProjectVelocity', 'metrics');
+
         $object->addPersister( new ProjectMetricDatesPersister() );
 	}
 }

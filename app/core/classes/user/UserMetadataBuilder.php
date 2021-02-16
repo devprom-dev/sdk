@@ -9,7 +9,7 @@ class UserMetadataBuilder extends ObjectMetadataEntityBuilder
 
         $metadata->addPersister( new UserReadonlyPersister() );
 
-        $system_attributes = array ('IsAdmin', 'IsShared', 'Rating', 'IsActivated', 'SessionHash', 'ICQ', 'Skype', 'LDAPUID', 'AskChangePassword', 'PhotoExt', 'PhotoPath');
+        $system_attributes = array ('IsShared', 'Rating', 'IsActivated', 'SessionHash', 'ICQ', 'Skype', 'PhotoExt', 'PhotoPath');
         foreach( $system_attributes as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'system');
         }
@@ -24,10 +24,22 @@ class UserMetadataBuilder extends ObjectMetadataEntityBuilder
 
         $metadata->setAttributeCaption( 'Phone', translate('Контакты') );
         $metadata->setAttributeVisible( 'Phone', true );
-        $metadata->setAttributeType( 'Phone', 'RICHTEXT' );
         $metadata->setAttributeRequired( 'Language', false );
         $metadata->setAttributeOrderNum('Photo', 1);
         $metadata->addAttributeGroup('Email', 'alternative-key');
         $metadata->addAttributeGroup('Login', 'alternative-key');
+        $metadata->setAttributeVisible( 'LDAPUID', true );
+        $metadata->setAttributeType( 'LDAPUID', 'varchar' );
+
+        foreach(array('NotificationEmailType', 'NotificationTrackingType', 'SendDeadlinesReport') as $attribute) {
+            $metadata->addAttributeGroup($attribute, 'notifications-tab');
+        }
+        $metadata->setAttributeType('NotificationEmailType', 'REF_NotificationId');
+        $metadata->setAttributeType('NotificationTrackingType', 'REF_NotificationTrackingTypeId');
+        $metadata->addAttributeGroup('SendDeadlinesReport', 'bulk');
+
+        foreach(array('Phone', 'IsReadonly') as $attribute) {
+            $metadata->addAttributeGroup($attribute, 'nonbulk');
+        }
     }
 }

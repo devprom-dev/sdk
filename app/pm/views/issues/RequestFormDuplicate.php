@@ -4,16 +4,16 @@ include_once SERVER_ROOT_PATH."pm/methods/DuplicateIssuesWebMethod.php";
 class RequestFormDuplicate extends RequestForm
 {
 	private $source_it = null;
+	private $duplicateMethod = null;
 
 	public function __construct( $object )
 	{
+        $this->source_it = $object->createCachedIterator(
+            array(
+                \JsonWrapper::decode(str_replace('\'', '"', $_REQUEST['Request']))
+            )
+        );
 		parent::__construct($object);
-
-		$this->source_it = $object->getRegistry()->Query(
-			array (
-				new FilterInPredicate($_REQUEST['Request'])
-			)
-		);
 	}
 	
 	public function extendModel()
@@ -28,6 +28,8 @@ class RequestFormDuplicate extends RequestForm
 			$object->setAttributeType('Project', 'REF_ProjectAccessibleActiveId');
 			$object->setAttributeOrderNum('Project', 2);
 		}
+
+		$this->duplicateMethod = new DuplicateIssuesWebMethod($this->source_it);
 	}
 	
 	function getFieldValue( $attribute )
@@ -36,26 +38,23 @@ class RequestFormDuplicate extends RequestForm
 		{
 			case 'LinkType':
 				return getFactory()->getObject('RequestLinkType')->getByRef('ReferenceName', 'implemented')->getId();
-				
 			case 'Project':
 				return $_REQUEST['Project'] > 0 ? $_REQUEST['Project'] : parent::getFieldValue($attribute);
-
-			case 'Estimation':
-			case 'PlannedRelease':
-			case 'Owner':
-			case 'Customer':
-            case 'OrderNum':
-            case 'State':
-				return parent::getFieldValue( $attribute );
-
-			case 'Author':
-				return getSession()->getUserIt()->getId();
-
-            case 'Description':
-                $uid = new ObjectUID();
-                return '{{'.$uid->getObjectUid($this->source_it).'}}';
-
+            case 'Type':
+                if ( $_REQUEST['Project'] > 0 ) {
+                    $typeIt = getFactory()->getObject('RequestType')
+                        ->getByRef('ReferenceName', $this->source_it->getRef('Type')->get('ReferenceName'));
+                    return $typeIt->getId();
+                }
+                return '';
 			default:
+                $defaults = $this->duplicateMethod->getAttributesDefaults($this->source_it);
+                if ( array_key_exists($attribute, $defaults) ) {
+                    return $defaults[$attribute];
+                }
+			    if ( in_array($attribute, $this->duplicateMethod->getAttributesToReset()) ) {
+                    return parent::getFieldValue( $attribute );
+                }
 				return $this->source_it->get($attribute);
 		}
 	}
@@ -84,11 +83,10 @@ class RequestFormDuplicate extends RequestForm
 		if ( $this->getAction() != 'add' ) return parent::process();
 		if ( $this->source_it->getId() == '' ) return parent::process();
 
-		$method = new DuplicateIssuesWebMethod($this->source_it);
 		try {
 			if ( $this->source_it->get('Project') != getSession()->getProjectIt()->getId() ) {
 				if ( !$this->persist() ) return false;
-				$method->linkIssues(
+                $this->duplicateMethod->linkIssues(
 					array(
 						'pm_ChangeRequest' => array (
 							$this->source_it->getId() => $this->getObjectIt()->getId()
@@ -98,8 +96,8 @@ class RequestFormDuplicate extends RequestForm
 				$this->redirectOnAdded($this->getObjectIt());
 			}
 			else {
-				$method->execute_request();
-				$this->redirectOnAdded($method->getResult());
+                $this->duplicateMethod->execute_request();
+				$this->redirectOnAdded($this->duplicateMethod->getResult());
 			}
 		}
 		catch( Exception $e ) {

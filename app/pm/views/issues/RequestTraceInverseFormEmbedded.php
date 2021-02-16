@@ -50,7 +50,7 @@ class RequestTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
  		$title = parent::getItemDisplayName($object_it);
  		
  		if ( $this->show_delivery_date && $object_it->get('DeliveryDate') != '' ) {
- 			$title .= str_replace('%1', $object_it->getDateFormat('DeliveryDate'), text(2031));
+ 			$title .= str_replace('%1', $object_it->getDateFormatted('DeliveryDate'), text(2031));
  		}
  		
  		return $title;

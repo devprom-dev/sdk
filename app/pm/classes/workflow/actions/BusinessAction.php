@@ -42,29 +42,29 @@ class BusinessAction
             $parms[$attribute] = $action_it->getHtmlDecoded($attribute);
         }
 
+        foreach( \TextUtils::parseItems($action_it->get('ResetAttributes')) as $attribute ) {
+            $parms[$attribute] = 'NULL';
+        }
+
         return $this->modify($action_it, $object_it, $parms);
     }
 
     function modify ( $action_it, $object_it, $parms )
     {
-        if ( count($parms) > 0 ) {
-            $parms['AutoActionUserName'] = $action_it->getDisplayName();
+        $errors = array();
 
+        if ( count($parms) > 0 ) {
             if ( $parms['State'] != '' ) {
                 $service = new WorkflowService($object_it->object);
-                $service->moveToState( $object_it->copy(), $parms['State'], '', $parms );
+                if ( !$service->moveToState( $object_it->copy(), $parms['State'], '', $parms ) ) {
+                    $errors[] = text(2832);
+                }
             }
             else {
-                $object_it->object->modify_parms( $object_it->getId(), $parms );
+                if ( $object_it->object->modify_parms( $object_it->getId(), $parms ) < 1 ) {
+                    $errors[] = text(2833);
+                }
             }
-
-            $modifiedIt = $object_it->object->getRegistry()->Query(
-                array( new FilterInPredicate($object_it->getId()) )
-            );
-
-            $notificator = new PMChangeLogNotificator();
-            $notificator->setRecordData( $parms );
-            $notificator->modify( $object_it, $modifiedIt );
         }
 
         $taskParms = array_filter( $parms,
@@ -75,19 +75,23 @@ class BusinessAction
         );
 
         if ( count($taskParms) > 0 ) {
-            $values = array();
+            $values = array(
+                'Author' => getSession()->getUserIt()->getId()
+            );
             foreach( $taskParms as $parm => $value ) {
                 $parm = str_replace('Task_', '', $parm);
                 $values[$parm] = $value;
             }
 
             $values['ChangeRequest'] = $object_it->getId();
-            getFactory()->getObject('Task')->add_parms($values);
+            if ( getFactory()->getObject('Task')->add_parms($values) < 1 ) {
+                $errors[] = text(2834);
+            }
         }
 
         if ( $action_it->get('NewComment') != '' ) {
             $comment = getFactory()->getObject('Comment');
-            $comment->getRegistry()->Create(
+            $commentIt = $comment->getRegistry()->Create(
                 array(
                     'ObjectId' => $object_it->getId(),
                     'ObjectClass' => get_class($object_it->object),
@@ -95,7 +99,25 @@ class BusinessAction
                     'AuthorId' => getSession()->getUserIt()->getId()
                 )
             );
+            if ( $commentIt->getId() == '' ) {
+                $errors[] = text(2835);
+            }
         }
+
+        $modifiedIt = $object_it->object->getRegistry()->Query(
+            array( new FilterInPredicate($object_it->getId()) )
+        );
+
+        $actionParms = array(
+            'AutoActionUserName' => $action_it->getDisplayName()
+        );
+        if ( count($errors) > 0 ) {
+            $actionParms['AutoActionErrors'] = join(', ', $errors);
+        }
+
+        $notificator = new PMChangeLogNotificator();
+        $notificator->setRecordData( $actionParms );
+        $notificator->modify( $object_it, $modifiedIt );
 
         return true;
     }

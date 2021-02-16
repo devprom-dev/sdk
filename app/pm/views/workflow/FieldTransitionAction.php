@@ -20,22 +20,24 @@ class FieldTransitionAction extends FieldForm
  	function draw( $view = null )
  	{
 		$anchor = getFactory()->getObject('TransitionAction');
-		if ( is_object($this->object_it) )
-		{
-			$anchor->addFilter( new FilterAttributePredicate('Transition', $this->object_it->getId()) );
+		if ( is_object($this->object_it) ) {
+            $anchorIt = $anchor->getRegistry()->Query(
+                array(
+                    new FilterAttributePredicate('Transition', $this->object_it->getId())
+                )
+            );
 			$entity = getFactory()->getObject($this->object_it->getRef('TargetState')->get('ObjectClass'));
 		}
-		else
-		{
-			$anchor->addFilter( new FilterAttributePredicate('Transition', 0) );
+		else {
+            $anchorIt = $anchor->getEmptyIterator();
 			$entity = $this->object;
 		}
 
  		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
- 			$form = new FormStateActionEmbedded( $anchor, 'Transition' );
+ 			$form = new FormStateActionEmbedded( $anchorIt, 'Transition' );
  			$form->setEntity( $entity );
 	 		$form->setReadonly( $this->readOnly() );
-	 		$form->draw( $view );
+     		$form->draw( $view );
  		echo '</div>';
  	}
 }

@@ -15,7 +15,14 @@ class FunctionalareasController extends FOSRestController implements ClassResour
     {
     	$service = new WorkspaceService();
 
-        return $this->handleView($this->view($service->getWorkspaces(), 200));
+    	$workspaces = array_filter(
+            $service->getWorkspaces(),
+            function($workspace) {
+                return $workspace['id'] != 'stg';
+            }
+        );
+
+        return $this->handleView($this->view($workspaces, 200));
     }
     
     public function putAction(Request $request, $areaId)

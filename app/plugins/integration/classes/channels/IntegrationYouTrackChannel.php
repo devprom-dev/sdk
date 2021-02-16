@@ -83,14 +83,7 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
             array_merge(
                 $releases, $issues, $hours
             ),
-            $nextTimestamp != '' ? new \DateTime(date('Y-m-d h:i:s', round(floatval($nextTimestamp) / 1000, 0))) : ''
-        );
-    }
-
-    protected function buildIdUrl( $url, $id ) {
-        return str_replace(
-            '{project}', $this->getObjectIt()->get('ProjectKey'),
-                str_replace('{id}', $id, $url)
+            $nextTimestamp != '' ? new \DateTime(date('Y-m-d h:i:s', round(floatval($nextTimestamp) / 1000, 0)), new DateTimeZone("UTC")) : ''
         );
     }
 
@@ -105,9 +98,9 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
         );
     }
 
-    public function mapToInternal($source, $mapping, $getter)
+    public function mapToInternal($class, $id, $source, $mapping, $getter)
     {
-        $data = parent::mapToInternal($source, $mapping, $getter);
+        $data = parent::mapToInternal($class, $id, $source, $mapping, $getter);
 
         foreach( $data as $attribute => $value ) {
             if ( $attribute == 'File' ) {
@@ -127,9 +120,9 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
         return $data;
     }
 
-    public function mapFromInternal($source, $mapping, $setter)
+    public function mapFromInternal($class, $id, $source, $mapping, $setter)
     {
-        $put = parent::mapFromInternal($source, $mapping, $setter);
+        $put = parent::mapFromInternal($class, $id, $source, $mapping, $setter);
 
         foreach( $source as $attribute => $value ) {
             if ( $attribute == 'Capacity' ) {

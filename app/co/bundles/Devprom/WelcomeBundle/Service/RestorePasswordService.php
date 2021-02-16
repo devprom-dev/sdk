@@ -1,21 +1,16 @@
 <?php
 namespace Devprom\WelcomeBundle\Service;
+use Devprom\CommonBundle\Service\Emails\RenderService;
 
 class RestorePasswordService
 {
     private $factory;
-    private $controller;
-    private $emailTemplate;
     private $session;
 
-    function __construct( $factory, $controller, $session )
+    function __construct( $factory, $session )
     {
         $this->factory = $factory;
-        $this->controller = $controller;
         $this->session = $session;
-
-        $lang = strtolower($this->session->getLanguageUid());
-        $this->emailTemplate = 'CommonBundle:Emails/'.$lang.':restore.html.twig';
     }
 
     function execute( $email )
@@ -25,19 +20,22 @@ class RestorePasswordService
         if ( $part_it->getId() < 1) throw new \Exception(text(220));
         if ( $part_it->get('Password') == '' ) throw new \Exception(text(2061));
 
-        $settings_it = $this->factory->getObject('cms_SystemSettings')->getAll();
+        $lang = strtolower($this->session->getLanguageUid());
+        $renderService = new RenderService(
+            $this->session, SERVER_ROOT_PATH."co/bundles/Devprom/CommonBundle/Resources/views/Emails/".$lang
+        );
 
-        $body = $this->controller->render( $this->emailTemplate,
-                        array (
-                            'url' => \EnvironmentSettings::getServerUrl().'/reset?key='.$part_it->getResetPasswordKey()
-                        )
-                    )->getContent();
+        $body = $renderService->getContent(
+            "restore.html.twig",
+            array (
+                'url' => \EnvironmentSettings::getServerUrl().'/reset?key='.$part_it->getResetPasswordKey()
+            )
+        );
 
         $mail = new \HtmlMailbox;
         $mail->appendAddress($part_it->get('Email'));
         $mail->setBody($body);
         $mail->setSubject( text(222) );
-        $mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
         $mail->send();
 
         return text(223);

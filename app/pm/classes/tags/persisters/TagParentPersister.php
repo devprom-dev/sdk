@@ -7,29 +7,34 @@ class TagParentPersister extends ObjectSQLPersister
     function map(& $parms)
     {
         if ( $parms['Tag'] == '' ) return;
-        if ( is_numeric($parms['Tag']) ) return;
 
         $tag = getFactory()->getObject('Tag');
-        foreach( preg_split('/[,;:]/', $parms['Tag']) as $tagName ) {
-            $tag_it = $tag->getByRef('Caption', $tagName);
-            $this->tagIds[$tagName] =
-                $tag_it->getId() > 0
-                    ? $tag_it->getId()
-                    : $tag->add_parms( array('Caption' => $tagName) ) ;
+        if ( is_numeric($parms['Tag']) ) {
+            $tagIt = $tag->getExact($parms['Tag']);
+            if ( $tagIt->getId() != '' ) {
+                $this->tagIds[] = $tagIt->getId();
+                return;
+            }
         }
+
+        $tagParms = array();
+        if ( getSession()->getProjectIt()->IsPortfolio() ) {
+            $tagParms['VPD'] = '';
+        }
+
+        foreach( preg_split('/[,;]/', $parms['Tag']) as $tagName ) {
+            $tagIt = $tag->getRegistry()->Query(array(
+                new FilterAttributePredicate('Caption', $tagName ),
+                new FilterBaseVpdPredicate()
+            ));
+            if ( $tagIt->getId() == '' && getFactory()->getAccessPolicy()->can_create($tag) ) {
+                $tagIt = $tag->getRegistry()->Create(array(
+                    'Caption' => $tagName
+                ));
+            }
+            $this->tagIds[$tagName] = $tagIt->getId();
+        }
+
         $parms['Tag'] = array_shift($this->tagIds);
-    }
-
-    function add($object_id, $parms)
-    {
-        $tagRegistry = $this->getObject()->getRegistry();
-        $tagRegistry->setPersisters(array());
-
-        $ids = $this->tagIds;
-        $this->tagIds = array();
-        foreach( $ids as $tagId ) {
-            $parms['Tag'] = $tagId;
-            $tagRegistry->Create($parms);
-        }
     }
 }

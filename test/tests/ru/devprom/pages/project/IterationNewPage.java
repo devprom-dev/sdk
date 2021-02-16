@@ -77,7 +77,7 @@ public class IterationNewPage extends SDLCPojectPageBase {
 		   
 	         releaseInput.clear();
 	         releaseInput.sendKeys(iteration.getReleaseName());
-	         autocompleteSelect(iteration.getReleaseName(), true);
+	         autocompleteSelect(iteration.getReleaseName(), false);
 	         
 	         submitDialog(submitBtn);
 		

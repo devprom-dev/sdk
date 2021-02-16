@@ -94,6 +94,10 @@ public class UserAddNewPage extends AdminPageBase {
 		licenseQACheckbox.click();
 		submitDialog(createBtn);
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='email' and contains(.,'" + user.getEmail() + "')]")));
+		user.id = Integer.parseInt(
+				driver.findElement(
+						By.xpath("//td[@id='email' and contains(.,'" + user.getEmail() + "')]/parent::tr"))
+							.getAttribute("object-id"));
 		return new UsersListPage(driver);
 	}
 
@@ -125,6 +129,10 @@ public class UserAddNewPage extends AdminPageBase {
 		}
 		submitDialog(driver.findElement(By.id("cms_UserSubmitBtn")));
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='email' and contains(.,'" + user.getEmail() + "')]")));
+		user.id = Integer.parseInt(
+				driver.findElement(
+						By.xpath("//td[@id='email' and contains(.,'" + user.getEmail() + "')]/parent::tr"))
+						.getAttribute("object-id"));
 		return new UsersListPage(driver);
 	}
 

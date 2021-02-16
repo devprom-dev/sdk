@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/methods/c_date_methods.php";
 include "WhatsNewPageList.php";
 
 class WhatsNewPageTable extends PMPageTable
@@ -30,13 +29,8 @@ class WhatsNewPageTable extends PMPageTable
         );
 	}
 	
-	function buildStartFilter()
-	{
-		if( array_key_exists('start',$_REQUEST) and in_array($_REQUEST['start'],array('','all','hide')) ) {
-			unset($_REQUEST['start']);
-		}
-		$filter = new ViewStartDateWebMethod();
-		return $filter;
+	function buildStartFilter() {
+		return new ViewStartDateWebMethod();
 	}
 	
 	function buildEntityFilter()
@@ -44,6 +38,7 @@ class WhatsNewPageTable extends PMPageTable
 		$entity_filter = new FilterObjectMethod( getFactory()->getObject('ChangeLogEntitySet'), '', 'entities' );
 		$entity_filter->setHasNone( false );
 		$entity_filter->setIdFieldName( 'ClassName' );
+        $entity_filter->setHasAny(false);
 		
 		return $entity_filter;
 	}
@@ -65,13 +60,11 @@ class WhatsNewPageTable extends PMPageTable
         return $filter;
     }
 
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
-		$values = $this->getFilterValues();
-
 		$filters = array(
             new ChangeLogActionFilter( $values['action'] ),
-			new ChangeLogStartFilter( $_REQUEST['start'] ),
+			new ChangeLogStartFilter( $values['start'] ),
             new ChangeLogVisibilityFilter(),
             new FilterAttributeNotNullPredicate('Caption'),
             new ChangeLogObjectFilter( $values['entities'] )
@@ -82,7 +75,7 @@ class WhatsNewPageTable extends PMPageTable
         }
 		
 		return array_merge(
-		    parent::getFilterPredicates(),
+		    parent::getFilterPredicates( $values ),
             $filters
         );
 	}
@@ -109,7 +102,7 @@ class WhatsNewPageTable extends PMPageTable
 
     function getBulkActions()
     {
-        $action_url = "javascript:processBulk('".text(2463)."','?formonly=true&operation=Method:MarkChangesAsReadWebMethod:objects=%ids%', '', function(){window.location.reload();});";
+        $action_url = "javascript:processBulk('".text(2463)."','?formonly=true&operation=Method:MarkChangesAsReadWebMethod:objects=%ids%', '', devpromOpts.updateUI);";
         return array(
             'delete' => array(
                 array (
@@ -125,6 +118,9 @@ class WhatsNewPageTable extends PMPageTable
 
     protected function getFamilyModules( $module )
     {
-        return array('project-log');
+        return array(
+            'project-log',
+            'project-question'
+        );
     }
 }

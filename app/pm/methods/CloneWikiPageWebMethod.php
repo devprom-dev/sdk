@@ -5,7 +5,7 @@ class CloneWikiPageWebMethod extends DuplicateWebMethod
 {
 	function getMethodName()
 	{
-		return 'Method:'.get_class($this).':Snapshot:Project:class='.get_class($this->getObjectIt()->object);
+		return 'Method:'.get_class($this).':Project:class='.get_class($this->getObjectIt()->object);
 	}
 
 	function getCaption() {

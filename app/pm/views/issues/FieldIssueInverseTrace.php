@@ -4,10 +4,9 @@ include "RequestTraceInverseFormEmbedded.php";
  
 class FieldIssueInverseTrace extends FieldIssueTrace
 {
- 	function getFilters()
- 	{
+ 	function getFilters() {
 		return array ( 
-				new RequestTraceObjectPredicate(is_object($this->getObjectIt()) ? $this->getObjectIt() : 0) 
+            new RequestTraceObjectPredicate(is_object($this->getObjectIt()) ? $this->getObjectIt() : 0)
 		);  
  	}
  	

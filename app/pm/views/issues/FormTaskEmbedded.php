@@ -5,11 +5,12 @@ include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 class FormTaskEmbedded extends PMFormEmbedded
 {
  	var $tasks_added;
+ 	private $parms = array();
  	
- 	function __construct($object = null, $anchor_field = null, $form_field = '')
+ 	function __construct($object = null, $anchor_field = null, $form_field = '', $parms = array())
  	{
  	    if ( !is_object($object) ) $object = getFactory()->getObject('pm_Task');
-
+        $this->parms = $parms;
         parent::__construct($object, $anchor_field, $form_field);
  	}
 
@@ -119,8 +120,8 @@ class FormTaskEmbedded extends PMFormEmbedded
                 if ( is_object($object_it) && $object_it->getId() > 0 ) {
                     return $object_it->get('Priority');
                 }
-                return parent::getFieldValue( $attr );
  			default:
+                if ( array_key_exists($attr, $this->parms) ) return $this->parms[$attr];
  				return parent::getFieldValue( $attr );
  		}
  	}
@@ -154,9 +155,4 @@ class FormTaskEmbedded extends PMFormEmbedded
 				return parent::createField( $attr );			
 		}
 	}
-
-    function getListUrlParms($object, $ids) {
- 	    if ( !is_object($this->getObjectIt()) ) return '';
-        return 'issue='.$this->getObjectIt()->getId().'&clickedonform';
-    }
 }

@@ -5,21 +5,14 @@
  */
 package ru.devprom.tests;
 
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import javax.imageio.ImageIO;
-import org.testng.annotations.BeforeClass;
+
 import org.testng.annotations.Test;
 import ru.devprom.helpers.Configuration;
 import ru.devprom.helpers.CopyData;
 import ru.devprom.helpers.DataProviders;
-import ru.devprom.helpers.ImageTransferable;
 import ru.devprom.items.KanbanTask;
 import ru.devprom.items.Project;
 import ru.devprom.items.Requirement;
@@ -27,18 +20,8 @@ import ru.devprom.items.Template;
 import ru.devprom.items.TestScenario;
 import ru.devprom.pages.PageBase;
 import ru.devprom.pages.ProjectNewPage;
-import ru.devprom.pages.kanban.KanbanAddSubtaskPage;
-import ru.devprom.pages.kanban.KanbanBuildsPage;
-import ru.devprom.pages.kanban.KanbanEnvirenmentNewPage;
-import ru.devprom.pages.kanban.KanbanEnvirenmentsPage;
-import ru.devprom.pages.kanban.KanbanNewBuildPage;
-import ru.devprom.pages.kanban.KanbanPageBase;
-import ru.devprom.pages.kanban.KanbanSubTaskEditPage;
-import ru.devprom.pages.kanban.KanbanTaskBoardPage;
-import ru.devprom.pages.kanban.KanbanTaskNewPage;
-import ru.devprom.pages.kanban.KanbanTaskViewPage;
-import ru.devprom.pages.kanban.KanbanTasksPage;
-import ru.devprom.pages.kanban.KanbanTestsPage;
+import ru.devprom.pages.kanban.*;
+import ru.devprom.pages.kanban.KanbanTestPage;
 import ru.devprom.pages.project.requests.RequestDonePage;
 import ru.devprom.pages.project.requests.RequestsPage;
 import ru.devprom.pages.project.requirements.RequirementNewPage;
@@ -97,13 +80,13 @@ public class TestReviewScreenCast extends ProjectTestBase{
 
     private void developmentTestsStage() throws InterruptedException {
         RequirementsDocsPage requrementsDocsPage = (new KanbanPageBase(driver)).gotoRequirementsDocs();
-        RequirementViewPage requirementsViewPage = requrementsDocsPage.addDoc();
-        requirementsViewPage.editRequirementName("Варианты использования");
-        RequirementNewPage rnp = requirementsViewPage.addChildRequirement();
+        RequirementNewPage newPage = requrementsDocsPage.addDoc();
+        RequirementViewPage specPage = newPage.createSimple(new Requirement("Варианты использования"));
+        RequirementNewPage rnp = specPage.addChildRequirement();
         Requirement r = new Requirement("Авторизация пользователя");
         r.setTemplateName("OpenUP");
         rnp.createChild(r, true);
-        TestScenarioNewPage tsnp = requirementsViewPage.createNewTestSuit();
+        TestScenarioNewPage tsnp = specPage.createNewTestSuit();
         TestScenario scenario = new TestScenario("Детальная проверка авторизации");
         TestScenario ParentScenario = new TestScenario("Ручные функциональные тесты");
         scenario.setParentPage(ParentScenario);
@@ -115,10 +98,10 @@ public class TestReviewScreenCast extends ProjectTestBase{
         table.add("Результат 2");
         table.add("Результат 3");
         tsnp.createScenarioWithTable(scenario, table);
-        requirementsViewPage.waitForTraceEntity("TestScenario");
-        requirementsViewPage.addContent(r.getClearId(), "\nПоявился новый шаг основного сценария");
+        specPage.waitForTraceEntity("TestScenario");
+        specPage.addContent(r.getClearId(), "\nПоявился новый шаг основного сценария");
         driver.navigate().refresh();
-        TestSpecificationsPage testSpecoficationsPage = requirementsViewPage.clickAttentionTesting();
+        TestSpecificationsPage testSpecoficationsPage = specPage.clickAttentionTesting();
         Thread.sleep(bigTimeOut);
         testSpecoficationsPage.clickRepair();
     }
@@ -184,35 +167,37 @@ public class TestReviewScreenCast extends ProjectTestBase{
         TestScenarioViewPage testPlanViewPage = scenariosPage.massIncludeToTestPlan(checkVersionPlan.getName());
         testPlanViewPage.startTesting();
         startTestingPage.startTest("3.4.0", "IE");
-        //----
         testingPage.fillCell("1", "4", "Ok");
-        //driver.navigate().refresh();
         testingPage.fillCell("2", "4", "Ok");
-        //driver.navigate().refresh();
         (new CopyData()).copyImage(Configuration.getPathToBugImage());
-        testingPage.pasteToCell("3", "4"); 
+        testingPage.pasteToCell("3", "4");
+        driver.navigate().refresh();
         //-----
-        testingPage.failTest(checkVersionPlan);
-        testingPage.rejectWish("Не прошел тест, все подробности смотри в связанном отчете по тестированию");
-        testingPage.gotoScenarioNumber(2);
         KanbanTask bug2 = new KanbanTask("Проблема авторизации пользователя, если в пароле есть символы врехнего регистра");
         KanbanTaskNewPage taskNewPage = testingPage.createNewBug();
         taskNewPage.addName(bug2.getName());
         taskNewPage.save();
         //-----
         testingPage.fillCell("1", "4", "Ok");
-        //driver.navigate().refresh();
         testingPage.fillCell("2", "4", "Ok");
-        //driver.navigate().refresh();
-        testingPage.pasteToCell("3", "4"); 
+        testingPage.pasteToCell("3", "4");
+        driver.navigate().refresh();
         //-----
         testingPage.failTest(checkVersionPlan);
+        testingPage.gotoScenarioNumber(1);
+        testingPage.failTest(checkVersionPlan);
+        testingPage.rejectWish("Не прошел тест, все подробности смотри в связанном отчете по тестированию");
         try {
     		Thread.sleep(6000);
     	}
         catch (InterruptedException e) {
     	}
         (new KanbanPageBase(driver)).gotoKanbanBoard();
+        try {
+            Thread.sleep(2000);
+        }
+        catch (InterruptedException e) {
+        }
         kanbanBoard.moveToAnotherRelease(bug.getNumericId(), 0, "Разработка: готово");
         kanbanBoard.clickSubmit();
         try {
@@ -267,7 +252,7 @@ public class TestReviewScreenCast extends ProjectTestBase{
         requestDonePage = testingPage.readyWishWithOutTime();
         requestDonePage.submit();
         testingPage.passTest(testPlan);
-        KanbanTestsPage testsPage = (new KanbanPageBase(driver)).gotoTests();
+        KanbanTestPage testsPage = (new KanbanPageBase(driver)).gotoTests();
         File file = new File(Configuration.getPathToTestReport());
         testsPage.importReport(file);
         
@@ -305,11 +290,11 @@ public class TestReviewScreenCast extends ProjectTestBase{
         TestSpecificationsPage testPlansPage = (new KanbanPageBase(driver)).gotoTestPlans();
         TestSpecificationViewPage testPlanViewPage = testPlansPage.clickToSpecification(testPlan.getId());
         TestScenarioAddToBaselinePage addToBaselinePage = testPlanViewPage.addToBaseline();
-        addToBaselinePage.addToBaseline(testPlan, "Релиз 0", false);
+        addToBaselinePage.Submit(testPlan, "Релиз 0");
         TestScenarioNewPage testScenarioNewPage = testPlanViewPage.addSection();
         TestScenario testScenario = new TestScenario("Новый тестовый сценарий");
         testScenario.setTemplate("Приемочный сценарий");
         testScenarioNewPage.createNewScenarioWithTemplate(testPlan);
-        testPlanViewPage.compareWithVersion("Начальная");
+        testPlanViewPage.compareWithVersion("Начальный");
     }
 }

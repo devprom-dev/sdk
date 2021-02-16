@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/views/ui/BulkForm.php';
 
 class TaskBulkForm extends BulkForm
@@ -52,8 +51,6 @@ class TaskBulkForm extends BulkForm
  		{
  			case 'Release':
  				return translate('Итерация');
-            case 'Tag':
-                return translate('Тэг');
  			default:
  				return parent::getName( $attr );
  		}
@@ -69,10 +66,6 @@ class TaskBulkForm extends BulkForm
 				$field->SetId('Release');
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-
- 		 		if ( $this->showAttributeCaption() ) {
-					echo $this->getObject()->getAttributeUserName($attribute);
-				}
 				$field->draw();
 				break;
 				
@@ -83,10 +76,6 @@ class TaskBulkForm extends BulkForm
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
 				$field->SetRequired(true);
-				
- 				if ( $this->showAttributeCaption() ) {
-					echo $this->getObject()->getAttributeUserName($attribute);
-				}
 				$field->draw();
 				break;
 
@@ -97,10 +86,6 @@ class TaskBulkForm extends BulkForm
                 $field->SetValue($value);
                 $field->SetTabIndex($tab_index);
                 $field->setAppendable();
-
-                if ( $this->showAttributeCaption() ) {
-                    echo $this->getName($attribute);
-                }
                 $field->draw();
                 break;
 

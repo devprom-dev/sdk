@@ -9,10 +9,6 @@ class ModelServiceRequirement extends ModelService
 	{
 		$object = parent::getObject($entity_name);
 
-		$registry = new \ObjectRegistrySQL();
-		$registry->setPersisters($object->getPersisters());
-		$object->setRegistry($registry);
-
 		foreach( array('DocumentId', 'DocumentVersion') as $field ) {
 			$object->addAttributeGroup($field, 'system');
 		}

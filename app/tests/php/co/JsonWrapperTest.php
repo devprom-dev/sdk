@@ -1,6 +1,6 @@
 <?php
 
-class JsonWrapperTest extends PHPUnit_Framework_TestCase
+class JsonWrapperTest extends \PHPUnit\Framework\TestCase
 {
 	public function testJsonEncodeString()
 	{

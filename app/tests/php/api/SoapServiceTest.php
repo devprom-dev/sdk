@@ -6,8 +6,11 @@ class SoapServiceTest extends DevpromTestCase
 {
     function testConvertionValuesSoapToSystem()
     {   
-        $service = $this->getMock('SoapService', array('login'));
-        
+        $service = $this->getMockBuilder(\SoapService::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['login'])
+            ->getMock();
+
         $date_value = "2011-01-10";
         
         $this->assertEquals( "2011-01-10", $service->soapValueToSystem("xsd:date", $date_value ));

@@ -7,9 +7,8 @@ use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\FOSRestController;
 use Devprom\ProjectBundle\Service\Model\ModelService;
 use Devprom\ProjectBundle\Service\Model\FilterResolver\ModifiedAfterFilterResolver;
-
-include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
-include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.php';
+use Devprom\ProjectBundle\Service\Model\FilterResolver\StateFilterResolver;
+use Devprom\ProjectBundle\Service\Model\FilterResolver\CommonFilterResolver;
 
 abstract class RestController extends FOSRestController implements ClassResourceInterface
 {
@@ -200,7 +199,9 @@ abstract class RestController extends FOSRestController implements ClassResource
 				$request->get('updatedBefore'),
 				$request->get('createdAfter'),
 				$request->get('createdBefore')
-			)
-		);
+			),
+            new StateFilterResolver($request->get('state')),
+            new CommonFilterResolver($request->get('in'))
+        );
 	}
 }

@@ -71,11 +71,25 @@ class Field
 		}
 		else
 		{
-			return IteratorBase::getHtmlValue( html_entity_decode($this->getValue(), ENT_COMPAT | ENT_HTML401, APP_ENCODING) );
+			return self::getHtmlValue($this->getValue());
 		}
 	}
-	
-	function setDefault( $value )
+
+    static function getHtmlValue( $text )
+    {
+        $text = preg_replace('/&quot;/', '"', $text);
+        $text = preg_replace_callback('/\[url=([^\]]+)\s+text=([^\]]+)]/im', array(self::class, iterator_url_callback), $text);
+        $text = preg_replace_callback('/\[url=([^\]]+)]/im', array(self::class, iterator_url_callback), $text);
+
+        $url = '~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
+        $text = preg_replace($url, '<a href="$0" target="_blank">$0</a>', $text);
+
+        $text = preg_replace_callback('/(^|[^\w\.\,\:\;\/\#">]+)(\[?[A-Z]{1}-[0-9]+\]?)([\s]*|$)/mi', array(self::class,iterator_uid_callback), $text);
+
+        return nl2br($text);
+    }
+
+    function setDefault( $value )
 	{
 		$this->default = $value;
 	}
@@ -146,4 +160,42 @@ class Field
 	{
 		return new ModelValidatorTypeNull();
 	}
+
+    static function iterator_url_callback( $match )
+    {
+        if ( strpos($match[1], '/') == 0 )
+        {
+            $match[1] = _getServerUrl().$match[1];
+        }
+
+        $text = $match[2] != '' ? $match[2] : $match[1];
+
+        return '<a target="_blank" href="'.$match[1].'">'.$text.'</a>';
+    }
+
+    static function iterator_uid_callback( $match )
+    {
+        $uid = new ObjectUID;
+
+        $object_it = $uid->getObjectIt(trim($match[2], '[]'));
+
+        if ( is_object($object_it) && $object_it->count() > 0 )
+        {
+            $result = trim($match[1], '[]');
+
+            $result .= $uid->getUidIconGlobal( $object_it );
+
+            $result .= trim($match[3], '[]');
+
+            return $result;
+        }
+        else
+        {
+            return $match[0];
+        }
+    }
+
+    function getCssClass() {
+        return '';
+    }
 }

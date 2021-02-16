@@ -6,7 +6,7 @@ $view['slots']->stop();
 
 ?>
 
-<div class="project-settings">
+<div class="form-container project-settings">
 <? foreach( $sections as $index => $section ) { ?>
 	<div class="row">
 		<div class="page-header">

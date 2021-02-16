@@ -11,10 +11,6 @@ class SearchResultRegistry extends ObjectRegistrySQL
 
         foreach( $this->getFilters() as $filter ) {
             if ( $filter instanceof FilterAttributePredicate ) {
-                if ( $filter->getAttribute() == 'Caption' ) {
-                    $searchString = $filter->getValue();
-                    if ( in_array($searchString,array('hide','all')) ) $searchString = '';
-                }
                 if ( $filter->getAttribute() == 'entityId' ) {
                     $searchEntities = array_filter(
                             preg_split('/[,-]/', $filter->getValue()),
@@ -23,6 +19,10 @@ class SearchResultRegistry extends ObjectRegistrySQL
                             }
                         );
                 }
+            }
+            if ( $filter instanceof FilterSearchAttributesPredicate ) {
+                $searchString = $filter->getValue();
+                if ( in_array($searchString,array('hide','all')) ) $searchString = '';
             }
             if ( $filter instanceof StateCommonPredicate ) {
                 $searchPredicates[] = $filter;
@@ -55,7 +55,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
                 if ( $report_it->getId() == '' ) {
                     $report_it = $module->getExact($searchable_it->get('Report'));
                 }
-                $lists[$entityId] = $report_it->getUrl(strtolower($entityId).'='.\TextUtils::buildIds($object_it->idsToArray()));
+                $lists[$entityId] = $report_it->getUrl('ids='.\TextUtils::buildIds($object_it->idsToArray()));
             }
 
             while( !$object_it->end() )
@@ -80,7 +80,9 @@ class SearchResultRegistry extends ObjectRegistrySQL
                         '<span class="label label-found">\\0</span>',
                         $text
                     );
-                    $textsFound[] = translate($object_it->object->getAttributeUserName($attribute)) . ': ' . $text;
+                    $userName = $object_it->object->getAttributeUserName($attribute);
+                    if ( $userName == '' ) $userName = $attribute;
+                    $textsFound[] = translate($userName) . ': ' . $text;
                 }
 
                 $data[$entityId][] = array (
@@ -92,7 +94,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
                             : $uid->getUidWithCaption($object_it),
                     'Caption' => $object_it->getDisplayName(),
                     'Content' => $textsFound,
-                    'Url' => $object_it->getViewUrl()
+                    'Url' => $object_it->getUidUrl()
                 );
                 $object_it->moveNext();
             }
@@ -191,25 +193,6 @@ class SearchResultRegistry extends ObjectRegistrySQL
                         'attributes' => $searchable_it->get('attributes')
                     );
                 }
-                $object_it = $registry->Query(
-                    array_merge(
-                        $parms,
-                        $predicates,
-                        array(
-                            new CustomAttributeSearchPredicate($search, $searchable_it->get('attributes')),
-                            new FilterVpdPredicate()
-                        ),
-                        $sorts
-                    )
-                );
-                if ( $object_it->count() > 0 ) {
-                    $results[$searchable_it->getId()] = array(
-                        'object' => $object->createCachedIterator($object_it->getRowset()),
-                        'attributes' => array_filter(array_keys($object->getAttributes()), function($key) use ($object) {
-                            return $object->getAttributeOrigin($key) == ORIGIN_CUSTOM;
-                        })
-                    );
-                }
             }
 
             $searchable_it->moveNext();
@@ -220,10 +203,6 @@ class SearchResultRegistry extends ObjectRegistrySQL
 
     protected function searchByUid( $uid )
     {
-        $matches = array();
-        if ( !preg_match('/([A-Z]{1}-[0-9]+)/', trim(strtoupper($uid)), $matches) ) return array();
-
-        $uid = $matches[1];
         $results = array();
         $searchable = getFactory()->getObject('SearchableObjectSet');
         $searchable_it = $searchable->getAll();

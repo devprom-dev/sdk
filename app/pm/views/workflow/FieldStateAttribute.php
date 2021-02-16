@@ -1,5 +1,4 @@
 <?php
-
 include "FormStateAttributeEmbedded.php";
 
 class FieldStateAttribute extends FieldForm
@@ -29,26 +28,24 @@ class FieldStateAttribute extends FieldForm
  			? get_class($this->object_it->object) : get_class($this->object_it);
  		
 		$anchor = getFactory()->getObject( 'StateAttribute' );
-		
 		$anchor->setAttributeType('State', 'REF_'.$state_class.'Id');
 		
-		if ( is_object($this->object_it) && $this->object_it instanceof IteratorBase )
-		{
-			$anchor->addFilter( new FilterAttributePredicate('State', $this->object_it->getId()) );
+		if ( is_object($this->object_it) && $this->object_it instanceof IteratorBase ) {
+            $anchorIt = $anchor->getRegistry()->Query(
+                array(
+                    new FilterAttributePredicate('State', $this->object_it->getId()),
+                    new TransitionAttributeEntityAttributesPredicate()
+                )
+            );
 		}
-		else
-		{
-			$anchor->addFilter( new FilterAttributePredicate('VPD', '-') );
+		else {
+            $anchorIt = $anchor->getEmptyIterator();
 		}
-		
-		$anchor->addFilter( new TransitionAttributeEntityAttributesPredicate() );
 
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
-	 		
-			$form = new FormStateAttributeEmbedded( $anchor, 'State' );
+			$form = new FormStateAttributeEmbedded( $anchorIt, 'State' );
 	 		$form->setReadonly( $this->readOnly() );
 	 		$form->draw( $view );
-	 		
  		echo '</div>';
  	}
 }

@@ -29,9 +29,8 @@ abstract class StateBusinessBaseRegistry extends ObjectRegistrySQL
  	    		if ( is_a($filter, 'StateBusinessEntityFilter') )
  	    		{
  	    			$entity = $filter->getValue();
- 	    			
- 	    			if ( $builder->getEntityRefName() != $entity->getEntityRefName() )
- 	    			{
+
+ 	    			if ( !is_a($entity, $builder->getEntityRefName()) && $builder->getEntityRefName() != $entity->getEntityRefName() ) {
  	    				$skip_builder = true;
  	    			}
  	    		}

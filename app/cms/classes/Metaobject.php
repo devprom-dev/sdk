@@ -11,6 +11,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectSQLPasswordPe
 include "ObjectMetadataBuilder.php";
 include "ObjectMetadataModelBuilder.php";
 include "model/sorts/SortAttributeClause.php";
+include "model/sorts/SortReferenceNameClause.php";
 include "ObjectReferenceParser.php";
 include "GroupAttributeClause.php";
 
@@ -125,6 +126,10 @@ class Metaobject extends StoredObjectDB
 			'/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $this->entity_title
 		);
 	}
+
+	function getEmptyValueName() {
+ 	    return '';
+    }
 	
 	function getPage() 
 	{
@@ -136,6 +141,10 @@ class Metaobject extends StoredObjectDB
 		$offset = $_REQUEST['offset'];
 		return $this->getPage().'class=metaobject&entity='.$this->getClassName().(isset($offset) ? '&offset='.$offset : '');
 	}
+
+    function getPageFormPopup() {
+ 	    return $this->IsDictionary();
+    }
 
 	function getPageTableName() {
 		global $_REQUEST;
@@ -164,7 +173,17 @@ class Metaobject extends StoredObjectDB
 	{
 		return $this->entity->get('IsOrdered') == 'Y';
 	}
-	
+
+	function IsDictionary()
+    {
+        return $this->entity->get('IsDictionary') == 'Y';
+    }
+
+    function IsPersistable()
+    {
+        return true;
+    }
+
 	function DeletesCascade( $object )
 	{
 		return true;
@@ -198,42 +217,34 @@ class Metaobject extends StoredObjectDB
 	function getAttributeClass( $attribute )
 	{
 		$att_type = $this->getAttributeDbType( $attribute );
-		
 		return substr($att_type, 4, strlen($att_type) - 6);
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
 	function getAttributeObject( $attribute )
 	{
-		global $model_factory;
-		
 		$att_type = $this->getAttributeDbType( $attribute );
 		
-		if ( $att_type == '' ) 
-		{
+		if ( $att_type == '' ) {
 		    throw new Exception('There is no attribute "'.$attribute.'" in the class "'.get_class($this).'"');
 		}
 
-		if ( !$this->IsReference( $attribute ) )
-		{
+		if ( !$this->IsReference( $attribute ) ) {
 		    throw new Exception('Attribute "'.$attribute.'" of the class "'.get_class($this).'" is not a reference');
 		}
 		
-	    foreach ( $this->reference_parsers as $parser )
-		{
+	    foreach ( $this->reference_parsers as $parser ) {
 			$object = $parser->parse( $attribute, $att_type );
-			
 			if ( is_object($object) ) return $object;
 		}
 
-		$object = $model_factory->getObject($this->getAttributeClass($attribute));
-		
-		if ( !is_object($object) )
-		{
-		    throw new Exception('Attribute "'.$attribute.'" ('.$this->getAttributeDbType($attribute).') of the class "'.get_class($this).'" points to unknown class "'.$this->getAttributeClass($attribute).'"');
-		}
-		
-        return $object;
+        try {
+            $attributeClass = getFactory()->getClass($this->getAttributeClass($attribute));
+            return getFactory()->getObject($attributeClass);
+        }
+        catch(\Exception $e) {
+            throw new Exception('Attribute "'.$attribute.'" ('.$this->getAttributeDbType($attribute).') of the class "'.get_class($this).'" points to unknown class "'.$attributeClass.'"');
+        }
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
@@ -388,6 +399,9 @@ class Metaobject extends StoredObjectDB
 			$parts = preg_split('/::/', $attribute_path);
 			$attribute = $parts[1];
 
+            $class_name = getFactory()->getClass($class_name);
+            if ( !class_exists($class_name, false) ) continue;
+
 			$object = getFactory()->getObject($class_name);
 			if ( !$object->IsAttributeStored($attribute) ) continue;
 
@@ -437,10 +451,10 @@ class Metaobject extends StoredObjectDB
 	
 	function UpdatesCascade( $attribute, & $self_it, & $reference_it )
 	{
-		while( $reference_it->getId() != '' )
-		{
+		while( $reference_it->getId() != '' ) {
+            if ( UndoLog::Instance()->valid($reference_it) ) UndoLog::Instance()->putReference($reference_it, $attribute);
+            $reference_it->object->removeNotificator( 'EmailNotificator' );
 			$reference_it->object->modify_parms($reference_it->getId(), array( $attribute => '' ));
-			
 			$reference_it->moveNext();
 		}
 	}
@@ -459,6 +473,28 @@ class Metaobject extends StoredObjectDB
             }
         }
         return parent::formatValueForDB( $name, $value );
+    }
+
+    public function getSearchableAttributes()
+    {
+        $searchAttributes = array();
+        if ( $this->getAttributeType('Caption') != '' ) {
+            $searchAttributes[] = 'Caption';
+        }
+        $object = $this;
+        return array_diff(
+            array_filter(
+                array_merge( $searchAttributes,
+                    $this->getAttributesByType('wysiwyg'),
+                    $this->getAttributesByType('text'),
+                    $this->getAttributesByType('varchar')
+                ),
+                function( $item ) use ($object) {
+                    return $object->IsAttributeStored($item);
+                }
+            ),
+            $this->getAttributesByGroup('system')
+        );
     }
 
 	public function __sleep()

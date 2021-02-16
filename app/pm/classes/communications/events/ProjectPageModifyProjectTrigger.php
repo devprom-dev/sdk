@@ -6,8 +6,8 @@ class ProjectPageModifyProjectTrigger extends EntityModifyProjectTrigger
 	function checkEntity( $object_it ) {
 	    return $object_it->object instanceof ProjectPage;
 	}
-	
-	protected function & getObjectReferences( & $object_it )
+
+    static function getObjectReferences( $object_it )
 	{
  	    // prepare list of objects to be serilalized
  	    $references = array();

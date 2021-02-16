@@ -7,9 +7,13 @@ class WikiIteratorExportPdf extends WikiIteratorExport
 	function export()
 	{
         $converter = new WikiConverterMPdf();
-    	$converter->setTitle( $this->getName() );
-
  		$iterator = $this->getIterator();
+
+        $this->getIterator()->moveFirst();
+        $documents = array_unique($this->getIterator()->fieldToArray('DocumentId'));
+        $converter->setTitle( count($documents) < 2
+            ? $this->getIterator()->getDisplayName()
+            : $this->getName() );
 
  		if ( $iterator->object->getClassName() == 'WikiPageChange' ) {
 		 	$converter->setRevision( $iterator );

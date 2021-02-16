@@ -22,13 +22,15 @@ class TaskBusinessActionGetIssueInWork extends BusinessActionWorkflow
  		getSession()->addBuilder( new RequestModelExtendedBuilder() );
  		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
 
+        if ( getSession()->IsRDD() && $request_it->object instanceof Issue ) return true;
+
 		$state_it = getFactory()->getObject($request_it->object->getStateClassName())->getRegistry()->Query(
 			array(
-				new FilterHasNoAttributePredicate('IsTerminal', 'Y'),
-				new FilterVpdPredicate($request_it->get('VPD'))
+				new FilterAttributePredicate('IsTerminal', 'I'),
+				new FilterVpdPredicate($request_it->get('VPD')),
+                new SortOrderedClause()
 			)
 		);
-		$state_it->moveNext(); // move to the second state (In Work)
 		if ( $state_it->getId() > 0 ) {
 			$service = new WorkflowService($request_it->object);
 			$service->moveToState($request_it, $state_it->get('ReferenceName'));

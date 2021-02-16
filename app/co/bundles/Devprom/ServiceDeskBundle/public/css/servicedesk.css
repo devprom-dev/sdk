@@ -67,11 +67,12 @@ ul.dropdown-menu a {
     color: black;
 }
 
-.state-row
-{ 
+.state-row {
     padding-top: 32px;  
 }
-
+.state-desc {
+    opacity: 0.5
+}
 
 .no-video .video-container video,
 .touch .video-container video {
@@ -271,4 +272,16 @@ textarea {
 a [class^="icon-"],
 a [class*=" icon-"] {
     display: inline-block;
+}
+
+body.cke_editable {
+    font-family: "Roboto, sans-serif";
+}
+
+header .icon-pages {
+    float:left;
+}
+
+select:required option[value=""] {
+    display: none;
 }

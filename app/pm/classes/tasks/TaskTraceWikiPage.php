@@ -1,5 +1,4 @@
 <?php
-
 include_once "TaskTraceBase.php";
 include_once "TaskTraceWikiPageIterator.php";
 include_once "persisters/TaskTraceWikiPageDetailsPersister.php";

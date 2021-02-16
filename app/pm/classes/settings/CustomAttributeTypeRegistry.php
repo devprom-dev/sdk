@@ -49,7 +49,13 @@ class CustomAttributeTypeRegistry extends ObjectRegistrySQL
                 'entityId' => 9,
                 'ReferenceName' => 'char',
                 'Caption' => text(2542)
-            )
- 		));  
+            ),
+            array (
+                'entityId' => 10,
+                'ReferenceName' => 'datetime',
+                'Caption' => translate('Дата/время')
+            ),
+
+        ));
  	}
 }

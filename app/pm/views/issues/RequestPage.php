@@ -3,10 +3,9 @@ include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.ph
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderIssues.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelCommonBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/TransitionCommentPersister.php";
+include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
+include_once SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
 
-include SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
-include SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';
 
 include "RequestForm.php";
 include "RequestFormDuplicate.php";
@@ -39,7 +38,11 @@ class RequestPage extends PMPage
             if ( is_object($object_it) ) {
                 $object_it = $object_it->getSpecifiedIt();
                 if ( $object_it->object instanceof Issue ) {
-                    exit(header('Location: '.$object_it->getViewUrl()));
+                    $url = $object_it->getViewUrl();
+                    if ( $_REQUEST['attributesonly'] != '' ) {
+                        $url .= '&attributesonly=true';
+                    }
+                    exit(header('Location: '.$url));
                 }
             }
 
@@ -58,13 +61,16 @@ class RequestPage extends PMPage
                     $this->addInfoSection(new PageSectionComments($object_it));
 
                     $ids = $object_it->getImplementationIds();
-                    if (count($ids) > 0) {
-                        $it = $object_it->object->getRegistry()->Query(
+                    if (count($ids) > 0 && $_REQUEST['formonly'] == '') {
+                        $uidService = new ObjectUID();
+                        $it = getFactory()->getObject('Request')->getRegistry()->Query(
                             array(new FilterInPredicate($ids))
                         );
                         while (!$it->end()) {
                             $section = new PageSectionComments($it->copy());
-                            $section->setCaption($section->getCaption() . ' {'.$it->get('ProjectCodeName').'} I-' . $it->getId());
+                            $uid = $it->get('UID');
+                            if ( $uid == '' ) $uid = $uidService->getObjectUidInt(get_class($it->object), $it->getId());
+                            $section->setCaption($section->getCaption() . ' {'.$it->get('ProjectCodeName').'} ' . $uid);
                             $section->setId($section->getId() . $it->getId());
                             $this->addInfoSection($section);
                             $it->moveNext();
@@ -77,10 +83,6 @@ class RequestPage extends PMPage
                     $this->addInfoSection(new NetworkSection($object_it));
                 }
             }
-		}
-		elseif ($_REQUEST['mode'] == '') {
-			if ($_REQUEST['view'] == 'board') $this->addInfoSection(new FullScreenSection());
-			$this->addInfoSection(new DetailsInfoSection());
 		}
 	}
 
@@ -122,24 +124,20 @@ class RequestPage extends PMPage
 	function needDisplayForm()
 	{
 		if ( parent::needDisplayForm() ) return true;
-		return $_REQUEST['view'] == 'import' || in_array($_REQUEST['mode'], array('bulk', 'group'));
+		return in_array($_REQUEST['mode'], array('bulk', 'group'));
 	}
 
-	function getBulkForm()
-	{
+	function getBulkForm() {
 		return new RequestBulkForm($this->getObject(), \RequestForm::class);
 	}
 
-	function getForm()
+	function getEntityForm()
 	{
 		switch ($_REQUEST['mode']) {
 			case 'group':
 				$form = new RequestPlanningForm($this->getObject());
 				$form->edit($_REQUEST['ChangeRequest']);
 				return $form;
-		}
-		if ( $_REQUEST['view'] == 'import' ) {
-			return new ImportXmlForm($this->getObject());
 		}
 		if ( $_REQUEST['view'] == 'importdoc') {
             return new RequestImportDocumentForm($this->getObject());
@@ -152,19 +150,16 @@ class RequestPage extends PMPage
 		}
 
 		$object = $this->getObject();
-		$object->addPersister(new TransitionCommentPersister());
-
 		return new RequestForm($object);
 	}
 
-	function getPageWidgets()
-	{
+	function getPageWidgets() {
 		return array('kanbanboard', 'issuesboard', 'issues-backlog');
 	}
 
-    function buildExportIterator( $object, $ids, $iteratorClassName )
+    function buildExportIterator( $object, $ids, $iteratorClassName, $queryParms )
     {
-        $iterator = parent::buildExportIterator($object, $ids, $iteratorClassName);
+        $iterator = parent::buildExportIterator($object, $ids, $iteratorClassName, $queryParms);
         if ( is_subclass_of($iteratorClassName, 'WikiIteratorExport') ) {
             $data = array();
             while( !$iterator->end() ) {
@@ -173,11 +168,10 @@ class RequestPage extends PMPage
                     'Caption' => $iterator->getDisplayName(),
                     'Content' => $iterator->get('Description'),
                     'ContentEditor' => getSession()->getProjectIt()->get('WikiEditorClass'),
-                    'UID' => 'I-'.$iterator->getId()
+                    'UID' => $iterator->get('UID')
                 );
                 $iterator->moveNext();
             }
-            $_REQUEST['options'] = 'UseUID';
             return getFactory()->getObject('WikiPage')->createCachedIterator($data);
         }
         return $iterator;

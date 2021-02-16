@@ -18,7 +18,7 @@ class ReportWorkflowAnalysisPage extends RequestPage
         return new ReportWorkflowAnalysisTable( $this->getObject() );
     }
 
-    function getForm()
+    function getEntityForm()
     {
         return null;
     }

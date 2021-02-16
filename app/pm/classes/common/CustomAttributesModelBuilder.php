@@ -12,25 +12,27 @@ class CustomAttributesModelBuilder extends ObjectModelBuilder
 
     public function build( Metaobject $object )
     {
+        $attributes = array_keys($object->getAttributes());
 		$attr_it = getFactory()->getObject('pm_CustomAttribute')->getRegistry()->Query(
 		    array(
 		        new CustomAttributeObjectPredicate($this->objectIt),
-                new CustomAttributeSortClause(),
-                new FilterHasNoAttributePredicate('ReferenceName', array_keys($object->getAttributes()))
+                new FilterHasNoAttributePredicate('ReferenceName', $attributes),
+                new CustomAttributeSortClause(array_shift($attributes))
             )
         );
+        $policy = getFactory()->getAccessPolicy();
 		
     	while( !$attr_it->end() )
 		{
-            $db_type = $attr_it->getDBType();
-            $groups = $attr_it->getGroups();
-
-			if ( $attr_it->get('ShowMainTab') != 'Y' && !in_array('trace', $groups) ) {
-                $groups[] = 'additional';
-			}
+		    $readable = $policy->can_read_attribute($object,
+                $attr_it->get('ReferenceName'), $object->getAttributeClass($attr_it->get('ReferenceName')));
+            if ( !$readable ) {
+                $attr_it->moveNext();
+                continue;
+            }
 
             $object->addAttribute(
-                $attr_it->get('ReferenceName'), $db_type,
+                $attr_it->get('ReferenceName'), $attr_it->getDBType(),
                 $attr_it->get('Caption'), $attr_it->get('IsVisible') == 'Y',
                 false, $attr_it->get('Description')
             );
@@ -41,7 +43,7 @@ class CustomAttributesModelBuilder extends ObjectModelBuilder
             $object->setAttributeDefault($attr_it->get('ReferenceName'),
                 $attr_it->get('ObjectKind') == '' ? $attr_it->getHtmlDecoded('DefaultValue') : '');
 
-            $object->setAttributeGroups($attr_it->get('ReferenceName'), $groups);
+            $object->setAttributeGroups($attr_it->get('ReferenceName'), $attr_it->getGroups());
             $object->setAttributeOrigin($attr_it->get('ReferenceName'), ORIGIN_CUSTOM);
 
 			$attr_it->moveNext();

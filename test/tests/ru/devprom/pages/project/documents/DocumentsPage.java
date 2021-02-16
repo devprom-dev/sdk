@@ -1,9 +1,12 @@
 package ru.devprom.pages.project.documents;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import ru.devprom.items.Project;
 import ru.devprom.pages.project.SDLCPojectPageBase;
@@ -31,6 +34,7 @@ public class DocumentsPage extends SDLCPojectPageBase {
 		} catch (ElementNotVisibleException e) {
 			clickOnInvisibleElement(newDocBtn);
 		}
+		waitForDialog();
 		return new DocumentNewPage(driver);
 	}
 

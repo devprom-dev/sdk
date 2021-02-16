@@ -5,6 +5,7 @@ class CustomAttributeObjectPredicate extends FilterPredicate
  	function _predicate( $filter )
  	{
  	    if ( !$filter instanceof IteratorBase ) return " AND 1 = 2 ";
+ 	    if ( !is_numeric($filter->getId()) ) return " AND 1 = 2 ";
 
  	    if ( $filter->object->getEntityRefName() == 'pm_ChangeRequest' ) {
             $classNames = array(

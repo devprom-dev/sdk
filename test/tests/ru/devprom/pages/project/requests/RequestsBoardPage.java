@@ -1,26 +1,20 @@
 package ru.devprom.pages.project.requests;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.NotFoundException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import ru.devprom.helpers.DateHelper;
-import ru.devprom.helpers.WebDriverPointerRobot;
 import ru.devprom.items.Project;
 import ru.devprom.items.RTask;
 import ru.devprom.items.Request;
@@ -82,58 +76,6 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
 		super(driver, project);
 	}
 
-	public RequestsBoardPage addGrouppingByUserAttribute (String attrCodeName){
-		asterixBtn.click();
-		((JavascriptExecutor) driver).executeScript("filterLocation.setup( 'group="+attrCodeName+"', 0 );");
-		asterixBtn.click();
-		return new RequestsBoardPage(driver);
-	}
-	
-	public void addFilter(String filtername) {
-		String code = "filterLocation.setup( '" + filtername + "=all', 1 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and @uid='"+filtername+"']")));
-	}
-	
-	public RequestsPage showAll() {
-		driver.navigate().to(driver.getCurrentUrl()+"&state=all");
-		return new RequestsPage(driver);
-	}
-
-	public RequestsBoardPage turnOnFilter(String value, String russianName) throws InterruptedException
-	{
-		WebElement filterButton = driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'" + russianName + "')]"));
-		filterButton.click();
-		List<WebElement> inputElements = filterButton.findElements(By.xpath("./following-sibling::ul/li[@uid='search']/input"));
-		if ( inputElements.size() > 0 ) {
-			inputElements.get(0).sendKeys(value);
-		}
-		Thread.sleep(1000);
-		filterButton.findElement(By.xpath("./following-sibling::ul/li/a[text()='" + value + "']")).click();
-		Thread.sleep(600);
-		filterButton.click();
-		
-		(new WebDriverWait(driver, waiting))
-			.until(ExpectedConditions.presenceOfElementLocated(
-					By.xpath("//a[@data-toggle='dropdown' and contains(@class,'btn-info') and contains(.,'" + russianName + "')]")));
-		return new RequestsBoardPage(driver);
-	}
-
-	public RequestsBoardPage turnOffFilter(String engName){
-		String code = "filterLocation.turnOn('"+engName+"', 'all', 0)";
-		asterixBtn.click();
-		((JavascriptExecutor) driver).executeScript(code);
-		asterixBtn.click();
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		return new RequestsBoardPage(driver);
-	}
-
-	
 	public List<String> getListOfRequestsInGroup(String groupName){
 		List<String> list = new ArrayList<String>();
 		List<WebElement> elements = driver.findElements(By.xpath("//tr[@class='info']/td[contains(.,'"+groupName+"')]/../following-sibling::tr[1]//a[contains(@class,'with-tooltip')]"));
@@ -164,7 +106,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
 
 	public RequestViewPage clickToRequest(String id) {
 		driver.findElement(
-				By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'["
+				By.xpath("//table[@id='requestboard1']//a[contains(.,'["
 						+ id + "]')]")).click();
 		return new RequestViewPage(driver);
 	}
@@ -174,7 +116,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
     	WebElement element = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+requestNumericId+"')]//a[text()='Добавить комментарий']"));
       //  clickOnInvisibleElement(element);
        
-        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[I-"
+        WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[I-"
 						+ requestNumericId + "]')]/../.."));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
@@ -190,7 +132,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
 	
 	
     public RequestsBoardPage addTask(String requestNumericId, RTask task){
-          WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[I-"
+          WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[I-"
   						+ requestNumericId + "]')]/../.."));
           mouseMove(onElement);
           new Actions(driver).contextClick(onElement).build().perform();
@@ -201,7 +143,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
     }
     
     public TaskNewPage addTask(String requestNumericId){
-        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[I-"
+        WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[I-"
 						+ requestNumericId + "]')]/../.."));
         mouseMove(onElement);
         new Actions(driver).contextClick(onElement).build().perform();
@@ -213,7 +155,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
     
     public RequestEditPage editRequest(String requestNumericId){
     	
-        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[I-"
+        WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[I-"
 						+ requestNumericId + "]')]/../.."));
         mouseMove(onElement);
         new Actions(driver).doubleClick(onElement).build().perform();
@@ -248,7 +190,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
     public RequestsBoardPage writeOffSpentTime(String requestNumericId, Spent spent) throws InterruptedException{
     	  WebElement element = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+requestNumericId+"')]//a[text()='Списать время']"));
          
-          WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[I-"
+          WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[I-"
   						+ requestNumericId + "]')]/../.."));
           mouseMove(onElement);
           new Actions(driver).contextClick(onElement).build().perform();
@@ -289,17 +231,18 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
     	  driver.findElement(By.id("BlogPostCaption")).sendKeys(postName);
     	  driver.findElement(By.id("BlogPostSubmitBtn")).click();
     	  
-    	  (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//table[contains(@id,'requestboard')]")));
+    	  (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//table[@id='requestboard1']")));
     	  return new RequestsBoardPage(driver);
     }
     
-    public RequestsBoardPage moveToCompleted(String requestNumericId, String version, Spent spent, String verticalSectionName){
+    public RequestsBoardPage moveToCompleted(String requestNumericId, String version, Spent spent, String verticalSectionName)
+    {
    	 WebElement element = driver.findElement(By.xpath("//div[@object='"+requestNumericId+"']"));
    	WebElement onElement = null;    
    	 if (verticalSectionName.isEmpty()) 
-   		onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//td[contains(@class,'board-column')][4]"));
+   		onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//td[contains(@class,'board-column')][4]"));
         else  {
-        	List<WebElement> rows = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='info']"));
+        	List<WebElement> rows = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[@class='info']"));
         	int row = 0;
         	for (int i=0; i<rows.size();i++){
         		if ( rows.get(i).getText().contains(verticalSectionName) ) {
@@ -308,7 +251,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
         		}
         	}
             String srow = String.valueOf(row);
-            onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')][4]"));
+            onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//tr[@class='row-cards']["+srow+"]//*[contains(@class,'list_cell') and contains(@more,'resolved')]"));
         }
    	 
    	 	mouseMove(element);
@@ -350,7 +293,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
     
     public RequestsBoardPage moveToCompletedUsingMenu(String requestNumericId, String version, String comment, Spent spent){
            WebElement element = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+requestNumericId+"')]//a[text()='Выполнить']"));
-           WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[I-"
+           WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[I-"
    						+ requestNumericId + "]')]/../.."));
            mouseMove(onElement);
            new Actions(driver).contextClick(onElement).build().perform();
@@ -390,26 +333,24 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {
 		}
-      	 return new RequestsBoardPage(driver);
-      }
-       
+        return new RequestsBoardPage(driver);
+	}
     
-    
-    public RequestPlanningPage moveToPlanned(String requestNumericId){
-    	WebElement element = driver.findElement(By.xpath("//div[@object='"+requestNumericId+"']"));
-         
-         WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//td[contains(@class,'board-column')][3]"));
-         mouseMove(element);
-         new Actions(driver).dragAndDrop(element, onElement).build().perform();
-         mouseMove(onElement);
-         waitForDialog();
-    	 return new RequestPlanningPage(driver);
+    public RequestPlanningPage moveToPlanned(String requestNumericId)
+    {
+		WebElement element = driver.findElement(By.xpath("//div[@object='"+requestNumericId+"']"));
+		WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//*[contains(@more,'planned') and string(@group)]"));
+		mouseMove(element);
+		new Actions(driver).dragAndDrop(element, onElement).build().perform();
+		mouseMove(onElement);
+		waitForDialog();
+		return new RequestPlanningPage(driver);
     }
     
     public RequestPlanningPage moveToPlannedUsingMenu(String requestNumericId){
          WebElement element = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+requestNumericId+"')]//a[text()='Запланировать']"));
          
-         WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[I-"
+         WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[I-"
  						+ requestNumericId + "]')]/../.."));
          mouseMove(onElement);
          new Actions(driver).contextClick(onElement).build().perform();
@@ -456,16 +397,17 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
      * @param attrsEng - javascript attribute name
      * @return
      */
-    public RequestsBoardPage showSpecificAttributes(String... attrsEng){
-    	asterixBtn.click();
-    
+    public RequestsBoardPage showSpecificAttributes(String... attrsEng)
+	{
     	for (String a:attrsEng){
-            String code = "filterLocation.showColumn('"+a+"', 0);";
-            ((JavascriptExecutor) driver).executeScript(code);
-    	}
-    	
-    	asterixBtn.click();
-      	 return new RequestsBoardPage(driver);
+			showColumn(a);
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+			}
+			driver.navigate().refresh();
+		}
+    	return new RequestsBoardPage(driver);
     }
     
     
@@ -527,7 +469,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
 			}
     	}
     }
-    	return "Ошибка при попытке считать атрибут";
+    	return "";
     	
     }
     
@@ -547,7 +489,7 @@ public String readAllCardAttributesAsString(String numericId){
      */
     public double readEstimation(String numericId){
     	WebElement element = driver.findElement(By.xpath("//div[@object='"+numericId+"']"));
-    	String estimation = element.findElement(By.xpath(".//a[contains(@data-target,'#estimation')]")).getText().trim();
+    	String estimation = element.findElement(By.xpath(".//a[contains(@uid,'estimation')]")).getText().trim();
     	return Double.parseDouble(estimation);
     	
     }
@@ -561,38 +503,6 @@ public String readAllCardAttributesAsString(String numericId){
     	return new SDLCPojectPageBase(driver);
     }
     
-    public RequestsBoardPage turnOfGrouping(){
-    	asterixBtn.click();
-    	String code = "filterLocation.setup( 'group=none', 0 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		asterixBtn.click();
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-    	return new RequestsBoardPage(driver);
-    }
-    
-    /**
-     * 
-     * @param parameter - "внутреннее" имя параметра, латиница
-     * @return
-     */
-    public RequestsBoardPage setupGrouping(String parameter){
-    	asterixBtn.click();
-    	String code = "javascript: filterLocation.setup( 'group="+parameter+"', 0 ); ";
-		((JavascriptExecutor) driver).executeScript(code);
-		asterixBtn.click();
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-    	return new RequestsBoardPage(driver);
-    }
-    
-    
     public List<String> readDatesTitles(String requestNumericId) throws InterruptedException{
     	List<String> result = new ArrayList<String>();
     	Thread.sleep(1000);
@@ -604,61 +514,50 @@ public String readAllCardAttributesAsString(String numericId){
     	return result;
     	
     }
-    
-    public RequestsBoardPage moveToAnotherSection(String requestNumericId, int row, int column){
-   	 WebElement element = driver.findElement(By.xpath("//div[@object='"+requestNumericId+"']"));
-        String srow = String.valueOf(row);
-        String scolumn = String.valueOf(column);
-        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]"));
-        mouseMove(element);
-        new Actions(driver).dragAndDrop(element, onElement).build().perform();
-        mouseMove(onElement);
-      
- 	   (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]//div[@object='"+requestNumericId+"']")));
- 		
-        /*try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}*/
-   	 return new RequestsBoardPage(driver);
-   }
-   
-    public RequestsBoardPage moveToAnotherSection(String requestNumericId, String rowName, String columnName){
-    	List<WebElement> rows = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='info']"));
-    	int row = 0;
-    	for (int i=0; i<rows.size();i++){
-    		if ( rows.get(i).getText().contains(rowName) ) {
-    			row = i;
-    			break;
-    		}
-    	}
-    	List<WebElement> cols = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]/tbody/tr[contains(@class,'board-columns')]/th"));
-    	String columnValue = "";
-    	int column = 0;
-    	for (int i=0; i<cols.size();i++){
-    		if( cols.get(i).getText().contains(columnName) ) {
-    			columnValue = cols.get(i).getAttribute("value"); 
-    			break;
-    		}
-    	}
-    	
-      	 WebElement element = driver.findElement(By.xpath("//div[@object='"+requestNumericId+"']//div[@class='board_item_body']"));
-		WebElement onElement = rows.get(row).findElement(By.xpath("./following-sibling::tr[@class='row-cards']//*[contains(@class,'list_cell') and contains(@more,'"+columnValue+"')]")); 
-       scrollToElement(onElement);
-       mouseMove(element);
-       new Actions(driver).dragAndDrop(element, onElement).build().perform();
-       mouseMove(onElement);
-       try {
-		Thread.sleep(5000);
+
+	public RequestsBoardPage moveToAnotherSection(String requestNumericId, int row, int column)
+	{
+		WebElement element = driver.findElement(By.xpath("//div[@object='"+requestNumericId+"']"));
+		String srow = String.valueOf(row);
+		String scolumn = String.valueOf(column);
+		WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]"));
+		scrollToElement(element);
+		new Actions(driver).dragAndDrop(element, onElement).build().perform();
+		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.textToBePresentInElement(onElement, requestNumericId));
+		return new RequestsBoardPage(driver);
+	}
+
+	public RequestsBoardPage moveToAnotherSection(String requestNumericId, String rowName, String columnName){
+		List<WebElement> rows = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[@class='info']"));
+		int row = 0;
+		for (int i=0; i<rows.size();i++){
+			if ( rows.get(i).getText().contains(rowName) ) {
+				row = i;
+				break;
+			}
+		}
+		List<WebElement> cols = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[contains(@class,'board-columns')]/th"));
+		String columnValue = "";
+		int column = 0;
+		for (int i=0; i<cols.size();i++){
+			if( cols.get(i).getText().contains(columnName) ) {
+				columnValue = cols.get(i).getAttribute("value");
+				break;
+			}
+		}
+		WebElement element = driver.findElement(By.xpath("//div[@object='"+requestNumericId+"']//div[contains(@class,'ca-field')]"));
+		WebElement onElement = rows.get(row).findElement(By.xpath("./following-sibling::tr[@class='row-cards']//*[contains(@class,'list_cell') and contains(@more,'"+columnValue+"')]"));
+		scrollToElement(element);
+		new Actions(driver).dragAndDrop(element, onElement).build().perform();
+		try {
+			Thread.sleep(3000);
 		} catch (InterruptedException e) {
 		}
-      	 return new RequestsBoardPage(driver);
-      }
-    
+		return new RequestsBoardPage(driver);
+	}
     
       public List<String> getAllGroupingSections(){
-    	  List<WebElement> rows = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='info']"));
+    	  List<WebElement> rows = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[@class='info']"));
     	  List<String> result = new ArrayList<String>();
     	   for (WebElement el:rows){
     		   result.add(el.getText());
@@ -668,8 +567,8 @@ public String readAllCardAttributesAsString(String numericId){
       
        public boolean isRequestInSection(String requestNumericId,  String rowName, String columnName)
        {
-       	List<WebElement> cols = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]/tbody/tr[contains(@class,'board-columns')]/th"));
-  	    List<WebElement> rows = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]//tr[@class='info']"));
+       	List<WebElement> cols = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[contains(@class,'board-columns')]/th"));
+  	    List<WebElement> rows = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[@class='info']"));
        	String columnValue = "";
        	for (int i=0; i<cols.size();i++){
        		if ( cols.get(i).getText().contains(columnName) ) {
@@ -705,7 +604,7 @@ public String readAllCardAttributesAsString(String numericId){
         * @return
         */
        public RequestsBoardPage changePriorityInContextMenu(String requestNumericId, String priority){
-    	    WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[I-"
+    	    WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[I-"
    						+ requestNumericId + "]')]/../.."));
     	    mouseMove(onElement);
            new Actions(driver).contextClick(onElement).build().perform();
@@ -728,9 +627,9 @@ public String readAllCardAttributesAsString(String numericId){
        public String tryToMoveDenied(String requestNumericId, String rowName, String columnName)
        {
     	   moveToAnotherSection(requestNumericId, rowName, columnName);
-    	   waitForDialog();
-    	   String errorMessage = driver.findElement(By.id("modal-form")).getText();
-    	   submitDialog(driver.findElement(By.id("buttonOk")));
+		   (new WebDriverWait(driver, waiting)).until(
+		   		ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(@class,'alert-error')]")));
+    	   String errorMessage = driver.findElement(By.xpath("//*[contains(@class,'alert-error')]")).getText();
     	   return errorMessage;
        }
        
@@ -754,7 +653,7 @@ public String readAllCardAttributesAsString(String numericId){
        }
   
        public IterationNewPage versionChange(String sprint) {
-           WebElement sprintTitle = driver.findElement(By.xpath("//td[@class='board-group']//span[contains(.,'"+sprint+"')]"));
+           WebElement sprintTitle = driver.findElement(By.xpath("//td[contains(@class,'board-group')]//span[contains(.,'"+sprint+"')]"));
            clickOnInvisibleElement(sprintTitle.findElement(By.xpath("./ancestor::td//a[@id='row-modify']")));
            return new IterationNewPage(driver);
        }

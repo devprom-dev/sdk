@@ -11,6 +11,8 @@ abstract class NewDocumentWebMethod extends WebMethod
 			? $object_it : getFactory()->getObject('entity')->getEmptyIterator()
 		);
 		parent::__construct();
+        $this->setBeforeCallback('devpromOpts.updateUI');
+        $this->setRedirectUrl('devpromOpts.updateUI');
 	}
 
 	abstract public function getObject();
@@ -61,6 +63,7 @@ abstract class NewDocumentWebMethod extends WebMethod
 
 			getFactory()->setEventsManager(new \ModelEventsManager());
 			$context = new CloneContext();
+            $context->setResetUids(true);
 			$context->setUseExistingReferences(true);
 
 			foreach( $this->getReferences() as $cloneObject )
@@ -75,33 +78,64 @@ abstract class NewDocumentWebMethod extends WebMethod
 
 			$object->modify_parms($object_it->getId(), array (
 				'Caption' => $template_it->getHtmlDecoded('Caption'),
-                'PageType' => $_REQUEST['PageType']
+                'PageType' => $_REQUEST['PageType'],
+                'IsDocument' => 1
 			));
 
 			if ( $_REQUEST['Request'] > 0 ) {
                 $request_it = getFactory()->getObject('Request')->getExact($_REQUEST['Request']);
-                $trace = getFactory()->getObject('RequestTraceRequirement');
+                if ( $request_it->getId() > 0 ) {
+                    $trace = getFactory()->getObject('RequestTraceRequirement');
+                    $trace->getRegistry()->Merge(
+                        array(
+                            'ObjectId' => $object_it->getId(),
+                            'ObjectClass' => $trace->getObjectClass(),
+                            'ChangeRequest' => $request_it->getId(),
+                            'Type' => $request_it->get('Type') == '' ? REQUEST_TRACE_REQUEST : REQUEST_TRACE_PRODUCT
+                        ),
+                        array('ObjectId','ObjectClass','ChangeRequest')
+                    );
+                }
+            }
 
-                $trace->getRegistry()->Merge(
-                    array(
-                        'ObjectId' => $object_it->getId(),
-                        'ObjectClass' => $trace->getObjectClass(),
-                        'ChangeRequest' => $request_it->getId(),
-                        'Type' => $request_it->get('Type') == '' ? REQUEST_TRACE_REQUEST : REQUEST_TRACE_PRODUCT
-                    ),
-                    array('ObjectId','ObjectClass','ChangeRequest')
-                );
+            if ( $_REQUEST['Task'] > 0 ) {
+                $taskIt = getFactory()->getObject('Task')->getExact($_REQUEST['Task']);
+                if ( $taskIt->getId() > 0 ) {
+                    $trace = getFactory()->getObject('TaskTraceRequirement');
+                    $trace->getRegistry()->Merge(
+                        array(
+                            'ObjectId' => $object_it->getId(),
+                            'ObjectClass' => $trace->getObjectClass(),
+                            'Task' => $taskIt->getId()
+                        )
+                    );
+                }
+            }
+
+            if ( $_REQUEST['Feature'] > 0 ) {
+                $featureIt = getFactory()->getObject('Feature')->getExact($_REQUEST['Feature']);
+                if ( $featureIt->getId() > 0 ) {
+                    $trace = getFactory()->getObject('FunctionTraceRequirement');
+                    $trace->getRegistry()->Merge(
+                            array(
+                                'ObjectId' => $object_it->getId(),
+                                'ObjectClass' => $trace->getObjectClass(),
+                                'Feature' => $featureIt->getId()
+                            )
+                        );
+                }
             }
         }
 		else {
 			$object_it = $object->getExact($object->add_parms(
 				array (
 					'Caption' => $this->getCaption(),
-                    'PageType' => $_REQUEST['PageType']
+                    'PageType' => $_REQUEST['PageType'],
+                    'IsDocument' => 1
 				)
 			));
 		}
 
-		echo $object_it->getViewUrl();
+		echo $object_it->getUidUrl();
  	}
 }

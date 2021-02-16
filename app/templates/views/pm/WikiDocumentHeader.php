@@ -1,10 +1,10 @@
 <div class="hidden-print hover-holder" style="display:table;width:100%;">
-	<div class="filter" style="display:table-cell;font-weight:normal;width:<?(count($documents) > 0 ? '60%' : '100%')?>;vertical-align:top;">
+	<div class="content-filter" style="width:<?=(count($documents) > 0 ? '60%' : '100%')?>;">
 		<?php foreach( $actions as $index => $action ) { ?>
 			<?php if ( count($action['items']) < 1 ) continue; ?>
 		
-			<div class="btn-group pull-left" <?=($index > 0) ? 'style="padding-left:5px;"' : ""?> >
-			   	<a uid="<?=$action['uid']?>" class="btn dropdown-toggle btn-sm <?=($action['class'] == '' ? 'btn-inverse' : $action['class'])?>" href="#" data-toggle="dropdown">
+			<div class="btn-group pull-left">
+			   	<a uid="<?=$action['uid']?>" class="btn dropdown-toggle btn-sm <?=($action['class'] == '' ? 'btn-inverse' : $action['class'])?>" href="" data-toggle="dropdown">
 			   		<?=$action['name']?>
 			   		<span class="caret"></span>
 			   	</a>
@@ -19,7 +19,7 @@
         if ( count($compareMoreActions) > 0 ) {
         ?>
             <div class="btn-group pull-left">
-                <a class="btn btn-cell dropdown-toggle btn-light" uid="compare-more-actions" href="#"
+                <a class="btn btn-cell dropdown-toggle btn-light" uid="compare-more-actions" href=""
                    data-toggle="dropdown" style="padding-left:0;">
                     <span class="label">...</span>
                 </a>

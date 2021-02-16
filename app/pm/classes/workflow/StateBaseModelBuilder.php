@@ -11,6 +11,7 @@ class StateBaseModelBuilder extends ObjectModelBuilder
 
     	$object->addAttribute('Attributes', 'REF_StateAttributeId', text(1800), true);
 		$object->addAttribute('Actions', 'REF_StateActionId', translate('Системные действия'), true);
+        $object->addAttribute('Transitions', 'REF_TransitionId', translate('Переходы'), true, false, str_replace('%1', $object->getPage(), text(2013)), 20);
 		$object->addPersister( new StateBaseModelPersister() );
 		
 		$object->setAttributeCaption('OrderNum', text(1923));
@@ -24,7 +25,7 @@ class StateBaseModelBuilder extends ObjectModelBuilder
         $object->setAttributeType('ReferenceName', 'varchar');
         $object->setAttributeVisible('ReferenceName', false);
 
-        foreach( array('Description','OrderNum','ReferenceName','ExcludeLeadTime','SkipEmailNotification') as $attribute ) {
+        foreach( array('Description','OrderNum','ReferenceName','ExcludeLeadTime','SkipEmailNotification','IsNewArtifacts') as $attribute ) {
             $object->addAttributeGroup($attribute, 'additional');
         }
 		foreach( array('QueueLength','RelatedColor') as $attribute ) {
@@ -33,7 +34,7 @@ class StateBaseModelBuilder extends ObjectModelBuilder
         foreach ( array( 'QueueLength' ) as $attribute ) {
             $object->addAttributeGroup($attribute, 'skip-total');
         }
-        foreach( array('ObjectClass','ExcludeLeadTime','ReferenceName', 'SkipEmailNotification') as $attribute ) {
+        foreach( array('ObjectClass') as $attribute ) {
             $object->addAttributeGroup($attribute, 'system');
         }
     }

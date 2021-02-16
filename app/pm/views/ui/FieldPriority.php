@@ -3,11 +3,9 @@
 class FieldPriority extends Field
 {
 	private $actions = null;
-	private $reload = false;
 	private $moreActions = array();
 
-	function __construct( $object_it = null, $reload = false, $moreActions = array() ) {
-		$this->reload = $reload;
+	function __construct( $object_it = null, $moreActions = array() ) {
         $this->object_it = $object_it;
         $this->moreActions = $moreActions;
 		$this->actions = $this->buildActions();
@@ -35,9 +33,12 @@ class FieldPriority extends Field
 		}
 
 		$priorityIt = $this->object_it->getRef('Priority');
-		echo $view->render('pm/PriorityButton.php', array (
-			'data' => $priorityIt->getDisplayName(),
-			'color' => $priorityIt->get('RelatedColor') == '' ? 'white' : $priorityIt->get('RelatedColor'),
+
+		$color = $priorityIt->get('RelatedColor') == '' ? 'white' : $priorityIt->get('RelatedColor');
+		$textColor = '<span class="btn btn-priority btn-field"><span class="pri-cir" style="color:'.$color.'">&#x25cf;</span>&nbsp;</span>';
+
+		echo $view->render('pm/AttributeButton.php', array (
+			'data' => $textColor . $priorityIt->getDisplayName(),
 			'items' => count($this->moreActions) > 0
                 ? array_merge(
                         $this->actions,
@@ -59,12 +60,6 @@ class FieldPriority extends Field
 		{
 			$method = new ModifyAttributeWebMethod($empty_it, 'Priority', $priorityIt->getId());
 			if ( $method->hasAccess() ) {
-				if ( !$this->reload ) {
-					$method->setCallback( "donothing" );
-				}
-				else {
-					$method->setCallback( "function() {window.location.reload();}" );
-				}
 				$actions[$priorityIt->getId()] = array(
                     'name' => $priorityIt->getDisplayName(),
                     'method' => $method

@@ -1,6 +1,6 @@
 <?php
 
-$etagFile = md5(__FILE__)."-".$_REQUEST['v'];
+$etagFile = md5(__FILE__)."-".md5($_REQUEST['v']);
 $etagHeader=(isset($_SERVER['HTTP_IF_NONE_MATCH']) ? trim($_SERVER['HTTP_IF_NONE_MATCH']) : false);
 if ($etagHeader == $etagFile) {
 	exit(header("HTTP/1.1 304 Not Modified"));
@@ -41,13 +41,13 @@ switch ( $type )
             'styles/fancybox/jquery.fancybox.min.css,'.
             'styles/newlook/main.css,'.
             'styles/newlook/medium-fonts.css,'.
-            'styles/jquery/jquery.treeview.css,' .
             'scripts/color-picker/colorPicker.css,'.
             'styles/newlook/board.css,'.
             'styles/wysiwyg/codes.css,'.
             'styles/newlook/sidebar.css,'.
             'styles/newlook/ui.fancytree.css,'.
             'styles/newlook/extended.css,'.
+            'styles/bootstrap/css/bootstrap-multiselect.css,'.
             'styles/jquery/perfect-scrollbar.min.css';
         break;
 
@@ -62,12 +62,9 @@ switch ( $type )
         {
             case '1':
                 $files =
-                    'jquery/jquery-1.11.3.min.js,'.
+                    'jquery/jquery-3.5.1.min.js,'.
                     'jquery/jquery-migrate-1.2.1.js,'.
                     'jquery/jquery.form.js,'.
-                    'jquery/jquery.treeview.js,'.
-                    'jquery/jquery.treeview.edit.js,'.
-                    'jquery/jquery.treeview.async.js,'.
                     'keyboard/mousetrap.min.js,'.
                     'fancybox/jquery.fancybox.min.js,'.
                     'excanvas/excanvas.compiled.js,'.
@@ -89,8 +86,12 @@ switch ( $type )
                     'locale/underi18n.js,' .
                     'time/jstz-1.0.4.min.js,'.
                     'clipboard/clipboard.min.js,'.
+                    'annotation/jquery.mark.min.js,'.
                     'pm/locale/'.$language.'/resources.js,'.
+                    'pm/comments.js,'.
                     'pm/common.js,'.
+                    'pm/ui.js,'.
+                    'pm/filter.js,'.
                     'flow/circle-progress.min.js,'.
                     'flow/flow.min.js,'.
                     'pm/upload.js,'.
@@ -99,34 +100,18 @@ switch ( $type )
                     'pm/treegrid.js,'.
                     'pm/shortcuts.js';
                 break;
-            case '2': // TODO: remove for next update
-                $files =
-                    'jquery/jquery.cookies.2.2.0.min.js,' .
-                    'modernizr/modernizr.js,' .
-                    'jquery/jquery.base64.min.js,'.
-                    'jquery/jquery.ba-resize.min.js,'.
-                    'jquery/imagesloaded.pkgd.min.js,'.
-                    'color-picker/jquery.colorPicker.min.js,'.
-                    'locale/underi18n.js,' .
-                    'time/jstz-1.0.4.min.js';
-                break;
-            default: // TODO: remove for next update
-                $files =
-                    'pm/locale/'.$language.'/resources.js,'.
-                    'pm/common.js,'.
-                    'pm/board.js,'.
-                    'pm/document.js';
-                break;
         }
 
         $files .=
-            ',bootstrap/bootstrap.min.js,'.
-            'bootstrap/bootstrap-filestyle-0.1.0.min.js,'.
+            ',bootstrap/bootstrap.js,'.
+            'bootstrap/bootstrap-filestyle.min.js,'.
             'bootstrap/bootstrap-contextmenu.js,'.
+            'bootstrap/bootstrap-multiselect.js,'.
             'jquery-ui/jquery-ui.js,'.
             'jquery-ui/jquery.ui.touch-punch.min.js,'.
-            'fancytree/jquery.fancytree.js,' .
-            'fancytree/jquery.fancytree.dnd.js,' .
+            'fancytree/jquery.fancytree.min.js,' .
+            'fancytree/jquery.fancytree.ui-deps.js,' .
+            'fancytree/jquery.fancytree.dnd5.js,' .
             'fancytree/jquery.fancytree.persist.js,' .
             'fancytree/jquery.fancytree.table.js,' .
             'scrollbar/perfect-scrollbar.min.js,'.

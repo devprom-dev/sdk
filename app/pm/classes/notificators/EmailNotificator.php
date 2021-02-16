@@ -65,7 +65,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 					? $this->handlers[$object_it->object->getClassName()] : $this->common_handler; 
  	}
 	
-	public function sendMail( $action, $object_it, $prev_object_it, $usersToNotify )
+	public function sendMail( $action, $object_it, $prev_object_it, $usersToNotify = array() )
 	{
 		$queues = array();
 		
@@ -97,10 +97,10 @@ class EmailNotificator extends ObjectFactoryNotificator
 			if ( count($parms['fields']) < 1 ) continue;
 
 			$mail = new HtmlMailBox();
-			$mail->setFromUser(getSession()->getUserIt());
 			$mail->appendAddress( $this->getAddress($recipient) );
 			$mail->setSubject( $this->getSubject( $object_it, $prev_object_it, $action, $recipient ) );
 	   		$mail->setBody($render_service->getContent($parms['template'], $parms));
+            $mail->setInReplyMessageId($object_it->getHtmlDecoded('EmailMessageId'));
 
 	   		$attachments = array();
 	   		foreach( $object_it->object->getAttributesByGroup('email-attachments') as $attribute ) {
@@ -314,7 +314,6 @@ class EmailNotificator extends ObjectFactoryNotificator
 		    $systemuser_it = $user->getRegistry()->Query(
 				array (
 					new UserStatePredicate('nonblocked'),
-					new FilterAttributeNotNullPredicate('NotificationEmailType'),
 					new FilterInPredicate($users)
 				)
 			);
@@ -399,9 +398,14 @@ class EmailNotificator extends ObjectFactoryNotificator
 	{
 		$users = array();
 
-		$watcher_it = getFactory()->getObject2('pm_Watcher',
-			is_a($object_it->object, 'Comment') ? $object_it->getAnchorIt() : $object_it)->getAll();
+		if ( is_a($object_it->object, 'Comment') ) {
+            $object_it = $object_it->getAnchorIt();
+        }
+        if ( is_a($object_it->object, 'WikiPage') ) {
+            $object_it = $object_it->getParentsIt();
+        }
 
+		$watcher_it = getFactory()->getObject2('pm_Watcher', $object_it)->getAll();
 		while ( !$watcher_it->end() )
 		{
 			// skip current user or external emails

@@ -1,21 +1,16 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/views/tags/FieldTagTrace.php";
 include_once SERVER_ROOT_PATH."pm/views/tags/CustomTagFormEmbedded.php";
 
 class FieldFeatureTagTrace extends FieldTagTrace
 {
- 	function __construct( $anchor )
- 	{
+ 	function __construct( $anchor ) {
  		parent::__construct( $anchor, 'ObjectId' );
  	}
  	
 	function getTagObject()
 	{	
-		global $model_factory;
-		
-		$tag = $model_factory->getObject('FeatureTag');
-		
+		$tag = getFactory()->getObject('FeatureTag');
  		$anchor_it = $this->getAnchorIt();
  		
 		$tag->addFilter( 
@@ -27,10 +22,8 @@ class FieldFeatureTagTrace extends FieldTagTrace
 	
     function getForm()
     {
-        $form = new CustomTagFormEmbedded( $this->getTagObject(), $this->getField() );
-        
-        $form->setAnchorIt( $this->getAnchorIt() );
-        
+        $form = new CustomTagFormEmbedded($this->getTagObject(), $this->getField(), $this->getName());
+        $form->setAnchorIt($this->getAnchorIt());
         return $form;
     }
 }

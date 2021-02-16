@@ -1,7 +1,7 @@
 set APP_ROOT=%~dp0/../ext
 set TEST_ROOT=%~dp0
 
-set PATH=%PATH%;%TEST_ROOT%../../dev/php
+set PATH=%TEST_ROOT%../../dev/php;%PATH%
 
 chcp 1251
 

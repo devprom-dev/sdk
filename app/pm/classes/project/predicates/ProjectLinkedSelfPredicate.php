@@ -8,6 +8,8 @@ class ProjectLinkedSelfPredicate extends FilterPredicate
 	
  	function _predicate( $filter )
  	{
+ 	    if ( !getSession() instanceof \PMSession ) return " AND 1 = 2 ";
+
         $ids = getSession()->getLinkedIt()->fieldToArray('pm_ProjectId');
         if ( !getSession()->getProjectIt()->IsPortfolio() ) $ids[] = getSession()->getProjectIt()->getId();
 

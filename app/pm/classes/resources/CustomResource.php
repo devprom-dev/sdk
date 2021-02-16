@@ -15,6 +15,7 @@ class CustomResource extends Resource
  	function __construct()
  	{
  		parent::__construct( new CustomResourceRegistry($this) );
+ 		$this->setAttributeVisible('ResourceKey', false);
  	}
  	
  	function createIterator()
@@ -72,11 +73,9 @@ class CustomResource extends Resource
  			
      		if ( $items['contains'] != '' )
      		{
-     		    $right = IteratorBase::wintoutf8($items['contains']);
-     		    
-     		    $value = IteratorBase::wintoutf8($resource['ResourceValue']);
-     		    
-     		    $original = IteratorBase::wintoutf8($resource['OriginalValue']);
+     		    $right = $items['contains'];
+     		    $value = $resource['ResourceValue'];
+     		    $original = $resource['OriginalValue'];
      		    
      		    $remove = mb_stripos($value, $right, 0, 'utf-8') === false 
      		        && mb_stripos($original, $right, 0, 'utf-8') === false;

@@ -6,24 +6,17 @@ if ( !$tableonly )
     $view['slots']->output('_content');
 }
 
-$section = new DetailsInfoSection();
-if ( $_REQUEST['viewmode'] == 'recon' ) {
-    $section->setActive(true);
-}
-$bodySections = array($section);
-
-$placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'right';
-if ( array_key_exists('applyChanges', $_REQUEST) ) {
-    $placementClass = '';
-}
-
+$comparisonMode = $_REQUEST['comparemode'] == 'modified';
+$structureVisible = in_array($_COOKIE['toggle-docstruct'], array('','true')) && $has_hierarchy;
 $filter_actions = $table->getFilterActions();
-unset($filter_actions['filters']);
 
 ?>
-<div class="wiki-page <?=$placementClass?>">
+<div class="treeview-push pull-left <?=($structureVisible? 'invisible' : '')?>" onclick="toggleDocumentStructure()">
+    <i class="icon-chevron-right"></i>
+</div>
+<div class="wiki-page left">
     <?php
-        if ( !$tableonly && count($sections) > 0 && $placementClass == 'left' ) {
+        if ( !$tableonly && count($sections) > 0 ) {
             echo $view->render('pm/WikiDocumentTree.php', array(
                 'sections' => $sections,
                 'object_class' => $object_class,
@@ -31,25 +24,39 @@ unset($filter_actions['filters']);
                 'page_uid' => $page_uid,
                 'document_hint' => $document_hint,
                 'docs_url' => $docs_url,
+                'registry_url' => $registry_url,
+                'registry_title' => $registry_title,
                 'docs_title' => $docs_title,
                 'documentId' => $widget_id,
-                'placement_text' => text(2209),
-                'placement_icon' => 'icon-arrow-right',
-                'placement_script' => "javascript: toggleDocumentTreePlacement('right')",
-                'placement_class' => 'left',
-                'filter_actions' => $filter_actions
+                'structureVisible' => $structureVisible
             ));
         }
     ?>
     <div class="wiki-page-document">
         <?php
+            $filter_settings = array(
+                array(
+                    'html' => '<button id="filter-settings" class="btn dropdown-toggle btn btn-sm btn-light"><i class="icon-cog icon-gray"></i></button>'
+                )
+            );
+            if ( $comparisonMode ) {
+                array_unshift(
+                    $filter_settings,
+                    array(
+                        'html' => '<a class="btn btn-sm btn-light" href="'.$document_url.'">&#8592; '.translate('Закрыть').'</a>'
+                    )
+                );
+            }
 
             echo $view->render('core/PageTableBody.php', array (
                 'table' => $table,
                 'caption' => $caption,
                 'description' => $description,
                 'tableonly' => $tableonly,
+                'filter_visible' => $filter_visible,
                 'filter_items' => $filter_items,
+                'filter_buttons' => $filter_buttons,
+                'filter_search' => $filter_search,
                 'actions' => $actions,
                 'additional_actions' => $additional_actions,
                 'list' => $list,
@@ -68,32 +75,9 @@ unset($filter_actions['filters']);
                 'page_uid' => $page_uid,
                 'list_slider' => $list_slider,
                 'sliderClass' => $sliderClass,
-                'filterMoreActions' => $filterMoreActions
+                'filterMoreActions' => $filterMoreActions,
+                'filter_settings' => $filter_settings
             ));
-            if ( $hint_open )
-            {
-                echo '<span class="clearfix"></span>';
-                echo $view->render('core/Hint.php', array('title' => $document_hint, 'name' => $page_uid, 'open' => true));
-            }
         ?>
     </div>
-    <?php
-        if ( !$tableonly && count($sections) > 0 && $placementClass == 'right' ) {
-            echo $view->render('pm/WikiDocumentTree.php', array(
-                'sections' => $sections,
-                'object_class' => $object_class,
-                'object_id' => $object_id,
-                'page_uid' => $page_uid,
-                'document_hint' => $document_hint,
-                'docs_url' => $docs_url,
-                'docs_title' => $docs_title,
-                'documentId' => $widget_id,
-                'placement_text' => text(2208),
-                'placement_icon' => 'icon-arrow-left',
-                'placement_script' => "javascript: toggleDocumentTreePlacement('left')",
-                'placement_class' => 'right',
-                'filter_actions' => $filter_actions
-            ));
-        }
-    ?>
 </div>

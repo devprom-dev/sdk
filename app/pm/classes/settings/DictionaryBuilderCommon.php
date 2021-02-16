@@ -15,7 +15,7 @@ class DictionaryBuilderCommon extends DictionaryBuilder
 		
  		$registry->addEntity( getFactory()->getObject('PMCustomAttribute') );
  		$registry->addEntity( getFactory()->getObject('RequestType'),
-            $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ? text(2672) : ''
+            $this->session->IsRdd() ? text(2672) : ''
         );
  		$registry->addEntity( getFactory()->getObject('RequestTemplate') );
         $registry->addEntity( getFactory()->getObject('TextTemplate') );

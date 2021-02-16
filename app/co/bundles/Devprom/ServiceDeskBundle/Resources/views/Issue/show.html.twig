@@ -3,7 +3,7 @@
 {% import "DevpromServiceDeskBundle:Common:macros.html.twig" as macro %}
 
 {% block title %}
-    [I-{{ issue.id }}] {{ issue.caption }}
+    {{ issue.id }} {{ issue.caption }}
 {% endblock %}
 
 {% block content -%}
@@ -11,7 +11,7 @@
         <div class="container">
             <div class="col-lg-8">
                 <article class="post">
-                    <h1>I-{{ issue.id }} &nbsp; <span id="issue-title">{{ issue.caption|unescapeHtml }}</span></h1>
+                    <h1>{{ issue.id }} &nbsp; <span id="issue-title">{{ issue.caption|unescapeHtml }}</span></h1>
 
                     <ul class="meta">
                         <li><span>{{ 'issue_createdAt'|trans }} :</span> {{ localeDate(issue.createdAt) }}</li>
@@ -20,9 +20,9 @@
                         {% endif %}
                     </ul>
 
-                    <p id="issue-description">
+                    <div id="issue-description">
                         {% autoescape false %}{{ issue.description|unescapeHtml }}{% endautoescape %}
-                    </p>
+                    </div>
                     <p>&nbsp;</p>
 
                     {% if issue.attachments %}
@@ -37,7 +37,7 @@
                     </ul>
                     {% endif %}
                     <button type="button" class="btn btn-sm btn-primary" id="add-attachment-button"
-                            onclick="window.location='{{ url('attachment', { 'issueId' : issue.id }) }}';">
+                            onclick="window.location='{{ path('attachment', { 'issueId' : issue.id }) }}';">
                         {{ 'issue.add.attachment'|trans }}
                     </button>
                     <p>&nbsp;</p>
@@ -62,12 +62,11 @@
                 </article>
                 <div class="feedback">
                     <div id="comment-form">
-                        <form role="form" class="form-horizontal" action="{{ path('issue_add_comment', { 'issueId' : issue.id }) }}" method="post" {{ form_enctype(comment_form) }}>
-                            <textarea id="form_text" rows="3" name="form[text]" required="required" placeholder="{{ 'issue.comment.prompt'|trans }}" class="form-control input-transparent textarea-comment"></textarea>
-                            {{ form_widget(comment_form._token) }}
+                        {{ form_start(comment_form, {"attr": {"class":"form-horizontal","action":path('issue_add_comment', { 'issueId' : issue.id })}}) }}
+                            {{ form_widget(comment_form) }}
                             <br/>
                             <button type="submit" id="new-message-btn" class="btn btn-sm btn-primary">{{ 'issue.comment.add'|trans }}</button>
-                        </form>
+                        {{ form_end(comment_form) }}
                     </div>
                 </div>
             </div>
@@ -78,7 +77,12 @@
                         <span class="icon icon-3"></span>
 
                         <h4>{{ 'issue_state'|trans }}</h4>
-                        <p>{{ issue.state.name|trans }}</p>
+                        <p>
+                            {{ issue.state.name|trans }}
+                            {% if issue.state.description != "" %}
+                                <br/>({{ issue.state.description|unescapeHtml }})
+                            {% endif %}
+                        </p>
 
                         {% if issue.issueType != "" %}
                             <h4>{{ 'issue_issueType'|trans }}</h4>
@@ -111,7 +115,7 @@
                         {% endif %}
                         -->
 
-                        <a id="edit-issue-button" href="{{ url('issue_edit', { 'id': issue.id }) }}" class="btn btn-sm btn-success">{{ 'issue.edit'|trans }}</a>
+                        <a id="edit-issue-button" href="{{ path('issue_edit', { 'id': issue.id }) }}" class="btn btn-sm btn-success">{{ 'issue.edit'|trans }}</a>
                     </div>
 
                 </div>
@@ -119,4 +123,19 @@
         </div>
     </main>
 
+{% endblock %}
+
+{% block javascripts %}
+    <script src="//{{ app.request.getHttpHost() ~ '/plugins/wrtfckeditor/ckeditor/ckeditor.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/locale/underi18n.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/plugins/wrtfckeditor/resources/js/locals/ru/resource.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/jquery/paste.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/flow/flow.min.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/co/bundles/Devprom/ServiceDeskBundle/public/js/wysiwyg.js?v=' ~ app_version }}"></script>
+    <script type="text/javascript">
+        $(document).ready( function() {
+            setupEditorGlobal();
+            setupWysiwygEditor('form_text', 230);
+        });
+    </script>
 {% endblock %}

@@ -1,0 +1,17 @@
+{% extends "layout.html.twig" %}
+
+{% block fos_user_content %}
+<section class="card-section">
+    <div class="container">
+        <div class="col-lg-8 col-lg-offset-2">
+            <div class="card text-center">
+                <header class="text-center">
+                    <div class="section-subtitle">
+                        {{ 'resetting.check_email'|trans({'%email%': email}, 'FOSUserBundle') }}
+                    </div>
+                </header>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

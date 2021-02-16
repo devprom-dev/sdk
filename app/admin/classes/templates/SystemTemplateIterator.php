@@ -1,6 +1,6 @@
 <?php
 
-class SystemTemplateIterator extends OrderedIterator
+class SystemTemplateIterator extends CacheableIterator
 {
 	function get( $attr )
 	{
@@ -22,14 +22,14 @@ class SystemTemplateIterator extends OrderedIterator
 		    	$file_path = file_exists($this->getFilePath())
                     ? $this->getFilePath()
                     : parent::get('BackupDirName') . '/' . parent::get('BackupFileName');
-		    	return file_get_contents($file_path);
+		    	return htmlentities(file_get_contents($file_path));
 		    	
 		    default:
 		    	return parent::get_native($attr);
 		}
 	}
 	
-	function getFilePath($attribute)
+	function getFilePath( $attribute = '' )
 	{
 		$language = strtolower(getSession()->getLanguageUid());
 		return $this->object->getPath().$language . '/' . $this->get('BackupFileName');

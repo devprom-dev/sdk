@@ -5,22 +5,22 @@ class WikiFileIterator extends OrderedIterator
  	function getFileLink() 
  	{
  	    if ( $this->isImage('Content') ) {
-            return '<a class="image_attach" data-fancybox="gallery" href="'.$this->getFileUrl().'&.png" ' . '>'.$this->getFileName('Content').'</a>';
+            return '<a class="image_attach" data-fancybox="gallery" href="'.$this->getFileUrl().'" ' . '>'.$this->getFileName('Content').'</a>';
         }
         else {
-            return '<a class="file_attach" href="'.$this->getFileUrl().'&.png" ' . '>'.$this->getFileName('Content').'</a>';
+            return '<a class="file_attach" target="_blank" href="'.$this->getFileUrl().'" ' . '>'.$this->getFileName('Content').'</a>';
         }
  	}
  	
  	function getDisplayName() 
  	{
-        $modified = getSession()->getLanguage()->getDateFormattedShort($this->get('RecordModified'));
+        $modified = $this->getDateFormattedShort('RecordModified');
         return $this->getFileLink().' ('.$modified.', '.$this->getFileSizeKb('Content').' '.translate('Kb').')';
  	}
 
     function getFileInfo()
     {
-        $modified = getSession()->getLanguage()->getDateFormattedShort($this->get('RecordModified'));
+        $modified = $this->getDateFormattedShort('RecordModified');
         return $modified.', '.$this->getFileSizeKb('Content').' '.translate('Kb');
     }
 

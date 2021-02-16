@@ -23,14 +23,6 @@ class TaskConvertToIssueWebMethod extends WebMethod
  		return text(2228);
  	}
 
- 	function getJSCall( $parms = array() ) {
-		return parent::getJSCall(
-			array (
-				'Task' => $parms['Task']
-			)
-		);
- 	}
- 	
 	function url( $taskId ) {
 	    return $this->getJSCall(
 	        array (
@@ -49,7 +41,16 @@ class TaskConvertToIssueWebMethod extends WebMethod
         $task_it = getFactory()->getObject('Task')->getExact(TextUtils::parseIds($_REQUEST['Task']));
         if ( $task_it->getId() == '' ) throw new Exception('Unknown task given');
 
-        $service = new TaskConvertToIssueService(getFactory());
+        $targetClass = $_REQUEST['targetClass'];
+        if ( $targetClass != '' ) {
+            $targetClass = getFactory()->getClass($targetClass);
+            if ( !class_exists($targetClass) ) throw new Exception('Unknown class given');
+        }
+        else {
+            $targetClass = getSession()->IsRDD() ? 'Issue' : 'Request';
+        }
+
+        $service = new TaskConvertToIssueService(getFactory(), $targetClass);
         $request_it = $service->convert($task_it);
 
         if ( $request_it->count() == 1 ) {

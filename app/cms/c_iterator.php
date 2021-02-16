@@ -168,12 +168,12 @@ class IteratorBase
 			    $this->moveToPos( array_shift(array_keys($result)) );
 			}
 		}
+		return $this;
 	}
 
 	function moveToId( $value )
 	{
 		$this->moveTo( $this->id_field, $value );
-		
 		return $this;
 	}
 
@@ -204,26 +204,10 @@ class IteratorBase
 
 	function getHtml( $attribute )	
 	{
-		return $this->getHtmlValue( $this->get( $attribute ) );
+        $text = preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $this->get( $attribute ) );
+		return $text;
 	}
 	
-	static function getHtmlValue( $text )	
-	{
-		global $shrink_length;
-		
-		$shrink_length = 30;
-
-		$text = preg_replace('/&quot;/', '"', $text);
-		$text = preg_replace_callback(TextUtils::REGEX_SHRINK, array(TextUtils::class, 'shrinkLongUrl'), $text);
-        $text = preg_replace_callback('/\[url=([^\]]+)\s+text=([^\]]+)]/im', iterator_url_callback, $text);
-		$text = preg_replace_callback('/\[url=([^\]]+)]/im', iterator_url_callback, $text);
-        $text = preg_replace_callback('/(^|[^\w\.\,\:\;\/\#">]+)(\[?[A-Z]{1}-[0-9]+\]?)([\s]*|$)/mi', iterator_uid_callback, $text);
-		$text = preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $text );
-		$text = TextUtils::breakLongWords($text);
-
-		return nl2br($text);
-	}
-
 	function getHtmlDecoded( $attribute ) {
 		return \TextUtils::decodeHtml($this->get_native($attribute));
 	}
@@ -261,18 +245,6 @@ class IteratorBase
 	    {
 	        return $this->rs;
 	    }
-	}
-
-	function getSubset( $key, $value )
-	{
-		$data = array();
-		$this->moveTo( $key, $value );
-		while( $this->data[$key] == $value && !$this->end() )
-		{
-			$data[] = $this->data;
-			$this->moveNext();
-		}
-		return $data;
 	}
 
 	function getResource()
@@ -424,7 +396,7 @@ class IteratorBase
 	    return $this->object->getDisplayName();
     }
 
-	function getDisplayName() 
+	function  getDisplayName()
 	{
 		$caption = $this->get("Caption");
 		
@@ -437,21 +409,13 @@ class IteratorBase
         return $prefix . $this->getDisplayName();
     }
 
-	function getDisplayNameHtmlDecoded() 
-	{
-		$caption = $this->get("Caption");
-		if($caption != '') return translate($this->getHtmlDecoded("Caption"));
-		
-		return $this->getHtmlDecoded(2);
-	}
+    function getDisplayNameSearch( $prefix = '' ) {
+        return $prefix . $this->getDisplayName();
+    }
 
 	function getDescription() {
 		if($this->get("Description") != '') return $this->get("Description");
 		return $this->get(3);
-	}
-	
-	function hasImage( $attribute ) {
-		return $this->getImageMime( $attribute ) != '';
 	}
 	
 	function isImage( $attribute ) {
@@ -463,27 +427,11 @@ class IteratorBase
 		return $this->get($attribute.'Mime');
 	}
 
-	function getImage($attribute)	{
-		return $this->object->fs_image->readFile( $attribute, $this );
-	}
-
-	function getImageName($attribute) {
-		return $this->object->fs_image->getFileName( $attribute, $this );
-	}
-	
 	function getFileMime( $attribute )	{
 		return $this->get($attribute.'Mime');
 	}
 
-	function getFile($attribute) {
-		return $this->object->fs_file->readFile( $attribute, $this );
-	}
-
-	function getFileCheckSum($attribute) {
-		return $this->object->fs_file->getCheckSum( $attribute, $this );
-	}
-
-	function getFileSizeKb($attribute) 
+	function getFileSizeKb($attribute)
 	{
 		$path = $this->getFilePath($attribute);
 		if ( !file_exists($path) ) return 0;
@@ -510,42 +458,44 @@ class IteratorBase
 	function getFileUrl() 
 	{
 		if ( $this->get('ProjectCodeName') != "" ) {
-			return '/file/'.$this->object->getClassName().'/'.$this->get('ProjectCodeName').'/'.$this->getId();
+			return \EnvironmentSettings::getServerUrl() .
+                '/file/'.$this->object->getClassName().'/'.$this->get('ProjectCodeName').'/'.$this->getId();
 		}
 		else {
-			return '/file/'.$this->object->getClassName().'/'.$this->getId();
+			return \EnvironmentSettings::getServerUrl() .
+                '/file/'.$this->object->getClassName().'/'.$this->getId();
 		}
-	}
-	
-	function copyFile($attribute, $dest_path) {
-		return $this->object->fs_file->copyFileOnPath( $attribute, $this, $dest_path);
 	}
 	
 	function getCreated() {
 		return $this->data['RecordCreated'];
 	}
 
-	function getCreatedDate() {
-		return $this->getDateFormat( 'RecordCreated' );
+	function getDateFormatted($attribute)
+	{
+		return getSession()->getLanguage()->getDateFormatted(
+            $this->object->getAttributeType($attribute) == 'date'
+                ? $this->get_native($attribute)
+                : SystemDateTime::convertToClientTime($this->get_native($attribute))
+        );
 	}
 
-	function getCreatedDateTime() {
-		return $this->getDateTimeFormat( 'RecordCreated' );
-	}
-	
-	function getDateFormat($attribute)
+	function getDateFormattedShort($attribute)
 	{
-		return getSession()->getLanguage()->getDateFormatted( $this->get_native($attribute) );
-	}
-
-	function getDateFormatShort($attribute)
-	{
-		return getSession()->getLanguage()->getDateFormattedShort( $this->get_native($attribute) );
+		return getSession()->getLanguage()->getDateFormattedShort(
+            $this->object->getAttributeType($attribute) == 'date'
+                ? $this->get_native($attribute)
+                : SystemDateTime::convertToClientTime($this->get_native($attribute))
+        );
 	}
 
 	function getDateFormatUser($attribute, $format)
 	{
-		return getSession()->getLanguage()->getDateUserFormatted(	$this->get_native($attribute), $format );
+		return getSession()->getLanguage()->getDateUserFormatted(
+		    $this->object->getAttributeType($attribute) == 'date'
+                ? $this->get_native($attribute)
+                : SystemDateTime::convertToClientTime($this->get_native($attribute)),
+            $format );
 	}
 
 	function getDateTimeFormat($attribute) 
@@ -564,14 +514,11 @@ class IteratorBase
 	
 	function getRef( $attribute, $object = null ) 
 	{
-		if ( is_null($object) )
-		{
+		if ( is_null($object) ) {
 		    $object = $this->object->getAttributeObject( $attribute );
-		    if ( is_null($object) ) return $this->object->createCachedIterator(array());
+		    if ( is_null($object) ) return $this->object->getEmptyIterator();
 		}
-		
-	    $object->resetFilters();
-		return $object->getExact(preg_split('/,/', $this->data[$attribute]));
+		return $object->getRegistry()->QueryById($this->data[$attribute]);
 	}
 	
 	function modify( $parms ) 
@@ -652,7 +599,7 @@ class IteratorBase
 	}
 	
 	function getCommentsUrl() {
-		return $this->getViewUrl().'#comments';
+		return $this->getUidUrl().'#comments';
 	}
 	
 	function getSearchName()
@@ -732,7 +679,7 @@ class IteratorBase
  		return $s;
  	}   
 
- 	function serialize2Xml( $skipTypes = array() )
+ 	function serialize2Xml( $skipTypes = array(), $useAttributes = array() )
  	{
  		$this->moveFirst();
 		$xml = '';
@@ -745,7 +692,9 @@ class IteratorBase
 
 			$xml .= '<object id="'.$this->getId().'">';
 			
-			$keys = array_keys($this->object->getAttributes());
+			$keys = count($useAttributes) > 0
+                ? $useAttributes
+                : array_keys($this->object->getAttributes());
 			
 			for( $i = 0; $i < count($keys); $i++ )
 			{
@@ -785,6 +734,7 @@ class IteratorBase
 
 			$xml .= '<attr name="RecordCreated" type="datetime">'.$this->get('RecordCreated').'</attr>';
 			$xml .= '<attr name="RecordModified" type="datetime">'.$this->get('RecordModified').'</attr>';
+            $xml .= '<attr name="VPD" type="char">'.$this->get('VPD').'</attr>';
 			$xml .= '</object>';
 			
 			$this->moveNext();
@@ -816,7 +766,11 @@ class IteratorBase
             $parts = preg_split('/::/', $attribute_path);
 		    
 		    $attribute = $parts[1];
-		    		    
+
+            $class_name = getFactory()->getClass($class_name);
+
+            if ( !class_exists($class_name, false) ) continue;
+
 		    $object = getFactory()->getObject($class_name);
 		    
 		    $object->disableVpd();
@@ -907,42 +861,6 @@ function sharelink_shrinker_callback( $match )
     return '<a target="_blank" href="'.$match[0].'">'.$match[0].'</a>';
 }
 
- /////////////////////////////////////////////////////////////////////////////////////////////////////////////
- function iterator_uid_callback( $match )
- {
- 	$uid = new ObjectUID;
- 	
- 	$object_it = $uid->getObjectIt(trim($match[2], '[]'));
- 	
- 	if ( is_object($object_it) && $object_it->count() > 0 )
- 	{
- 		$result = trim($match[1], '[]');
-		
-		$result .= $uid->getUidIconGlobal( $object_it );
- 		
- 		$result .= trim($match[3], '[]');
- 		
- 		return $result;
- 	}
- 	else
- 	{
- 		return $match[0];
- 	}
- }
- 
- /////////////////////////////////////////////////////////////////////////////////////////////////////////////
- function iterator_url_callback( $match )
- {
-     if ( strpos($match[1], '/') == 0 )
-     {
-         $match[1] = _getServerUrl().$match[1];
-     }
-     
-     $text = $match[2] != '' ? $match[2] : $match[1];
-       
-     return '<a target="_blank" href="'.$match[1].'">'.$text.'</a>';
- }
- 
  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
  function iterator_text_callback( $match )
  {

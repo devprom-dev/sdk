@@ -3,8 +3,8 @@
 <?php $file = array_pop($files); ?>
 
 <div class="btn-group">
-	<a class="<?=$file['type']?>_attach" href="<?=$file['url']?>&.png" title="<?=$file['name']?> (<?=$file['size']?> KB)">
-		<img src="/images/<?=($file['type'] == 'image' ? 'image' : 'attach')?>.png">
+	<a class="<?=$file['type']?>_attach" href="<?=$file['url']?>" title="<?=$file['name']?> (<?=$file['size']?> KB)">
+		<img src="/images/<?=($file['type'] == 'image' ? 'image.png' : 'attach.png')?>">
 	</a>
 </div>
 
@@ -19,7 +19,7 @@ foreach( $files as $file )
 {
 	$actions[] = array(
 		'name' => $file['name'].' ('.$file['size'].'KB)',
-		'url' => $file['type'] == 'image' ? $file['url'].'&.png' : $file['url'],
+		'url' => $file['type'] == 'image' ? $file['url'] : $file['url'],
 		'class' => $file['type'] == 'image' ? "image_attach" : ""
 	);
 }
@@ -28,7 +28,7 @@ foreach( $files as $file )
 
 <?php if ( count($actions) > 0 ) { ?>
 <div class="btn-group">
-	<a class="dropdown-toggle" data-toggle="dropdown" href="#" data-placement="right" data-target="#attachments<?=$id?>">
+	<a class="dropdown-toggle" data-toggle="dropdown" href="" data-placement="right" data-target="#attachments<?=$id?>">
 		<img src="/images/image.png">
 	</a>
 </div>

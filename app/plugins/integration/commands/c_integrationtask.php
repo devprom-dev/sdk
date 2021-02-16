@@ -14,13 +14,18 @@ class IntegrationTask extends TaskCommand
 		$parameters = $this->getData()->getParameters();
 		$itemsToProcess = $parameters['limit'] > 0 ? $parameters['limit'] : 60;
 
-		$integration_it = getFactory()->getObject('Integration')->getRegistry()->Query(
-			array (
-				new FilterInPredicate($this->getChunk()),
-                new FilterAttributePredicate('IsActive', 'Y'),
-                new EntityProjectPersister()
-			)
-		);
+		$queryParms = array (
+            new FilterAttributePredicate('IsActive', 'Y'),
+            new ProjectActiveVpdPredicate(),
+            new EntityProjectPersister()
+        );
+
+		$chunk = $this->getChunk();
+		if ( count($chunk) > 0 ) {
+            $queryParms[] = new FilterInPredicate($chunk);
+        }
+
+		$integration_it = getFactory()->getObject('Integration')->getRegistry()->Query($queryParms);
 		while( !$integration_it->end() )
 		{
             if ( $integration_it->get('Project') == '' ) {

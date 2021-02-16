@@ -5,6 +5,7 @@ class ModelProjectValidator extends ModelValidatorInstance
 {
 	public function validate( Metaobject $object, array & $parms )
 	{
+	    if ( !array_key_exists('Project', $parms) ) return "";
 		if ( !$object->IsAttributeRequired('Project') ) return "";
 		if ( $parms['Project'] < 1 ) return text(2).': '.translate($object->getAttributeUserName('Project'));
 

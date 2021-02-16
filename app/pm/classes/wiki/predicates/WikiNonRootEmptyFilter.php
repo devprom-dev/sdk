@@ -2,9 +2,8 @@
 
 class WikiNonRootEmptyFilter extends FilterPredicate
 {
- 	function WikiNonRootEmptyFilter()
- 	{
- 		parent::FilterPredicate('root');
+ 	function WikiNonRootEmptyFilter() {
+ 		parent::__construct('root');
  	}
  	
  	function _predicate( $filter )

@@ -16,7 +16,10 @@ class RequestModelTest extends DevpromDummyTestCase
         
         // entity mocks
         
-        $this->entity = $this->getMock('Request', array('getTerminalStates','getNonTerminalStates'));
+        $this->entity = $this->getMockBuilder(Request::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getTerminalStates','getNonTerminalStates'])
+            ->getMock();
 
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
@@ -36,7 +39,7 @@ class RequestModelTest extends DevpromDummyTestCase
 
     function testFinishDateChanged()
     {
-        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
+        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("FinishDate = NOW()")
         );
 
@@ -60,7 +63,7 @@ class RequestModelTest extends DevpromDummyTestCase
 
     function testFinishDateEmpty()
     {
-        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
+        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("FinishDate = NULL")
         );
     	
@@ -110,7 +113,7 @@ class RequestModelTest extends DevpromDummyTestCase
 
     function testFinishDateReset()
     {
-        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
+        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("FinishDate = NULL")
         );
 

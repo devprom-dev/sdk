@@ -1,7 +1,5 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/views/issues/FieldIssueInverseTrace.php';
-
 include "FieldQuestionTagTrace.php";
 
 class QuestionForm extends PMPageForm
@@ -27,32 +25,10 @@ class QuestionForm extends PMPageForm
     {
    		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_ChangeRequest'));
    		if ( $method->hasAccess() ) {
-   			$method->setRedirectUrl('donothing');
-   			$this->create_issue_method = $method; 
+   			$this->create_issue_method = $method;
     	}
     }
     
-	function draw()
-	{
-		echo '<div class="line">';
-			parent::draw();
-		echo '</div>';
-
-		$object_it = $this->getObjectIt();
-		
-		if ( isset($object_it) )
-		{
-			echo '<div style="padding:4px;"><b>';
-				echo_lang('Комментарии');
-			echo '</b></div>';
-
-			echo '<div style="padding:10px 0 0 4px;">';
-				$comment_form = new CommentList( $object_it );
-				$comment_form->draw();
-			echo '</div>';
-		}
-	}
-
 	function createFieldObject( $name )
 	{
 		switch ( $name )
@@ -75,15 +51,6 @@ class QuestionForm extends PMPageForm
 		}
 	}
 
-	function IsAttributeEditable( $attr ) {
-        switch( $attr ) {
-            case 'Content':
-                return $this->getEditMode();
-            default:
-                return parent::IsAttributeEditable($attr);
-        }
-    }
-
 	function getNewRelatedActions()
 	{
 		$actions = parent::getNewRelatedActions();
@@ -102,4 +69,9 @@ class QuestionForm extends PMPageForm
 	
 		return $actions;	
 	}
+
+	function getShortAttributes()
+    {
+        return array('Owner', 'Tags');
+    }
 }

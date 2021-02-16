@@ -1,6 +1,6 @@
 <?php
 
-class TaskTypeBaseIterator extends OrderedIterator
+class TaskTypeBaseIterator extends CacheableIterator
 {
  	function get( $attr )
  	{

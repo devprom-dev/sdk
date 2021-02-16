@@ -1,10 +1,9 @@
 <?php
-
 include_once "ObjectSQLPersister.php";
 
 class ObjectRecordAgePersister extends ObjectSQLPersister
 {
- 	function getSelectColumns()
+ 	function getSelectColumns($alias)
  	{
  		$columns = array();
  		$alias = $alias != '' ? $alias."." : "";

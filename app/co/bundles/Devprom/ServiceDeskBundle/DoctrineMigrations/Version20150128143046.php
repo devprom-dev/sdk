@@ -12,10 +12,8 @@ class Version20150128143046 extends AbstractMigration
 {
     public function up(Schema $schema)
     {
-        try {
+        if ($schema->getTable('cms_ExternalUser')->hasIndex('UNIQ_59F2E2C792FC23A8')) {
             $this->addSql('DROP INDEX UNIQ_59F2E2C792FC23A8 ON cms_ExternalUser');
-        }
-        catch(Exception $e) {
         }
     }
 

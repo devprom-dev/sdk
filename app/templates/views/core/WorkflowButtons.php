@@ -5,7 +5,7 @@
 
     <? if ( count($actions) > 0 ) { ?>
     <div class="btn-group pull-left">
-        <a class="btn dropdown-toggle btn-sm btn-warning" href="#" data-toggle="dropdown">
+        <a class="btn dropdown-toggle btn-sm btn-warning" href="" data-toggle="dropdown">
             <i class="icon-hand-right"></i> <?=translate("Состояние")?>
             <span class="caret"></span>
         </a>

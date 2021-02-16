@@ -36,29 +36,16 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 			}
  	    }
 
-		// show attributes visible on the first state
-		$attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($object);
-		while( !$attribute_it->end() )
-		{
-			if ( $attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y' ) {
-				$object->setAttributeVisible( $attribute_it->get('ReferenceName'), true );
-				$object->setAttributeRequired(
-					$attribute_it->get('ReferenceName'), $attribute_it->get('IsRequired') == 'Y'
-				);
-                $visibleAttributes[] = $attribute_it->get('ReferenceName');
-			}
-            if ( $attribute_it->get('IsMainTab') == 'Y' ) {
-                $groups = $object->getAttributeGroups($attribute_it->get('ReferenceName'));
-                if ( is_array($groups) ) {
-                    $groups = array_diff($groups, array('additional','deadlines','trace','sla'));
-                    $object->setAttributeGroups($attribute_it->get('ReferenceName'),$groups);
-                }
-            }
-			$attribute_it->moveNext();
-		}
-
+		// use attributes settings for the first state
+		$firstStateAttributeIt = WorkflowScheme::Instance()->getStateAttributeIt($object);
 		// apply attributes settings for the given state
-		$attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($object, $this->state_it->get('ReferenceName'));
+        $stateAttributeIt = WorkflowScheme::Instance()->getStateAttributeIt($object, $this->state_it->get('ReferenceName'));
+
+        $attribute_it = $firstStateAttributeIt->object->createCachedIterator(
+            array_values(array_merge(
+                $firstStateAttributeIt->getRowset(), $stateAttributeIt->getRowset()
+            ))
+        );
 		while( !$attribute_it->end() )
 		{
 			$object->setAttributeRequired( 
@@ -68,12 +55,14 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 					$attribute_it->get('ReferenceName'), 
 					$attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y'
 				);
-            $object->setAttributeEditable(
-                $attribute_it->get('ReferenceName'), $attribute_it->get('IsReadonly') != 'Y'
-            );
-
+            if ( $object->getAttributeEditable($attribute_it->get('ReferenceName')) ) {
+                $object->setAttributeEditable(
+                    $attribute_it->get('ReferenceName'), $attribute_it->get('IsReadonly') != 'Y'
+                );
+            }
             if ( $attribute_it->get('IsVisible') == 'Y' ) {
                 $visibleAttributes[] = $attribute_it->get('ReferenceName');
+                $object->resetAttributeGroup($attribute_it->get('ReferenceName'), 'form-column-skipped');
             }
 
             if ( $attribute_it->get('IsMainTab') == 'Y' ) {
@@ -83,6 +72,10 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
                     $object->setAttributeGroups($attribute_it->get('ReferenceName'),$groups);
                 }
             }
+            if ( $attribute_it->get('IsVisibleOnEdit') == 'Y' ) {
+                $object->addAttributeGroup($attribute_it->get('ReferenceName'), 'form-column-skipped');
+            }
+
 			$attribute_it->moveNext();
 		}
 		$object->addAttribute('TransitionComment', 'WYSIWYG', text(1197), false, false,

@@ -12,8 +12,10 @@ class AttachmentUnifiedRegistry extends ObjectRegistrySQL
  	{
 		$sql = "
 			SELECT t.pm_AttachmentId,
+			       t.pm_AttachmentId SelfId,
 				   t.RecordCreated,
 				   t.RecordModified,
+				   t.RecordVersion,
 				   t.VPD,
 				   t.OrderNum,
 				   t.FileMime,
@@ -35,9 +37,11 @@ class AttachmentUnifiedRegistry extends ObjectRegistrySQL
                 continue;
             }
             $sql .= " UNION
-                    SELECT t.WikiPageFileId,
+                    SELECT 1000000 + t.WikiPageFileId,
+			               t.WikiPageFileId,
                            t.RecordCreated,
                            t.RecordModified,
+                           t.RecordVersion,
                            t.VPD,
                            t.OrderNum,
                            t.ContentMime,

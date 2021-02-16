@@ -2,7 +2,7 @@
 
 class SearchList extends PMStaticPageList
 {
-    function getColumns() {
+    function getColumnFields() {
         return array('UID', 'Caption', 'ReferenceName');
     }
 
@@ -65,7 +65,7 @@ class SearchList extends PMStaticPageList
     {
         if ( !getSession()->getProjectIt()->IsPortfolio() ) {
             $portfolios = getFactory()->getObject('Portfolio')->getAll()->fieldToArray('CodeName');
-            $searchUrl = 'search.php?search-keywords=' . SanitizeUrl::parseUrl($_REQUEST['search-keywords']);
+            $searchUrl = 'search.php?search=' . SanitizeUrl::parseUrl($_REQUEST['search']);
             if (in_array('all', $portfolios)) {
                 return str_replace('%1', '/pm/all/' . $searchUrl, text(2308));
             }

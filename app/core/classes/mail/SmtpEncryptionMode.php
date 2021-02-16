@@ -1,16 +1,17 @@
 <?php
-
 include "SmtpEncryptionModeRegistry.php";
 
 class SmtpEncryptionMode extends MetaobjectCacheable
 {
-    function __construct()
-    {
-        parent::__construct('Priority', new SmtpEncryptionModeRegistry($this));
+    function __construct() {
+        parent::__construct('entity', new SmtpEncryptionModeRegistry($this));
     }
     
-    function getDisplayName()
-    {
+    function getDisplayName() {
         return translate('Шифрование');
+    }
+
+    function IsDictionary() {
+        return true;
     }
 }

@@ -4,7 +4,7 @@ abstract class CustomizableObjectBuilder
 {
     protected $session;
     
-    function __construct( PMSession & $session )
+    function __construct( PMSession $session )
     {
         $this->session = $session;
     }

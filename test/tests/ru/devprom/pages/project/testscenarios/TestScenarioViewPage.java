@@ -9,6 +9,7 @@ import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import ru.devprom.pages.project.SDLCPojectPageBase;
+import ru.devprom.pages.project.requirements.RequirementAddToBaselinePage;
 import ru.devprom.pages.project.requirements.RequirementEditPage;
 
 public class TestScenarioViewPage extends SDLCPojectPageBase {
@@ -24,6 +25,9 @@ public class TestScenarioViewPage extends SDLCPojectPageBase {
 	
 	@FindBy(xpath = "//a[@id='new-baseline']")
 	protected WebElement addToBaselineBtn;
+
+	@FindBy(xpath = "//a[@id='new-branch']")
+	protected WebElement makeBranchBtn;
 
 	@FindBy(xpath = "//a[@id='modify']")
 	protected WebElement editBtn;
@@ -57,15 +61,22 @@ public class TestScenarioViewPage extends SDLCPojectPageBase {
 		return new TestScenarioEditPage(driver);
 	}
 
-	public TestScenarioAddToBaselinePage addToBaseline() {
-		 actionsBtn.click();
-		 (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(addToBaselineBtn));
-		 addToBaselineBtn.click();
+	public TestScenarioAddToBaselinePage addToBaseline()
+	{
+		clickOnInvisibleElement(addToBaselineBtn);
+		waitForDialog();
 		return new TestScenarioAddToBaselinePage(driver);
 	}
-	
+
+	public TestScenarioAddToBaselinePage makeBranch()
+	{
+		clickOnInvisibleElement(makeBranchBtn);
+		waitForDialog();
+		return new TestScenarioAddToBaselinePage(driver);
+	}
+
 	public boolean isChildScenarioPresent(String name) {
-		return !driver.findElements(By.xpath("//td[@id='content']//div[contains(.,'"+name+"')]")).isEmpty();
+		return !driver.findElements(By.xpath("//span[contains(@class,'fancytree-title') and contains(.,'"+name+"')]")).isEmpty();
 	}
 
     public void addContent(String newContent) {
@@ -74,7 +85,18 @@ public class TestScenarioViewPage extends SDLCPojectPageBase {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent') and @objectclass='TestScenario']")).sendKeys(newContent);
+		driver.findElement(By.xpath("//div[starts-with(@id,'WikiPageContent') and @objectclass='TestScenario']")).sendKeys(newContent);
     }
-	
+
+    public TestScenarioViewPage gotoPage(String name ) {
+		clickOnInvisibleElement(
+				driver.findElement(By.xpath("//span[contains(@class,'fancytree-title') and contains(.,'"+name+"')]"))
+		);
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return this;
+	}
 }

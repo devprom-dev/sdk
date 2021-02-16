@@ -13,14 +13,25 @@ class QuestionTable extends PMPageTable
 	function getFilters()
 	{
 		$filters = array(
-			new FilterStateMethod( $this->getObject() ),
+			$this->buildStateFilter(),
 			new FilterStateTransitionMethod( $this->getObject() ),
 			$this->buildTagsFilter(),
-			new FilterUserAuthorWebMethod()
+			$this->buildAuthorFilter()
 		);
 		
 		return array_merge( $filters, parent::getFilters() );
 	}
+
+	protected function buildAuthorFilter() {
+        $filter = new FilterObjectMethod(getFactory()->getObject('ProjectUser'), translate('Автор'), 'author');
+        return $filter;
+    }
+
+    protected function buildStateFilter() {
+        $filter = new FilterStateMethod( $this->getObject() );
+        $filter->setDefaultValue('none,N,I');
+        return $filter;
+    }
 
     protected function buildTagsFilter()
     {
@@ -30,11 +41,6 @@ class QuestionTable extends PMPageTable
         return $filter;
     }
 
-	function getFiltersDefault()
-	{
-		return array('author', 'state', 'tag');
-	}
-	
 	function getSortDefault( $sort_parm = 'sort' )
 	{
 		if ( $sort_parm == 'sort' )
@@ -44,4 +50,12 @@ class QuestionTable extends PMPageTable
 
 		return parent::getSortDefault($sort_parm);
 	}
+
+    protected function getFamilyModules( $module )
+    {
+        return array(
+            'whatsnew',
+            'project-log'
+        );
+    }
 }

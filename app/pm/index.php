@@ -1,22 +1,12 @@
 <?php
 
  include('header.php');
- include('methods/c_user_methods.php');
- include('methods/c_date_methods.php');
- 
+
  $mode = $_REQUEST['mode'];
  
  $blog_id = $_REQUEST['blog_id'];
  
- if( $mode == 'blog' ) 
- {
- 	include('views/communications/BlogPage.php');
- 	
- 	$page = new BlogPage;
-
- 	$page->render();
- }
- elseif( $mode == '' || $mode == 'log' ) 
+ if( $mode == '' || $mode == 'log' )
  {
  	include('views/communications/ProjectLogPage.php');
 

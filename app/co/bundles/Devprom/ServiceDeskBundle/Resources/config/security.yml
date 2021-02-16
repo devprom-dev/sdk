@@ -2,18 +2,20 @@ fos_user:
     db_driver: orm
     firewall_name: main
     user_class: Devprom\ServiceDeskBundle\Entity\User
+    from_email:
+        address: "%adminEmail%"
+        sender_name: "%supportName%"
     service:
         mailer: servicedesk_mailer
     registration:
+        confirmation:
+            enabled: true
+            template: DevpromServiceDeskBundle:Registration:confirmation.html.twig
         form:
-            type: servicedesk_registration_form
             validation_groups:  [ServiceDeskRegistration, Default]
     resetting:
         email:
             template: DevpromServiceDeskBundle:Resetting:email.html.twig
-            from_email:
-                address: "%adminEmail%"
-                sender_name: "%supportName%"
 
 security:
     encoders:
@@ -33,13 +35,13 @@ security:
                 authenticator: apikey_authenticator
             form_login:
                 provider: fos_userbundle
-                always_use_default_target_path: true
                 default_target_path: /issues
+                always_use_default_target_path: true
             logout:       true
             anonymous:    true
             http_basic:   false
             remember_me:
-                key:      servicedesk_registration_form
+                secret:   servicedesk_registration_form
                 lifetime: 31536000
                 path:     /
                 always_remember_me: true

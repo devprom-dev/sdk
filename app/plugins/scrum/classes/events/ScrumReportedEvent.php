@@ -12,7 +12,6 @@ class ScrumReportedEvent extends SystemTriggersBase
 
 	    $render_service = new RenderService(getSession());
    		$mail = new \HtmlMailbox;
-   		$mail->setFromUser(getSession()->getUserIt());
 
 		$emails = defined('PERMISSIONS_ENABLED')
 			? getFactory()->getObject('Participant')->getAll()->fieldToArray('Email')

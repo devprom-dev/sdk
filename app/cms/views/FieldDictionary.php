@@ -10,6 +10,8 @@ class FieldDictionary extends Field
  	private $null_title = '';
  	private $objectIt = null;
  	private $titleRequired = '';
+ 	private $multiple = false;
+ 	private $attributes = array();
  	
 	function FieldDictionary( $object )
 	{
@@ -27,7 +29,7 @@ class FieldDictionary extends Field
 		$this->displayhelp = is_object($this->object) && 
 			(is_a($this->object, 'Metaobject') || is_subclass_of($this->object, 'Metaobject')) && 
 			$this->object->getAttributeType('Description') != '' &&
-			$this->object->entity->get('IsDictionary') == 'Y';
+			$this->object->IsDictionary();
 		
 		parent::Field();
 	}
@@ -49,7 +51,15 @@ class FieldDictionary extends Field
     function setTitleRequired( $value ) {
 	    $this->titleRequired = $value;
     }
-	
+
+    function setMultiple( $value ) {
+	    $this->multiple = $value;
+    }
+
+    function getMultiple() {
+	    return $this->multiple;
+    }
+
 	function translateOptions( $translate = true )
 	{
 		$this->translate_options = $translate;
@@ -80,19 +90,22 @@ class FieldDictionary extends Field
 	{
 	    return !$this->getEditMode() || parent::readOnly();
 	}
-	
+
+	function setAttributes( $array ) {
+	    $this->attributes = $array;
+    }
+
 	function getText()
 	{
 		$value = $this->getValue();
-	    
 		if ( $value == '' ) return '';
-		
-		$options = $this->getOptions();
-	    
-	    foreach( $options as $option )
-	    {
-	        if ( $value == $option['value'] ) return $option['caption'];
+
+		$items = \TextUtils::parseItems($value);
+        $title = array();
+	    foreach( $this->getOptions() as $option ) {
+	        if ( in_array($option['value'], $items) ) $title[] = $option['caption'];
 	    }
+	    if ( count($title) > 0 ) return join(', ', $title);
 
 	    $valueIt = $this->object->getExact($this->getValue());
 	    if ( $valueIt->getId() == '' ) {
@@ -146,11 +159,8 @@ class FieldDictionary extends Field
 	{
 		global $tabindex;
 
-		if ( $this->readOnly() )
-		{
-			echo '<input type="hidden" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'">';
-			echo '<input class="input-block-level" type="text" disabled value="'.$this->getText().'">';
-			
+		if ( $this->readOnly() ) {
+            echo $this->getText();
 			return;
 		}
 
@@ -163,8 +173,19 @@ class FieldDictionary extends Field
 		foreach( $this->options as $option )
 		{
 		    if ( $option['value'] == '' ) $hasNullOption = true;
-			if ( !array_key_exists($option['group'],$groups) ) $option['group'] = ''; 
-			$groups[$option['group']]['items'][] = $option;
+
+		    $groupKey = $option['group'];
+			if ( !array_key_exists($groupKey,$groups) ) $groupKey = '';
+            if ( !array_key_exists('items', $groups[$groupKey]) ) {
+                $groups[$groupKey] = array_merge(
+                    $groups[$groupKey],
+                    array(
+                        'items' => array()
+                    )
+                );
+            }
+
+		    $groups[$groupKey]['items'][] = $option;
 		}
 
 		if ( $this->titleRequired != '' ) {
@@ -173,28 +194,37 @@ class FieldDictionary extends Field
             echo '</div>';
         }
 		?>
-		<select class="input-block-level" tabindex="<? echo $tab_index ?>" onchange="<?php echo $this->script ?>" style="<? echo $this->style ?>" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" <?=($this->getRequired() ? 'required' : '')?> default="<?=htmlentities($this->getDefault())?>">
-		<?php if ( $this->null_option && !$hasNullOption ) { ?>
+		<select class="dictionary input-block-level"
+                tabindex="<? echo $tab_index ?>"
+                onchange="<?php echo $this->script ?>"
+                style="<? echo $this->style ?>"
+                name="<? echo ($this->getMultiple() ? $this->getName().'[]' : $this->getName() ); ?>"
+                id="<? echo $this->getId(); ?>" <?=($this->getRequired() ? 'required' : '')?> <?=($this->getMultiple() ? 'multiple' : '')?>
+                default="<?=htmlentities($this->getDefault())?>"
+                <?=join(' ', $this->attributes)?> >
+
+		<?php if ( !$this->getMultiple() && $this->null_option && !$hasNullOption ) { ?>
 			<option value="" referenceName=""><?=$this->null_title?></option>
 			<?php } ?>
 			<?
 			$valueinlist = false;
+			$values = \TextUtils::parseItems($this->getValue());
 
 			foreach( $groups as $group )
 			{
 				if ( !is_array($group) ) continue;
 				if ( !is_array($group['items']) ) continue;
-				
+
 				if ( $group['label'] != '' ) echo '<optgroup label="'.$group['label'].'">';
 				foreach( $group['items'] as $option )
 				{
-					$selected = ($option['value'] == $this->getValue() && $this->getValue() != '' || count($this->options) == 1 && $this->getRequired()) ? 'selected ' : '';
+					$selected = (in_array($option['value'],$values) || count($values) < 1 && $option['value'] == '' || count($this->options) == 1 && $this->getRequired()) ? 'selected ' : '';
 					
 					?>
 						<option value="<? echo $option['value']; ?>" <? echo $selected; ?> referenceName="<?=$option['referenceName']?>" <?=($option['disabled'] ? 'disabled' : '')?> ><?=$option['caption']?></option>
 					<?
 					
-					if ( $selected || $option['value'] == $this->getValue() )
+					if ( $selected || in_array($option['value'],$values) )
 					{
 						$valueinlist = true;
 					}

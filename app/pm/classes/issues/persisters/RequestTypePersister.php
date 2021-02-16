@@ -23,6 +23,11 @@ class RequestTypePersister extends ObjectSQLPersister
 					)
 			)->getId();
 		}
+		unset($parms['TypeBase']);
 	}
+
+	function IsPersisterImportant() {
+        return true;
+    }
 }
 

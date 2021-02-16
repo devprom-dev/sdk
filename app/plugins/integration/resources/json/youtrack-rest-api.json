@@ -35,7 +35,8 @@
     "ObjectId": "{parentId}",
     "Caption": "text",
     "RecordCreated": "created",
-    "RecordModified": "updated"
+    "RecordModified": "updated",
+    "ExternalAuthor": "authorFullName"
   },
   "ActivityRequest": {
     "url": "/rest/issue/{parent}/timetracking/workitem/{id}",

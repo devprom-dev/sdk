@@ -1,8 +1,6 @@
 <?php
-
 include 'FunctionTraceIterator.php';
 include 'FunctionInversedTraceIterator.php';
-
 include 'predicates/FunctionTraceClassPredicate.php';
 include 'predicates/FunctionTraceObjectPredicate.php';
 
@@ -11,19 +9,19 @@ class FunctionTrace extends Metaobject
  	function FunctionTrace() 
  	{
  		parent::Metaobject('pm_FunctionTrace');
- 		
+
+        foreach( array('ObjectId','ObjectClass','Feature') as $attribute ) {
+            $this->addAttributeGroup($attribute, 'alternative-key');
+        }
+
  		$object_class = $this->getObjectClass();
- 		
- 		if ( $object_class != '' )
- 		{
+ 		if ( $object_class != '' ) {
  		    $this->setAttributeType('ObjectId', 'REF_'.$object_class.'Id');
- 		    
  		    $this->setAttributeRequired('ObjectId', true);
  		}
  	}
  	
- 	function createIterator() 
- 	{
+ 	function createIterator() {
  		return new FunctionTraceIterator( $this );
  	}
 
@@ -31,34 +29,15 @@ class FunctionTrace extends Metaobject
 		return 'Baseline';
 	}
 
- 	function getObjectClass()
- 	{
+ 	function getObjectClass() {
  		return '';
  	}
 
-	function getObjectIt( $function_it )
-	{
-		global $model_factory;
-		
-		$it = $this->getByRefArray( array( 
-			'Feature' => $request_it->getId() 
-		));
-
-		$object = $model_factory->getObject( $this->getObjectClass() );
-		
-        if( $it->count() < 1 ) return $object->getEmptyIterator();
-		
-		return $object->getExact( $it->fieldToArray('ObjectId') );
-	}
-
 	function getFunctionIt( $object_it )
 	{
-		global $model_factory;
-		
 		$it = $this->getByRef('ObjectId', $object_it->getId());
 		
-		$request = $model_factory->getObject('pm_Function');
-		
+		$request = getFactory()->getObject('pm_Function');
         if( $it->count() < 1 ) return $request->getEmptyIterator();
 		
 		return $request->getExact( $it->fieldToArray('Feature') );

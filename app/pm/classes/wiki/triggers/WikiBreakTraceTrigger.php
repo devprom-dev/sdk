@@ -24,7 +24,7 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 	    
 	    while ( !$trace_it->end() )
 	    {
-	        if ( $data['ReintegratedTraceId'] ==  $trace_it->getId() ) {
+	        if ( $data['ReintegratedTargetPageId'] ==  $trace_it->get('TargetPage') ) {
                 $trace_it->moveNext();
                 continue;
             }

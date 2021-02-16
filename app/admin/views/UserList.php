@@ -2,23 +2,16 @@
 
 class UserList extends PageList
 {
-	function getPredicates( $values )
-	{
-		return array(
-    		new UserAccessPredicate( $values['state'] ),
-    		new UserSystemRolePredicate( $values['role'] )
-		);
-	}
-	
-	function setupColumns()
-	{
-		parent::setupColumns();
-		
-		foreach( $this->object->getAttributes() as $attribute => $data )
-		{
-			$this->object->setAttributeVisible( $attribute, in_array($attribute, array('Caption', 'Description', 'Email', 'Photo', 'GroupId')) );
-		}
-	}
+	function extendModel()
+    {
+        parent::extendModel();
+
+        foreach( $this->getObject()->getAttributes() as $attribute => $data ) {
+            $this->getObject()->setAttributeVisible( $attribute,
+                in_array($attribute, array('Caption', 'Description', 'Email', 'Photo', 'GroupId'))
+            );
+        }
+    }
 
 	function drawCell( $object_it, $attr )
 	{

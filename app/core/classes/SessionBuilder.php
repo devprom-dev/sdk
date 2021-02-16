@@ -16,7 +16,8 @@ class SessionBuilder
         static::$nativeSession = new Session(
             new NativeSessionStorage(
                 array(
-                    "name" => "devprom-app"
+                    "name" => "devprom-app",
+                    "cookie_httponly" => "1"
                 ),
                 new NullSessionHandler()
             )
@@ -41,7 +42,7 @@ class SessionBuilder
         $nativeSessionId = md5(get_class($this).serialize($parms).self::$nativeSession->getId());
         if ( self::$nativeSession->getId() != "" ) {
             $session = getFactory()->getCacheService()->get($nativeSessionId, self::CACHE_KEY);
-            if ( is_object($session) ) return $session;
+            if ( is_object($session) && $session->getUserIt()->getId() != '' ) return $session;
         }
 
         $session = $this->buildSession($parms, $cacheService);
@@ -65,8 +66,10 @@ class SessionBuilder
             $session->close();
             $this->invalidate($session->getId());
         }
-        setcookie('devprom', '', 0, '/', $_SERVER['HTTP_HOST'] );
-        setcookie('devprom', '', 0, '/' );
+        setcookie('devprom', '', 0, '/', $_SERVER['HTTP_HOST'], false, true );
+        setcookie('devprom', '', 0, '/', '', false, true );
+        setcookie('session', '', 0, '/', $_SERVER['HTTP_HOST'], false, true );
+        setcookie('session', '', 0, '/', '', false, true );
         $session = null;
     }
 

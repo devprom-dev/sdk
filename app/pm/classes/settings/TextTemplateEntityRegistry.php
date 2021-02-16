@@ -34,14 +34,10 @@ class TextTemplateEntityRegistry extends ObjectRegistrySQL
             'HelpPage' => 'Content'
         );
 
-        if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD )
+        if ( getSession()->IsRDD() )
         {
-            if ( class_exists('Issue') ) {
-                $values['Issue'] = 'Description';
-            }
-            if ( class_exists('Increment') ) {
-                $values['Increment'] = 'Description';
-            }
+            $values['Issue'] = 'Description';
+            $values['Increment'] = 'Description';
         }
         else {
             $values['Request'] = 'Description';

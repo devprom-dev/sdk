@@ -9,7 +9,6 @@ include "predicates/FilterPredicate.php";
 include "predicates/FilterAdditionalObjectsPredicate.php";
 include "predicates/FilterAttributePredicate.php";
 include "predicates/FilterBaseVpdPredicate.php";
-include "predicates/FilterClusterPredicate.php";
 include "predicates/FilterInPredicate.php";
 include "predicates/FilterNotInPredicate.php";
 include "predicates/FilterModifiedAfterPredicate.php";
@@ -30,12 +29,16 @@ include "predicates/FilterDateAfterPredicate.php";
 include "predicates/FilterDateBeforePredicate.php";
 include "predicates/FilterAttributeNullPredicate.php";
 include "predicates/FilterAttributeNotNullPredicate.php";
+include "predicates/FilterAttributeGreaterPredicate.php";
+include "predicates/FilterAttributeLesserPredicate.php";
+include "predicates/FilterAttributeHiePredicate.php";
 include "predicates/FilterDummyPredicate.php";
 include "predicates/FilterEmptyPredicate.php";
 include "predicates/ParentTransitiveFilter.php";
 include "sorts/SortClauseBase.php";
 include "sorts/SortCaptionClause.php";
 include "sorts/SortOrderedClause.php";
+include "sorts/SortIndexClause.php";
 include "sorts/SortRecentClause.php";
 include "sorts/SortKeyClause.php";
 include "sorts/SortReverseKeyClause.php";
@@ -43,9 +46,8 @@ include "sorts/SortRevOrderedClause.php";
 include "sorts/SortVPDClause.php";
 include "sorts/SortRecentModifiedClause.php";
 
-class StoredObjectDB extends Object
+class StoredObjectDB extends AbstractObject
 {
- 	var $fs_image, $fs_file;
 	var $aggregates = array();
  	var $vpd_enabled;
  	var $disabled_notificators;
@@ -53,19 +55,13 @@ class StoredObjectDB extends Object
  	var $vpd_context;
  	var $notification_enabled;
  	var $default_sorts = array();
- 	
  	private $registry = null;
- 	
  	private $persisters = array();
 	
 	//----------------------------------------------------------------------------------------------------------
 	function StoredObjectDB( ObjectRegistrySQL $registry = null ) 
 	{
 		$this->setRegistry(is_object($registry) ? $registry : new ObjectRegistrySQL());
-		
-		$this->fs_image = new FileStoringFS( $this );	
-		$this->fs_file = new FileStoringFS( $this );
-		
 		$this->resetFilters();
 		$this->resetSortClause();
 		$this->resetAggregates();
@@ -85,7 +81,7 @@ class StoredObjectDB extends Object
 	
 	function getOrderStep()
 	{
-	    return 10;
+	    return 1;
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
@@ -94,13 +90,17 @@ class StoredObjectDB extends Object
 	    switch ( $name )
 	    {
 	        case 'OrderNum':
-				if ( $this->entity->get('IsDictionary') == 'Y' || $this->IsAttributeRequired($name) ) {
-					if ( $this->getVpdValue() == '' ) {
-						return 0;
+				if ( $this->IsDictionary() || $this->IsAttributeRequired($name) ) {
+					if ( in_array($this->getVpdValue(), array('','-')) ) {
+                        $it = $this->createSQLIterator(
+                            "SELECT MAX(t.OrderNum) OrderNum FROM ".$this->getEntityRefName()." t "
+                        );
 					}
-					$it = $this->createSQLIterator(
-						"SELECT MAX(t.OrderNum) OrderNum FROM ".$this->getEntityRefName()." t WHERE t.VPD = '".$this->getVpdValue()."'"
-					);
+					else {
+                        $it = $this->createSQLIterator(
+                            "SELECT MAX(t.OrderNum) OrderNum FROM ".$this->getEntityRefName()." t WHERE t.VPD = '".$this->getVpdValue()."'"
+                        );
+                    }
 					return $it->get( 'OrderNum' ) == '' ? 1 : $it->get( 'OrderNum' ) + $this->getOrderStep();
 				}
 				return 0;
@@ -263,64 +263,13 @@ class StoredObjectDB extends Object
 	//----------------------------------------------------------------------------------------------------------
 	function getExact( $objectid ) 
 	{
-	    if ( $objectid == '' ) $objectid = -1;
-		if ( !is_numeric($objectid) && !is_array($objectid) && $this->IsAttributeStored('Caption') )
-		{
-			$objectid .= ' ';
-			
-			$objectid = DAL::Instance()->Escape(
-				htmlspecialchars($objectid, ENT_COMPAT | ENT_HTML401, APP_ENCODING));
-
-			$search1 = '[^[:alnum:]]*'.str_replace(' ', '[^[:alnum:]]+', 
-				addslashes(preg_quote($this->utf8towin(str_replace('-', ' ', trim($objectid))))) ).'[^[:alnum:]]*';
-				
-			$search2 = '[^[:alnum:]]*'.str_replace(' ', '[^[:alnum:]]+', 
-				addslashes(urldecode(preg_quote(str_replace('-', ' ', trim($objectid))))) ).'[^[:alnum:]]*';
-			
-			$sql = " SELECT ".$this->getRegistry()->getSelectClause('t')." FROM ".$this->getRegistry()->getQueryClause().
-				" t WHERE TRIM(t.".$this->getAttributeDbName('Caption').") REGEXP '^".$search1."$|^".$search2."$' ";
-
-			$sql .= $this->getVpdPredicate().$this->getFilterPredicate();
-			
-			$group = $this->getGroupClause('t');
-
-    		if ( $group != '' )
-    		{
-    			$sql .= ' GROUP BY '.$group;
-    		}
-			
-		    $sort = $this->getSortClause('t');
-		    
-			if ( $sort != '' )
-			{
-				$sql .= ' ORDER BY '.$sort;
-			}
-			
-			return $this->createSQLIterator($sql.' LIMIT 1');
-		}
-		elseif ( is_array($objectid) )
-		{
-            $objectid = array_filter($objectid, function($value) {
-                return $value > 0;
-            });
-            if ( count($objectid) > 0 ) {
-                return $this->getRegistry()->Query(
-                    array(
-                        new FilterInPredicate($objectid)
-                    )
-                );
-            }
-            else {
-                return $this->getEmptyIterator();
-            }
-		}
-		else {
-            return $this->getRegistry()->Query(
-                array(
-                    new FilterInPredicate($objectid)
-                )
-            );
-        }
+        $objectid = \TextUtils::parseItems($objectid);
+	    if ( count($objectid) < 1 ) return $this->getEmptyIterator();
+        return $this->getRegistry()->Query(
+            array(
+                new FilterInPredicate($objectid)
+            )
+        );
 	}
 
 	public function setRegistry( $registry )
@@ -438,9 +387,7 @@ class StoredObjectDB extends Object
 					for ( $p = 0; $p < count($field_values[$reference_field[$i]]); $p++ )
 					{
 						$field_values[$reference_field[$i]][$p] =  
-							$this->formatValueForDb( $reference_field[$i],
-								DAL::Instance()->Escape($field_values[$reference_field[$i]][$p])
-							);
+							$this->formatValueForDb($reference_field[$i], $field_values[$reference_field[$i]][$p]);
 					}
 				}
 				
@@ -489,10 +436,9 @@ class StoredObjectDB extends Object
 					else
 					{
 						$field_values[$reference_field[$i]] = 
-							$this->formatValueForDB( $reference_field[$i], addslashes($field_values[$reference_field[$i]]) );
+							$this->formatValueForDB($reference_field[$i], $field_values[$reference_field[$i]]);
 						
-						if( $this->isString($reference_field[$i]) )
-						{
+						if( $this->isString($reference_field[$i]) ) {
 							$sql .= "BINARY ".$field_name." = ".$field_values[$reference_field[$i]];
 						}
 						else
@@ -746,13 +692,13 @@ class StoredObjectDB extends Object
 				if ( $column != '' ) $inner_columns[$column] = $column;
 			}
 			
-			$column = trim($aggregate->getColumn());
+			$column = trim($aggregate->getColumn(), ' `');
 			if ( $column != '' ) $outer_columns[$column] = $column;
 
-			$column = trim($aggregate->getAggregatedInnerColumn());
+			$column = trim($aggregate->getAggregatedInnerColumn(), ' `');
 			if ( $column != '' ) $agg_attrs[$column] = $column;
 			
-			$column = $aggregate->getAggregateColumn();
+			$column = trim($aggregate->getAggregateColumn(), ' `');
 			if ( $column != '' ) $agg_columns[$column] = $column;
 			
 			$alias = $aggregate->getAlias();
@@ -782,13 +728,13 @@ class StoredObjectDB extends Object
 			$vpdFilter = $this->isVpdEnabled() && $this->getVpdValue() != '' ? " AND t.VPD IN ('".join("','",$this->getVpds())."') " : "";
 		}
 
-		$sql = " SELECT ".join($outer_columns, ',').", ".join($agg_columns, ',').
+		$sql = " SELECT ".join(',', $outer_columns).", ".join(',', $agg_columns).
 			   "   FROM (SELECT ".$inner_select.
 			   "		   FROM ".$registry->getQueryClause()." t, (SELECT @row_num:=0) foo " .
 			   "          WHERE 1 = 1 ".$predicate.$vpdFilter.
 			   ($sort_clause != '' ? " ORDER BY ".$sort_clause : "").
 			   "		) t ".
-			   "  GROUP BY ".join($outer_columns, ',');
+			   "  GROUP BY ".join(',', $outer_columns);
 
 		return $this->createSQLIterator( $sql );
 	}
@@ -890,14 +836,6 @@ class StoredObjectDB extends Object
 	   $attribute_type = $this->getAttributeType($attribute_name);
 	   $sql = '';
 
-       if($attribute_type == 'image') {
-        $sql .= " ".$this->fs_image->getDataDefinition($attribute_name);
-        return $sql;
-       }
-       if($attribute_type == 'file') {
-        $sql .= " ".$this->fs_file->getDataDefinition($attribute_name);
-        return $sql;
-       }
        if($attribute_type == 'price') {
         $sql .= " Price INTEGER, PriceCode varchar(32)";
         return $sql;
@@ -962,6 +900,61 @@ class StoredObjectDB extends Object
 			}
 	}
 
+    function storeFile( $name, $it, $parms = array() )
+    {
+        if ( is_uploaded_file($_FILES[$name]['tmp_name']) || file_exists($_FILES[$name]['tmp_name']) )
+        {
+            if ( $_FILES[$name]['name'] == '' ) {
+                $file_name = 'unnamed';
+            }
+            else
+            {
+                $file_name = $_FILES[$name]['name'];
+                $file_name = preg_replace('/\[/', '(', $file_name);
+                $file_name = preg_replace('/\]/', ')', $file_name);
+            }
+
+            // каждый файл размещается в подкаталоге с именем класса
+            if(!file_exists(SERVER_FILES_PATH)) mkdir(SERVER_FILES_PATH);
+            $filepath = SERVER_FILES_PATH.$this->getClassName();
+            if(!file_exists($filepath)) mkdir($filepath);
+            $filepath .= '/'.$name.$it->getId();
+
+            // копируем файл в подкаталог
+            copy( $_FILES[$name]['tmp_name'], $filepath);
+
+            $fileSizeAddition = '';
+            if ( $this->getAttributeType('FileSize') != '' ) {
+                $fileSizeAddition = "FileSize = ".max(0, filesize($filepath)).",";
+            }
+
+            $sql = "UPDATE ".$this->getClassName()." SET ".$name."Path = '".
+                DAL::Instance()->Escape($filepath)."',
+    			".$fileSizeAddition." 
+    			".$name."Mime = '".DAL::Instance()->Escape($_FILES[$name]['type'])."',
+				".$name."Ext = '".DAL::Instance()->Escape($file_name).
+                "' WHERE ".$this->getClassName()."Id = ".$it->getId();
+
+            $r2 = DAL::Instance()->Query($sql);
+            getFactory()->resetCachedIterator($it->object);
+
+            unlink($_FILES[$name]['tmp_name']);
+        }
+        else if ( $parms['FileExt'] != '' ) {
+            DAL::Instance()->Query(
+                "UPDATE ".$this->getClassName()." SET  
+                ".$name."Path = '".DAL::Instance()->Escape($parms['FilePath'])."',
+                ".$name."Mime = '".DAL::Instance()->Escape($parms['FileMime'])."',
+				".$name."Ext = '".DAL::Instance()->Escape($parms['FileExt']).
+                "' WHERE ".$this->getClassName()."Id = ".$it->getId()
+            );
+        }
+    }
+
+	function getValidators() {
+	    return array();
+    }
+
 	//----------------------------------------------------------------------------------------------------------
  	function add_parms( $parms )
 	{
@@ -985,9 +978,9 @@ class StoredObjectDB extends Object
         	($parms['RecordCreated'] != '' ? "'".$parms['RecordCreated']."'" : "NOW()").", ".
         	($parms['RecordModified'] != '' ? "'".$parms['RecordModified']."'" : "NOW()").", ";
 
-		if ( $parms['VPD'] != '' )
+		if ( array_key_exists('VPD', $parms) )
 		{
-			$values = $values."'".DAL::Instance()->Escape(addslashes($parms['VPD']))."',"; 
+			$values = $values."'".DAL::Instance()->Escape($parms['VPD'])."',";
 		}
 		else
 		{
@@ -1013,10 +1006,6 @@ class StoredObjectDB extends Object
 		if ( $parms[$this->getEntityRefName().'Id'] > 0 )
 		{
 		    $values .= $parms[$this->getEntityRefName().'Id'].',';
-		}
-
-		foreach ( $this->persisters as $persister ) {
-			$persister->map( $parms );
 		}
 
 		$imageattributes = array();
@@ -1049,17 +1038,14 @@ class StoredObjectDB extends Object
 				$parms[$keys[$i]] = 'N';
 			}
 
-			if ( $parms[$keys[$i]] == '' && $this->IsAttributeRequired($keys[$i]) )
-			{
-				$parms[$keys[$i]] = $this->getDefaultAttributeValue($keys[$i]);
+			$defaultValue = $this->getDefaultAttributeValue($keys[$i]);
+			if ( $parms[$keys[$i]] == '' && $defaultValue != '' ) {
+				$parms[$keys[$i]] = $defaultValue;
 			}
 
-			if( isset($parms[$keys[$i]]) ) 
-			{
+			if( isset($parms[$keys[$i]]) ) {
 				$sql .= "`".$keys[$i].'`,';
-				
-				$values .= $this->formatValueForDB($keys[$i], 
-					DAL::Instance()->Escape(addslashes($parms[$keys[$i]]))).',';
+				$values .= $this->formatValueForDB($keys[$i], $parms[$keys[$i]]).',';
 			}
 		}
 		
@@ -1104,11 +1090,11 @@ class StoredObjectDB extends Object
 			
 			// загружаем изображения
 			for($i=0; $i < count($imageattributes); $i++) {
-				$this->fs_image->storeFile( $imageattributes[$i], $new_object_it, $parms );
+				$this->storeFile( $imageattributes[$i], $new_object_it, $parms );
 			}
 			// загружаем файлы
 			for($i=0; $i < count($fileattributes); $i++) {
-				$this->fs_file->storeFile( $fileattributes[$i], $new_object_it, $parms );
+				$this->storeFile( $fileattributes[$i], $new_object_it, $parms );
 			}
 		}
 
@@ -1159,26 +1145,11 @@ class StoredObjectDB extends Object
 	{
 		$this->beforeDelete($object_it);
 
-		// get file/image attributes
-		$keys = array_keys($this->getAttributes());
-		$file_attributes = array();
-		$image_attributes = array();
-		for ( $i=0; $i < count($keys); $i++ ) {
-			if($this->getAttributeType($keys[$i]) == 'image') {
-				$image_attributes[] = $keys[$i];
-			}
-			if($this->getAttributeType($keys[$i]) == 'file') {
-				$file_attributes[] = $keys[$i];
-			}
-		}
-
-		if ( $record_version != '' )
-		{
+		if ( $record_version != '' ) {
 			$parms['RecordVersion'] = DAL::Instance()->Escape(
 				addslashes($record_version));
 		}
-		else
-		{
+		else {
 			$parms['RecordVersion'] = $object_it->get('RecordVersion') != ''
 				? $object_it->get('RecordVersion') : 0;
 		}
@@ -1256,16 +1227,12 @@ class StoredObjectDB extends Object
 
         $now_object_it = $this->getRegistryDefault()->Store( $prev_object_it, $parms );
 		
-		if ( count($imageattributes) > 0 || count($fileattributes) > 0 )
-		{
-		    foreach( $imageattributes as $attribute )
-		    {
-		        $this->fs_image->storeFile( $attribute, $now_object_it );
+		if ( count($imageattributes) > 0 || count($fileattributes) > 0 ) {
+		    foreach( $imageattributes as $attribute ) {
+		        $this->storeFile( $attribute, $now_object_it );
 		    }
-		      
-		    foreach( $fileattributes as $attribute )
-		    {
-		        $this->fs_file->storeFile( $attribute, $now_object_it );
+		    foreach( $fileattributes as $attribute ) {
+		        $this->storeFile( $attribute, $now_object_it );
 		    }
 		}
 		
@@ -1304,16 +1271,19 @@ class StoredObjectDB extends Object
 				if ( strtolower($value) == 'now()' ) return $value;
 				if ( $value == 0 ) return 'NULL';
 				if ( strpos($value, '0000-00-00') !== false ) return 'NULL';
-				break;
+				return "'" . DAL::Instance()->Escape($value) . "'";
 				
 			case 'float':
 			case 'integer':
                 $value = str_replace(',', '.', $value);
-                if ( $value != '' && !is_numeric($value) ) $value = 0;
+                if ( $value != '' && !is_numeric($value) ) $value = '';
 				return htmlspecialchars($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
+
+            default:
+                return "'".trim(htmlspecialchars(
+                    DAL::Instance()->Escape(addslashes($value)),
+                        ENT_QUOTES | ENT_HTML401, APP_ENCODING))."'";
 		}
-		
-		return "'".htmlspecialchars(trim($value), ENT_QUOTES | ENT_HTML401, APP_ENCODING)."'";
 	}
 	
 	//----------------------------------------------------------------------------------------------------------

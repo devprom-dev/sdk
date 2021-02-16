@@ -2,14 +2,11 @@
 
 class ProjectCurrentPredicate extends FilterPredicate
 {
- 	function ProjectCurrentPredicate()
- 	{
- 		parent::FilterPredicate('current');
+ 	function ProjectCurrentPredicate() {
+ 		parent::__construct('current');
  	}
  	
- 	function _predicate( $filter )
- 	{
- 		global $project_it;
- 		return " AND pm_ProjectId = ".$project_it->getId();
+ 	function _predicate( $filter ) {
+ 		return " AND pm_ProjectId = ".getSession()->getProjectIt()->getId();
  	}
 }

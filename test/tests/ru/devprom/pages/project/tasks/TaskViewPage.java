@@ -88,6 +88,7 @@ public class TaskViewPage extends SDLCPojectPageBase {
 	}
 	
 	public void addTestDocumentation(String testdoc){
+		expandAdditional();
 		addTestDocBtn.click();
 		try {
 			driver.findElement(
@@ -104,6 +105,13 @@ public class TaskViewPage extends SDLCPojectPageBase {
 		}
 	}
 
+	public void expandAdditional() {
+		if ( addTestDocBtn.isDisplayed() ) return;
+		driver.findElement(
+				By.xpath("//a[contains(@href,'collapsetrace')]")).click();
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(addTestDocBtn));
+	}
+	
 	public String readName(){
 		return driver.findElement(By.xpath("//*[contains(@id,'pm_TaskCaption')]")).getText();
 	}
@@ -117,15 +125,15 @@ public class TaskViewPage extends SDLCPojectPageBase {
 	}
 	
 	public String readType(){
-		return driver.findElement(By.xpath("//input[@id='pm_TaskTaskType']/following-sibling::input")).getAttribute("value");
+		return driver.findElement(By.xpath("//*[@id='pm_TaskTaskType']")).getText();
 	}
 	
 	public String readOwner(){
-		return driver.findElement(By.xpath("//input[@id='pm_TaskAssignee']/following-sibling::input")).getAttribute("value");
+		return driver.findElement(By.xpath("//*[@id='pm_TaskAssignee']")).getText();
 	}
 	
 	public String readPriority(){
-		return driver.findElement(By.xpath("//input[@id='pm_TaskPriority']/following-sibling::input")).getAttribute("value");
+		return driver.findElement(By.xpath("//*[@id='pm_TaskPriority']")).getText();
 	}
 	
 	public double readEstimatesPlanned(){
@@ -250,6 +258,10 @@ public class TaskViewPage extends SDLCPojectPageBase {
 		(new WebDriverWait(driver, waiting)).
 			until(ExpectedConditions.presenceOfElementLocated(
 					By.xpath("//div[contains(@id,'comments-form')]")));
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
 
 		CKEditor we = new CKEditor(driver);
 		we.typeText(comment);

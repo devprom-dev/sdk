@@ -37,14 +37,36 @@ public class TimetablePage extends SDLCPojectPageBase {
 		super(driver);
 	}
 
+	public void goToIssues() {
+		clickOnInvisibleElement(driver.findElement(By.xpath("//a[@id='activitiesreport']")));
+		(new WebDriverWait(driver, waiting)).until(
+				ExpectedConditions.presenceOfElementLocated(
+						By.xpath("//table[@uid='activitiesreport']")));
+	};
+
+	public void goToTasks() {
+		clickOnInvisibleElement(driver.findElement(By.xpath("//a[@id='activitiesreporttasks']")));
+		(new WebDriverWait(driver, waiting)).until(
+				ExpectedConditions.presenceOfElementLocated(
+						By.xpath("//table[@uid='activitiesreporttasks']")));
+	};
+
+	public void goToProjects() {
+		clickOnInvisibleElement(driver.findElement(By.xpath("//a[@id='activitiesreportproject']")));
+		(new WebDriverWait(driver, waiting)).until(
+				ExpectedConditions.presenceOfElementLocated(
+						By.xpath("//table[@uid='activitiesreportproject']")));
+	};
+
+	public void goToUsers() {
+		clickOnInvisibleElement(driver.findElement(By.xpath("//a[@id='activitiesreportusers']")));
+		(new WebDriverWait(driver, waiting)).until(
+				ExpectedConditions.presenceOfElementLocated(
+						By.xpath("//table[@uid='activitiesreportusers']")));
+	};
+
 	public TimetablePage(WebDriver driver, Project project) {
 		super(driver, project);
-	}
-
-	public TimetablePage setMode(String mode) {
-		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and contains(.,'Вид:')]")).click();
-		driver.findElement(By.xpath("//ul[@uid='view']/li/a[contains(@onkeydown,'view="+mode+"') or contains(@href,'view="+mode+"')]")).click();
-	    return new TimetablePage(driver);
 	}
 
 	public TimetableItem[] readTimetable(){
@@ -53,7 +75,7 @@ public class TimetablePage extends SDLCPojectPageBase {
 		for (int i=1; i<=rows.size();i++){
 			WebElement row = rows.get(i-1);
 			String name = row.findElement(By.id("caption")).getText().trim().replace("__", ""); 
-			String sum =  row.findElement(By.id("total")).getText().trim().replace("ч", "");
+			String sum =  row.findElement(By.id("total")).getText().trim().replace("ч", "").replace(",00", "");
 			List<WebElement> elements = row.findElements(By.xpath(".//td[contains(@id,'day')]"));
 			String[] days = new String[elements.size()];
 			int k = 0;
@@ -67,109 +89,43 @@ public class TimetablePage extends SDLCPojectPageBase {
 	}
 	
 	public String readTimetableType(){
-		return driver.findElement(By.xpath("//table[contains(@id,'reportspenttimelist')]/tbody/tr/th/a")).getText().trim();
+		return driver.findElement(By.xpath("//table[contains(@id,'reportspenttimelist')]//th[@uid='caption']")).getText().trim();
 	}
 	
 	public TimetableItem[] exportToExcel(String type) throws XPathExpressionException,
-	ParserConfigurationException, SAXException, IOException,
-	InterruptedException {
-		TimetableItem[] t = null;
-       int attemptscount = 5;
-        FileOperations.removeExisted("Затраченное время.xls");
-         actionsBtn.click();
-         try {
-     	excelBtn.click();
-        } catch (ElementNotVisibleException e) {
-	     clickOnInvisibleElement(excelBtn);
-         }
+		ParserConfigurationException, SAXException, IOException,
+		InterruptedException {
+			TimetableItem[] t = null;
+		   int attemptscount = 5;
+			FileOperations.removeExisted("Затраченное время.xls");
+			 actionsBtn.click();
+			 try {
+			excelBtn.click();
+			} catch (ElementNotVisibleException e) {
+			 clickOnInvisibleElement(excelBtn);
+			 }
 
-       File excelTable = FileOperations.downloadFile("Затраченное время.xls");
-       while (true)
-	if (attemptscount == 0)
-		break;
-	else {
-		try {
-			attemptscount--;
-			t = XLTableParser.getTimetableItems(excelTable, type);
+		   File excelTable = FileOperations.downloadFile("Затраченное время.xls");
+		   while (true)
+		if (attemptscount == 0)
 			break;
-		} catch (FileNotFoundException e) {
-			Thread.sleep(2000);
+		else {
+			try {
+				attemptscount--;
+				t = XLTableParser.getTimetableItems(excelTable, type);
+				break;
+			} catch (FileNotFoundException e) {
+				Thread.sleep(2000);
+			}
 		}
-	}
-return t;
-}
-	
-	public void addFilterParticipant() {
-		String code = "filterLocation.setup( 'participant=all', 1 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and @uid='participant']")));
+		return t;
 	}
 	
-	public void addFilterRole() {
-		String code = "filterLocation.setup( 'role=all', 1 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and @uid='role']")));
+	public void setFilterRole(int value) {
+		setFilter("role", Integer.toString(value));
 	}
 	
-
-	public void removeFilterParticipant() {
-		WebElement element = driver.findElement(By.xpath("//a[@data-toggle='dropdown' and @uid='participant']"));
-		String code = "filterLocation.setup( 'participant=hide', 1 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.stalenessOf(element));
+	public void setFilterParticipant(int value) throws InterruptedException {
+		setFilter("participant", Integer.toString(value));
 	}
-	
-	
-	public void removeFilterRole() {
-		WebElement element = driver.findElement(By.xpath("//a[@data-toggle='dropdown' and @uid='role']"));
-		String code = "filterLocation.setup( 'role=hide', 1 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.stalenessOf(element));
-	}
-	
-	
-	public TimetablePage setFilterRole(String value) {
-
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and @uid='role']")).click();
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-		}
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and @uid='role']/following-sibling::ul/li/a[text()='" + value + "']")).click();
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and contains(@class,'btn-info') and contains(.,'"	+ value + "')]")));
-		
-		return new TimetablePage(driver);
-	}
-	
-
-	public TimetablePage setFilterParticipant(String value) throws InterruptedException {
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and @uid='participant']")).click();
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {}
-		try {
-			driver.findElement( By.xpath("//li[@uid='show-all']/a")).click();
-		}
-		catch(NoSuchElementException e) {}
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {}
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and @uid='participant']/following-sibling::ul/li/a[text()='" + value + "']")).click();
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and @uid='participant']")).click();
-		try {
-			Thread.sleep(6000);
-		} catch (InterruptedException e) {
-		}
-		driver.navigate().refresh();
-		(new WebDriverWait(driver, waiting)).until(
-				ExpectedConditions.presenceOfElementLocated(
-						By.xpath("//a[@data-toggle='dropdown' and @uid='participant' and contains(.,'" + value.substring(0, 9) + "')]")));
-		return new TimetablePage(driver);
-	}
-
 }

@@ -23,7 +23,6 @@ class MainApplicationKernel extends Kernel
             new \Devprom\WelcomeBundle\WelcomeBundle(),
         	new \Devprom\ApplicationBundle\ApplicationBundle(),
             new \Devprom\CommonBundle\CommonBundle(),
-            new \Symfony\Bundle\AsseticBundle\AsseticBundle(),
             new \Nelmio\CorsBundle\NelmioCorsBundle()
         );
 
@@ -78,6 +77,10 @@ class MainApplicationKernel extends Kernel
         $session = $this->buildSession($caching);
 
         parent::boot();
+
+        if ( $_REQUEST['isMobile'] == '1' ) {
+            exit(header('Location: /mobile'));
+        }
     }
 
     protected function buildSession($caching) {

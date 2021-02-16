@@ -1,5 +1,4 @@
 <?php
-
 include_once "FunctionalAreaMenuProjectBuilder.php";
 
 class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
@@ -11,7 +10,8 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     	$menus = parent::build($set);
     	
 		$module = getFactory()->getObject('Module');
-		
+        $report = getFactory()->getObject('PMReport');
+
 		$items = array();
 
         $module_it = $module->getExact('profile');
@@ -24,7 +24,17 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
             $items[] = $module_it->buildMenuItem();
         }
 
-		$module_it = $module->getExact('methodology');
+        $module_it = $report->getExact('navigation-settings');
+        if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
+            $data = $module_it->buildMenuItem('area=favs');
+            unset($data['title']);
+            unset($data['report']);
+            $data['name'] = text(3008);
+            $data['description'] = text(3009);
+            $items[] = $data;
+        }
+
+        $module_it = $module->getExact('methodology');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
     		$items[] = $module_it->buildMenuItem();
 		}
@@ -34,7 +44,16 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     		$items[] = $module_it->buildMenuItem();
 		}
 
-	    $menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
+        if ( getSession()->getUserIt()->IsAdministrator() ) {
+            $items[] = array(
+                'name' => translate('Администрирование'),
+                'url' => '/admin/activity.php',
+                'uid' => 'admin',
+                'description' => text(2631)
+            );
+        }
+
+        $menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
 
         if ( !getSession()->getProjectIt()->IsPortfolio() ) {
 
@@ -60,7 +79,7 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
             );
             $object_it = getFactory()->getObject('Dictionary')->getAll();
 
-            $items = array('');
+            $items = array();
 
             while (!$object_it->end()) {
                 if (!in_array($object_it->getId(), $template_classes)) {
@@ -95,32 +114,14 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
                 $object_it->moveNext();
             }
 
-            $menus['dicts'] = array(
-                'name' => translate('Справочники'),
-                'uid' => 'dicts',
-                'items' => $items
-            );
-
-            $items = array();
-
             $module_it = $module->getExact('tags');
-
             if (getFactory()->getAccessPolicy()->can_read($module_it)) {
                 $items[] = $module_it->buildMenuItem();
             }
 
-            if ( getSession()->getUserIt()->IsAdministrator() ) {
-                $items[] = array(
-                    'name' => translate('Администрирование'),
-                    'url' => '/admin',
-                    'uid' => 'admin',
-                    'description' => text(2631)
-                );
-            }
-
-            $menus['more'] = array(
-                'name' => translate('Дополнительно'),
-                'uid' => 'more',
+            $menus['dicts'] = array(
+                'name' => translate('Справочники'),
+                'uid' => 'dicts',
                 'items' => $items
             );
         }

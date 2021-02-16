@@ -1,6 +1,8 @@
 <?php
 
 include SERVER_ROOT_PATH . "pm/classes/model/classes.php";
+include "validators/ModelCustomAttributesValidator.php";
+include "validators/ModelStateValidator.php";
 
 class ModelFactoryProject extends ModelFactoryExtended
 {
@@ -22,7 +24,6 @@ class ModelFactoryProject extends ModelFactoryExtended
 			'pm_activity' => array( 'Activity'),
 			'pm_requesttag' => array( 'RequestTag'),
 			'pm_question' => array( 'Question' ),
-		    'pm_downloadaction' => array( 'DownloadAction' ),
 			'pm_milestone' => array( 'Milestone' ),
 		    'pm_projectrole' => array( 'ProjectRole' ),
 			'pm_participantrole' => array( 'ParticipantRole'),
@@ -53,7 +54,19 @@ class ModelFactoryProject extends ModelFactoryExtended
 		    'pm_workspacemenuitem' => array( 'WorkspaceMenuItem' ),
 		    'pm_projectuse' => array( 'ProjectUse' ),
 			'pm_featuretype' => array( 'FeatureType' ),
-			'pm_stateattribute' => array( 'StateAttribute' )
+			'pm_stateattribute' => array( 'StateAttribute' ),
+            'pm_invitation' => array('Invitation')
 		));
-	}	
+	}
+
+	function getModelValidators()
+    {
+        return array_merge(
+            parent::getModelValidators(),
+            array(
+                new ModelCustomAttributesValidator(),
+                new ModelStateValidator()
+            )
+        );
+    }
 }

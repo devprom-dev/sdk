@@ -37,7 +37,7 @@ class FieldAttachments extends FieldForm
  		if ( is_object($this->object_it) ) {
 			$this->attachments = getFactory()->getObject('pm_Attachment');
 			$this->attachments->addFilter( new AttachmentObjectPredicate($this->object_it) );
- 		    $this->attachments->setVpdContext($this->object_it);
+            $this->attachments->disableVpd();
             return $this->attachments->getAll();
  		}
  		else {
@@ -119,6 +119,9 @@ class FieldAttachments extends FieldForm
             'objectid' => $this->getEditMode() ? '' : $objectid,
             'objectclass' => $objectclass,
             'attachmentClass' => get_class($attachmentIt->object),
+            'project' => $this->object_it->get('ProjectCodeName') != ''
+                            ? $this->object_it->get('ProjectCodeName')
+                            : getSession()->getProjectIt()->get('CodeName'),
             'count' => $attachmentIt->count()
         ));
 	}

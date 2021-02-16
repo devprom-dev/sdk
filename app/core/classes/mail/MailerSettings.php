@@ -25,7 +25,6 @@ class MailerSettings extends Metaobject
 		$settings = getFactory()->getObject('cms_SystemSettings');
 		 
 		$this->addAttribute('AdminEmail', 'VARCHAR', $settings->getAttributeUserName('AdminEmail'), true, false, $settings->getAttributeDescription('AdminEmail') );
-		$this->addAttribute('EmailSender', 'VARCHAR', text(1223), true, false, text(1224));
 		$this->addAttribute('MailTestEmail', 'VARCHAR', text(1521), true, false, text(1522) );
 
 		$this->addPersister( new MailerSettingsPersister() );

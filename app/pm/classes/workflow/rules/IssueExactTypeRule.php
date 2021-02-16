@@ -35,7 +35,8 @@ class IssueExactTypeRule extends BusinessRulePredicate
  	}
  	
  	function getDisplayName() {
- 		return str_replace('%1', $this->type_name, text(1157));
+ 	    $textTemplate = getSession()->IsRDD() ? text(2843) : text(1157);
+ 		return sprintf(str_replace('%1', $this->type_name, $textTemplate), $this->type_name);
  	}
  	
  	function check( $object_it, $transitionIt ) {

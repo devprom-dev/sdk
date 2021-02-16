@@ -1,6 +1,7 @@
 <?php
 include_once SERVER_ROOT_PATH."plugins/integration/commands/c_integrationtask.php";
 include_once SERVER_ROOT_PATH."plugins/integration/model/validators/IntegrationMappingModelValidator.php";
+include_once SERVER_ROOT_PATH."plugins/integration/model/validators/IntegrationQueueModelValidator.php";
 
 class IntegrationForm extends PMPageForm
 {
@@ -20,6 +21,14 @@ class IntegrationForm extends PMPageForm
 				$builder->build($object);
 			}
 		}
+
+		if ( is_object($this->getObjectIt()) ) {
+            $object->addAttribute('QueueItemsCount', 'INTEGER', text('integration28'), true, false, '', 10);
+            $object->addAttributeGroup('QueueItemsCount', 'additional');
+            $object->setAttributeEditable('QueueItemsCount', false);
+            $object->addAttribute('QueueDate', 'DATETIME', text('integration29'), true, false, '', 20);
+            $object->addAttributeGroup('QueueDate', 'additional');
+        }
 	}
 
 	function createFieldObject( $name )
@@ -39,7 +48,7 @@ class IntegrationForm extends PMPageForm
 		switch ($name) {
 			case 'Log':
 			case 'MappingSettings':
-				$field->setRows(34);
+				$field->setRows(26);
 				break;
 		}
 		return $field;
@@ -51,9 +60,7 @@ class IntegrationForm extends PMPageForm
 		$object_it = $this->getObjectIt();
 
 		$method = new IntegrationTaskRunWebMethod($object_it);
-		if ( $method->hasAccess() )
-		{
-			$method->setRedirectUrl('donothing');
+		if ( $method->hasAccess() ) {
 			$actions[] = array();
 			$actions[] = array(
 				'url' => $method->getJSCall(),
@@ -63,14 +70,18 @@ class IntegrationForm extends PMPageForm
         return $actions;
 	}
 
-	function buildModelValidator()
-	{
-		$validators = parent::buildModelValidator();
-		$validators->addValidator( new IntegrationMappingModelValidator() );
-		return $validators;
-	}
+	function getValidators()
+    {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new IntegrationMappingModelValidator(),
+                new IntegrationQueueModelValidator()
+            )
+        );
+    }
 
-	function getDefaultValue( $field ) {
+    function getDefaultValue( $field ) {
 		switch( $field ) {
 			case 'MappingSettings':
 				$appId = parent::getFieldValue('Caption');
@@ -82,7 +93,31 @@ class IntegrationForm extends PMPageForm
 				return parent::getDefaultValue($field);
 		}
 	}
-	function drawScripts()
+
+	function getFieldValue($field)
+    {
+        switch( $field ) {
+            case 'QueueItemsCount':
+                $data = $this->getQueueData();
+                return count($data['items']);
+
+            case 'QueueDate':
+                $data = $this->getQueueData();
+                return $data['remote_timestamp'];
+
+            default:
+                return parent::getFieldValue($field);
+        }
+    }
+
+    function getQueueData() {
+	    if ( !is_object($this->getObjectIt()) ) return array();
+	    return \JsonWrapper::decode(
+            $this->getObjectIt()->getHtmlDecoded('ItemsQueue')
+        );
+    }
+
+    function drawScripts()
 	{
 		parent::drawScripts();
 

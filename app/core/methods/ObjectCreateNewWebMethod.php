@@ -18,7 +18,7 @@ class ObjectCreateNewWebMethod extends WebMethod
 
 		$this->setAsync(false);
         $this->setBeforeCallback('beforeUnload');
-		$this->setRedirectUrl( 'function() { window.location.reload(); }' );
+		$this->setRedirectUrl( 'devpromOpts.updateUI' );
 	}
 
     function getModule() {
@@ -46,19 +46,21 @@ class ObjectCreateNewWebMethod extends WebMethod
 		return $this->object->getPageName();
 	}
 	
-	function getJSCall( $parms = array(), $title = '' )
+	function getJSCall( $parms = array() )
 	{
 		$uid = new ObjectUID;
 		if ( $uid->hasUidObject($this->object) ) {
 			$absoluteUrl = getSession()->getApplicationUrl().$uid->getObjectUidInt($uid->getClassName($this->object->getEmptyIterator()), '');
 		}
+		else {
+            $absoluteUrl = $this->object->getPage();
+        }
 
 		$method_parms = array (
-				$this->getNewObjectUrl(),
-				get_class($this->object),
-				$this->object->getEntityRefName(),
-				$absoluteUrl,
-				$title != '' ? $title : $this->object->getDisplayName()
+            $this->getNewObjectUrl(),
+            get_class($this->object),
+            $this->object->getEntityRefName(),
+            $absoluteUrl
 		);
 		
 		foreach( $method_parms as $key => $parm )
@@ -81,7 +83,10 @@ class ObjectCreateNewWebMethod extends WebMethod
 	function execute_request()
     {
         $class = getFactory()->getClass($_REQUEST['class']);
-        if ( !class_exists($class) ) throw new Exception('Unknown entity: '.$class);
+        if ( !class_exists($class) ) {
+            \Logger::getLogger('System')->error('Unknown entity: '.$class);
+            return;
+        }
 
         $object = getFactory()->getObject($class);
         $data = array (
@@ -138,7 +143,7 @@ class ObjectCreateNewWebMethod extends WebMethod
         echo json_encode(
             array(
                 'Id' => $object_it->getId(),
-                'Url' => $object_it->getViewUrl()
+                'Url' => $object_it->getUidUrl()
             )
         );
 

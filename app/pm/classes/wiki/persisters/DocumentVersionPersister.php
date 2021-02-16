@@ -4,6 +4,12 @@ class DocumentVersionPersister extends ObjectSQLPersister
 {
     function map( &$parms )
     {
+        if ( $parms['DocumentVersion'] != '' ) {
+            $baselineIt = getFactory()->getObject('Baseline')->getExact($parms['DocumentVersion']);
+            if ( $baselineIt->getId() != '' ) {
+                $parms['DocumentVersion'] = $baselineIt->getDisplayName();
+            }
+        }
         if ( $parms['DocumentVersion'] == '' && $parms['ParentPage'] != '' ) {
             $parentIt = $this->getObject()->getExact($parms['ParentPage']);
             $parms['DocumentVersion'] = $parentIt->get('DocumentVersion');
@@ -15,7 +21,7 @@ class DocumentVersionPersister extends ObjectSQLPersister
         $columns = array();
         
         $columns[] = $alias.".DocumentVersion ";
-        $columns[] = " ( SELECT s.Caption FROM WikiPage s WHERE s.WikiPageId = t.DocumentId ) DocumentName ";
+        $columns[] = " IF(t.ParentPage IS NULL, t.Caption, ( SELECT s.Caption FROM WikiPage s WHERE s.WikiPageId = t.DocumentId )) DocumentName ";
 
         return $columns;
     }

@@ -30,7 +30,6 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $visible = array_merge(
             array (
                 'Spent',
-                'IssueTraces',
                 'RecentComment',
                 'DueDate'
             ),
@@ -49,6 +48,11 @@ class PageSettingCommonBuilder extends PageSettingBuilder
                         'Priority'
                     )
                 );
+            }
+            if ( $reportName == 'newtasks' ) {
+                $setting->setSorts(array(
+                    'RecordCreated.D'
+                ));
             }
             $settings->add( $setting );
         }
@@ -100,6 +104,8 @@ class PageSettingCommonBuilder extends PageSettingBuilder
                     'UID',
                     'Caption',
                     'State',
+                    'TaskType',
+                    'Priority',
                     'Fact'
  	    		),
                 array_filter($object->getAttributesByGroup('trace'), function($value) use($object) {
@@ -123,20 +129,15 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $setting = new ReportSetting('iterationburndown');
         $setting->setVisibleColumns(
             array(
-                'UID', 'Caption', 'TaskType', 'Assignee', 'Priority', 'ChangeRequest', 'State', 'RecentComment', 'LeftWork', 'Fact'
+                'UID', 'Caption', 'TaskType', 'Assignee', 'Priority', 'State', 'RecentComment', 'Planned', 'LeftWork', 'Fact'
             )
         );
-        $setting->setGroup('ChangeRequest.D');
+        $setting->setGroup('Assignee');
         $setting->setSorts(
             array(
                 'State.A',
                 'OrderNum.A',
                 'Priority.A'
-            )
-        );
-        $setting->setFilters(
-            array(
-                'iteration', 'tasktype', 'assignee'
             )
         );
         $settings->add( $setting );
@@ -152,13 +153,12 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         // tasks table
         
         $setting = new PageListSetting('TaskBoardList');
-        $columns = array('UID', 'Caption', 'Description', 'RecentComment', 'Fact', 'Attachment', 'Assignee', 'Progress', 'TaskType');
+        $columns = array('UID', 'Caption', 'Description', 'RecentComment', 'Fact', 'Attachment', 'Assignee', 'Progress', 'TaskType', 'Tags');
         $setting->setVisibleColumns($columns);
         $setting->setGroupSort('Priority.A');
         $settings->add( $setting );
 
         $setting = new PageTableSetting('TaskTable');
-        $setting->setFilters( array('release', 'iteration', 'state', 'tasktype', 'taskassignee', 'target') );
 	    $setting->setSorts( array('Priority','OrderNum') );
         $settings->add( $setting );
     }

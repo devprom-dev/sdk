@@ -2,7 +2,7 @@
 
 include_once SERVER_ROOT_PATH.'core/classes/system/EnvironmentSettings.php';
 
-class EnvironmentSettingsTest extends PHPUnit_Framework_TestCase
+class EnvironmentSettingsTest extends \PHPUnit\Framework\TestCase
 {
 	public function testServerPortDefault()
 	{
@@ -36,7 +36,7 @@ class EnvironmentSettingsTest extends PHPUnit_Framework_TestCase
 
 	public function testServerUrlByLocalhost()
 	{
-	    $this->assertEquals( 'http://127.0.0.1', EnvironmentSettings::getServerUrlLocalhost() );
+	    $this->assertEquals( 'http://127.0.0.1:80', EnvironmentSettings::getServerUrlLocalhost() );
 	}
 
 	public function testCustomTimeZone()

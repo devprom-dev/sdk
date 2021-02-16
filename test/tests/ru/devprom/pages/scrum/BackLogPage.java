@@ -26,6 +26,7 @@ public class BackLogPage extends ScrumPageBase{
 
     public ScrumIssueNewPage addUserStory() {
         clickOnInvisibleElement(addUserStoryBtn);
+        waitForDialog();
         return new ScrumIssueNewPage(driver);
     }
 

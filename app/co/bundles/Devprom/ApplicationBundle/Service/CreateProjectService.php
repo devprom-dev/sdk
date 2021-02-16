@@ -81,7 +81,7 @@ class CreateProjectService
  	
  	function createProject()
  	{
-		global $model_factory, $session;
+		global $session;
 		
 		getFactory()->getEventsManager()->removeNotificator( new \ChangesWaitLockReleaseTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \CacheSessionProjectTrigger() );
@@ -92,39 +92,32 @@ class CreateProjectService
 		if ( $user_it->count() < 1 ) return -1;
 
 		// создаем проект
-		$prj_cls = $model_factory->getObject('pm_Project');
-		$prj_it = $prj_cls->getByRef('CodeName', $this->code_name);
-		
-		if( $prj_it->count() > 0 ) 
-		{
-			return -3;
-		}
+		$prj_cls = getFactory()->getObject('pm_Project');
+		$projectsCount = $prj_cls->getRegistry()->Count(
+		    array(
+		        new \FilterAttributePredicate('CodeName', $this->code_name)
+            )
+        );
+		if( $projectsCount > 0 ) return -3;
 
 		$parms = array();
-
 		$parms['CodeName'] = $this->code_name;
 		$parms['Caption'] = $this->caption;
 		$parms['StartDate'] = "NOW()";
 		$parms['DaysInWeek'] = 5;
 		
-		if ( is_numeric($this->language) )
-		{
+		if ( is_numeric($this->language) ) {
 			$parms['Language'] = $this->language;
 		}
-		else
-		{
+		else {
 			switch($this->language) 
 			{
 				case 'RU':
-					
 					$parms['Language'] = 1;
-					
 					break;
 					
 				case 'EN':
-					
 					$parms['Language'] = 2;
-					
 					break;
 			}
 		}
@@ -141,11 +134,10 @@ class CreateProjectService
         $parms['Tools'] = $this->methodology;
 
 		$prj_cls->modify_parms($project_id, $parms);
-		
 		$project_it = $prj_cls->getExact($project_id);
 		
 		// создаем участника
-		$part_cls = $model_factory->getObject('pm_Participant');
+		$part_cls = getFactory()->getObject('pm_Participant');
 
 		$parms = array();
 		$parms['SystemUser'] = $user_it->getId();
@@ -161,7 +153,7 @@ class CreateProjectService
 
 		$part_it = $part_cls->getExact($id);
 
-		$model_factory->resetCachedIterator( $prj_cls );
+		getFactory()->resetCachedIterator( $prj_cls );
 		
 		$auth_factory = new \AuthenticationFactory();
 			
@@ -181,7 +173,7 @@ class CreateProjectService
 		$blog_id = $blog->add_parms($parms);
 		
 		// looking for template
-		$template = $model_factory->getObject('pm_ProjectTemplate');
+		$template = getFactory()->getObject('pm_ProjectTemplate');
 		
 		$template->setRegistry( new \ObjectRegistrySQL() );
 		
@@ -197,7 +189,7 @@ class CreateProjectService
 		$prj_cls->modify_parms($project_it->getId(),$parms);
 		$project_it = $prj_cls->getExact($project_it->getId());  
 
-		$project_roles = $model_factory->getObject('ProjectRole');
+		$project_roles = getFactory()->getObject('ProjectRole');
 
 		// check the template has been imported
 		if ( $project_roles->getRecordCount() < 1 ) return -11;
@@ -284,7 +276,7 @@ class CreateProjectService
 						'WikiEditor' => $project_it->get('WikiEditorClass')
 					)
 				);
-				$plan_it = $model_factory->getObject('TestScenario')->getRegistry()->Query(
+				$plan_it = getFactory()->getObject('TestScenario')->getRegistry()->Query(
 					array(
 						new \FilterVpdPredicate(),
                         new \FilterAttributeNullPredicate('PageType'),
@@ -392,11 +384,15 @@ class CreateProjectService
 
 	public function invalidateServiceDeskCache()
 	{
+        $application = new \Symfony\Bundle\FrameworkBundle\Console\Application(ServiceDeskAppKernel::loadWithoutRequest());
 		$command = new \Symfony\Bundle\FrameworkBundle\Command\CacheClearCommand;
-		$command->setContainer(ServiceDeskAppKernel::loadWithoutRequest()->getContainer());
+
+        $application->add($command);
+        $application->setDefaultCommand($command->getName(), true);
+        $application->setAutoExit(false);
 
 		$output = new \Symfony\Component\Console\Output\NullOutput();
-		$command->run(new \Symfony\Component\Console\Input\ArgvInput(array('', '--no-warmup')), $output);
+        $application->run(new \Symfony\Component\Console\Input\ArgvInput(array('', '--no-warmup')), $output);
 	}
 
 	static function getResultDescription( $result )

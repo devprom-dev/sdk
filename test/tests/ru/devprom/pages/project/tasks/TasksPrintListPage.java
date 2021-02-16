@@ -19,7 +19,7 @@ public class TasksPrintListPage {
 	public RTask[] getPrintedTasks() {
 		List<WebElement> rows = driver.findElements(By
 				.xpath("html/body/table/tbody/tr"));
-		List<WebElement> header = rows.get(0).findElements(By.xpath("./node()"));
+		List<WebElement> header = rows.get(0).findElements(By.xpath("./th"));
 		int idN=1;
 		int nameN=2;
 		int typeN=3;

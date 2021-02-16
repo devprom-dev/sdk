@@ -11,7 +11,7 @@ class BlogPostFileIterator extends OrderedIterator
         }
         else
         {
-            return '<a href="'.$this->getFileUrl().'" name="'.$this->getFileName('Content').'" ' .
+            return '<a href="'.$this->getFileUrl().'" target="_blank" name="'.$this->getFileName('Content').'" ' .
                     'title="'.$this->get('Description').'"><img src="/images/attach.png" style="margin-bottom:-4px;"> '.$this->getFileName('Content').'</a>';
         }
     }

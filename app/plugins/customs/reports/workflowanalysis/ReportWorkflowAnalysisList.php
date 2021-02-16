@@ -10,13 +10,7 @@ class ReportWorkflowAnalysisList extends PMStaticPageList
 		$this->first_state = array_shift($this->getObject()->getNonTerminalStates());
 	}
 	
-	function buildFilterActions( & $base_actions )
-	{
-	    parent::buildFilterActions( $base_actions );
-	    $this->buildFilterColumnsGroup( $base_actions, 'states' );
-	}
-	
-	function drawCell( $object_it, $attr ) 
+	function drawCell( $object_it, $attr )
 	{
 		$matches = array();
 

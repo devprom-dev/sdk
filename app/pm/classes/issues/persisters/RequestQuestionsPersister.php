@@ -2,7 +2,11 @@
 
 class RequestQuestionsPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+    function getAttributes() {
+        return array('Question');
+    }
+
+    function getSelectColumns( $alias )
  	{
  		$trace = getFactory()->getObject('RequestTraceQuestion');
  		return array( 

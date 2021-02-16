@@ -106,28 +106,29 @@ include "DateFormatRussian.php";
  	function getDateFormatted( $value )
  	{
  		if ( $value == '' ) return $value;
- 		
- 		return strftime($this->dateformat->getDateFormat(), strtotime(SystemDateTime::convertToClientTime($value)));
+ 		return strftime($this->dateformat->getDateFormat(), strtotime($value));
  	}
  	
  	function getDateFormattedShort( $value )
  	{
  		if ( $value == '' ) return $value;
- 		return SystemDateTime::convertToClientTime($value, $this->dateformat->getDateFormatShort(strtotime($value)));
+        $time = new DateTime($value, new DateTimeZone("UTC"));
+        return $time->format($this->dateformat->getDateFormatShort(strtotime($value)));
  	}
  	
  	function getDateUserFormatted( $value, $format )
  	{
  		if ( $value == '' ) return $value;
- 		
- 		return strftime($format, strtotime(SystemDateTime::convertToClientTime($value)));
+ 		return strftime($format, strtotime($value));
  	}
 
  	function getDateTimeFormatted( $value )
  	{
  		if ( $value == '' ) return $value;
  		
- 		return strftime($this->dateformat->getDateFormat().' %H:%M:%S', strtotime(SystemDateTime::convertToClientTime($value)));
+ 		return strftime($this->dateformat->getDateFormat().' %H:%M:%S',
+            strtotime(SystemDateTime::convertToClientTime($value))
+        );
  	}
  	
  	function getTimeFormatted( $value )

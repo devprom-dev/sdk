@@ -15,7 +15,7 @@ class MilestoneMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->setAttributeType('Description', 'WYSIWYG');
         $metadata->setAttributeVisible('CompleteResult', false);
 
-    	$metadata->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', translate('Пожелания'), true );
+    	$metadata->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', text(808), true );
 	    $metadata->addPersister( new MilestoneRequestPersister() );
 	    
 	    $metadata->addAttribute('Overdue', 'INTEGER', translate('Смещение'), false );
@@ -24,7 +24,7 @@ class MilestoneMetadataBuilder extends ObjectMetadataEntityBuilder
 	    $metadata->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), true );
 	    $metadata->addPersister( new CommentRecentPersister() );
 
-        foreach( array('TraceRequests','RecentComment','MilestoneDate','Description') as $attribute ) {
+        foreach( array('TraceRequests','MilestoneDate','Description') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'tooltip');
         }
 
@@ -35,6 +35,10 @@ class MilestoneMetadataBuilder extends ObjectMetadataEntityBuilder
 
         foreach ( array('MilestoneDate','Caption','Description') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'permissions');
+        }
+
+        foreach ( array('TraceRequests') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'trace');
         }
     }
 }

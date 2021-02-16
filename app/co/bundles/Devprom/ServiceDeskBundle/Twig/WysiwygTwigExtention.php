@@ -1,7 +1,6 @@
 <?php
 
 namespace Devprom\ServiceDeskBundle\Twig;
-use Devprom\ServiceDeskBundle\Util\TextUtil;
 
 class WysiwygTwigExtention extends \Twig_Extension
 {
@@ -18,6 +17,8 @@ class WysiwygTwigExtention extends \Twig_Extension
             new \Twig_SimpleFunction('wysiwyg', function($entity) use ($container)
             {
                 $registry = getFactory()->getObject('ProjectPage')->getRegistry();
+                $fileRegistry = getFactory()->getObject('WikiPageFile')->getRegistry();
+
                 $registry->setPersisters(array());
                 $objectIt = $registry->Query(
                     array(
@@ -30,7 +31,20 @@ class WysiwygTwigExtention extends \Twig_Extension
                 while( !$objectIt->end() ) {
                     $parser = new \WrtfCKEditorSupportParser($objectIt->copy(), $container->get('router'));
                     $html[] = '<br/><h4>'.$objectIt->getHtmlDecoded('Caption').'</h4>';
-                    $html[] = $parser->parse($objectIt->getHtmlDecoded('Content'));
+
+                    $filesHtml = array();
+                    $fileIt = $fileRegistry->Query(
+                        array(
+                            new \FilterAttributePredicate('WikiPage', $objectIt->getId())
+                        )
+                    );
+                    while( !$fileIt->end() ) {
+                        $url = $container->get('router')->generate('doc_attachment_download', array('attachmentId' => $fileIt->getId()));
+                        $filesHtml[] = '<a href="'.$url.'">'.$fileIt->get('Caption').' ('.$fileIt->getFileSizeKb('Content').' Kb)</a>';
+                        $fileIt->moveNext();
+                    }
+
+                    $html[] = join('<br/>', $filesHtml) . $parser->parse($objectIt->getHtmlDecoded('Content'));
                     $objectIt->moveNext();
                 }
                 array_shift($html);

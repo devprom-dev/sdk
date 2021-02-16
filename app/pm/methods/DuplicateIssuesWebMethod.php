@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/methods/DuplicateWebMethod.php";
 
 class DuplicateIssuesWebMethod extends DuplicateWebMethod
@@ -16,18 +15,15 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 		}
 	}
 
-	function getCaption()
-	{
-		return text(867);
+	function getCaption() {
+		return text(2694);
 	}
 
-	function getMethodName()
-	{
+	function getMethodName() {
 		return parent::getMethodName().':LinkType';
 	}
 
-	function getObject()
-	{
+	function getObject() {
 		return getFactory()->getObject('Request');
 	}
 	
@@ -49,7 +45,53 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 
 		return $references;
 	}
-	
+
+	function getAttributesToReset()
+    {
+        $object = $this->getObject();
+        $attributes = array_merge(
+            $object->getAttributesByGroup('workflow'),
+            array(
+                'OrderNum'
+            )
+        );
+        foreach( $object->getAttributes() as $attribute => $info ) {
+            if ( !$object->IsReference($attribute) ) continue;
+            $attributes[] = $attribute;
+        }
+
+        $reset = array_diff( $attributes,
+            array(
+                'Project'
+            )
+        );
+        if ( defined('ISSUE_DUP_PRESERVE_ATTRS') ) {
+            $reset = array_diff($reset, ISSUE_DUP_PRESERVE_ATTRS);
+        }
+        else {
+            $reset = array_diff($reset, array('Severity', 'Priority'));
+        }
+        return $reset;
+    }
+
+    function getAttributesDefaults( $iterator )
+    {
+        $uid = new ObjectUID();
+        $override = array(
+            'Description' => '{{'.$uid->getObjectUid($iterator).'}}',
+            'Author' => getSession()->getUserIt()->getId()
+        );
+        if ( defined('ISSUE_DUP_PRESERVE_ATTRS') ) {
+            foreach( ISSUE_DUP_PRESERVE_ATTRS as $attribute ) {
+                unset($override[$attribute]);
+            }
+        }
+        return array_merge(
+            parent::getAttributesDefaults($iterator),
+            $override
+        );
+    }
+
  	function duplicate( $project_it, $parms )
  	{
 		$context = parent::duplicate( $project_it, $parms );

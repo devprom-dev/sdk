@@ -1,11 +1,9 @@
 <?php
-
 include_once "ExportWebMethod.php";
 
 class HtmlExportWebMethod extends ExportWebMethod
 {
- 	function getCaption()
- 	{
+ 	function getCaption() {
  		return text(2510);
  	}
  	
@@ -14,5 +12,4 @@ class HtmlExportWebMethod extends ExportWebMethod
  		return parent::getJSCall(
  			array( 'class' => $class ) );
  	}
- 	
 }

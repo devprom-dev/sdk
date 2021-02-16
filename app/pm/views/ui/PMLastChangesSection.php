@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."core/views/PageSectionLastChanges.php";
+include_once SERVER_ROOT_PATH."pm/views/ui/FieldWYSIWYG.php";
 
 class PMLastChangesSection extends LastChangesSection
 {
@@ -15,6 +16,14 @@ class PMLastChangesSection extends LastChangesSection
 
     function getBodyTemplate() {
         return parent::getTemplate();
+    }
+
+    function getContent( $objectIt )
+    {
+        $field = new FieldWYSIWYG();
+        $field->setObjectIt($objectIt);
+        $field->setValue($objectIt->get('Content'));
+        return $field->getText();
     }
 
     function getRenderParms()

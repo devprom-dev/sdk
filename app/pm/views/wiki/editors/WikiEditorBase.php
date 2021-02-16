@@ -168,11 +168,6 @@ abstract class WikiEditorBase
  		return "makeClickableFiles";
  	}
  	
- 	function getTemplateCallback()
- 	{
- 		return "function(result) { $('#".$this->getFieldId()."').val(result); }"; 
- 	}
- 	
  	function getPageParser()
  	{
  		return null;
@@ -182,6 +177,11 @@ abstract class WikiEditorBase
  	{
  		return null;
  	}
+
+    function getHtmlImportableParser()
+    {
+        return $this->getHtmlParser();
+    }
 
  	function getComparerParser()
  	{

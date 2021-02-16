@@ -64,7 +64,7 @@ public class WorkflowTest extends ProjectTestBase{
 		//First find requests in newly added state and delete them, then delete the state
 		mip = rvp.gotoRequests();
 		mip.showAll();
-		mip = mip.selectFilterValue("state", newStateName);
+		mip.setFilter("state", newStateName);
 		mip = mip.deleteAll();
 		rsp = mip.gotoRequestsStatePage();
 		rsp.deleteState(newStateName);
@@ -92,7 +92,7 @@ public class WorkflowTest extends ProjectTestBase{
 			RequestNewPage rnp = rp.clickNewCR();
 		    rnp.createNewCR(request);	
 		    RequestsBoardPage rbp = rnp.gotoRequestsBoard();
-		    String errorMessage = rbp.tryToMoveDenied(request.getNumericId(), "Релиз: нет", "Запланировано");
+		    String errorMessage = rbp.tryToMoveDenied(request.getNumericId(), "0", "Запланировано");
 		    Assert.assertTrue(errorMessage.length() > 10, "Не получено правильное сообщение о невозможности запланировать пожелание");
 		   
 		    rp = rsp.gotoRequests();

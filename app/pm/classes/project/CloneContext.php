@@ -2,14 +2,16 @@
 
 class CloneContext
 {
-    var $ids_map = array();
-    var $default_parms = array();
-    var $use_existing_refs = false;
-    var $broken_references = array();
+    private $ids_map = array();
+    private $default_parms = array();
+    private $use_existing_refs = false;
+    private $broken_references = array();
     private $reset_state_value = true;
     private $reset_dates = true;
     private $resetAssignments = false;
     private $resetUids = false;
+    private $restoreFromTemplate = true;
+    private $reuseProject = false;
     
     function getIdsMap()
     {
@@ -85,5 +87,21 @@ class CloneContext
 
     function getResetUids() {
         return $this->resetUids;
+    }
+
+    function setRestoreFromTemplate( $flag ) {
+        $this->restoreFromTemplate = $flag;
+    }
+
+    function getRestoreFromTemplate() {
+        return $this->restoreFromTemplate;
+    }
+
+    function setReuseProject($flag = true) {
+        $this->reuseProject = $flag;
+    }
+
+    function getReuseProject() {
+        return $this->reuseProject;
     }
 }

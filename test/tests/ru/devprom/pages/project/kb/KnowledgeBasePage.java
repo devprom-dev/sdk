@@ -57,7 +57,7 @@ public class KnowledgeBasePage extends SDLCPojectPageBase {
 	}
 	
 	public String readContent(String pageId){
-		return driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent"+pageId+"') and contains(@class,'wysiwyg')]")).getText();
+		return driver.findElement(By.xpath("//div[starts-with(@id,'WikiPageContent"+pageId+"') and contains(@class,'wysiwyg')]")).getText();
 	}
 	
 	/**Use this method to get tag text decoration information (only controlled by tags, no css).   
@@ -65,7 +65,7 @@ public class KnowledgeBasePage extends SDLCPojectPageBase {
 	public List<String> getStyleTagsForText(String requirementId, String text){
 		List<String> tags = new ArrayList<String>();
 		
-		WebElement p = driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent"+requirementId+"') and contains(@class,'wysiwyg')]//*[contains(.,'"+text+"')]"));
+		WebElement p = driver.findElement(By.xpath("//div[starts-with(@id,'WikiPageContent"+requirementId+"') and contains(@class,'wysiwyg')]//*[contains(.,'"+text+"')]"));
 		String tag = p.getTagName();
 		while (!tag.equals("p")) {
 			 tags.add(tag);

@@ -23,11 +23,14 @@ class BulkActionBuilderCommon extends BulkActionBuilder
 				$object->getAttributesByGroup('bulk')
 		);
  		$system_attributes = array_merge(
- 				$object->getAttributesByGroup('system'),
- 				$object->getAttributesByGroup('nonbulk'),
- 				array (
- 						'Caption', 'Description', 'State', 'OrderNum'
- 				)
+            $object->getAttributesByGroup('system'),
+            $object->getAttributesByGroup('nonbulk'),
+            $object->getAttributesByType('wysiwyg'),
+            $object->getAttributesByType('text'),
+            $object->getAttributesByType('varchar'),
+            array (
+                'OrderNum'
+            )
  		);
  		$system_types = array('date', 'datetime', 'file', 'image', 'varchar', 'text', 'char', 'password');
 

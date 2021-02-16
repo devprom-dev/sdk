@@ -1,22 +1,8 @@
 <?php
 
-class TagList extends PageList
+class TagList extends PMPageList
 {
-	function IsNeedToDisplay( $attr ) 
-	{
-		switch ( $attr )
-		{
-			default:
-				return parent::IsNeedToDisplay( $attr );
-		}
-	}
-	
-	function IsNeedToDisplayLinks( ) 
-	{ 
-		return false; 
-	}
-
-	function drawRefCell( $entity_it, $object_it, $attr ) 
+	function drawRefCell( $entity_it, $object_it, $attr )
 	{
 		switch( $attr )
 		{
@@ -27,15 +13,15 @@ class TagList extends PageList
 					if ( is_object($object) )
 					{
                         $widget_it = $this->getTable()->getReferencesListWidget($object, $attr);
-                        if ( $widget_it->getId() != '' ) {
-                            $url = $widget_it->getUrl('tag='.$object_it->getId());
-                        }
-                        else {
-                            $url = $object->getPage().'tag='.$object_it->getId();
-                        }
-						echo '<a href="'.$url.'">';
-							echo count(preg_split('/,/', $object_it->get($attr))); 
-						echo '</a>';
+                        $vpds = $entity_it->fieldToArray('VPD');
+
+                        $url = $widget_it->getUrl(
+                            'tag='.$object_it->getId(),
+                            $this->getTable()->getReferencesListProjectIt($vpds)
+                        );
+
+                        echo count(array_unique(preg_split('/,/', $object_it->get($attr))));
+						echo ' &nbsp; <a class="dashed" target="_blank" href="'.$url.'">' . text(2084) . '</a>';
 					}
 				}
 		}
@@ -43,23 +29,17 @@ class TagList extends PageList
 	
 	function drawCell( $object_it, $attr ) 
 	{
-		global $project_it, $model_factory;
-		
 		switch ( $attr )
 		{
 			case 'Caption':
 				echo $object_it->getDisplayName();
 				break;
-				
 			default:
 				parent::drawCell( $object_it, $attr ); 
 		}
-		
-		global $model_factory;
 	}
 
-	function getGroupFields()
-	{
+	function getGroupFields() {
 		return array();
 	}
 }

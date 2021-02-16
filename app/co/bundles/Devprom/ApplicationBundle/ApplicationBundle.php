@@ -1,15 +1,14 @@
 <?php
-
 namespace Devprom\ApplicationBundle;
 
 use Devprom\Component\HttpKernel\Bundle\DevpromBundle;
 use Devprom\ApplicationBundle\Service\Mailer\MailerLogger;
 use Swift_Plugins_LoggerPlugin;
-
 include_once SERVER_ROOT_PATH.'core/methods/WebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/ProcessEmbeddedWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/DeleteEmbeddedWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/SettingsWebMethod.php';
+include_once SERVER_ROOT_PATH.'core/methods/AutocompleteWebMethod.php';
 include_once SERVER_ROOT_PATH.'/core/c_command.php';
 
 class ApplicationBundle extends DevpromBundle
@@ -65,6 +64,10 @@ class ApplicationBundle extends DevpromBundle
         else {
             $command = \PluginsFactory::Instance()->getCommand( $_REQUEST['namespace'], 'co', $class );
             if ( !is_object($command) ) return false;
+        }
+
+        if ( $command->IsAuthenticationRequired() && getSession()->getUserIt()->getId() == '' ) {
+            return false;
         }
 
 		$command->execute();

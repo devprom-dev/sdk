@@ -12,10 +12,11 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
         if ( !array_key_exists('Content', $parms) ) return;
 
 		preg_match_all(REGEX_INCLUDE_PAGE, $parms['Content'], $matches);
+
 		$uids = array_merge($uids, $matches[1]);
 		if ( count($uids) > 0 ) {
-            $first = array_shift($uids);
-            if ( '{{'.$first.'}}' == trim($parms['Content']) ) {
+            $first = array_shift(array_values($uids));
+            if ( $parms['Content'] == '{{'.$first.'}}' ) {
                 $parms['Includes'] = array_pop(preg_split('/-/', $first));
             }
 		}
@@ -45,8 +46,19 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
 		$uidService = new ObjectUID();
 		$objects = array();
 		foreach( $uids as $uid ) {
-		    if ( !$uidService->isValidUid($uid) ) continue;
-			$objects[] = $uidService->getClassNameByUid($uid).':'.array_pop(preg_split('/-/', $uid));
+		    if ( !$uidService->isValidUid($uid) ) {
+		        $objectIt = $this->getObject()->getRegistryBase()->Query(
+		            array(
+		                new FilterAttributePredicate('UID', $uid)
+                    )
+                );
+		        if ( $objectIt->getId() != '' ) {
+                    $objects[] = get_class($this->getObject()).':'.$objectIt->getId();
+                }
+            }
+		    else {
+                $objects[] = $uidService->getClassNameByUid($uid).':'.array_pop(preg_split('/-/', $uid));
+            }
 		}
 
 		$parms['Dependency'] = join(',',$objects);
@@ -128,4 +140,8 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
 			$trace_it->moveNext();
 		}
 	}
+
+	function IsPersisterImportant() {
+        return true;
+    }
 }

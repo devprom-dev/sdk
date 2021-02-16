@@ -4,7 +4,7 @@ include_once "AttachmentIterator.php";
 class AttachmentUnifiedIterator extends AttachmentIterator
 {
 	function getFileUrl() {
-        return '/file/'.$this->get('AttachmentClassName').'/'.$this->get('ProjectCodeName').'/'.$this->getId();
+        return \EnvironmentSettings::getServerUrl() . '/file/'.$this->get('AttachmentClassName').'/'.$this->get('ProjectCodeName').'/'.$this->getId();
 	}
 
 	function getFilePath($attribute)

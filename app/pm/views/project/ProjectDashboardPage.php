@@ -13,7 +13,10 @@ class ProjectDashboardPage extends PMPage
     }
 
     function getObject() {
- 		return new Project(new ProjectLinkedActiveRegistry());
+ 		return new Project(
+            getSession()->getProjectIt()->get('CodeName') == 'all'
+                ? null : new ProjectLinkedRegistry()
+        );
  	}
  	
  	function getTable() {

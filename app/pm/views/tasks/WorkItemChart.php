@@ -8,21 +8,27 @@ class WorkItemChart extends PMPageChart
 	    $startFilter = new SortAttributeClause('StartDate');
         $startFilter->setNullOnTop(false);
 
-        $filters = $this->getTable()->getFilterPredicates();
+        $plannedFilter = new SortAttributeClause('PlannedStartDate');
+        $plannedFilter->setNullOnTop(false);
+
+        $filters = $this->getTable()->getFilterPredicates($this->getTable()->getPredicateFilterValues());
         foreach( $filters as $key => $filter ) {
             if ( $filter instanceof FilterBaseVpdPredicate ) {
                 unset($filters[$key]);
             }
         }
+        $this->getObject()->disableVpd();
 
 		return $this->getObject()->getRegistry()->Query(
             array_merge(
                 $filters,
                 array (
                     $startFilter,
-                    new SortAttributeClause('PlannedStartDate'),
-                    new SortAttributeClause('FinishDate'),
-                    new FilterAttributePredicate('Assignee', getFactory()->getObject('ProjectUser')->getAll()->idsToArray())
+                    $plannedFilter,
+                    new SortAttributeClause('Priority'),
+                    new SortAttributeClause('OrderNum'),
+                    new FilterAttributePredicate('Assignee', getFactory()->getObject('ProjectUser')->getAll()->idsToArray()),
+                    new FilterAttributeGreaterPredicate('Planned', 0)
                 )
             )
 		);

@@ -51,25 +51,28 @@ if ( EnvironmentSettings::getBrowserIE() ) {
 }
 
 if ( count($items) < 1 ) return;
+$itemsCount = count($items);
 
 ?>
 
 <ul class="dropdown-menu text-left" role="menu" uid="<?=$uid?>">
 
-<?php foreach ( $items as $action ) { ?> 
+<?php foreach ( array_values($items) as $index => $action ) { ?>
 
 	<?php
 	if ( is_array($action['items']) )
 	{
-		$first_item = array_pop(array_values($action['items']));
-		if ( $first_item['name'] == '' ) {
+		$realActions = array_filter(array_values($action['items']), function($item) {
+		    return $item['name'] != '';
+        });
+		if ( count($realActions) < 1 ) {
 			$action['name'] = ''; // mark empty sub-menu as separator
 		}
 		else {
 			if ( count($action['items']) > 1 ) {
 				?>
 				<li class="dropdown-submenu">
-					<a href="#"><?= $action['name'] ?></a>
+					<a><?= $action['name'] ?></a>
                         <?php echo $view->render('core/PopupMenuBody.php', array('items' => $action['items'], 'uid' => $action['uid'])); ?>
 				</li>
 				<?php
@@ -101,8 +104,8 @@ if ( count($items) < 1 ) return;
     }
 
 		?>
-		<?php  if ( $action['url'] == '' && $action['click'] == '' && $action['name'] == '' ) { ?>
-			<? if ( $last_action['name'] != '') { ?>
+		<?php  if ( $action['name'] == '' ) { ?>
+			<? if ( $last_action['name'] != '' && $index < $itemsCount - 1) { ?>
 				<li class="divider"></li>
 			<? } ?>
 		<?php } else { ?>
@@ -135,14 +138,6 @@ if ( count($items) < 1 ) return;
 <?php
 
 $last_action = $action;
-}
-
-if ( $hasSearchOption ) {
-    ?>
-    <li uid="show-all" class="dropdown-item-all">
-        <a title="<?=text(2307)?>">&bull; &bull; &bull;</a>
-    </li>
-    <?php
 }
 
 if ( $optionsUrl != '' ) {

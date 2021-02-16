@@ -6,14 +6,19 @@ class RequestImporterContentBuilder extends WikiImporterContentBuilder
     private $ids = array();
 
     public function buildDocument($documentTitle, $documentContent, $options, $parentId) {
-        return $this->getObject()->getEmptyIterator();
+        if ( $documentContent == '' ) {
+            return $this->getObject()->getEmptyIterator();
+        }
+        return $this->buildPage(
+            $documentTitle, $documentContent, $options, $parentId, $this->getObject()->getEmptyIterator()
+        );
     }
 
     function getDocumentIt() {
         return $this->getObject()->getExact($this->ids);
     }
 
-    public function buildPage($title, $content, $options, $parentId)
+    public function buildPage($title, $content, $options, $parentId, $documentIt, $sectionNumber = '', $uid = '')
     {
         $objectId = $this->getObject()->add_parms(
             array_merge(

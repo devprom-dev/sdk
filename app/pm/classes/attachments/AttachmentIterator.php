@@ -7,24 +7,24 @@ class AttachmentIterator extends OrderedIterator
  		if ( $this->IsImage('File')) 
  		{
 			return '<a class="image_attach" data-fancybox="gallery" id="File'.$this->getId().'" href="'.$this->getFileUrl().
-				'&.png" title="'.$this->get('Description').'">'.$this->getFileName('File').'</a>';
+				'" title="'.$this->get('Description').'">'.$this->getFileName('File').'</a>';
  		}
  		else
  		{
-			return '<a id="File'.$this->getId().'" href="'.$this->getFileUrl().
+			return '<a id="File'.$this->getId().'" target="_blank" href="'.$this->getFileUrl().
 				'" title="'.$this->get('Description').'">'.$this->getFileName('File').'</a>';
  		}
  	}
  	
  	function getDisplayLink()
  	{
-        $modified = getSession()->getLanguage()->getDateFormattedShort($this->get('RecordModified'));
+        $modified = $this->getDateFormattedShort('RecordModified');
  		return $this->getFileLink().' ('.$modified.', '.$this->getFileSizeKb('File').' '.translate('Kb').')';
  	}
 
     function getFileInfo()
     {
-        $modified = getSession()->getLanguage()->getDateFormattedShort($this->get('RecordModified'));
+        $modified = $this->getDateFormattedShort('RecordModified');
         return $modified.', '.$this->getFileSizeKb('File').' '.translate('Kb');
     }
 
@@ -32,6 +32,11 @@ class AttachmentIterator extends OrderedIterator
  	{
  		return $this->getDisplayLink();
  	}
+
+ 	function getDisplayNameSearch( $prefix = '' )
+    {
+        return $this->getFileName('File');
+    }
 
 	function getAnchorIt()
 	{

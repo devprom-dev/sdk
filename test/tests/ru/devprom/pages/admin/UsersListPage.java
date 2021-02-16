@@ -45,7 +45,7 @@ public class UsersListPage extends AdminPageBase {
 	public int getUsersCount() {
 		try {
 			return driver.findElements(
-					By.xpath("//tr[contains(@id, 'userlist1_row_')]")).size();
+					By.xpath("//tr[starts-with(@id,'userlist1_row_')]")).size();
 		} catch (NoSuchElementException e) {
 			return 0;
 		}
@@ -53,7 +53,7 @@ public class UsersListPage extends AdminPageBase {
 
 	public List<User> getAllUsers() {
 		List<WebElement> allUsers = driver.findElements(By
-				.xpath("//tr[contains(@id, 'userlist1_row_')]"));
+				.xpath("//tr[starts-with(@id,'userlist1_row_')]"));
 		List<User> users = new ArrayList<User>();
 		for (WebElement userRow : allUsers) {
 			users.add(new User("User" + allUsers.indexOf(userRow), "pass",

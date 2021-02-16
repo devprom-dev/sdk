@@ -9,6 +9,7 @@ public class User implements Comparable<User> {
 	private String usernameLong;
 	private String email;
 	public Boolean isAdmin;
+	public int id;
 
 	public enum Lang {
 		russian, english

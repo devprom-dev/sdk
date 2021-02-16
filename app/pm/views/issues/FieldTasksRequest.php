@@ -23,22 +23,22 @@ class FieldTasksRequest extends FieldForm
  	function draw( $view = null )
  	{
  		$task = getFactory()->getObject('pm_Task');
-        $builder = new TaskModelExtendedBuilder();
-        $builder->build($task);
- 		$task->disableVpd();
- 		
- 		$task->addFilter( new FilterAttributePredicate( 'ChangeRequest', 		 
- 			is_object($this->object_it) ? $this->object_it->getId() : 0 ) );
- 		
- 		$task->addSort( new SortAttributeClause('State') );
- 		$task->addSort( new SortOrderedClause() );
- 		$task->addSort( new SortKeyClause() );
- 		
+ 		if ( is_object($this->object_it) ) {
+            $taskIt = $task->getRegistry()->Query(array(
+                new FilterAttributePredicate( 'ChangeRequest', $this->object_it->getId()),
+                new SortAttributeClause('State'),
+                new SortOrderedClause(),
+                new SortKeyClause()
+            ));
+        }
+ 		else {
+ 		    $taskIt = $task->getEmptyIterator();
+        }
+
  		echo '<div id="'.$this->getId().'" class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
-
- 		    $form = new FormRequestTasksEmbedded( $task, 'ChangeRequest' );
-
+ 		    $form = new FormRequestTasksEmbedded( $taskIt, 'ChangeRequest' );
             $form->setRelease($this->releaseId);
+
             if ( $_REQUEST['Iteration'] > 0 ) {
                 $_REQUEST['Release'] = $_REQUEST['Iteration'];
             }

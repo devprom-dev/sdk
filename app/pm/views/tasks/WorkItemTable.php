@@ -12,7 +12,7 @@ class WorkItemTable extends TaskTable
 
     function getList( $mode = '' )
     {
-        switch( $_REQUEST['report'] )
+        switch( $this->getReportBase() )
         {
             case 'workitemchart':
                 return new WorkItemChart($this->getObject());
@@ -32,9 +32,7 @@ class WorkItemTable extends TaskTable
         if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )
         {
             $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Task'));
-            if ( $method->hasAccess() )
-            {
-                $method->setRedirectUrl('donothing');
+            if ( $method->hasAccess() ) {
                 $parms = array (
                     'area' => $this->getPage()->getArea(),
                     'Assignee' => getSession()->getUserIt()->getId()
@@ -51,9 +49,7 @@ class WorkItemTable extends TaskTable
         else
         {
             $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Request'));
-            if ( $method->hasAccess() )
-            {
-                $method->setRedirectUrl('donothing');
+            if ( $method->hasAccess() ) {
                 $parms = array (
                     'area' => $this->getPage()->getArea(),
                     'Owner' => getSession()->getUserIt()->getId()
@@ -90,14 +86,18 @@ class WorkItemTable extends TaskTable
         return new WorkItemStatePredicate( $value );
     }
 
+    function buildIssueStatePredicate( $values ) {
+        return new WorkItemExactTypeStatePredicate($values['issueState'], getFactory()->getObject('Request'));
+    }
+
     function buildAssigneeFilter()
     {
-        if ( $this->getReport() == 'mytasks' ) return null;
+        if ( $this->getReportBase() == 'mytasks' ) return null;
         return parent::buildAssigneeFilter();
     }
 
     function buildAssigneePredicate( $values ) {
-        if ( $this->getReport() == 'mytasks' ) {
+        if ( $this->getReportBase() == 'mytasks' ) {
             return new FilterAttributePredicate('Assignee', getSession()->getUserIt()->getId());
         }
         else {
@@ -120,6 +120,12 @@ class WorkItemTable extends TaskTable
                 'workitemchart'
             ),
             parent::getChartModules($module)
+        );
+    }
+
+    function getDetailsParms() {
+        return array (
+            'active' => 'form'
         );
     }
 }

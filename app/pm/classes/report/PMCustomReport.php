@@ -27,7 +27,7 @@ class PMCustomReport extends Metaobject
  	
 	function getPage() 
 	{
-		return getSession()->getApplicationUrl().'project/reports?';
+		return getSession()->getApplicationUrl($this).'project/reports?';
 	}
 
 	function getSaveUrl($object_id = '', $report_it = null)

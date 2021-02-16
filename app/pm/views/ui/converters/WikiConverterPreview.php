@@ -1,5 +1,5 @@
 <?php
-
+use Devprom\ProjectBundle\Service\Wiki\WikiBaselineService;
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 
 class WikiConverterPreview 
@@ -8,8 +8,13 @@ class WikiConverterPreview
 	private $root_it;
 	private $options = array();
 	private $compareTo = null;
+	private $baselineService = null;
 
-	function setOptions( $options ) {
+	function __construct() {
+        $this->baselineService = new WikiBaselineService(getFactory(), getSession());
+    }
+
+    function setOptions( $options ) {
 		$this->options = $options;
 	}
 
@@ -19,21 +24,68 @@ class WikiConverterPreview
 
  	function setObjectIt( $wiki_it )
  	{
+ 	    $documentIt = $wiki_it->getRef('DocumentId');
+        $baselineId = '';
+        $compareToId = '';
+
+        foreach( $this->options as $option ) {
+            if ( preg_match('/baseline,(.+)/', $option, $matches) ) {
+                $baselineId = $matches[1];
+            }
+            if ( preg_match('/compare,(.+)/', $option, $matches) ) {
+                $compareToId = $matches[1];
+            }
+        }
+
+        if ( $baselineId != '' ) {
+            try {
+                $registry = $this->baselineService->getBaselineRegistry($documentIt, $baselineId);
+                if ( $compareToId != '' ) {
+                    $registry->setComparisonMode();
+                }
+                $wiki_it = $registry->Query(
+                    array(
+                        new FilterInPredicate($wiki_it->idsToArray()),
+                        new SortDocumentClause()
+                    )
+                );
+            }
+            catch( \Exception $e ) {}
+        }
+
+        if ( $compareToId != '' ) {
+            $this->compareTo = $this->baselineService->getComparableBaselineIt($documentIt, $compareToId);
+            if ( $baselineId == '' ) {
+                $registry = $this->baselineService->getComparableRegistry($documentIt, $this->compareTo);
+                $wiki_it = $registry->Query(
+                    array(
+                        new FilterInPredicate($wiki_it->idsToArray()),
+                        new SortDocumentClause()
+                    )
+                );
+            }
+        }
+
 		$this->root_it = $wiki_it->copy();
+        $this->wiki_it = $wiki_it;
 
 		$editor = WikiEditorBuilder::build($wiki_it->get('ContentEditor'));
-		$editor->setObjectIt($wiki_it);
+		$editor->setObjectIt($wiki_it->copy());
 
-		foreach( $this->options as $option ) {
-			if ( preg_match('/baseline,(.+)/', $option, $matches) ) {
-				$this->compareTo = $this->buildCompareTo($matches[1], $wiki_it);
-				if ( $this->compareTo->getId() == '' ) $this->compareTo = null;
-			}
-		}
+		if ( is_object($this->compareTo) ) {
+            $this->parser = $editor->getComparerParser();
+        }
+		else {
+		    if ( array_search('syntax', $this->options) !== false ) {
+                $this->parser = $editor->getHtmlImportableParser();
+            }
+		    else {
+                $this->parser = $editor->getHtmlParser();
+            }
+        }
 
- 		$this->parser = is_object($this->compareTo) ? $editor->getComparerParser() : $editor->getHtmlParser();
 		$this->parser->setRequiredExternalAccess();
- 		$this->parser->setObjectIt($wiki_it);
+ 		$this->parser->setInlineSectionNumbering(in_array('numbering', $this->options));
 
  		$this->parser->setHrefResolver(function($wiki_it) {
  			return '#'.$wiki_it->getId();
@@ -51,7 +103,6 @@ class WikiConverterPreview
                         return $info['caption'];
                       }
         );
-		$this->wiki_it = $wiki_it;
  	}
 
  	function buildCompareTo( $value, $wiki_it )
@@ -86,8 +137,6 @@ class WikiConverterPreview
  	function parse()
  	{
  		header('Content-Type: text/html; charset='.APP_ENCODING);
-		$this->uid = new ObjectUID();
-
  		$this->drawBegin();
 		$this->drawBody();
  		$this->drawEnd();
@@ -212,11 +261,7 @@ class WikiConverterPreview
 		<?
 			if ( is_object($this->compareTo) )
 			{
-				$registry = new WikiPageRegistryComparison($wiki_it->object);
-				$registry->setPageIt($wiki_it);
-				$registry->setBaselineIt($this->compareTo);
-				$compare_to_page_it = $registry->Query();
-
+                $compare_to_page_it = $this->baselineService->getComparedPageIt($wiki_it, $this->compareTo);
 				$diffBuilder = new WikiHtmlDiff(
 					$compare_to_page_it->getId() > 0
 						? $this->parser->parse($compare_to_page_it->getHtmlDecoded('Content'))
@@ -243,9 +288,8 @@ class WikiConverterPreview
 		if( $this->b_draw_section_num && $wiki_it->get('SectionNumber') != '' ) {
 			$title .= $wiki_it->get('SectionNumber').'.&nbsp; ';
 		}
-		if ( in_array('uid', $this->options) && $wiki_it->get('ParentPage') != '' ) {
-			$info = $this->uid->getUIDInfo($wiki_it);
-			$title .= $info['uid'] . '&nbsp; ';
+		if ( in_array('uid', $this->options) && ($wiki_it->get('ParentPage') != '' || $wiki_it->get('DocumentId') == '') ) {
+			$title .= '['.$wiki_it->get('UID') . ']&nbsp; ';
 		}
 		$title .= $wiki_it->get('Caption');
 		return $title;

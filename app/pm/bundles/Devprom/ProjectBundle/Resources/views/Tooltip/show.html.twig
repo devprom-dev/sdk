@@ -1,8 +1,11 @@
 <div class="tooltip-body">
 {% if type.uid != "" %}
 	<div class="tt-field-data">
-		<b>{{ type.name }}</b>: {{ type.uid | raw }}
-		{% for attribute_name, attribute in attributes if attribute_name == "Caption" %}
+		<b>{{ type.name }}</b>:
+		<button type="button" class="btn-link clipboard" data-clipboard-text="{{ type.url | raw }}" data-message="{{ type.message | raw }}" tabindex="-1">
+			<i class="icon-share"></i> {{ type.uid | raw }}
+		</button>
+		{% for attribute_name, attribute in attributes if attribute.name == "Caption" %}
 			{{ attribute.text | raw }}
 		{% endfor %}
 	</div>
@@ -10,7 +13,7 @@
 {% endif %}
 
 {% set group = 0 %}
-{% for attribute_name, attribute in attributes if type.uid != "" and attribute_name != "Caption" or type.uid == "" %}
+{% for attribute_name, attribute in attributes if attribute.name != "Caption" or type.uid == ""  %}
 	{% if group != attribute.group %}
 		<div class="accordion-wrap" style="margin-top: 18px;">
 			<div class="accordion-heading">

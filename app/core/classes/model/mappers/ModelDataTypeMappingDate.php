@@ -1,11 +1,9 @@
 <?php
-
 include_once "ModelDataTypeMapping.php";
 
 class ModelDataTypeMappingDate extends ModelDataTypeMapping
 {
-	public function applicable( $type_name )
-	{
+	public function applicable( $type_name ) {
 		return in_array($type_name, array('date'));
 	}
 	
@@ -14,12 +12,17 @@ class ModelDataTypeMappingDate extends ModelDataTypeMapping
 	    list($date, $time) = preg_split('/\s+/', $value);
 		if ( $date == '' ) return '';
 
-        $value = SystemDateTime::convertToServerTime(
-            SystemDateTime::parseRelativeDateTime($date, getLanguage()) . date(' H:i:s')
-        );
-
+        $value = SystemDateTime::parseRelativeDateTime($date, getLanguage());
         if ( $value == '' ) return '';
 
-		return $value;
+        try {
+            $time = new DateTime($date, new DateTimeZone("UTC"));
+            return $time->format("Y-m-d");
+        }
+        catch( Exception $e ) {
+            \Logger::getLogger('System')->error($e->getMessage());
+        }
+
+        return "";
 	}
 }

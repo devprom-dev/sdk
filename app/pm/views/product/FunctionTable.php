@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH.'pm/methods/FunctionFilterStageWebMethod.php';
 include_once SERVER_ROOT_PATH.'pm/methods/FunctionFilterStateWebMethod.php';
 include "FunctionList.php";
 include "FunctionChart.php";
@@ -16,29 +15,15 @@ class FunctionTable extends PMPageTable
             case 'trace':
                 return new FunctionList( $this->getObject() );
 			default:
+			    if ( $_REQUEST['export'] != '' ) {
+                    return new FunctionList( $this->getObject() );
+                }
 				return new FunctionTreeGrid( $this->getObject() );
 		}
 	}
 
     function buildFiltersName() {
         return md5($_REQUEST['view'].parent::buildFiltersName());
-    }
-
-    function getActions()
-    {
-        $actions = array();
-        $object = $this->getObject();
-
-        if ( getFactory()->getAccessPolicy()->can_create($object) && !getSession()->getProjectIt()->IsPortfolio() ) {
-            $actions[] = array();
-            $actions['import-excel'] = array(
-                'name' => text(2261),
-                'url' => '?view=import&mode=xml&object='.get_class($this->getObject()),
-                'uid' => 'import-excel'
-            );
-        }
-
-        return array_merge($actions, parent::getActions());
     }
 
     function getNewActions()
@@ -52,7 +37,6 @@ class FunctionTable extends PMPageTable
 		$method = new ObjectCreateNewWebMethod($this->getObject());
 		if ( !$method->hasAccess() ) return $actions;
 
-        $method->setRedirectUrl('donothing');
 		while( !$type_it->end() )
 		{
 			$uid = 'append-feature-'.$type_it->get('ReferenceName');
@@ -77,27 +61,40 @@ class FunctionTable extends PMPageTable
 			$this->buildFilterType(),
 			$this->buildTagsFilter(),
 			new FilterObjectMethod( getFactory()->getObject('Importance'), '', 'importance'),
-			new FunctionFilterStageWebMethod(),
 			new FilterObjectMethod($this->getObject(), text(2094), 'parent')
 		);
 
+		$filter = $this->buildStageFilter();
+		if ( is_object($filter) ) {
+		    $filters[] = $filter;
+        }
+
 		return array_merge( $filters, parent::getFilters() );
 	}
-	
-	function getFilterPredicates()
-	{
-	    $filters = $this->getFilterValues();
 
+	function buildStageFilter()
+    {
+        $methodologIt = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodologIt->HasReleases() || $methodologIt->HasPlanning() ) {
+            return new FilterObjectMethod( getFactory()->getObject('Stage'), '', 'stage');
+        }
+    }
+
+	function getFilterPredicates( $values )
+	{
 		$predicates = array(
-			new FeatureStateFilter( $filters['state'] ),
-			new CustomTagFilter( $this->getObject(), $filters['tag'] ),
-			new FilterAttributePredicate( 'Importance', $filters['importance'] ),
-			new FilterAttributePredicate( 'Type', $filters['type'] ),
-            new ParentTransitiveFilter($_REQUEST['roots']),
-            new ParentTransitiveFilter($filters['parent'])
+			new FeatureStateFilter( $values['state'] ),
+			new CustomTagFilter( $this->getObject(), $values['tag'] ),
+			new FilterAttributePredicate( 'Importance', $values['importance'] ),
+			new FilterAttributePredicate( 'Type', $values['type'] ),
+            $_REQUEST['roots'] == '0'
+                ? new FeatureRootFilter()
+                : new FilterAttributePredicate('ParentFeature', $_REQUEST['roots']),
+            new ParentTransitiveFilter($values['parent']),
+            new FeatureStageFilter($values['stage'])
 		);
 		
-		return array_merge(parent::getFilterPredicates(), $predicates);
+		return array_merge(parent::getFilterPredicates( $values ), $predicates);
 	}
 
 	protected function buildFilterType()
@@ -115,11 +112,24 @@ class FunctionTable extends PMPageTable
         return $filter;
     }
 
+    function getSortAttributeClause( $field )
+    {
+        $parts = preg_split('/\./', $field);
+        switch( $parts[0] ) {
+            case 'FeatureLevel':
+                return new SortReferenceNameClause($this->getObject()->getAttributeObject($parts[0]), 'Type');
+            default:
+                return parent::getSortAttributeClause($field);
+        }
+    }
+
     protected function getFamilyModules( $module )
     {
         return array(
+            'delivery',
             'features-trace',
-            'features-list'
+            'features-list',
+            'dicts-featuretype'
         );
     }
 

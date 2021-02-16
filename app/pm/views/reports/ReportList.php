@@ -1,11 +1,8 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 
 class ReportList extends PMPageList
 {
-	private $first_area_it = null;
-
 	private $favorite_reports = array();
 	
     function getIterator()
@@ -20,62 +17,47 @@ class ReportList extends PMPageList
         return $it;
     }
 
-    function getForm( $object_it ) {
+    function getForm($object_it) {
         return null;
     }
     
 	function IsNeedToDisplay( $attr ) 
 	{
-		switch ( $attr )
-		{
+		switch ( $attr ) {
 			case 'Caption':
 				return true;
-				
 			default:
 				return false;
 		}
 	}
 
-	function IsNeedToDeleteRow( $object_it )
-	{
+	function IsNeedToDeleteRow( $object_it ) {
 		return is_numeric($object_it->getId()) && parent::IsNeedToDeleteRow( $object_it );
 	}
 
 	function getColumnFields()
 	{
 		$fields = parent::getColumnFields();
-		
 		unset($fields[array_search('Url', $fields)]);
-		
 		return $fields;
 	}
 
-	function getGroupFields()
-	{
+	function getGroupFields() {
 		return array('Category');
 	}
 
 	function drawGroup( $group_field, $object_it ) 
 	{
-		global $model_factory;
-		
-		switch ( $group_field )
-		{
+		switch ( $group_field ) {
 			case 'Category':
-				
-			    $category = $model_factory->getObject('PMReportCategory');
+			    $category_it = getFactory()->getObject('PMReportCategory')->getByRef('ReferenceName', $object_it->get('Category'));
 
-			    $category_it = $category->getByRef( 'ReferenceName', $object_it->get('Category') );
-
-			    if ( $category_it->getId() )
-			    {
+			    if ( $category_it->getId() ) {
 				    echo $category_it->getDisplayName();
 			    }
-			    else
-			    {
+			    else {
 				    echo translate('Отчеты');
 			    }
-				
 				break;
 		}
 	}
@@ -89,16 +71,27 @@ class ReportList extends PMPageList
 			return $value['id'] == $id;
 		});
 
-		if ( count($filtered) < 1 )
-		{
+		if ( count($filtered) < 1 ) {
 			$info = $object_it->buildMenuItem();
 		    $actions[] = array(
 			    'name' => text(1327),
 			    'url' => "javascript:addToFavorites('".$object_it->getId()."','".urlencode($info['url'])."');" 
 			);
 		}
-		
-		if ( is_numeric($object_it->getId()) )
+
+        $method = new ObjectCreateNewWebMethod(getFactory()->getObject('DashboardItem'));
+        $actions['add-dashboard'] = array(
+            'name' => text(2926),
+            'url' => $method->getJSCall(
+                array(
+                    'Caption' => $object_it->getDisplayName(),
+                    'WidgetUID' => $object_it->getId()
+                )
+            ),
+            'uid' => 'add-dashboard'
+        );
+
+        if ( is_numeric($object_it->getId()) )
 		{
 			$custom_it = getFactory()->getObject('pm_CustomReport')->getExact( $object_it->getId() );
 
@@ -152,12 +145,5 @@ class ReportList extends PMPageList
 			default:
 				parent::drawCell( $object_it, $attr );
 		}
-	}
-	
-	protected function getFirstAreaIt()
-	{
-		if ( is_object($this->first_area_it) ) return $this->first_area_it;
-		
-		return $this->first_area_it = getFactory()->getObject('FunctionalArea')->getAll();
 	}
 }

@@ -4,16 +4,35 @@ class TaskFeaturePredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
-		$ids = array_filter(preg_split('/,/', $filter), function($value) {
-			return $value > 0;
-		});
-		if ( strpos($filter, 'none') !== false ) $ids[] = '0';
-		if ( count($ids) < 1 ) return " AND 1 = 2 ";
+ 	    $sqls = array();
 
-		$sql = " EXISTS (SELECT 1 FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest AND IFNULL(r.Function,0) IN (".join(',',$ids).")) ";
-		if ( in_array(0, $ids)) {
-			$sql = " ( ".$sql." OR NOT EXISTS (SELECT 1 FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) ) ";
-		}
-		return " AND ".$sql;
+ 	    if ( strpos($filter, 'none') !== false ) {
+            $sqls[] =
+                " (EXISTS (SELECT 1 FROM pm_ChangeRequest r WHERE r.Function IS NULL AND r.pm_ChangeRequestId = t.ChangeRequest) OR t.ChangeRequest IS NULL) ".
+                " AND NOT EXISTS (SELECT 1 FROM pm_FunctionTrace ft, pm_TaskTrace tt 
+                                   WHERE tt.Task = t.pm_TaskId AND tt.ObjectClass = 'Requirement' 
+                                     AND tt.ObjectId = ft.ObjectId AND ft.ObjectClass = 'Requirement') ";
+        }
+
+        if ( strpos($filter, 'any') !== false ) {
+            $sqls[] =
+                " EXISTS (SELECT 1 FROM pm_ChangeRequest r WHERE r.Function IS NOT NULL AND r.pm_ChangeRequestId = t.ChangeRequest) ".
+                " AND EXISTS (SELECT 1 FROM pm_FunctionTrace ft, pm_TaskTrace tt 
+                               WHERE tt.ObjectClass = 'Requirement' AND tt.ObjectId = ft.ObjectId AND ft.ObjectClass = 'Requirement') ";
+        }
+
+		$ids = \TextUtils::parseIds($filter);
+		if ( count($ids) > 0 ) {
+            $sqls[] =
+                " EXISTS (SELECT 1 FROM pm_ChangeRequest r 
+                           WHERE r.Function IN (".join(',',$ids).") AND r.pm_ChangeRequestId = t.ChangeRequest) ";
+
+            $sqls[] =
+                " EXISTS (SELECT 1 FROM pm_FunctionTrace ft, pm_TaskTrace tt 
+                           WHERE tt.Task = t.pm_TaskId AND tt.ObjectClass = 'Requirement' AND ft.Feature IN (".join(',',$ids).")
+                             AND tt.ObjectId = ft.ObjectId AND ft.ObjectClass = 'Requirement') ";
+        }
+
+		return count($sqls) < 1 ? " AND 1 = 2 " : " AND (".join(" OR ", $sqls).") ";
  	}
 }

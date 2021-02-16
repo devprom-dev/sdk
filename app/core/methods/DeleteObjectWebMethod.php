@@ -9,7 +9,7 @@ class DeleteObjectWebMethod extends WebMethod
  	function __construct( $object_it = null )
  	{
  		$this->object_it = $object_it;
- 		
+ 		$this->setBeforeCallback('devpromOpts.updateUI');
  		parent::WebMethod();
  	}
  	
@@ -52,7 +52,7 @@ class DeleteObjectWebMethod extends WebMethod
 
 		if ( $object_it->delete() < 1 ) throw new Exception('The object wasn\'t deleted');
 
-		if ( class_exists('UndoWebMethod') ) {
+		if ( class_exists('UndoWebMethod') && UndoLog::Instance()->valid($object_it) ) {
 			$method = new UndoWebMethod(ChangeLog::getTransaction());
 			$method->setCookie();
 		}

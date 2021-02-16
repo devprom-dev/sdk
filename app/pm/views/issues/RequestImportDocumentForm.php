@@ -61,7 +61,7 @@ class RequestImportDocumentForm extends PMPageForm
                             array(
                                 'Id' => $documentIt->getId(),
                                 'Url' => getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
-                                            'request='.\TextUtils::buildIds($documentIt->idsToArray())
+                                            'ids='.\TextUtils::buildIds($documentIt->idsToArray())
                                          )
                             )
                         );

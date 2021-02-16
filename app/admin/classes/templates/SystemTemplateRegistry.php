@@ -37,13 +37,18 @@ class SystemTemplateRegistry extends ObjectRegistrySQL
             ),
             array (
                 'Caption' => text(2056),
-                'BackupDirName' => addslashes($projectPath."views/Emails/".$language),
+                'BackupDirName' => addslashes($projectPath."views/Emails"),
                 'BackupFileName' => addslashes("object-changed.twig")
             ),
             array (
                 'Caption' => text(2612),
                 'BackupDirName' => addslashes($projectPath."views/Emails/".$language),
                 'BackupFileName' => addslashes("share-widget.twig")
+            ),
+            array (
+                'Caption' => text(2696),
+                'BackupDirName' => addslashes($projectPath."views/Emails/".$language),
+                'BackupFileName' => addslashes("deadlines.twig")
             ),
             array (
                 'Caption' => text(2022),
@@ -59,6 +64,16 @@ class SystemTemplateRegistry extends ObjectRegistrySQL
                 'Caption' => text(2517),
                 'BackupDirName' => addslashes($serviceDeskPath."views"),
                 'BackupFileName' => addslashes("Issue/edit.html.twig")
+            ),
+            array (
+                'Caption' => text(2687),
+                'BackupDirName' => addslashes($serviceDeskPath."views"),
+                'BackupFileName' => addslashes("Issue/show.html.twig")
+            ),
+            array (
+                'Caption' => text(2688),
+                'BackupDirName' => addslashes($serviceDeskPath."views"),
+                'BackupFileName' => addslashes("Issue/index.html.twig")
             ),
 			array (
 				'Caption' => text(2141),

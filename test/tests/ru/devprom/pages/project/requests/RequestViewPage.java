@@ -26,9 +26,16 @@ import ru.devprom.items.Milestone;
 import ru.devprom.pages.CKEditor;
 import ru.devprom.pages.project.SDLCPojectPageBase;
 import ru.devprom.pages.project.SpentTimePage;
+import ru.devprom.pages.project.requirements.RequirementNewPage;
 import ru.devprom.pages.project.testscenarios.TestScenarioTestingPage;
 
-public class RequestViewPage extends SDLCPojectPageBase {
+public class RequestViewPage extends SDLCPojectPageBase
+{
+	@FindBy(xpath = "//a[@id='workflow-inprogress']")
+	protected WebElement analyseBtn;
+
+	@FindBy(xpath = "//a[contains(@id,'requirement')]")
+	protected WebElement createRequirementBtn;
 
 	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
@@ -42,16 +49,16 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	@FindBy(id = "state-label")
 	protected WebElement stateLabel;
 
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr[@name='Type']/td")
+	@FindBy(xpath = "//table[@class='properties-table']//tr[@name='Type']/td")
 	protected WebElement typeLabel;
 
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr[@name='Priority']/td")
+	@FindBy(xpath = "//table[@class='properties-table']//tr[@name='Priority']/td")
 	protected WebElement priorityLabel;
 
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr[@name='Estimation']/td")
+	@FindBy(xpath = "//table[@class='properties-table']//tr[@name='Estimation']/td")
 	protected WebElement estimatesLabel;
 
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr[@name='Author']/td")
+	@FindBy(xpath = "//table[@class='properties-table']//tr[@name='Author']/td")
 	protected WebElement originatorLabel;
 
 	@FindBy(xpath = "//input[@value='requesttracemilestone']/following-sibling::div[contains(@id,'embeddedItems')]//*[contains(@class,'title')]")
@@ -96,7 +103,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//ul//a[@id='run-test']")
 	protected WebElement beginTesting;
 
-	@FindBy(xpath = "//ul//a[text()='Реализовать']")
+	@FindBy(xpath = "//ul//a[@id='implement']")
 	protected WebElement duplicateRequest;
 
 	@FindBy(xpath = "//ul//a[text()='Перенести в проект']")
@@ -213,9 +220,6 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	}
 
 	public RequestViewPage addComment(String comment) {
-		if (!addComment.isDisplayed()) {
-			collapseComments.click();
-		}
 		scrollToElement(addComment);
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
 				.elementToBeClickable(addComment));
@@ -295,7 +299,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 
 	public int readFirstInPageCommentNumber() {
 		String commentId = driver.findElement(
-				By.xpath(".//*[contains(@id,'comment') and child::table]"))
+				By.xpath(".//*[contains(@id,'comment') and contains(@class,'comment-line')]"))
 				.getAttribute("id");
 		String[] id = commentId.split("t");
 		return Integer.parseInt(id[1]);
@@ -334,7 +338,6 @@ public class RequestViewPage extends SDLCPojectPageBase {
 				.presenceOfElementLocated(By.id("ClosedInVersionText")));
 		driver.findElement(By.id("ClosedInVersionText")).clear();
 		driver.findElement(By.id("ClosedInVersionText")).sendKeys(version);
-		autocompleteSelect(version);
 		driver.findElement(By.id("pm_ChangeRequestSubmitBtn")).click();
 		(new WebDriverWait(driver, waiting))
 				.until(ExpectedConditions.presenceOfElementLocated(By
@@ -362,7 +365,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		if ( !input.getAttribute("value").equals(releaseNumber) ) {
 			input.clear();
 			input.sendKeys(releaseNumber); 
-	   		autocompleteSelect(releaseNumber, true);
+	   		autocompleteSelect(releaseNumber);
 		}
 
 		submitDialog(submitBtn);
@@ -400,45 +403,67 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		return new RequestPlanningPage(driver);
 	}
 
-	public TestScenarioTestingPage beginTest(String version, String environment) {
+	public TestScenarioTestingPage beginTest(String version, String environment) 
+	{
 		clickOnInvisibleElement(beginTesting);
 		waitForDialog();
 		if (!"".equals(environment)) 	(new Select(driver.findElement(By.id("pm_TestEnvironment")))).selectByVisibleText(environment);
 		driver.findElement(By.id("VersionText")).clear();
 		driver.findElement(By.id("VersionText")).sendKeys(version);
 		autocompleteSelect(version);
-		submitDialog(driver.findElement(By.id("pm_TestSubmitBtn")));
+		submitDialog(driver.findElement(By.id("pm_TestSubmitOpenBtn")));
 		return new TestScenarioTestingPage(driver);
 	}
 
-	public String[] readTestResults() {
+	public String[] readTestResults() 
+	{
+		openTracesSection();
+		
 		List<WebElement> testScenarios = driver
 				.findElements(By
 						.xpath("//span[@name='pm_ChangeRequestTestExecution']//div[contains(@class,'transparent-btn')]"));
-		String[] results = new String[testScenarios.size()];
-		for (int i = 0; i < results.length; i++) {
-			results[i] = testScenarios.get(i).getText();
+		
+		ArrayList<String> results = new ArrayList<String>();
+		for (int i = 0; i < testScenarios.size(); i++) {
+			String title = testScenarios.get(i).getText();
+			if ( title.equals("") ) continue;
+			results.add(title);
 		}
-		return results;
+		return results.toArray(new String[results.size()]);
 	}
 
-	public Requirement[] readRequirements() {
-		Requirement[] results;
+	public Requirement[] readRequirements() 
+	{
+		openTracesSection();
+		
 		String[] ss;
 		String s;
 		List<WebElement> requirementsList = driver
 				.findElements(By
-						.xpath("//div[@id='collapseOne']//input[@value='requesttracerequirement']/following-sibling::div[contains(@id,'embeddedItems')]//div[@class='embeddedRowTitle']"));
-		results = new Requirement[requirementsList.size()];
-		for (int i = 0; i < results.length; i++) {
+						.xpath("//input[@value='requesttracerequirement']/following-sibling::div[contains(@id,'embeddedItems')]//div[@class='embeddedRowTitle']"));
+		
+		ArrayList<Requirement> results = new ArrayList<Requirement>();
+		for (int i = 0; i < requirementsList.size(); i++) {
 			s = requirementsList.get(i).findElement(By.className("title")).getText();
+			if ( s.equals("") ) continue;
 			ss = s.split(" ");
-			results[i] = new Requirement(ss[ss.length - 1].trim());
-			results[i].setId(s.split("]")[0].replace('[', ' ').trim());
+			Requirement t = new Requirement(ss[ss.length - 1].trim());
+			t.setId(s.split("]")[0].replace('[', ' ').trim());
+			results.add(t);
 		}
-		return results;
+		return results.toArray(new Requirement[results.size()]);
 	}
 
+	public void openTracesSection()
+	{
+		WebElement section = driver.findElement(By.xpath("//a[contains(@href,'collapseFive')]"));
+		if ( section.isDisplayed() ) {
+			section.click();
+			(new WebDriverWait(driver, 5)).until(ExpectedConditions
+					.visibilityOf(driver.findElement(By.id("collapseFive"))));
+		}
+	}
+	
 	public List<RTask> readTasks() {
 		List<RTask> results = new ArrayList<RTask>();
 		((JavascriptExecutor) driver)
@@ -450,12 +475,16 @@ public class RequestViewPage extends SDLCPojectPageBase {
 			String idText = el.findElement(By.xpath("./a[contains(@class,'uid')]")).getText();
 			String id = idText.replaceAll("\\[", "").replaceAll("\\]", "");
 			String state = el.findElement(By.xpath("./span[contains(@class,'label')]")).getText();
-			String[] parts = el.getText().replace(idText, "").replace(state, "").split(":");
+			String[] parts = el.getText().replace(idText, "").replace(state, "").replace("\u25CF","").split(":");
 			String type = "";
 			String name = "";
 			if ( parts.length > 1 ) {
 				type = parts[0].trim();
 				name = parts[1].trim();
+				String[] nameParts = name.split("\\[");
+				if ( nameParts.length > 1 ) {
+					name = nameParts[0].trim();
+				}
 			} else {
 				type = parts[0].trim();
 			}
@@ -502,7 +531,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	}
 
 	public String readDescription() {
-		return driver.findElement(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription')]")).getText().trim();
+		return driver.findElement(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription') and contains(@class,'wysiwyg-text')]")).getText().trim();
 	}
 
 	public List<Spent> readSpentRecords() 
@@ -514,7 +543,10 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		return spentList;
 	}
 
-	public List<Commit> readCommitRecords() {
+	public List<Commit> readCommitRecords() 
+	{
+		openTracesSection();
+		
 		List<WebElement> captions = driver
 				.findElements(By
 						.xpath("//span[@name='pm_ChangeRequestSourceCode']//span[contains(@class,'title')]"));
@@ -575,7 +607,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	}
 
 	public Boolean isDescriptionEditable() {
-		return driver.findElements(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription')]")).size() < 1;
+		return driver.findElements(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription') and contains(@class,'wysiwyg-text')]")).size() < 1;
 	}
 
 	public RequestViewPage applySimpleTransition(String transitionName) {
@@ -615,4 +647,25 @@ public class RequestViewPage extends SDLCPojectPageBase {
 				.click();
 		waitForFilterActivity();
 	}
+
+	public RequirementNewPage clickActionCreateRequirement()
+	{
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(createRequirementBtn));
+		createRequirementBtn.click();
+		waitForDialog();
+		return new RequirementNewPage(driver);
+	}
+
+	public void doAnalyse(String time) {
+		try
+		{
+			(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(analyseBtn));
+			analyseBtn.click();
+			Thread.sleep(2000);
+		}
+		catch(InterruptedException e)
+		{
+		}
+	}
+
 }

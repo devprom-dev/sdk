@@ -63,11 +63,6 @@ abstract class EstimationStrategy
 		return array(round($total_open, 1), round($estimated/$request_it->count()*100, 1));
 	}
 	
-	function getEstimationText()
-	{
-		return '';
-	}
-
     function getVelocityText()
     {
         $methodology_it = getSession()->getProjectIt()->getMethodologyIt();

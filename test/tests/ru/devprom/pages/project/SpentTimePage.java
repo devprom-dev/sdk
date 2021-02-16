@@ -41,7 +41,7 @@ public class SpentTimePage extends SDLCPojectPageBase {
 		(new WebDriverWait(driver, waiting))
 			.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//table[contains(@id,'spenttimelist')]")));
 
-		List<WebElement> rows = driver.findElements(By.xpath("//table[contains(@id,'spenttimelist')]//tr[contains(@id,'spenttimelist1_row') and @sort-type='asc']"));
+		List<WebElement> rows = driver.findElements(By.xpath("//table[contains(@id,'spenttimelist')]//tr[contains(@id,'spenttimelist1_row') and string(@object-id)]"));
 		List<Spent> spentList = new ArrayList<Spent>();
 		for(WebElement row : rows) {
 			spentList.add(

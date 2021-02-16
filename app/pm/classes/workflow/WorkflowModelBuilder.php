@@ -1,7 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once "persisters/StateDurationPersister.php";
-include_once "persisters/StateDetailsPersister.php";
 
 class WorkflowModelBuilder extends ObjectModelBuilder 
 {
@@ -11,6 +10,5 @@ class WorkflowModelBuilder extends ObjectModelBuilder
  	    if ( $object->getStateClassName() == '' ) return;
 
 		$object->addPersister( new StateDurationPersister(array('LeadTime','StateDuration')) );
-		$object->addPersister( new StateDetailsPersister() );
     }
 }

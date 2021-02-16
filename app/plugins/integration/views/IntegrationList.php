@@ -12,16 +12,15 @@ class IntegrationList extends PMPageList
         }
     }
 
-    function getColumns()
+    function extendModel()
     {
-        return array_diff(
-            parent::getColumns(),
-            array('Log','ItemsQueue','MappingSettings')
-        );
+        foreach( array('Log','ItemsQueue','MappingSettings') as $attribute ) {
+            $this->getObject()->setAttributeVisible($attribute, false);
+        }
+        parent::extendModel();
     }
 
-    function getGroupFields()
-    {
+    function getGroupFields() {
         return array();
     }
 
@@ -29,6 +28,11 @@ class IntegrationList extends PMPageList
     {
         switch( $attr ) {
             case 'StatusText':
+                if ( $object_it->get('IsActive') == 'N' ) {
+                    echo '<span class="label">'.translate('Отключено').'</span>';
+                    break;
+                }
+
                 if ( $object_it->get($attr) == '' ) {
                     echo '<span class="label label-success">Ok</span>';
                 }
@@ -37,10 +41,9 @@ class IntegrationList extends PMPageList
                 }
 
                 $method = new ObjectModifyWebMethod($object_it);
-                $method->setRedirectUrl('donothing');
                 echo '<span style="margin-left:26px;">';
                     echo '<i class="icon-file"></i> ';
-                    echo '<a class="dashed" onclick="'.$method->getJSCall(array('tab'=>2)).'">'.text('integration15').'</a>';
+                    echo '<a class="dashed" onclick="'.$method->getJSCall(array('tab'=>'additional')).'">'.text('integration15').'</a>';
                 echo '</span>';
                 break;
 

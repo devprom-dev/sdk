@@ -9,4 +9,8 @@ class RequestColorsPersister extends ObjectSQLPersister
             " (SELECT tp.RelatedColor FROM Priority tp WHERE tp.PriorityId = t.Priority) PriorityColor "
         );
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }

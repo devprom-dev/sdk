@@ -206,6 +206,7 @@ class RequestsImportBase extends CommandForm
 
 			array_push($result, $parms);
 		}
+
 		return $result;
 	}
 
@@ -217,7 +218,7 @@ class RequestsImportBase extends CommandForm
 	{
 		$object_it->moveFirst();
 		while ( !$object_it->end() ) {
-			if ( mb_strtoupper($object_it->getHtmlDecoded('Caption')) == mb_strtoupper(trim($value)) ) {
+			if ( mb_stripos($value, $object_it->getHtmlDecoded('Caption')) !== false ) {
 				return $object_it->getId();
 			}
 			$object_it->moveNext();
@@ -259,90 +260,122 @@ class RequestsImportBase extends CommandForm
 		}
 
 		$result = $this->parse();
+		$comments = array();
         $undefined = array();
 		$imported = 0;
+		$errors = array();
 
 		for ( $i = 0; $i < count($result); $i++ )
 		{
-			if ( $result[$i]['Caption'] != '' )
-			{
-				foreach( $result[$i] as $field => $value )
-				{
-					$match = array();
-					if ( $this->request->IsReference($field) )
-					{
-						$object = $this->request->getAttributeObject($field);
-						getFactory()->resetCachedIterator( $object );
+            foreach( $result[$i] as $field => $value )
+            {
+                $match = array();
+                if ( $this->request->IsReference($field) )
+                {
+                    $object = $this->request->getAttributeObject($field);
+                    getFactory()->resetCachedIterator( $object );
 
-						if ( preg_match('/^Undefined:(.+)$/si', $value, $match) )
-						{
-                            if ( $object instanceof $this->request ) {
-						        // hierarchy case
-                                $parentId = trim($match[1]);
-                                if ( array_key_exists($parentId, $undefined) ) {
-                                    $id = $undefined[$parentId];
-                                }
-                                else {
-                                    $parentRow = array_shift(
-                                        array_filter($result, function($item) use($parentId) {
-                                            return $item['Id'] == $parentId || $item['Caption'] == $parentId;
-                                        })
-                                    );
-                                    $id = $undefined[$parentRow['Id']];
-                                    if ( $id == '' ) $id = $this->getId($object->getAll(), $parentRow, '');
-                                    if ( $id == '' && in_array($field, array('Author')) ) $id = $parentId;
-                                }
-                                $result[$i][$field] = $id;
+                    if ( preg_match('/^Undefined:(.+)$/si', $value, $match) )
+                    {
+                        if ( $object instanceof $this->request ) {
+                            // hierarchy case
+                            $parentId = trim($match[1]);
+                            if ( array_key_exists($parentId, $undefined) ) {
+                                $id = $undefined[$parentId];
                             }
                             else {
-						        // other references
-                                $self = $this;
-                                $objectIt = $object->getAll();
-                                $valueObject = $object instanceof Tag || $object instanceof Watcher || $object instanceof User;
-
-                                $result[$i][$field] = join(',', array_filter(
-                                    array_map(
-                                        function($value) use ($self, $objectIt, $valueObject) {
-                                            return $self->getId($objectIt, $value, $valueObject ? $value : '');
-                                        },
-                                        preg_split("/[\r\n,]+/mi", $match[1])
-                                    ),
-                                    function($value) {
-                                        return $value != '';
-                                    }
-                                ));
+                                $parentRow = array_shift(
+                                    array_filter($result, function($item) use($parentId) {
+                                        return $item['Id'] == $parentId || mb_stripos($parentId, $item['Caption']) !== false;
+                                    })
+                                );
+                                $id = $undefined[$parentRow['Id']];
+                                if ( $id == '' ) $id = $this->getId($object->getAll(), $parentRow, '');
+                                if ( $id == '' && in_array($field, array('Author')) ) $id = $parentId;
                             }
-						}
+                            $result[$i][$field] = $id;
+                        }
+                        else {
+                            // other references
+                            $self = $this;
+                            $objectIt = $object->getAll();
+                            $valueObject = $object instanceof Tag || $object instanceof Watcher || $object instanceof User;
 
-						if ( $result[$i][$field] > 0 && $object instanceof Project ) {
-							$result[$i]['VPD'] = $object->getExact($result[$i][$field])->get('VPD');
-						}
-					}
-				}
+                            $result[$i][$field] = join(',', array_filter(
+                                array_map(
+                                    function($value) use ($self, $objectIt, $valueObject) {
+                                        return $self->getId($objectIt, $value, $valueObject ? $value : '');
+                                    },
+                                    preg_split("/[\r\n,]+/mi", $match[1])
+                                ),
+                                function($value) {
+                                    return $value != '';
+                                }
+                            ));
+                        }
+                    }
 
-				$parms = $result[$i];
-                $mapper = new ModelDataTypeMapper();
-                $mapper->map( $this->request, $parms );
-                $validator = new ModelValidator();
-                $validator->validate($this->request, $parms);
+                    if ( $result[$i][$field] > 0 ) {
+                        if ( $object instanceof Project ) {
+                            $result[$i]['VPD'] = $object->getExact($result[$i][$field])->get('VPD');
+                        }
+                    }
+                    elseif ( $result[$i][$field] != '' ) {
+                        $refId = $object->add_parms(
+                            array(
+                                'Caption' => $result[$i][$field]
+                            )
+                        );
+                        if ( $refId > 0 ) {
+                            $result[$i][$field] = $refId;
+                        }
+                        else {
+                            unset($result[$i][$field]);
+                        }
+                    }
+                }
+                else {
+                    switch( $field ) {
+                        case 'RecentComment':
+                            $comments = preg_split('/[\r\n]/', $result[$i][$field]);
+                            break;
+                        default:
+                            $fieldType = $this->request->getAttributeType($field);
+                            switch( $fieldType ) {
+                                case 'wysiwyg':
+                                    $result[$i][$field] = nl2br($result[$i][$field]);
+                                    break;
+                            }
+                    }
+                }
+            }
 
-				$request_id = $this->request->add_parms( $parms );
-				if ( $request_id > 0 )
-				{
-					$imported++;
-                    $undefined[$result[$i]['Id']] = $request_id;
-					$this->createDependencies($request_id, $parms);
-				}
-			}
+            try {
+                $parms = $result[$i];
+                $request_id = getFactory()->createEntity($this->request, $parms)->getId();
+                if ( $request_id > 0 ) $imported++;
+
+                $commentObject = getFactory()->getObject('Comment');
+                foreach( array_reverse($comments) as $key => $comment ) {
+                    if ( $comment == '' ) continue;
+                    getFactory()->createEntity($commentObject, array(
+                        'ObjectId' => $request_id,
+                        'ObjectClass' => get_class($this->request),
+                        'AuthorId' => getSession()->getUserIt()->getId(),
+                        'Caption' => html_entity_decode($comment),
+                        'OrderNum' => $key + 1
+                    ));
+                }
+            }
+            catch( \Exception $e ) {
+                $errors[] = sprintf(text(3021), $i, $e->getMessage());
+            }
 		}
 
+		if ( count($errors) ) $this->replyError(join('<br/>', $errors));
 		$this->replySuccess( str_replace('%1', $imported, text(1723)) );
 	}
 	
-	function createDependencies( $request_id, $parms )
-	{
-	}
-
  	function preview()
 	{
 		// parse source content

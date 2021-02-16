@@ -9,11 +9,14 @@ class ReleaseActual extends Metaobject
 	}
 
     function createIterator() {
-        return new IterationDatesIterator($this);
+        return new ReleaseIterator($this);
     }
 
-    function getPage()
-    {
-        return getSession()->getApplicationUrl($this).'plan/hierarchy?';
+    function IsDictionary() {
+        return true;
+    }
+
+    function getPage() {
+        return getSession()->getApplicationUrl($this).'iterations?';
     }
 }

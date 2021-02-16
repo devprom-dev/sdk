@@ -1,14 +1,14 @@
 <?php
+include SERVER_ROOT_PATH . "admin/classes/model/validators/ModelProjectTemplateValidator.php";
 
 class ProjectTemplateForm extends PageForm
 {
-	function IsNeedButtonNew()
-	{
-		return false;
-	}
-
-	function IsNeedButtonCopy()
-	{
-		return false;
-	}
+    function getValidators() {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new ModelProjectTemplateValidator()
+            )
+        );
+    }
 }

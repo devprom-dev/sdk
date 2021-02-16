@@ -11,10 +11,6 @@ import ru.devprom.items.Project;
 
 public class PermissionsPage extends SDLCPojectPageBase {
 
-	@FindBy(id="filter-settings")
-	protected WebElement filterBtn;
-	
-	
 	public PermissionsPage(WebDriver driver) {
 		super(driver);
 	}
@@ -23,13 +19,6 @@ public class PermissionsPage extends SDLCPojectPageBase {
 		super(driver, project);
 	}
 
-	public PermissionsPage selectRole(String role) {
-		driver.findElement(By.xpath("//a[@uid='role']")).click();
-		driver.findElement(By.xpath("//a[@uid='role']/following-sibling::ul/li/a[text()='"+role+"']")).click();
-		return new PermissionsPage(driver);
-	}
-	
-	
 	/** Set permission level for selected role.
 	 * @param rightsLevel should be one of: "modify", "view", "none", ""(default)
 	 * */
@@ -39,13 +28,4 @@ public class PermissionsPage extends SDLCPojectPageBase {
 		(new Select(selector)).selectByValue(rightsLevel);
 		return new PermissionsPage(driver);
 	}
-	
-	public PermissionsPage showAll() {
-		filterBtn.click();
-		String code = "filterLocation.setup( 'rows=all', 0 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		filterBtn.click();
-			return new PermissionsPage(driver);
-	}
-	
 }

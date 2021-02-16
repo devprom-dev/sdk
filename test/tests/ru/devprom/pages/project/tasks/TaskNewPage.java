@@ -65,10 +65,10 @@ public class TaskNewPage extends SDLCPojectPageBase {
 	
 	public boolean isFieldNotVisibleByLabel(String fieldName){
 		driver.manage().timeouts()
-		.implicitlyWait(1, TimeUnit.MILLISECONDS);
+			.implicitlyWait(1, TimeUnit.MILLISECONDS);
 		boolean result = driver.findElements(By.xpath("//label[text()='"+fieldName+"']")).isEmpty();
 		driver.manage().timeouts()
-		.implicitlyWait(timeoutValue, TimeUnit.SECONDS);
+			.implicitlyWait(timeoutValue, TimeUnit.SECONDS);
 		return result;
 	}
 
@@ -91,8 +91,8 @@ public class TaskNewPage extends SDLCPojectPageBase {
 		
         submitDialog(saveBtn);
     	//read ID
-        (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='caption' and text()='"+task.getName()+"']")));
-    	String uid =driver.findElement(By.xpath("//td[@id='caption' and text()='"+task.getName()+"']/preceding-sibling::td[@id='uid']")).getText();
+        (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='caption' and contains(.,'"+task.getName()+"')]")));
+    	String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+task.getName()+"')]/preceding-sibling::td[@id='uid']")).getText();
     	task.setId(uid.substring(1, uid.length()-1));
 		return new TasksPage(driver);
 	}

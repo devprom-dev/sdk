@@ -18,7 +18,7 @@ class WhatsNewPage extends PMPage
  		return new WhatsNewPageTable( $this->getObject() );
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		return null;
  	}
@@ -28,8 +28,8 @@ class WhatsNewPage extends PMPage
          return $this->getObject()->getRegistry()->Query(
          		array (
                     new FilterModifiedSinceSecondsPredicate(5 * 60),
-         				new FilterVpdPredicate(),
-         				new SortChangeLogRecentClause()
+                    new FilterVpdPredicate(),
+                    new SortChangeLogRecentClause()
          		)
 	         )->idsToArray();
  	}

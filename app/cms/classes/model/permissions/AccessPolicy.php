@@ -80,7 +80,6 @@ class AccessPolicy
 	
 	function can_read( &$target ) 
 	{
-        if ( !defined('PERMISSIONS_ENABLED') ) return true;
 		if ( !is_object($target) ) return true;
 		
 		if ( $target instanceof IteratorBase )
@@ -94,18 +93,15 @@ class AccessPolicy
 		}
 	}
 
-	function can_modify( &$target ) 
+	function can_modify( $target )
 	{
 		if ( !is_object($target) ) return true;
 		
-		if ( $target instanceof IteratorBase )
-		{
-			if ( $target->getId() == '' ) return false;
-			
+		if ( $target instanceof IteratorBase ) {
+			if ( $target->getId() == '' ) return $this->check_access( ACCESS_MODIFY, $target->object, null );
 			return $this->check_access( ACCESS_MODIFY, $target->object, $target );
 		}
-		else
-		{
+		else {
 			return $this->check_access( ACCESS_MODIFY, $target, null );
 		}
 	}

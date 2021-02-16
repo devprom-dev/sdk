@@ -24,7 +24,7 @@ class ScrumPage extends PMPage
  		return new ScrumTable( new Scrum(new ScrumGrouppedRegistry()) );
  	}
  	
- 	function getForm() {
+ 	function getEntityForm() {
  		return new ScrumForm( $this->getObject() );
  	}
 }

@@ -7,7 +7,7 @@ class WikiPageChangeYounger extends FilterPredicate
  	    if ( !is_object($filter) ) return " AND 1 = 2 ";
 
         $ids = array();
- 	    $stateIt = \WorkflowScheme::Instance()->getStateIt($filter->object);
+ 	    $stateIt = \WorkflowScheme::Instance()->getStateIt($filter);
  	    while( !$stateIt->end() ) {
  	        if ( $stateIt->get('IsTerminal') == 'Y' ) {
                 $ids[] = $stateIt->getId();

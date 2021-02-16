@@ -23,8 +23,8 @@ class ReleaseDatesFrame
 		$start_date = $this->release_it->getStartDate();
 		$finish_date = $this->release_it->getFinishDate();
 
-		$estimated_start = $this->release_it->getDateFormat('EstimatedStartDate');
-		$estimated_finish = $this->release_it->getDateFormat('EstimatedFinishDate');
+		$estimated_start = $this->release_it->getDateFormatted('EstimatedStartDate');
+		$estimated_finish = $this->release_it->getDateFormatted('EstimatedFinishDate');
 		
 		$need_delimiter = false;
 

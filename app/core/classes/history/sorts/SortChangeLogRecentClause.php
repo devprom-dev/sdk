@@ -2,8 +2,13 @@
 
 class SortChangeLogRecentClause extends SortClauseBase
 {
- 	function clause()
- 	{
- 		return " MAX(".$this->setColumnAlias('RecordCreated').") DESC ";
+    private $sortType;
+
+    function __construct($sortType = 'DESC') {
+        $this->sortType = $sortType;
+    }
+
+    function clause() {
+ 		return " MAX(".$this->setColumnAlias('RecordCreated').") " . $this->sortType;
  	}
 }

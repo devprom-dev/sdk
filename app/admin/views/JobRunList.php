@@ -7,40 +7,27 @@ class JobRunList extends StaticPageList
 	function JobRunList( $object, $job_it )
 	{
 		$this->job_it = $job_it;
-		parent::StaticPageList( $object );
+		parent::__construct( $object );
 	}
 
-	function getIterator()
-	{
-		$this->object->defaultsort = 'RecordCreated DESC';
-		return $this->object->getByRefArray(
-		array( 'ScheduledJob' => $this->job_it->getId() ) );
+	function getIterator() {
+		return $this->object->getRegistry()->Query(
+		    array(
+		        new FilterAttributePredicate('ScheduledJob', $this->job_it->getId()),
+                new SortRecentClause()
+            )
+        );
 	}
 
-	function IsNeedToDisplay( $attr )
-	{
-		switch ( $attr )
-		{
-			case 'ExecutionTime':
-			case 'Result':
-				return true;
-		}
-
-		return false;
-	}
-
-	function getColumns()
-	{
-		$this->object->addAttribute('ExecutionTime', 'INTEGER', translate('Время выполнения'), true);
-		$this->object->addAttribute('Result', 'INTEGER', translate('Результат'), true);
-
-		return parent::getColumns();
-	}
+	function extendModel()
+    {
+        $this->getObject()->addAttribute('ExecutionTime', 'INTEGER', translate('Время выполнения'), true);
+        $this->getObject()->addAttribute('Result', 'INTEGER', translate('Результат'), true);
+        parent::extendModel();
+    }
 
 	function drawCell( $object_it, $attr )
 	{
-		global $model_factory;
-
 		switch ( $attr )
 		{
 			case 'ExecutionTime':
@@ -48,15 +35,12 @@ class JobRunList extends StaticPageList
 				break;
 
 			case 'Result':
-
 			    echo html_entity_decode($object_it->getWordsOnlyValue($object_it->get('Result'), 40), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
-
 			    break;
 		}
 	}
 
-	function getGroupFields()
-	{
+	function getGroupFields() {
 		return array();
 	}
 }

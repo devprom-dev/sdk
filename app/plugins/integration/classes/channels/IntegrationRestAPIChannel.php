@@ -3,20 +3,24 @@
 abstract class IntegrationRestAPIChannel extends IntegrationChannel
 {
     abstract protected function buildUsersMap();
-    abstract protected function buildIdUrl( $url, $id );
     abstract protected function getUserEmailAttribute();
 
     public function readItem($mapping, $class, $id, $parms = array())
     {
-        $data = $this->mapToInternal(
+        $data = $this->mapToInternal( $class, $id,
             array_merge(
                 $this->jsonGet($this->buildIdUrl(rtrim($mapping['url'],'/'),$id), array('expand' => 'renderedBody,renderedFields')),
                 $parms
             ),
             $mapping,
-            function($data, $attribute) {
-                $attribute_path = preg_split('/\./',$attribute);
-                $value = $data[array_shift($attribute_path)];
+            function($value, $attribute) {
+                $attribute_path =
+                    array_map(
+                        function($item) {
+                            return stripslashes($item);
+                        },
+                        preg_split('~\\\\.(*SKIP)(*FAIL)|\.~s',$attribute)
+                    );
                 foreach( $attribute_path as $field ) {
                     list($field, $shift) = preg_split('/:/', $field);
                     if ( $shift == 'first' ) {
@@ -50,10 +54,16 @@ abstract class IntegrationRestAPIChannel extends IntegrationChannel
     {
         $emails_map = array_flip($this->getUsersMap());
 
-        $put = $this->mapFromInternal( $data, $mapping,
+        $put = $this->mapFromInternal( $class, $id, $data, $mapping,
             function($attribute, $value) use($emails_map)
             {
-                $attribute_path = preg_split('/\./',$attribute);
+                $attribute_path =
+                    array_map(
+                        function($item) {
+                            return stripslashes($item);
+                        },
+                        preg_split('~\\\\.(*SKIP)(*FAIL)|\.~s',$attribute)
+                    );
                 foreach( array_reverse($attribute_path) as $field ) {
                     list($field, $shift) = preg_split('/:/', $field);
                     if ( $shift == 'first' ) {
@@ -135,6 +145,16 @@ abstract class IntegrationRestAPIChannel extends IntegrationChannel
             $this->usersMap = $this->buildUsersMap();
         }
         return $this->usersMap;
+    }
+
+    public function getWebLink( $id, $data, $link_pattern ) {
+        $parentId = $data['{parent}'];
+        if ( $parentId == '' ) $parentId = $data['{parentId}'];
+        return $this->buildIdUrl(
+            $this->getObjectIt()->get('URL') .
+                    preg_replace('/\{parent\}/', $parentId,
+                        preg_replace('/\{parentId\}/', $parentId, $link_pattern)), $id
+        );
     }
 
     private $usersMap = array();

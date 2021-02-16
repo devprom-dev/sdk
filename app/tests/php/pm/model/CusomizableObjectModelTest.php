@@ -29,7 +29,10 @@ class CusomizableObjectModelTest extends DevpromDummyTestCase
         
         // entity mocks
 
-        $entity = $this->getMock('CustomizableObjectSet', array('getExact'));
+        $entity = $this->getMockBuilder(CustomizableObjectSet::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getExact'])
+            ->getMock();
 
         $model_factory->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
@@ -40,16 +43,10 @@ class CusomizableObjectModelTest extends DevpromDummyTestCase
     
     function testCustomizableObjectSet()
     {
-        global $model_factory;
-        
-        $object = $model_factory->getObject('CustomizableObjectSet');
-        
-        $object_it = $object->getAll();
-        
+        $object_it = getFactory()->getObject('CustomizableObjectSet')->getAll();
+
         $this->assertGreaterThan(0, $object_it->count());
-        
         $this->assertEquals( 'RequestSubType', array_pop(array_slice(preg_split('/:/', $object_it->getId()), 1)) );
-        
         $this->assertEquals( 'Some text', $object_it->get('Caption') );
     }
 }

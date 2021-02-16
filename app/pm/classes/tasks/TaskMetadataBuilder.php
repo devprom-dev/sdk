@@ -4,6 +4,7 @@ include_once "persisters/TaskFactPersister.php";
 include_once "persisters/TaskTracePersister.php";
 include_once "persisters/TaskDetailsPersister.php";
 include_once "persisters/TaskTypePersister.php";
+include_once "persisters/TaskColorsPersister.php";
 include "persisters/TaskAssigneePersister.php";
 include "persisters/TaskTagsPersister.php";
 include "persisters/TaskTagPersister.php";
@@ -14,24 +15,23 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Task' ) return;
 
+        $metadata->setAttributeOrderNum('Priority', 5);
         $metadata->setAttributeRequired('Release', false);
-		$metadata->addAttribute('Fact', 'FLOAT', translate('Затрачено'), true, true, '', 14 );
 		$metadata->setAttributeType('Caption', 'VARCHAR');
-		$metadata->setAttributeOrderNum('Priority', 11);
 		$metadata->setAttributeOrderNum('Assignee', 12);
 		$metadata->setAttributeOrderNum('Planned', 13);
 		$metadata->setAttributeRequired('Planned', false);
 		$metadata->setAttributeOrderNum('LeftWork', 14);
 		$metadata->setAttributeVisible('LeftWork', false);
         $metadata->setAttributeRequired('OrderNum', true);
-		$metadata->addPersister( new TaskFactPersister(array('Fact')) );
 
         $metadata->addAttribute( 'Tags', 'REF_TagId', translate('Тэги'), true, false, '', 280 );
         $metadata->addPersister( new TaskTagPersister() );
 
         $metadata->setAttributeRequired('Assignee', false);
-		$metadata->addAttribute('TypeBase', 'REF_TaskTypeUnifiedId', translate('Тип'), false);
-		$metadata->addAttributeGroup('TypeBase', 'system');
+		$metadata->addAttribute('TaskTypeBase', 'REF_TaskTypeUnifiedId', translate('Тип'), false);
+		$metadata->addAttributeGroup('TaskTypeBase', 'system');
+        $metadata->addAttributeGroup('TaskType', 'type');
 		$metadata->addPersister(new TaskTypePersister());
 
 		$metadata->addAttribute('TraceTask', 'REF_TaskId', text(874), true, false, '', 80);
@@ -44,18 +44,38 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeOrderNum( 'PlannedStartDate', 18 );
 		$metadata->setAttributeOrderNum( 'PlannedFinishDate', 19 );
 
-		$metadata->setAttributeEditable('Author', false);
         $metadata->setAttributeVisible('Author', true);
+        $metadata->setAttributeRequired('Author', true);
         $metadata->setAttributeOrderNum('Author', 999);
 
         $metadata->addAttribute('DueWeeks', 'REF_DeadlineSwimlaneId', text(1898), false);
         $metadata->addPersister( new TaskDatesPersister() );
 
-        $attributes = array('Assignee', 'Release', 'Caption', 'ChangeRequest', 'Priority', 'Planned', 'Fact', 'Tags', 'OrderNum', 'TaskType', 'TraceTask','PlannedFinishDate','Project');
+        $metadata->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
+
+        $attributes = array(
+            'Assignee',
+            'Release',
+            'Caption',
+            'ChangeRequest',
+            'Priority',
+            'Planned',
+            'Fact',
+            'Tags',
+            'OrderNum',
+            'TraceTask',
+            'PlannedFinishDate',
+            'Project',
+            'RecentComment'
+        );
         foreach ( $attributes as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'permissions');
 			$metadata->addAttributeGroup($attribute, 'tooltip');
 		}
+        foreach ( array('TaskType') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'permissions');
+            $metadata->addAttributeGroup($attribute, 'skip-tooltip');
+        }
         foreach ( array('Result') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'system');
 		}
@@ -78,6 +98,7 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 
         $metadata->addPersister( new TaskDetailsPersister() );
         $metadata->addPersister( new TaskAssigneePersister() );
+        $metadata->addPersister( new TaskColorsPersister() );
 
         $priority = new Priority();
         $priorityIt = $priority->getByRef('IsDefault', 'Y');
@@ -85,7 +106,33 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
             $metadata->setAttributeDefault('Priority', $priorityIt->getId());
         }
 
-		$this->removeAttributes( $metadata, getSession()->getProjectIt()->getMethodologyIt() );
+        $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodologyIt->getId() != '' && getSession()->IsRDD() ) {
+            $metadata->setAttributeCaption('ChangeRequest', text(2824));
+        }
+        if ( $methodologyIt->IsTimeTracking() ) {
+            $metadata->addAttribute('Fact', 'FLOAT', translate('Затрачено'), true, true, '', 14 );
+            $metadata->addPersister( new TaskFactPersister(array('Fact')) );
+        }
+
+        $metadata->addAttribute('IssueDescription', 'WYSIWYG', text(2083), false, false, '', 40);
+        $metadata->addAttribute('IssueState', 'VARCHAR', text(2128), false, false, '', 43);
+        $metadata->addAttributeGroup('IssueState', 'workflow');
+
+        foreach ( array('IssueDescription') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'source-issue');
+        }
+
+        $typesCount = getFactory()->getObject('TaskType')->getRegistry()->Count(
+            array( new FilterBaseVpdPredicate() )
+        );
+        if ( $typesCount < 1 ) {
+            $metadata->setAttributeRequired('TaskType', false);
+            $metadata->setAttributeVisible('TaskType', false);
+            $metadata->setAttributeRequired('Caption', true);
+        }
+
+        $this->removeAttributes($metadata, $methodologyIt);
     }
     
     private function removeAttributes( $metadata, $methodology_it )
@@ -94,12 +141,12 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 	    $metadata->removeAttribute( 'Comments' );
 
         if ( !$methodology_it->IsTimeTracking() ) {
-            $metadata->removeAttribute( 'Fact' );
+            $metadata->addAttributeGroup('Fact', 'system');
         }
 
         if ( !$methodology_it->TaskEstimationUsed() ) {
-            $metadata->removeAttribute( 'Planned' );
-            $metadata->removeAttribute( 'LeftWork' );
+            $metadata->addAttributeGroup('Planned', 'system');
+            $metadata->addAttributeGroup('LeftWork', 'system');
         }
     }
 }

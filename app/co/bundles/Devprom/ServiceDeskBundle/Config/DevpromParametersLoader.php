@@ -36,6 +36,8 @@ class DevpromParametersLoader {
     	$data = $this->queryProjectSettings();
         $settings['supportProjects'] = $data['supportProjects'];
         $settings['supportProjectVpds'] = $data['supportProjectVpds'];
+        $settings['commonProjectVpds'] = $data['commonProjectVpds'];
+        $settings['publicKBProjectVpds'] = $data['publicKBProjectVpds'];
         return $settings;
     }
 
@@ -56,19 +58,30 @@ class DevpromParametersLoader {
     {
     	if (!\DeploymentState::IsInstalled()) return array();
         DALMySQLi::Instance()->Connect(new MySQLConnectionInfo(DB_HOST, DB_NAME, DB_USER, DB_PASS));
-        $sql = "SELECT p.pm_ProjectId, p.VPD
+        $sql = "SELECT p.pm_ProjectId, p.VPD, 
+                       (SELECT COUNT(1) FROM co_CompanyProject cp, co_Company c WHERE c.co_CompanyId = cp.Company AND cp.Project = p.pm_ProjectId) Companies,
+                       p.KnowledgeBaseAuthorizedAccess
                   FROM pm_Project p
-        		 WHERE EXISTS (SELECT 1 FROM pm_Methodology m WHERE m.IsSupportUsed = 'Y' AND m.Project = p.pm_ProjectId) AND IFNULL(p.IsClosed,'N') = 'N' ";
+        		 WHERE EXISTS (SELECT 1 FROM pm_Methodology m WHERE m.IsSupportUsed = 'Y' AND m.Project = p.pm_ProjectId) 
+        		   AND p.IsClosed = 'N'
+        		";
         $r2 = DAL::Instance()->Query($sql);
-        $result = array();
-        $ids = array();
-        $vpds = array();
+        $result = array(
+            'supportProjects' => array(),
+            'supportProjectVpds' => array(),
+            'commonProjectVpds' => array(),
+            'publicKBProjectVpds' => array()
+        );
         while($data = DAL::Instance()->QueryAssocArray($r2)) {
-        	$ids[] = $data['pm_ProjectId'];
-        	$vpds[] = $data['VPD'];
+            $result['supportProjects'][] = $data['pm_ProjectId'];
+            $result['supportProjectVpds'][] = $data['VPD'];
+            if ( $data['Companies'] < 1 ) {
+                $result['commonProjectVpds'][] = $data['VPD'];
+            }
+            if ( $data['KnowledgeBaseAuthorizedAccess'] != 'Y' ) {
+                $result['publicKBProjectVpds'][] = $data['VPD'];
+            }
         }
-        $result['supportProjects'] = $ids; 
-        $result['supportProjectVpds'] = $vpds;
         return $result;
     }
 }

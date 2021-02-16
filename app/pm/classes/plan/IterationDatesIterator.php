@@ -10,12 +10,12 @@ class IterationDatesIterator extends OrderedIterator
         }
         if ( parent::get('StartDate') == '' || parent::get('FinishDate') == '' ) return $title;
 
-        $finishDate = getSession()->getLanguage()->getDateFormattedShort(parent::get('FinishDate'));
+        $finishDate = parent::getDateFormattedShort('FinishDate');
         $finishDateObject = new DateTime(parent::get('FinishDate'));
         $interval = $finishDateObject->diff(new DateTime());
 
         return sprintf('%s &nbsp; [%s : %s]', $title,
-            getSession()->getLanguage()->getDateFormattedShort(parent::get('StartDate')),
+            parent::getDateFormattedShort('StartDate'),
             ($interval->invert ? -1 : 1) * $interval->days > 0
                 ? '<span class="label label-important">'.$finishDate.'</span>'
                 : $finishDate

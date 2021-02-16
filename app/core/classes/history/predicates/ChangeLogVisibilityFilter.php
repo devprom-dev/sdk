@@ -2,9 +2,8 @@
 
 class ChangeLogVisibilityFilter extends FilterPredicate
 {
- 	function ChangeLogVisibilityFilter()
- 	{
- 		parent::FilterPredicate('level');
+ 	function ChangeLogVisibilityFilter() {
+ 		parent::__construct('level');
  	}
  	
  	function _predicate( $filter )

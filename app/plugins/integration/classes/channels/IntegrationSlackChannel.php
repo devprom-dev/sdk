@@ -57,6 +57,7 @@ class IntegrationSlackChannel extends IntegrationChannel
             if ( $timestamp != "" ) {
                 $historyPayload['oldest'] = $timestamp;
             }
+            $this->getLogger()->info("History query ".var_export($historyPayload,true));
             $historyResponse = $this->slack->execute("channels.history", $historyPayload);
             $historyBody = $historyResponse->getBody();
             $this->getLogger()->info("Slack messages found ".count($historyBody));
@@ -117,7 +118,7 @@ class IntegrationSlackChannel extends IntegrationChannel
                                 );
                                 $attachments['fallback'] = $data['UID'];
                                 $updatedMessage['attachments'] = json_encode(
-                                    array_merge($updatedMessage['attachments'], $attachments)
+                                    array(array_merge($updatedMessage['attachments'][0], $attachments[0]))
                                 );
 
                                 $response = $this->slack->execute("chat.postMessage", $updatedMessage);
@@ -126,11 +127,14 @@ class IntegrationSlackChannel extends IntegrationChannel
                         }
                     }
                 }
-                $this->timestamp = $message['ts'] > $this->timestamp ? $message['ts'] : $this->timestamp;
+                $this->timestamp = floatval($message['ts']) > floatval($this->timestamp)
+                    ? $message['ts']
+                    : $this->timestamp;
             }
         }
+
         return array(
-            '' => '',
+            array(),
             ''
         );
     }
@@ -146,7 +150,7 @@ class IntegrationSlackChannel extends IntegrationChannel
         $data['Changed'] = join(',',$queueItem['attributes']);
 
         if ( $this->usersMapping[$queueItem['author']] != '' ) {
-            $authorChannel = "@".$this->usersMapping[$queueItem['author']];
+            $authorChannel = $this->usersMapping[$queueItem['author']];
         }
         else {
             $authorChannel = $queueItem['author'];
@@ -177,10 +181,12 @@ class IntegrationSlackChannel extends IntegrationChannel
             }
         );
         $payload['attachments']['fallback'] = $data['UID'];
-        $payload['attachments'] = json_encode($payload['attachments']);
-        if ( $payload['channel'] == '' ) {
+        $payload['attachments'] = json_encode(array_values($payload['attachments']));
+
+        if ( trim($payload['channel']) == '' ) {
             $payload['channel'] = $this->channel;
         }
+
         $this->getLogger()->info("Slack command payload: ".var_export($payload, true));
 
         $channels = preg_split('/[\s,]+/', $payload['channel']);
@@ -206,9 +212,12 @@ class IntegrationSlackChannel extends IntegrationChannel
     {
         $response = $this->slack->execute("users.list", array());
         $responseBody = $response->getBody();
+        $this->getLogger()->info("Users found ".count($responseBody['members']));
+
         foreach( $responseBody['members'] as $user ) {
-            $this->usersMapping[$user['profile']['email']] = $user['name'];
+            $this->usersMapping[$user['profile']['email']] = $user['id'];
             $this->users[$user['id']] = $user['name'];
+            $this->getLogger()->info("Channel @".$user['id']." for ".$user['profile']['email']);
         }
     }
 
@@ -233,7 +242,7 @@ class IntegrationSlackChannel extends IntegrationChannel
                             }
                         }
                         if ( filter_var($value, FILTER_VALIDATE_EMAIL) ) {
-                            return "@".$this->usersMapping[$value];
+                            return $this->usersMapping[$value];
                         }
                         else {
                             $text = new \Html2Text\Html2Text($value);

@@ -1,12 +1,11 @@
 <?php
-
 include "IssueAuthorRegistryUsersBuilder.php";
 
 class IssueAuthorRegistry extends ObjectRegistrySQL
 {
 	private $data = array();
 	
-	function Merge( $data ) {
+	function Merge( $data, array $alternativeKey = array() ) {
 		$this->data[] = $data;
 	}
 

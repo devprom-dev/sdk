@@ -37,4 +37,8 @@ class JSONViewerField extends Field
     			html_entity_decode($text, ENT_COMPAT | ENT_HTML401, APP_ENCODING)
     		);
     }
+
+    function contentEditable() {
+        return false;
+    }
 }

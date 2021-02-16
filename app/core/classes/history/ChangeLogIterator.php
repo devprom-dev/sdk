@@ -13,60 +13,18 @@ class ChangeLogIterator extends OrderedIterator
  	
  	function get( $attr )
  	{
- 		if ( $attr == 'Content' )
- 		{
- 			switch ( $this->get('ClassName') )
- 			{
- 				case 'blogpost':
- 				    
- 					$object_it = $this->getObjectIt();
- 					
- 					$content = parent::get('Content');
- 					
- 					if ( strpos( $content, translate('Содержание') ) !== false )
- 					{
- 						return '';
- 					}
- 					else
- 					{
- 						return parent::get( $attr );
- 					}
-	 			
+ 		if ( $attr == 'Content' ) {
+ 			switch ( $this->get('ClassName') ) {
  				default:
- 				    
 		 			$value = parent::get( $attr );
-		 			
-			 		if ( !$this->object->canreadcapacity )
-			 		{
+			 		if ( !$this->object->canreadcapacity ) {
 			 			$value = str_replace(translate('Фактическая'), 'fact', $value);
 			 			$value = preg_replace('/fact.+\n/mi', '', $value);
 			 		}	
-			 		
-			 		return $value;		
+			 		return $value;
  			}
  		}
- 		
  		return parent::get( $attr );
- 	}
- 	
- 	function getChangeKind()
- 	{
-		switch ($this->get('ChangeKind')) 
-		{
-			case 'added': 
-				$change_kind = translate('добавлено'); 
-				break;
-				
-			case 'modified': 
-				$change_kind = translate('изменено'); 
-				break;
-
-			case 'deleted': 
-				$change_kind = translate('удалено'); 
-				break;
-		}
-	
-		return $change_kind;
  	}
  	
  	function getIcon()

@@ -27,7 +27,7 @@ class ModulePluginsBuilder extends ModuleBuilder
  	        $item['Caption'] = $module['title'];
  	        $item['Description'] = $module['description'];
  	        $item['AccessEntityReferenceName'] = $module['AccessEntityReferenceName'];
- 	        $item['AccessType'] = $module['AccessType'];
+ 	        $item['AccessType'] = $module['AccessType'] != '' ? $module['AccessType'] : ACCESS_READ;
  	        $item['Section'] = $module['section'];
  	        $item['Url'] = $module['url'];
  	        $item['Area'] = $module['area'];

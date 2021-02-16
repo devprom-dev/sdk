@@ -22,14 +22,15 @@ class Mailer extends TwigSwiftMailer {
         $this->sendMessage($template, $context, $this->getFromAddress(), $user->getEmail());
     }
 
-    public function sendIssueCreatedMessage(Issue $issue, $toEmail, $language = 'ru') {
+    public function sendIssueCreatedMessage(Issue $issue, $toEmail, $language = 'ru', $issueLink = '') {
         $template = 'Email/issue_created.html.twig';
         $context = array(
             'issue' => $issue,
+            'issueLink' => $issueLink,
             'language' => $language
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail, $issue->getEmailMessageId());
     }
 
     public function sendIssueUpdatedMessage(Issue $issue, $comment, $changes, $toEmail, $language = 'ru', $version) {
@@ -42,7 +43,7 @@ class Mailer extends TwigSwiftMailer {
             'version' => $version
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail, $issue->getEmailMessageId());
     }
 
     public function sendIssueCommentedMessage(Issue $issue, IssueComment $comment, $toEmail, $language = 'ru') {
@@ -53,7 +54,11 @@ class Mailer extends TwigSwiftMailer {
             'language' => $language
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail);
+        $messageId = $comment->getEmailMessageId();
+        if ( $messageId == '' ) {
+            $messageId = $issue->getEmailMessageId();
+        }
+        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail, $messageId);
     }
 
     /**
@@ -61,39 +66,12 @@ class Mailer extends TwigSwiftMailer {
      */
     public function getFromAddress( Issue $issue = null )
     {
-        $vpd = '';
         if ( $issue ) {
             if ( $issue->getChannelEmail() != '' ) {
                 return html_entity_decode($issue->getChannelEmail());
             }
-            $vpd = $issue->getVpd();
         }
-
-        $supportEmail = $this->parameters['from_email']['default']['address'];
-
-        $emails = $this->getEntityManager()
-            ->getConnection()
-            ->query("SELECT p.VPD vpd, IF(rm.SenderAddress IS NOT NULL, rm.SenderAddress, IF(rm.EmailAddress IS NOT NULL, IF(rm.EmailAddress NOT LIKE '%%@%%', CONCAT(rm.EmailAddress, '@', rm.HostAddress), rm.EmailAddress), ' ')) email
-                       FROM co_RemoteMailbox rm, pm_Project p WHERE p.pm_ProjectId = rm.Project;")
-            ->fetchAll();
-
-        if ( count($emails) > 0 ) {
-            $supportEmail = $emails[0]['email'];
-        }
-
-        foreach( $emails as $email ) {
-            if ( $email['vpd'] == $vpd ) {
-                $supportEmail = $email['email'];
-                break;
-            }
-        }
-
-        $supportEmail = $this->normalizeEmailAddress(
-            array_shift(preg_split('/,/', $supportEmail))
-        );
-        return array(
-            $supportEmail => $this->parameters['from_email']['default']['sender_name']
-        );
+        return '';
     }
 
     protected function getEntityManager()
@@ -107,7 +85,7 @@ class Mailer extends TwigSwiftMailer {
      * @param string $fromEmail
      * @param string $toEmail
      */
-    protected function sendMessage($templateName, $context, $fromEmail, $toEmail)
+    protected function sendMessage($templateName, $context, $fromEmail, $toEmail, $messageId = '')
     {
         $context = $this->twig->mergeGlobals($context);
         $template = $this->twig->loadTemplate($templateName);
@@ -116,7 +94,10 @@ class Mailer extends TwigSwiftMailer {
         $mail->appendAddress($toEmail);
         $mail->setBody($template->renderBlock('body_html', $context));
         $mail->setSubject($template->renderBlock('subject', $context));
-        $mail->setFrom($fromEmail, false);
+        if ( mb_strlen($fromEmail) > 1 ) {
+            $mail->setFrom($fromEmail);
+        }
+        $mail->setInReplyMessageId($messageId);
         $mail->send();
    }
 

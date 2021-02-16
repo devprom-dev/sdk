@@ -24,8 +24,4 @@ class KanbanRequestPage extends RequestPage
  	{
 		return new KanbanRequestTable( $this->getObject() );
  	}
-
-	function isDetailsActive() {
-		return false;
-	}
 }

@@ -1,0 +1,44 @@
+{% extends 'email.base.twig' %}
+
+{% block title %}
+    {{ title | raw }}
+{% endblock %}
+
+{% block content %}
+    <tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+        <td class="content-block" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+            <a href="{{ url }}">{{ url }}</a>
+        </td>
+    </tr>
+    {% for field in fields %}
+        {% if field.was_value != "" %}
+            <tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                <td class="content-block" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+                    <span style="font-weight: bold;">{{ field.name | raw }}</span>: {{ field.value | raw }} (<strike> {{ field.was_value | raw }}</strike>)
+                </td>
+            </tr>
+        {% else %}
+            <tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                <td class="content-block" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+                    {% if field.type == "wysiwyg" or field.type == "text" %}
+                        <div class="reset wysiwyg">
+                            <span style="font-weight: bold;">{{ field.name | raw }}</span>: {{ field.value | raw }}
+                        </div>
+                    {% else %}
+                        <span style="font-weight: bold;">{{ field.name | raw }}</span>: {{ field.value | raw }}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+
+    <tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+        <td class="content-block" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+            &mdash; {{ author | raw }}
+        </td>
+    </tr>
+{% endblock %}
+
+{% block footer %}
+    {{ reason | raw }}
+{% endblock %}

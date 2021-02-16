@@ -7,7 +7,7 @@ class RequestCommentRegistry extends ObjectRegistrySQL
         return array_merge(
             parent::getFilters(),
             array (
-                new FilterAttributePredicate('ObjectClass', 'Request')
+                new FilterAttributePredicate('ObjectClass', array('Request','Issue','Increment'))
             )
         );
     }

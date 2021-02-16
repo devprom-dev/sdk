@@ -38,7 +38,7 @@ public class RepositoryConnectPage extends SDLCPojectPageBase {
 	
 	
 	public void checkRepository(String name){
-		driver.findElement(By.xpath("//tr[contains(@id,'connectorlist1_row_')]/td[@id='caption' and text()='"+name+"']/preceding-sibling::td/input[@class='checkbox']")).click();
+		driver.findElement(By.xpath("//tr[contains(@id,'connectorlist1_row_')]/td[@id='caption' and contains(.,'"+name+"')]/preceding-sibling::td/input[contains(@class,'checkbox')]")).click();
 	}
 	
 	public RepositoryConnectPage deleteRepository(String name){
@@ -46,7 +46,7 @@ public class RepositoryConnectPage extends SDLCPojectPageBase {
        clickOnInvisibleElement(removeBtn);
        waitForDialog();
        submitDialog(submitBtn);
-       (new WebDriverWait(driver,waiting)).until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//tr[contains(@id,'connectorlist1_row_')]/td[@id='caption' and text()='"+name+"']")));
+       (new WebDriverWait(driver,waiting)).until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//tr[contains(@id,'connectorlist1_row_')]/td[@id='caption' and contains(.,'"+name+"')]")));
        return new RepositoryConnectPage(driver);
 	}
 	
@@ -59,5 +59,10 @@ public class RepositoryConnectPage extends SDLCPojectPageBase {
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//tr[contains(@id,'connectorlist1_row_')]")));
 		driver.navigate().refresh();
 		return new RepositoryConnectPage(driver);
+	}
+
+	public RepositoryFilesPage gotoFiles(String repositoryName) {
+		driver.findElement(By.xpath("//tr[contains(@id,'connectorlist1_row_')]/td[@id='caption' and contains(.,'"+repositoryName+"')]//a")).click();
+		return new RepositoryFilesPage(driver);
 	}
 }

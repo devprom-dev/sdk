@@ -14,7 +14,7 @@ class SystemTemplatePage extends AdminPage
         return new SystemTemplateTable($this->getObject());
     }
 
-    function getForm()
+    function getEntityForm()
     {
         return new SystemTemplateForm($this->getObject());
     }

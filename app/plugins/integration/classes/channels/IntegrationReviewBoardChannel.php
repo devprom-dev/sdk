@@ -9,7 +9,8 @@ class IntegrationReviewBoardChannel extends IntegrationRestAPIChannel
         // build search query
         $parms = array();
         if ( $timestamp != '' ) {
-            $parms['last-updated-from'] = SystemDateTime::date(DateTime::ISO8601);
+            $datetime = new DateTime($timestamp, new DateTimeZone("UTC"));
+            $parms['last-updated-from'] = $datetime->format('c');
         }
         $parms['max-results'] = $limit;
         $parms['status'] = 'all';
@@ -35,10 +36,6 @@ class IntegrationReviewBoardChannel extends IntegrationRestAPIChannel
     protected function buildPostFields( $post ) {
         // multipart/form-data
         return array_shift($post);
-    }
-
-    protected function buildIdUrl( $url, $id ) {
-        return $url . '/' . $id . '/';
     }
 
     protected function getUserEmailAttribute() {
@@ -72,5 +69,13 @@ class IntegrationReviewBoardChannel extends IntegrationRestAPIChannel
     {
         $url = $result['review_request']['links']['draft']['href'];
         $this->jsonPut($url, $data, array(), true);
+    }
+
+    public function buildIdUrl($url, $id)
+    {
+        if ( strpos($url, '{id}') === false ) {
+            return $this->parseUrl($url) . '/' . $id . '/';
+        }
+        return parent::buildIdUrl($url, $id);
     }
 }

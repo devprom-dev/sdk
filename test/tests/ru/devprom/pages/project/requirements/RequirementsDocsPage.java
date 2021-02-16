@@ -25,14 +25,14 @@ public class RequirementsDocsPage extends SDLCPojectPageBase {
 		super(driver);
 	}
 
-    public RequirementViewPage addDoc() {
+    public RequirementNewPage addDoc() {
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(addDocBtn));
         addDocBtn.click();
         try {
 			Thread.sleep(5000);
 		} catch (InterruptedException e) {
 		}
-        return new RequirementViewPage(driver);
+        return new RequirementNewPage(driver);
     }
     
 }

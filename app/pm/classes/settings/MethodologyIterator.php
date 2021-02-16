@@ -8,18 +8,6 @@ class MethodologyIterator extends OrderedIterator
         $this->setObject( new Methodology() );
     }
 
-    function get( $attr )
- 	{
- 		global $project_it;
- 	
- 		if ( is_object($project_it) && $attr == 'Caption' )
- 		{
-	 		return $project_it->getDisplayName();
- 		}
- 		
- 		return parent::get( $attr );
- 	}
-
  	function HasTasks()
  	{
  		return $this->get('IsTasks') == 'Y';
@@ -106,19 +94,11 @@ class MethodologyIterator extends OrderedIterator
 	function getEstimationStrategy()
 	{
 	    $builders = getSession()->getBuilders('EstimationStrategyBuilder');
-	    
 	    if ( is_array($builders) )
 	    {
-    	    foreach( $builders  as $builder )
-            {
-                foreach( $builder->getStrategies() as $strategy )
-                {
-                    if ( is_a($strategy, $this->get('RequestEstimationRequired')) )
-                    {
-                        if ( $strategy instanceof EstimationNoneStrategy && $this->get('TaskEstimationUsed') == 'Y' ) {
-                            return new EstimationHoursStrategy();
-                        }
-
+    	    foreach( $builders  as $builder ) {
+                foreach( $builder->getStrategies() as $strategy ) {
+                    if ( is_a($strategy, $this->get('RequestEstimationRequired')) ) {
                         return $strategy;
                     }
                 }
@@ -126,11 +106,34 @@ class MethodologyIterator extends OrderedIterator
 	    }
 		return new EstimationNoneStrategy();
 	}
-	
+
+    function getIterationEstimationStrategy()
+    {
+        $builders = getSession()->getBuilders('EstimationStrategyBuilder');
+        if ( is_array($builders) )
+        {
+            foreach( $builders  as $builder ) {
+                foreach( $builder->getStrategies() as $strategy ) {
+                    if ( is_a($strategy, $this->get('RequestEstimationRequired')) ) {
+                        if ( $strategy instanceof EstimationNoneStrategy && $this->get('TaskEstimationUsed') == 'Y' ) {
+                            return new EstimationHoursStrategy();
+                        }
+                        return $strategy;
+                    }
+                }
+            }
+        }
+        return new EstimationNoneStrategy();
+    }
+
 	function RequestEstimationUsed()
 	{
 		return $this->get('RequestEstimationRequired') != 'estimationnonestrategy';
 	}
+
+	function IsEstimationHoursStrategy() {
+        return $this->get('RequestEstimationRequired') == 'estimationhoursstrategy';
+    }
 	
 	function TaskEstimationUsed()
 	{
@@ -139,5 +142,10 @@ class MethodologyIterator extends OrderedIterator
 
 	function IsAgile() {
         return $this->get('MetricsType') == 'A';
+    }
+
+    function IsLeftWorkVisible() {
+        return $this->HasTasks() && $this->TaskEstimationUsed()
+            || !$this->TaskEstimationUsed() && $this->IsEstimationHoursStrategy();
     }
 }

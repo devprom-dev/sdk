@@ -1,6 +1,6 @@
 <?php
 
-class UpdateIterator extends OrderedIterator
+class UpdateIterator extends CacheableIterator
 {
 	function getDisplayName() 
 	{

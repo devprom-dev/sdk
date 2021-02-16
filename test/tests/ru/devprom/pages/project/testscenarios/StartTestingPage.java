@@ -26,7 +26,7 @@ public class StartTestingPage extends SDLCPojectPageBase
     @FindBy(xpath = ".//*[@id='pm_TestCaption']")
 	protected WebElement captionField;
 
-    @FindBy(xpath = ".//*[@id='pm_TestSubmitBtn']")
+    @FindBy(xpath = ".//*[@id='pm_TestSubmitOpenBtn']")
 	protected WebElement saveTestingBtn;
 
     public StartTestingPage(WebDriver driver) {
@@ -35,6 +35,7 @@ public class StartTestingPage extends SDLCPojectPageBase
 
     public TestScenarioTestingPage startTest(String version, String envirenment)
     {
+        waitForDialog();
         if (!"".equals(envirenment)) {
             envirenmentField.sendKeys(envirenment);
             autocompleteSelect(envirenment);

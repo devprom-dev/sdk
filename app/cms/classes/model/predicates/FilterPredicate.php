@@ -8,7 +8,7 @@ class FilterPredicate
  	private $object = null;
  	private $alias = 't';
  	
- 	function FilterPredicate ( $filter )
+ 	function __construct( $filter )
  	{
 		$this->setValue($filter);
  	}
@@ -58,10 +58,10 @@ class FilterPredicate
 
  			array_walk( $filter, function (&$value, $key) 
  			{
- 				return $value = htmlspecialchars(DAL::Instance()->Escape(addslashes($value)), ENT_QUOTES | ENT_HTML401, APP_ENCODING);
+ 				return $value = htmlspecialchars(DAL::Instance()->Escape($value), ENT_QUOTES | ENT_HTML401, APP_ENCODING);
  			});
  			
- 			return join($filter, ',');
+ 			return join(',', $filter);
  		}
  		else if ( is_object($filter) )
  		{
@@ -72,7 +72,7 @@ class FilterPredicate
  		}
  		else
  		{
- 			$filter = htmlspecialchars(DAL::Instance()->Escape(addslashes($filter)), ENT_QUOTES | ENT_HTML401, APP_ENCODING);
+ 			$filter = htmlspecialchars(DAL::Instance()->Escape($filter), ENT_QUOTES | ENT_HTML401, APP_ENCODING);
  		}
  		
  		return $filter;
@@ -80,25 +80,21 @@ class FilterPredicate
  	
  	function defined( $filter )
  	{
- 		if ( is_array($filter) )
- 		{
+ 		if ( is_array($filter) ) {
  			$filter = array_filter($filter, function( $value ) {
-		    	return !in_array($value, array('','all','hide'));
+		    	return !in_array($value, array('','all','hide','undefined'));
 			});
  			return count($filter) > 0;
  		}
- 		else if ( is_object($filter) )
- 		{
+ 		else if ( is_object($filter) ) {
  			return true;
  		}
- 		else 
- 		{
+ 		else {
  			return $this->defined(preg_split('/,/', $filter));
  		}
  	}
  	
- 	function _predicate( $filter )
- 	{
+ 	function _predicate( $filter ) {
  		return "";
  	}
  	
@@ -138,4 +134,14 @@ class FilterPredicate
 	{
 		$this->object = null;
 	}
+
+    protected function hasNone( $filter ) {
+        $filterUnified = ','.trim($filter, ' ,').',';
+        return strpos($filterUnified, ',none,') !== false;
+    }
+
+    protected function hasAny( $filter ) {
+        $filterUnified = ','.trim($filter, ' ,').',';
+        return strpos($filterUnified, ',any,') !== false;
+    }
 }

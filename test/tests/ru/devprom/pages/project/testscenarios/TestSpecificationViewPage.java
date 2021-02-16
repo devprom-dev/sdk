@@ -33,10 +33,10 @@ public class TestSpecificationViewPage extends TestScenarioViewPage {
 	@FindBy(xpath = "//a[@uid='baseline' and contains(@class,'dropdown-toggle')]")
 	protected WebElement versionBtn;
 	
-	@FindBy(xpath = "//a[text()='Скопировать раздел']")
+	@FindBy(xpath = "//a[@id='reintegrate']")
 	protected WebElement copySectionBtn;
 	
-	@FindBy(xpath = "//a[text()='Скопировать раздел']/../../preceding-sibling::a")
+	@FindBy(xpath = "//a[@id='reintegrate']/../../preceding-sibling::a")
 	protected WebElement processChangesBtn;
         
          //кнопка со звездочкой корневого документа
@@ -67,16 +67,10 @@ public class TestSpecificationViewPage extends TestScenarioViewPage {
 	
 	public TestSpecificationViewPage showBaseline(String version){
 		clickOnInvisibleElement(versionBtn);
-		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'Бейзлайн: "+version+"')]")));
+		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'"+version+"')]")));
 		return new TestSpecificationViewPage(driver);
 	}
 	
-	public TestSpecificationViewPage showVersion(String version){
-		clickOnInvisibleElement(versionBtn);
-		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'Версия: "+version+"')]")));
-		return new TestSpecificationViewPage(driver);
-	}
-
 	public TestSpecificationViewPage compareWithVersion(String version)
 	{
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.elementToBeClickable(compareWithBtn));
@@ -90,41 +84,41 @@ public class TestSpecificationViewPage extends TestScenarioViewPage {
 	}
 	
 	public boolean isAlertPresent(){
-		return !driver.findElements(By.xpath("//td[@id='content']//i[contains(@class,'icon-broken')]")).isEmpty();
+		return !driver.findElements(By.xpath("//td[@id='content']//a[@uid='compare-actions']")).isEmpty();
 	}
 	
 	public TestSpecificationViewPage copySection() {
-		processChangesBtn.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(copySectionBtn));
-		copySectionBtn.click();
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		clickOnInvisibleElement(copySectionBtn);
+		waitForDialog();
+		submitDialog(driver.findElement(By.id("SubmitBtn")));
 		return new TestSpecificationViewPage(driver);
 	}
 	
 	public TestScenarioViewPage addNewTestScenario(TestScenario testScenario)
 	{
 		clickOnInvisibleElement(insirtSectionBtn);
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
 		By xpath = By.xpath("//div[contains(@class,'wysiwyg-text') and contains(.,'<Тестовый')]");
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(xpath));
 		
 		WebElement titleElement = driver.findElement(xpath);
-		titleElement.click();
-		(new WebDriverWait(driver, waiting)).until(
-				ExpectedConditions.attributeContains(titleElement, "class", "cke_editable_inline"));
-		titleElement.clear();
-		titleElement.sendKeys(testScenario.getName());
-		
 		String uid = "S-" + titleElement.getAttribute("objectid");
 		testScenario.setId(uid);
+		titleElement.click();
+		titleElement.clear();
+		titleElement.sendKeys(testScenario.getName());
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
 		return new TestScenarioViewPage(driver);
 	}
 
     public TestScenarioNewPage insirtNewSection() {
-        int count = driver.findElements(By.xpath(".//tbody/tr[contains(@id,'pmwikidocumentlist1_row_')]")).size();
+        int count = driver.findElements(By.xpath(".//tr[contains(@id,'pmwikidocumentlist1_row_')]")).size();
         if(count>1)count--;
         FILELOG.debug("Count = " + count);
         clickOnInvisibleElement(driver.findElement(By.xpath(".//*[@id='pmwikidocumentlist1_row_"+count+"']")));

@@ -25,7 +25,7 @@ class BackupPage extends AdminPage
 	    return $_REQUEST['action'] != '';
 	}
 	
-	function getForm()
+	function getEntityForm()
 	{
 	    $object = getFactory()->getObject('cms_Update');
 	    switch ( $_REQUEST['action'] )

@@ -5,8 +5,33 @@ hljs.configure({
 hljs.initHighlightingOnLoad();
 var mentions = [];
 
+var ALM_toolbars = {
+	"MiniToolbar": [
+		{ name: 'clipboard', items : ['Paste','PasteText' ] },
+		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','RemoveFormat','TextColor','BGColor' ] },
+		{ name: 'paragraph', items : [ 'Outdent','Indent','NumberedList','BulletedList','Blockquote' ] },
+		{ name: 'insert', items : [ 'InsertMultipleImages','searchArtifact','Table','EmbedHTML','Embed','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
+		{ name: 'tools', items : [ 'Maximize','Source','-','Undo','Redo' ] },
+		{ name: 'styles', items : [ 'Format','Font','FontSize','Markdown' ] }
+	],
+	"FullToolbar": [
+		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','-','Subscript','Superscript','-', 'TextColor','BGColor','-','CopyFormatting','RemoveFormat' ] },
+		{ name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','Blockquote' ] },
+		{ name: 'insert', items : [ 'InsertMultipleImages','searchArtifact','includeArtifact','Table','EmbedHTML','Embed','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
+		{ name: 'clipboard', items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo' ] },
+		{ name: 'editing', items : [ 'Scayt' ] },
+		{ name: 'tools', items : [ 'Maximize', 'ShowBlocks' ] },
+		{ name: 'forms', items : [ 'Checkbox' ] },
+		{ name: 'document', items : [ 'Source' ] },
+		{ name: 'styles', items : [ 'Styles','Format','Font','FontSize','Markdown' ] },
+		{ name: 'others' }
+	],
+	"": []
+};
+var removePlugins = 'autogrow,elementspath,autoembed,tableresize';
+var removePluginsEmptyToolbar = 'pastefromword,pastetext,includepage,clipboard,notificationaggregator,notification,mathjax,image2,embed,embedbase,codesnippet,widget,toolbar,' + removePlugins;
+
 CKEDITOR.disableAutoInline = true;
-CKEDITOR.disableNativeSpellChecker = true;
 
 function setupDialogTable( dialogDefinition )
 {
@@ -48,23 +73,24 @@ function setupEditor( editor )
                 event.cancel();
             }
         }
+
+		var edt = $(this.editable().$);
+		if ( editor.custom.objectclass == 'TestScenario' || editor.custom.objectclass == 'TestCaseExecution' ) {
+			var skip = false;
+			edt.find('table tr > td:nth-child(1)').each(function(index) {
+				if ( index == 0 ) {
+					skip = $(this).text() != "1";
+				}
+				if ( !skip ) {
+					$(this).html(index + 1);
+				}
+			});
+		}
+
 		originalEvent = event.data.domEvent.$;
 		if ( this.editable().$.ownerDocument != window.document ) Mousetrap.handleKeyEvent(originalEvent);
     });
-    editor.on( 'change', function( evt  ) {
-        var edt = $(this.editable().$);
-        if ( edt.attr('objectclass') == 'TestScenario' || edt.attr('objectclass') == 'TestCaseExecution' ) {
-        	var skip = false;
-            edt.find('table tr > td:nth-child(1)').each(function(index) {
-            	if ( index == 0 ) {
-                    skip = $(this).text() != "1";
-				}
-				if ( !skip ) {
-                    $(this).html(index + 1);
-				}
-            });
-		}
-    });
+
     editor.on( 'contentDom', function() {
         var editable = editor.editable();
         editable.attachListener( editable, 'mousedown', function( evt ) {
@@ -77,6 +103,7 @@ function setupEditor( editor )
                 window.open( href, target );
                 evt.data.preventDefault();
             }
+			annotationShowComment($(target.$));
         });
     } );
     $('.wysiwyg-welcome:not(.armed)').click(function() {
@@ -109,9 +136,20 @@ function setupEditorGlobal( filesTitle )
             setupDialogLink( dialogDefinition );
         }
 	});
+
+	CKEDITOR.on('instanceReady', function( ev ) {
+		$('.wiki-page-document .cke_inner:first').resize(function() {
+			if ( $(this).height() > 10 && $(this).parents('.wiki-page-document').length> 0 ) {
+				$('.wiki-page-document .documentToolbar').css({
+					'min-height': $(this).height() + 1
+				})
+			}
+		});
+		$('.cke_inner:first').trigger('resize');
+	});
 }
 
-function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHtml, appVersion, project )
+function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, appVersion, project )
 {
 	if ( typeof CKEDITOR == 'undefined' ) return;
 	CKEDITOR.timestamp = appVersion;
@@ -123,10 +161,10 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	if ( $(element).attr('contenteditable') != 'true' )
 	{
 		var editor = CKEDITOR.replace( element, {
-			toolbar: toolbar,
+			toolbar: ALM_toolbars[toolbar],
+			removePlugins: toolbar == '' ? removePluginsEmptyToolbar : removePlugins,
 			height: rows,
 			enterMode: CKEDITOR.ENTER_P,
-			removePlugins : 'elementspath',
 			resize_enabled : false,
 			language: devpromOpts.language == '' ? 'en' : devpromOpts.language,
 			contentsCss: ['/pm/'+project+'/scripts/css/?v='+appVersion],
@@ -139,7 +177,6 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 
 		editor.on('instanceReady', function(e) 
 		{
-			e.editor.config.autoGrow_minHeight = e.editor.config.height;
 			e.editor.updateElement();
 			
 	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() 
@@ -150,7 +187,6 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 
 	      	registerFormValidator($(element).parents('form').attr('id'), function() 
 	      	{ 
-	      		e.editor.custom.updateForm();
 		      	e.editor.updateElement();
 		      	return true;
 	      	});
@@ -176,8 +212,8 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	else
 	{
 		var editor = CKEDITOR.inline( element, {
-			removePlugins: toolbar == '' ? 'codesnippet,image,image2,mathjax,autoembed,widget,embed,embedbase,pastefromword,pastetext,autolink,clipboard,notificationaggregator,notification,toolbar' : '',
-			toolbar: toolbar,
+			toolbar: ALM_toolbars[toolbar],
+			removePlugins: toolbar == '' ? removePluginsEmptyToolbar : removePlugins,
 			enterMode: toolbar == '' ? CKEDITOR.ENTER_BR : CKEDITOR.ENTER_P,
 			allowedContent: toolbar != '',
 			language: devpromOpts.language == '' ? 'en' : devpromOpts.language,
@@ -188,61 +224,87 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			return;
 		}
 
-		editor.purgeTimeoutValue = 1000;
 		editor.persist = function( async )
 		{
 			var element = $('#' + this.name ); 
 			var editorInstance = this;
-				
 			if ( typeof $(element).attr('objectClass') == 'undefined' ) {
 				$('#'+$(element).attr('id')+'Value').val( editorInstance.getData() );
 			}
 			else if ( editorInstance.checkDirty() )
 			{
-				runMethod(modify_url, {
-					'class': $(element).attr('objectClass'),
-					'object': $(element).attr('objectId'),
-					'attribute': $(element).attr('attributeName'),
-					'value': editorInstance.getData(),
-					'parms': {
-						ContentEditor: 'WikiRtfCKEditor'
-					}
-				},
-				function(result) {
-					editorInstance.resetDirty();
-					var resultJson = jQuery.parseJSON(result);
-					if ( typeof resultJson.modified != 'undefined' ) {
-						$(element).parents('[modified]').attr('modified', resultJson.modified);
-					}
-				}, '', async);
+				try {
+					$.ajax({
+						type: "POST",
+						url: modify_url,
+						dataType: "html",
+						data: {
+							'class': $(element).attr('objectClass'),
+							'object': $(element).attr('objectId'),
+							'attribute': $(element).attr('attributeName'),
+							'version': $(element).attr('version'),
+							'value': editorInstance.getData(),
+							'parms': {ContentEditor: 'WikiRtfCKEditor'}
+						},
+						proccessData: false,
+						async: true,
+						success: function (result, status, xhr) {
+							try {
+								var resultJson = jQuery.parseJSON(result);
+								if (typeof resultJson.message != 'undefined' && resultJson.message == 'denied' ) {
+									throw resultJson.description;
+								}
+								if (typeof resultJson.modified != 'undefined') {
+									$(element).parents('[modified]').attr('modified', resultJson.modified);
+								}
+								if (typeof resultJson.version != 'undefined') {
+									$('.wysiwyg-text[version][objectid='+$(element).attr('objectid')+']').each(function(){
+										$(this).attr('version', resultJson.version);
+									});
+									$(element).attr('version', resultJson.version);
+									$(element).parents('[object-id]')
+										.find('.wysiwyg-text[version]')
+										.attr('version', resultJson.version);
+								}
+								editorInstance.resetDirty();
+							}
+							catch(e) {
+								reportError(e);
+							}
+						},
+						error: function (xhr, status, error) {
+							reportError(ajaxErrorExplain(xhr, error));
+						},
+						statusCode: {
+							500: function (xhr) {
+								window.location = '/500';
+							}
+						}
+					});
+				}
+				catch(e) {
+					reportError(e.toString());
+				}
 			}
 		};
-		
-		editor.on('blur', function(e) {
+
+		editor.on('change', function(e) {
 			if ( typeof e.editor.purgeTimeout == 'number' ) {
 				clearTimeout(e.editor.purgeTimeout);
 			}
-			e.editor.purgeTimeout = setTimeout(function() { e.editor.persist(true); }, e.editor.purgeTimeoutValue);
-		});
-		editor.on('focus', function(e) {
-			if ( typeof e.editor.purgeTimeout == 'number' ) {
-				clearTimeout(e.editor.purgeTimeout);
-			}
+			e.editor.purgeTimeout = setTimeout(function() { e.editor.persist(true); }, 1560);
 		});
 
-		editor.on('instanceReady', function(e) 
+		editor.on('instanceReady', function(e)
 		{
-	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function()
-	      	{
-		      	e.editor.persist(false);
+	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() {
+		      	e.editor.persist(true);
 		      	return true;
 	      	});
 	    			
 			if ( $(element).hasClass('wysiwyg-field') || $(element).parents('.embedded_form').length > 0 )
 			{
-		      	registerFormValidator($(element).parents('form').attr('id'), function() 
-      			{ 
-		      		e.editor.custom.updateForm();
+		      	registerFormValidator($(element).parents('form').attr('id'), function() {
 					e.editor.persist(true);
 		      		return true;
 			    });
@@ -270,10 +332,8 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
             makeupEditor(e.editor, editor, 'body', project);
 		});
 
-		editor.on('destroy', function(e) 
-		{
-			e.editor.purgeTimeoutValue = 0;
-			e.editor.persist(false);
+		editor.on('destroy', function(e) {
+			e.editor.persist(true);
 		});
 
 		editor.on('panelShow', function(e)
@@ -285,22 +345,11 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 				'left': panelElement.position().left + stickedParent.position().left
 			});
 		});
-
 	}
 	
 	editor.custom = { 
 		id: $(element).attr('id'),
-		attachmentsHtml: html_entity_decode(attachmentsHtml),
-		updateForm: function() 
-		{
-			if ( $('#'+this.id+'Files').length < 1 )
-			{
-				$('<div id="'+this.id+'Files" style="display:none"></div>')
-					.appendTo($('#'+this.id).parent());
-			}
-
-			$('#'+this.id+'Files').html(this.attachmentsHtml);				
-		}
+		objectclass: $(element).attr("objectclass")
 	};
 	
 	setupEditor( editor );
@@ -361,20 +410,6 @@ function pasteImage(ev, data)
     originalImage.src = data.dataURL;
 }
 
-function pasteTemplate( field, content )
-{
-	var editor_id = $('textarea[id*='+field+']').attr('id');
-	var instance = CKEDITOR.instances[editor_id];
-	if ( !instance.checkDirty() ) {
-		instance.setData(content, function() {
-			instance.updateElement();
-			instance.resetDirty();
-		});
-	} else {
-		instance.insertHtml(content);
-	}
-}
-
 function makeupEditor( editor, e, container, project, offset )
 {
 	var templates = [];
@@ -388,6 +423,8 @@ function makeupEditor( editor, e, container, project, offset )
             }
         }
     });
+
+	makeupAnnotations(e);
 
     if ( e.attr('objectclass') == 'TestCaseExecution' ) {
         e.find('table tr > th').each(function(index) {
@@ -470,7 +507,13 @@ function makeupEditor( editor, e, container, project, offset )
 				}
 			}
 		}
-	);
+	).on({
+		'textComplete:select': function (e, value, strategy) {
+			setTimeout(function() {
+				editor.fire('change');
+			}, 300);
+		}
+	});
 }
 (function ($) {
     var cannotContainText = ['AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT', 'KEYGEN', 'LINK', 'MENUITEM', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR', 'BASEFONT', 'BGSOUND', 'FRAME', 'ISINDEX'];

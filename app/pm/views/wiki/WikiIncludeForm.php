@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Wiki\WikiIncludeService;
 include_once "PMWikiForm.php";
 
 class WikiIncludeForm extends PMPageForm
@@ -17,35 +18,37 @@ class WikiIncludeForm extends PMPageForm
  		{
             if ( in_array($attribute, $system) ) continue;
  			$object->setAttributeVisible($attribute, false);
- 			$object->setAttributeRequired($attribute, false);
+            $object->setAttributeRequired($attribute, false);
  		}
+
  		$object->addAttribute('Include', 'INTEGER', '', false, false);
- 		
+        $object->setAttributeRequired('Caption', false);
+
  		if ( $this->getFieldValue('Include') == "1" )
  		{
- 			$object->addAttribute('PageToInclude', 'REF_'.get_class($this->getObject()).'Id', text('testing55'), true, false, text('testing59'));
+ 			$object->addAttribute('PageToInclude', 'REF_'.get_class($this->getObject()).'Id', $this->getObject()->getSectionName(), true, false);
  			$object->setAttributeRequired('PageToInclude', true);
  		}
  		else
  		{
  			$object->setAttributeVisible('ParentPage', true);
  			$object->setAttributeRequired('ParentPage', true);
- 			$object->setAttributeCaption('ParentPage', $this->getObject()->getDocumentName());
+ 			$object->setAttributeCaption('ParentPage', $this->getObject()->getParentName());
  		}
     }
 
 	function persist()
 	{
-		if ( !parent::persist() ) return false;
+	    $service = new WikiIncludeService(getFactory(), getSession());
+        $service->includePagesInto($this->getObject(), $_REQUEST['PageToInclude'], $_REQUEST['ParentPage'], $_REQUEST['OrderNum']);
 
-		if ( $this->getFieldValue('Include') == "1" ) {
-		}
-		else {
-			// redirect to document's page
-			$object_it = $this->getObjectIt();
-			$this->setObjectIt($object_it->getRef('DocumentId'));
-		}
-		return true;
+        if ( is_numeric($_REQUEST['ParentPage']) ) {
+            $this->setObjectIt($this->getObject()->getExact($_REQUEST['ParentPage']));
+        }
+        else {
+            $this->setObjectIt($this->getObject()->getByRef('Caption', $_REQUEST['ParentPage']));
+        }
+        return true;
 	}
 
 	function createFieldObject( $name )
@@ -53,7 +56,9 @@ class WikiIncludeForm extends PMPageForm
 		switch ( $name )
 		{		
 			case 'ParentPage':
-				return new FieldHierarchySelectorAppendable( $this->getObject()->getAttributeObject('DocumentId') );
+                $field = new FieldHierarchySelectorAppendable( $this->getObject()->getAttributeObject('DocumentId') );
+                $field->setSystemAttribute('realtraces');
+                return $field;
 				
 			case 'PageToInclude':
 				$treeObject = $this->getObject()->getAttributeObject($name);
@@ -65,10 +70,15 @@ class WikiIncludeForm extends PMPageForm
 				}
 				$field = new FieldHierarchySelector($searchObject);
 				$field->setTreeObject($treeObject);
+                $field->setSystemAttribute('realtraces');
 				return $field;
 				
 			default:
 				return parent::createFieldObject( $name );
 		}
-	}    
+	}
+
+	function getHint() {
+        return '';
+    }
 }

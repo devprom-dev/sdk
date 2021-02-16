@@ -54,8 +54,7 @@ class ScrumPMPlugin extends PluginPMBase
             new VelocityReportsBuilder(),
             new EstimationStrategyScrumBuilder(),
             new ScrumReportedEvent(),
-            new ChangeLogEntitiesScrumBuilder(),
-            new ScrumTourScriptBuilder(getSession())
+            new ChangeLogEntitiesScrumBuilder()
         );
     }
 

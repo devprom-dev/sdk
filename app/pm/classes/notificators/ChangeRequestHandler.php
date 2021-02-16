@@ -11,7 +11,7 @@ class ChangeRequestHandler extends EmailNotificatorHandler
 		switch ( $action )
 		{
 			case 'modify':
-				if ( $prev_object_it->getStateIt()->getId() != $object_it->getStateIt()->getId() ) {
+				if ( $prev_object_it->get('State') != $object_it->get('State') ) {
 					if ( $object_it->get('Author') > 0 ) {
 						array_push($result, $object_it->get('Author'));
 					}

@@ -37,18 +37,14 @@ class EnvironmentSettings
     static public function getServerNameDefault()
     {
         $host = getenv('SERVER_NAME');
-
         if ( $host != '' ) return $host;
         
-        if ( function_exists('apache_getenv') )
-        {
+        if ( function_exists('apache_getenv') ) {
             $host = apache_getenv('SERVER_NAME');
-
             if ( $host != '' ) return $host;
         }
         
         $host = gethostname(); 
-
         if ( $host != '' ) return $host;
         
         return 'localhost'; 
@@ -57,15 +53,16 @@ class EnvironmentSettings
     static public function getServerName()
     {
         $server_name = static::getCustomServerName();
-        
         if ( $server_name != '' ) return $server_name;
-        
+
+        list($host, $port) = preg_split('/:/', $_SERVER['HTTP_HOST']);
+        $host = filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME);
+        if ( $host != '' ) return $host;
+
         $server_name = self::getServerNameDefault();
-        
-		if ( class_exists('idna_convert', false) )
-		{
+		if ( class_exists('idna_convert', false) ) {
  			$converter = new idna_convert();
- 			$server_name = $converter->encode(IteratorBase::wintoutf8($server_name));
+ 			$server_name = $converter->encode($server_name);
 		}
 		
 		return $server_name;
@@ -74,50 +71,43 @@ class EnvironmentSettings
     static public function getServerAddress()
     {
         $host = getenv('SERVER_ADDR');
-
         if ( $host != '' ) return $host;
         
-        if ( function_exists('apache_getenv') )
-        {
+        if ( function_exists('apache_getenv') ) {
             $host = apache_getenv('SERVER_ADDR');
-
             if ( $host != '' ) return $host;
         }
-            
-        return '127.0.0.1'; 
+
+        return '127.0.0.1';
     }
     
     static public function getServerPort()
     {
         $port = static::getCustomServerPort();
-        
         if ( $port != '' ) return $port;
-        
+
+        list($host, $port) = preg_split('/:/', $_SERVER['HTTP_HOST']);
+        if ( is_numeric($port) && $port > 0 ) return $port;
+
         return self::getServerPortDefault();
     }
     
     static public function getServerPortDefault()
     {
     	$port = getenv('SERVER_PORT');
-
         if ( $port != '' ) return $port;
         
-        if ( function_exists('apache_getenv') )
-        {
+        if ( function_exists('apache_getenv') ) {
             $port = apache_getenv('SERVER_PORT');
-
             if ( $port != '' ) return $port;
         }
-
-        return '80'; 
+        return '80';
     }
     
     static public function getServerSchema()
     {
         if ( static::getHttps() ) return 'https';
-        
         if ( static::getServerPort() == '443' ) return 'https';
-        
         return 'http';
     }
     
@@ -135,8 +125,7 @@ class EnvironmentSettings
 
     static public function getServerUrlLocalhost()
     {
-        $schema = static::getServerSchema();
-        return self::appendPort($schema, $schema.'://127.0.0.1');
+        return static::getServerSchema() . '://127.0.0.1:' . static::getServerPortDefault();
     }
 
     static protected function appendPort( $schema, $url )
@@ -223,10 +212,40 @@ class EnvironmentSettings
     
     static public function getMaxFileSize()
     {
- 		return defined('MAX_FILE_SIZE') ? MAX_FILE_SIZE : 104857600;
+ 		return defined('MAX_FILE_SIZE') ? MAX_FILE_SIZE : 209715200;
     }
 
     static public function getRawPostData() {
         return file_get_contents("php://input");
+    }
+
+    static public function getUserPicTimestamp() {
+        $filePath = DOCUMENT_ROOT.'conf/userpic.info';
+        if ( !file_exists($filePath) ) return 1;
+        return intval(file_get_contents(DOCUMENT_ROOT.'conf/userpic.info'));
+    }
+
+    static public function getHelpDocsUrl( $page = '' )
+    {
+        $url = defined('HELP_DOCS_URL') ? HELP_DOCS_URL : _getServerUrl().'/docs/index.html';
+        if ( $page != '' ) {
+            $parts = parse_url($url);
+            $url =  trim($parts['scheme'].'://'.
+                        $parts['host'].($parts['port'] != 80 ? ':'.$parts['port'] : '').
+                            dirname($parts['path']), '/').'/'.$page;
+        }
+        return $url;
+    }
+
+    static public function getProcessDocsMap() {
+        return array (
+            'ticket_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4947.html'),
+            'reqs_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4771.html#4564'),
+            'scrum_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4770.html#4643'),
+            'sdlc_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4771.html#4772'),
+            'spec_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4771.html#5202'),
+            'kanban_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4770.html#4645'),
+            'scrumban_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4770.html#4644')
+        );
     }
 }

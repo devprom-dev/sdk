@@ -28,10 +28,8 @@ class ProjectTemplateTable extends PageTable
 		return $filter;
 	}
 	
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
-		$values = $this->getFilterValues();
-		
 		return array (
 				new FilterAttributePredicate('Language', $values['language'])
 		);

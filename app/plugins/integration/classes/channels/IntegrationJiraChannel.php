@@ -4,12 +4,16 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
 {
     const apiPath = "/rest/api/latest";
 
+    public function getKeyField() {
+        return 'id';
+    }
+
     public function getItems( $timestamp, $limit )
     {
         // build search query
         $jql = array();
         if ( $timestamp != '' ) {
-            $jql[] = 'updatedDate > "-'. round((strtotime(SystemDateTime::date()) - strtotime($timestamp)) / 60, 0) .'m"';
+            $jql[] = 'updatedDate > "-'. round((strtotime($this->getTimestamp()) - strtotime($timestamp)) / 60, 0) .'m"';
         }
         else {
             $jql[] = 'updatedDate >= "-60d"';
@@ -44,16 +48,15 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         foreach( $result['issues'] as $issue )
         {
             if ( $issue['fields']['issuetype']['subtask'] || in_array($issue['fields']['issuetype']['name'], $taskTypeMapping) ) {
-                $item = $second[$issue['key']] = array (
+                $item = $second[$issue[$this->getKeyField()]] = array (
                     'class' => 'Task',
-                    'id' => $issue['key']
+                    'id' => $issue[$this->getKeyField()]
                 );
-                $class = 'Task';
             }
             else {
-                $item = $first[$issue['key']] = array (
+                $item = $first[$issue[$this->getKeyField()]] = array (
                     'class' => 'Request',
-                    'id' => $issue['key']
+                    'id' => $issue[$this->getKeyField()]
                 );
             }
             $latest = array_merge( $latest,
@@ -82,12 +85,8 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
             array_merge(
                 $releases, $first, $second, $latest
             ),
-            $nextTimestamp != '' ? new \DateTime($nextTimestamp) : ''
+            $nextTimestamp != '' ? new \DateTime($nextTimestamp, new DateTimeZone("UTC")) : ''
         );
-    }
-
-    protected function buildIdUrl( $url, $id ) {
-        return $url . '/' . $id;
     }
 
     protected function getUserEmailAttribute() {
@@ -97,8 +96,7 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
     protected function getHeaders()
     {
         return array (
-            "X-Atlassian-Token: no-check",
-            "Content-Type: application/json"
+            "X-Atlassian-Token: no-check"
         );
     }
 
@@ -116,9 +114,9 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         return $map;
     }
 
-    public function mapToInternal($source, $mapping, $getter)
+    public function mapToInternal($class, $id, $source, $mapping, $getter)
     {
-        $data = parent::mapToInternal($source, $mapping, $getter);
+        $data = parent::mapToInternal($class, $id, $source, $mapping, $getter);
 
         foreach( $data as $attribute => $value ) {
             if ( $attribute == 'File' ) {
@@ -129,10 +127,11 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
             }
         }
 
+        $data['key'] = $source['key'];
         return $data;
     }
 
-    public function mapFromInternal($source, $mapping, $setter)
+    public function mapFromInternal($class, $id, $source, $mapping, $setter)
     {
         if ( array_key_exists('SourceRequest', $mapping) ) {
             $mapping['SourceRequest'] = array (
@@ -147,7 +146,7 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
             }
         }
 
-        $put = parent::mapFromInternal($source, $mapping, $setter);
+        $put = parent::mapFromInternal($class, $id, $source, $mapping, $setter);
 
         if ( $this->getObjectIt()->get('ProjectKey') != '' ) {
             if ( strpos($mapping['url'], '/issue') !== false ) {
@@ -157,6 +156,10 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
                 $put['project'] = $this->getObjectIt()->get('ProjectKey');
             }
         }
+        if ( $class == 'Task' && $put['fields']['issuetype']['name'] == '' ) {
+            $put['fields']['issuetype']['id'] = $this->taskIssueTypeId;
+        }
+        unset($put['fields'][$this->getKeyField()]);
 
         return $put;
     }
@@ -179,7 +182,9 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
     {
         foreach( $this->jsonGet(self::apiPath.'/issuetype', array(), false) as $issueType ) {
             $this->issueTypeMap[$issueType['id']] = $issueType['name'];
-            if ( $issueType['subtask'] ) $this->taskIssueType = $issueType['id'];
+            if ( $issueType['subtask'] ) {
+                $this->taskIssueTypeId = $issueType['id'];
+            }
         }
 
         foreach( $this->jsonGet(self::apiPath.'/status', array(), false) as $issueState ) {
@@ -214,7 +219,19 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         }
     }
 
+    public function buildIdUrl($url, $id)
+    {
+        if ( strpos($url, '{key}') !== false ) {
+            return $this->parseUrl($url);
+        }
+        return parent::buildIdUrl($url, $id);
+    }
+
+    public function getWebLink( $id, $data, $link_pattern ) {
+        return str_replace('{key}', $data['key'], parent::getWebLink( $id, $data, $link_pattern ));
+    }
+
     private $issueTypeMap = array();
     private $issueStates = array();
-    private $taskIssueType = 0;
+    private $taskIssueTypeId = 0;
 }

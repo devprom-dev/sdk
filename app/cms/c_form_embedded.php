@@ -3,7 +3,6 @@
 // PHPLOCKITOPT NOOBFUSCATE
 
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectRecordAgePersister.php";
-include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.php";
 include_once SERVER_ROOT_PATH.'cms/views/FieldDictionary.php';
 include_once SERVER_ROOT_PATH.'cms/views/FieldAutoCompleteObject.php';
 
@@ -23,18 +22,19 @@ class FormEmbedded
  	
  	function __construct( $object = null, $anchor_field = null, $form_field = '' )
  	{
- 		$this->object = $object;
+        if ( $object instanceof Metaobject ) {
+            $this->object = $object;
+            $this->iterator = $this->object->getAll();
+        }
+        else {
+            $this->iterator = $object;
+            $this->object = $this->iterator->object;
+        }
  		$this->setFormId(0);
  		$this->anchor_field = $anchor_field;
  		$this->readonly = false;
  		$this->singleton = false;
  		$this->form_field = $form_field;
- 		
- 		if ( is_object($this->object) )
- 		{
- 			$this->iterator = $this->object->getAll();
- 		}
-
  		$this->button_text = translate('добавить');
  	}
  	
@@ -69,7 +69,6 @@ class FormEmbedded
  	function setObjectIt( $object_it )
  	{
  		$this->object_it = $object_it;
- 		
  		$this->setFormId( $this->object_it->getId() );
  	}
  	
@@ -146,7 +145,7 @@ class FormEmbedded
 		return $this->object->getAttributeObject($attr);
  	}
  	
- 	function & getIteratorRef()
+ 	function getIteratorRef()
  	{
  		return $this->iterator;
  	}
@@ -157,7 +156,7 @@ class FormEmbedded
 	
 	function getItemDisplayName( $object_it )
 	{
-		return $object_it->getDisplayName();
+		return $object_it->getDisplayNameExt();
 	}
 
  	function getItemVisibility( $object_it )
@@ -176,25 +175,22 @@ class FormEmbedded
 	        return $this->getObjectIt()->getId();
         }
 
-		$value = $_REQUEST[$this->getFieldName( $attr )];
-        if ( $value != '' ) return $value;
-
-        $value = $_REQUEST[$attr];
-        if ( $value != '' ) return $value;
-
 		return $this->object->getDefaultAttributeValue($attr);
 	}
 	
 	function createField( $attr )
 	{
-		$object = $this->getAttributeObject( $attr );
-		
-		$field =
-            is_object($object->entity) && $object->entity->get('IsDictionary') == 'Y'
-                ? new FieldDictionary( $object )
-                : new FieldAutoCompleteObject( $object );
+	    if ( $this->object->IsReference($attr) ) {
+            $object = $this->getAttributeObject( $attr );
 
-		return $field;
+            $field =
+                $object->IsDictionary()
+                    ? new FieldDictionary( $object )
+                    : new FieldAutoCompleteObject( $object );
+
+            return $field;
+        }
+	    return null;
 	}
 	
 	function getHeaderMessage()
@@ -255,14 +251,14 @@ class FormEmbedded
 		if ( $this->IsAttributeObject( $attr ) )
 		{
 			$field = $this->createField( $attr );
-
-			$field->setName( $field_name );
-			$field->setId( $field_name );
-			$field->setValue( $value );
-			$field->setDefault( $value != '' ? $value : $this->object->getDefaultAttributeValue($attr) );
-			$field->setTabIndex( $tabindex );
-
-			$field->draw();
+			if ( is_object($field) ) {
+                $field->setName( $field_name );
+                $field->setId( $field_name );
+                $field->setValue( $value );
+                $field->setDefault( $value != '' ? $value : $this->object->getDefaultAttributeValue($attr) );
+                $field->setTabIndex( $tabindex );
+                $field->draw();
+            }
 		}
 		else
 		{
@@ -301,22 +297,21 @@ class FormEmbedded
 	
 				default:
 					$field = $this->createField( $attr );
-	
-					$field->setName( $field_name );
-					$field->setId( $field_name );
-					$field->setValue( $value );
-					$field->setTabIndex( $tabindex );
-					$field->setDefault( $this->object->getDefaultAttributeValue($attr) );
+                    if ( is_object($field) ) {
+                        $field->setName( $field_name );
+                        $field->setId( $field_name );
+                        $field->setValue( $value );
+                        $field->setTabIndex( $tabindex );
+                        $field->setDefault( $this->object->getDefaultAttributeValue($attr) );
 
-					if ( $field instanceof FieldWYSIWYG and $field->hasBorder() ) {
-						echo '<div class="well well-wysiwyg">';
-                            $field->setRows(2);
-							$field->draw();
-						echo '</div>';
-					}
-					else {
-						$field->draw();
-					}
+                        if ( $field instanceof FieldWYSIWYG and $field->hasBorder() ) {
+                            $field->setRows(1);
+                            $field->draw();
+                        }
+                        else {
+                            $field->draw();
+                        }
+                    }
 			}
 		}
 		
@@ -415,7 +410,7 @@ class FormEmbedded
 			 
 			$html .= '<div class="embedded_footer clearfix">';
 				$html .= '<input class="btn btn-primary btn-sm" tabindex="'.$tabindex.'" id="saveEmbedded'.$this->form_id.'" style="float:left;" action="save" type="button" value="'.translate('Добавить').'" '.
-					'onclick="javascript: saveEmbeddedItem(\''.$this->form_id.'\', [\''.join("','", $fields).'\'], [\''.join("','", $required).'\'], '.$callback.')">';
+					'onclick="javascript: processEmbeddedItem(\''.$this->form_id.'\', function(){saveEmbeddedItem(\''.$this->form_id.'\', [\''.join("','", $fields).'\'], [\''.join("','", $required).'\'], '.$callback.');});">';
 	
 			$tabindex++;
 			
@@ -439,13 +434,13 @@ class FormEmbedded
 			 '<input type="hidden" name="embeddedFields'.$this->form_id.'" value="'.join(',', $names).'">'.
 			 '<input type="hidden" name="embeddedPrefix'.$this->form_id.'" value="'.$prefix.'">'.
 			 '<input type="hidden" id="embeddedProject'.$this->form_id.'" value="'.$project.'">'.
-             '<input type="hidden" name="embeddedFieldName'.$this->form_id.'" value="'.$this->getFormField().'">';
+             '<input type="hidden" name="embeddedFieldName'.$this->form_id.'" value="'.$this->getFormField().'">'.
+             '<input type="hidden" name="embeddedAnchor'.$this->form_id.'" value="'.$this->anchor_field.'">';
 
 		if ( is_object($this->object_it) && $this->object_it->count() > 0 )
 		{
 			 $anchor_credentials .= '<input type="hidden" name="anchorObject'.$this->form_id.'" value="'.$this->object_it->getId().'">'.
-			 	'<input type="hidden" name="anchorClass'.$this->form_id.'" value="'.get_class($this->object_it->object).'">'.
-			 	'<input type="hidden" name="embeddedAnchor'.$this->form_id.'" value="'.$this->anchor_field.'">';
+			 	'<input type="hidden" name="anchorClass'.$this->form_id.'" value="'.get_class($this->object_it->object).'">';
 			 	
 			 echo '<input type="hidden" id="embeddedMode'.$this->form_id.'" value="standalone">';
 		}
@@ -508,9 +503,9 @@ class FormEmbedded
 	
 					// draw exist embedded items
 					echo '<div id="embeddedItems'.$this->form_id.'" style="position:relative;">';
-					
+
 					$object_it = $this->getIteratorRef();
-					
+
 					$item = 100;
 					$items_count = 0;
 					
@@ -624,9 +619,11 @@ class FormEmbedded
 				echo '</div>';
 			echo '</div>';
 
-			echo '<div>';
-    			$this->drawAddButton( $view, $this->tabindex );
-            echo '</div>';
+			if ( !$this->getReadonly() && getFactory()->getAccessPolicy()->can_create($this->getObject()) ) {
+                echo '<div>';
+                    $this->drawAddButton( $view, $this->tabindex );
+                echo '</div>';
+            }
 
 	 		echo '</div>';
 		}
@@ -649,12 +646,12 @@ class FormEmbedded
  	
  	function drawAddButton( $view, $tabindex )
  	{
-        if ( !$this->getReadonly() && getFactory()->getAccessPolicy()->can_create($this->getObject()) )
-        {
-            echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" href="javascript: appendEmbeddedItem('.
-                $this->getFormId().');">'.$this->getAddButtonText().'</a>';
-        }
+        echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" href="'.$this->getAddButtonUrl().'">'.$this->getAddButtonText().'</a>';
  	}
+
+ 	function getAddButtonUrl() {
+ 	    return 'javascript: appendEmbeddedItem('.$this->getFormId().');';
+    }
  	
  	function process( $object_it, $e, $process_record_callback = null )
  	{
@@ -728,18 +725,12 @@ class FormEmbedded
                 }
             }
 
-            $mapper = new ModelDataTypeMapper();
-            $mapper->map( $embedded, $parms );
-
             if ( $_REQUEST[$field_id] > 0 )
             {
                 $embedded_it = $embedded->getExact($_REQUEST[$field_id]);
-
                 if ( $embedded_it->getId() < 1 ) continue;
-                if ( !getFactory()->getAccessPolicy()->can_modify($embedded_it) ) continue;
 
-                if ( is_callable($process_record_callback, true, $how_to_call) )
-                {
+                if ( is_callable($process_record_callback, true, $how_to_call) ) {
                     if ( $process_record_callback( $embedded, $field_id, $anchor_field, $prefix, $i ) ) continue;
                 }
 
@@ -762,14 +753,14 @@ class FormEmbedded
                         }
                     }
 
-                    $embedded->modify_parms($_REQUEST[$field_id], $parms);
-
-                    $item_it = $embedded->getExact($_REQUEST[$field_id]);
+                    $item_it = getFactory()->modifyEntity(
+                        $embedded->getExact($_REQUEST[$field_id]), $parms, $embedded->getValidators()
+                    );
 
                     $this->processAdded( $item_it );
                 }
             }
-            else if ( count($parms) > 0 && getFactory()->getAccessPolicy()->can_create($embedded) )
+            else if ( count($parms) > 0 )
             {
                 if ( $parms[$anchor_field] == '' ) {
                     $parms[$anchor_field] = $object_it->getId();
@@ -800,7 +791,9 @@ class FormEmbedded
                 }
 
                 if ( !$was_errors ) {
-                    $this->processAdded( $embedded->getExact( $embedded->add_parms( $parms ) ) );
+                    $this->processAdded(
+                        getFactory()->mergeEntity($embedded, $parms, $embedded->getValidators())
+                    );
                 } else {
                     $this->logError('Embedded item skipped because of errors found');
                 }
@@ -823,13 +816,16 @@ class FormEmbedded
  	{
  	    if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) return array();
 
+ 	    $title = stripos($object_it->object->getEntityRefName(), 'trace') !== false
+            ? translate('Удалить связь') : translate('Удалить');
+
  	    $script = 'javascript: deleteEmbeddedItem(\''.$this->form_id.'\', \''.$item.'\');';
  	    
  	    if ( $_REQUEST['formonly'] != '' )
  	    {
      		return array(
     			array( 'click' => $script,
-    				   'name' => translate('Удалить'),
+    				   'name' => $title,
     			       'uid' => 'delete' )
     		);
  	    }
@@ -837,7 +833,7 @@ class FormEmbedded
  	    {
      		return array(
     			array( 'url' => $script,
-    				   'name' => translate('Удалить'),
+    				   'name' => $title,
     			       'uid' => 'delete' )
     		);
  	    }

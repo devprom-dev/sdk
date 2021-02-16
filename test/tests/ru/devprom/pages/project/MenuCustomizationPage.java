@@ -70,7 +70,7 @@ public class MenuCustomizationPage extends SDLCPojectPageBase {
 	
 	public void addFilteredMenuItem(String item, String itemBefore){
 		WebElement element = driver.findElement(By.xpath("//div[contains(@class,'ui-draggable')]//span[@class='filter-match' and text()='"+item+"']")); 
-		WebElement target = driver.findElement(By.xpath("//section[@id='menu']//span[text()='"+itemBefore+"']/.."));
+		WebElement target = driver.findElement(By.xpath("//section[@id='menu']//span[text()='"+itemBefore+"']"));
 		mouseMove(element);
 		(new Actions(driver)).dragAndDrop(element, target).perform();
 		mouseMove(target);
@@ -100,7 +100,7 @@ public class MenuCustomizationPage extends SDLCPojectPageBase {
 	
 	
 	public SDLCPojectPageBase close(){
-		driver.findElement(By.xpath("//div[contains(@class,'row-fluid')]//a[text()='Закрыть']")).click();
+		driver.findElement(By.id("close-btn")).click();
 		return new SDLCPojectPageBase(driver);
 	}
 	

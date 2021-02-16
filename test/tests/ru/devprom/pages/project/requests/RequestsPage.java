@@ -50,24 +50,9 @@ public class RequestsPage extends SDLCPojectPageBase {
 	@FindBy(id = "new-issue-bug")
 	protected WebElement addBugBtn;
 
-	@FindBy(id = "new-issue-enhancement")
-	protected WebElement addEnhancementBtn;
-
 	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Добавить')]")
-	protected WebElement addBtn;
-
-	@FindBy(id="filter-settings")
-	protected WebElement filterBtn;
-	
-	@FindBy(xpath = "//li[@uid='new-issue-enhancement']/a")
-	protected WebElement newCRBtn;
-
-	@FindBy(xpath = "//li[@uid='new-issue-bug']/a")
-	protected WebElement newBugBtn;
-
 	@FindBy(xpath = "//ul//a[text()='Печать карточек']")
 	protected WebElement printCardsBtn;
 	
@@ -80,31 +65,12 @@ public class RequestsPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//ul//a[@id='export-excel']")
 	protected WebElement excelBtn;
 
-	@FindBy(xpath = "//li[@class='dropdown-submenu']/a[text()='Фильтры']")
-	protected WebElement filtersSubmenu;
-	
-	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[contains(.,'Выполнить')]")
+	@FindBy(xpath = "//div[contains(@class,'btn-group') and contains(@object-state,'submitted-')]//a[contains(.,'Выполнить')]")
 	protected WebElement massCompleteBtn;
-	
-	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[contains(.,'Включить в релиз')]")
-	protected WebElement massIncludeInReleaseBtn;
 	
 	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[@id='bulk-delete']")
 	protected WebElement massDeleteBtn;
         
-        //поле версия на форме начать тестирование
-        @FindBy(xpath = ".//*[@id='VersionText']")
-	protected WebElement versionField;
-        
-        //поле окружение на форме начать тестирование
-        @FindBy(xpath = ".//*[@id='EnvironmentText']")
-	protected WebElement envirenmentField;
-        
-        //кнопка сохранить на форме начать тестирование
-        @FindBy(xpath = ".//*[@id='pm_TestSubmitBtn']")
-	protected WebElement saveTestingBtn;
-	
-
 	public RequestsPage(WebDriver driver) {
 		super(driver);
 	}
@@ -114,27 +80,20 @@ public class RequestsPage extends SDLCPojectPageBase {
 	}
 
 	public RequestNewPage clickNewCR() {
-        addRequestBtn.click();		
+		clickOnInvisibleElement(addRequestBtn);
         waitForDialog();
 		return new RequestNewPage(driver);
 	}
 
 	public RequestNewPage clickNewBug() {
-        addBugBtn.click();		
+		clickOnInvisibleElement(addBugBtn);
 		waitForDialog();
 		return new RequestNewPage(driver);
 	}
 	
 	
 	public RequestNewPage clickNewRequestUserType(String userType){
-		try {
-			addBtn.click();
-		}
-		catch(NoSuchElementException e) {
-		}
-		WebElement reqBtn = driver.findElement(By.xpath("//a[contains(@id,'new-') and contains(.,'"+userType+"')]"));
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(reqBtn));
-		reqBtn.click();
+		clickOnInvisibleElement(driver.findElement(By.xpath("//a[contains(@id,'new-') and contains(.,'"+userType+"')]")));
 		waitForDialog();
 		return new RequestNewPage(driver);
 	}
@@ -184,11 +143,6 @@ public class RequestsPage extends SDLCPojectPageBase {
 				}
 			}
 		return r;
-	}
-
-	public RequestsPage showAll() {
-		driver.navigate().to(driver.getCurrentUrl()+"&state=all");
-		return new RequestsPage(driver);
 	}
 
 	public int getCount() {
@@ -318,7 +272,7 @@ public class RequestsPage extends SDLCPojectPageBase {
 		driver.findElement(
 				By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(.,'"
 						+ id
-						+ "')]/../preceding-sibling::td/input[@class='checkbox']"))
+						+ "')]/../preceding-sibling::td/input[contains(@class,'checkbox')]"))
 				.click();
 	}
 
@@ -332,116 +286,6 @@ public class RequestsPage extends SDLCPojectPageBase {
 					+ name + "')]")).isEmpty();
 	}
 
-	public void addFilter(String filtername) {
-		String code = "filterLocation.setup( '" + filtername + "=all', 1 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		(new WebDriverWait(driver, waiting)).until(
-				ExpectedConditions.presenceOfElementLocated(
-						By.xpath("//div[contains(@class,'filter')]//*[@uid='"+filtername+"']")
-						)
-				);
-	}
-
-	public void removeFilter(String filtername) {
-		WebElement element = driver.findElement(By.xpath("//div[contains(@class,'filter')]//*[@uid='"+filtername+"']"));
-		String code = "filterLocation.setup( '" + filtername + "=hide', 1 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.stalenessOf(element));
-	}
-	/**
-	 * 
-	 * @param filtername - английское имя фильтра (например state)
-	 * @param value - видимое значение (например "В релизе")
-	 * @return
-	 */
-	public RequestsPage selectFilterValue (String filtername, String value){
-		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and @uid='"+filtername+"']")).click();
-		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and @uid='"+filtername+"']/following-sibling::ul//a[text()='"+value+"']")).click();
-		try {
-			Thread.sleep(200);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and @uid='"+filtername+"']")).click();
-		if (!value.equals("Все"))
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and @uid='"+filtername+"' and contains(@class,'btn-info')]")));
-		else
-			(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and @uid='"+filtername+"' and not (contains(@class,'btn-info'))]")));
-		return new RequestsPage(driver);
-	}
-	
-
-	public RequestsPage turnOnFilter(String value,
-			String russianFilterName) throws InterruptedException {
-
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
-						+ russianFilterName + "')]")).click();
-
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
-						+ russianFilterName + "')]/following-sibling::ul/li/a[text()='" + value + "']")).click();
-	Thread.sleep(600);
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
-						+ russianFilterName + "')]")).click();
-		
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and contains(@class,'btn-info') and contains(.,'"
-						+ russianFilterName + "')]")));
-		
-		return new RequestsPage(driver);
-	}
-
-	public RequestsPage turnOffFilter(String filtername, String value,
-			String russianName) throws InterruptedException {
-
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
-						+ russianName + "')]")).click();
-		
-		
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
-						+ russianName + "')]/following-sibling::ul/li/a[text()='" + value + "']")).click();
-		Thread.sleep(600);
-		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
-						+ russianName + "')]")).click();
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and @class='btn btn-sm dropdown-toggle' and contains(.,'"
-				+ russianName + "')]")));
-		
-		return new RequestsPage(driver);
-	}
-
-	public String[] readHistoryChangesForRequest(String requestId){
-		List<WebElement> historyRecords = driver.findElements(By.xpath("//td[@id='uid' and child::a/text()='["+requestId+"]']/following-sibling::td[@id='history']/div"));
-		if (historyRecords.size()<1) return null;
-		String[] result = new String[1];
-		result[0]=historyRecords.get(0).getText();
-		return result;
-	}
-	
-
-	public void addColumn(String columnname) {
-		String code = "filterLocation.showColumn('" + columnname + "', 1)";
-		((JavascriptExecutor) driver).executeScript(code);
-		try {
-			Thread.sleep(6000);
-		} catch (InterruptedException e) {
-		}
-		driver.navigate().refresh();
-	}
-
-	public void removeColumn(String columnname) {
-		String code = "filterLocation.hideColumn('" + columnname + "', 1)";
-		((JavascriptExecutor) driver).executeScript(code);
-		try {
-			Thread.sleep(6000);
-		} catch (InterruptedException e) {
-		}
-		driver.navigate().refresh();
-	}
-	
 	public RequestsPage deleteAll(){
 		if (driver.findElements(By.xpath("//tr[contains(@id,'requestlist1_row_')]")).size()>0){
 			driver.findElement(By.xpath("//input[contains(@id,'to_delete_allrequestlist')]")).click();
@@ -476,7 +320,6 @@ public class RequestsPage extends SDLCPojectPageBase {
 		clickOnInvisibleElement(massCompleteBtn);
 		waitForDialog();
 		driver.findElement(By.id("ClosedInVersionText")).sendKeys(version);
-		autocompleteSelect(version);
 		CKEditor we = new CKEditor(driver);
 		we.typeText(comment);		
 		submitDialog(driver.findElement(By.id("SubmitBtn")));
@@ -496,7 +339,7 @@ public class RequestsPage extends SDLCPojectPageBase {
 	}
 	
 	public RequestsPage massDuplicateInProject(String projectName){
-		WebElement duplicateBtn = driver.findElement(By.xpath("//div[@id='bulk-actions']//a[text()='Реализовать в проекте']"));
+		WebElement duplicateBtn = driver.findElement(By.xpath("//div[@id='bulk-actions']//a[text()='Создать реализацию']"));
 		clickOnInvisibleElement(duplicateBtn);
 		waitForDialog();
 		driver.findElement(By.id("ProjectText")).sendKeys(projectName);

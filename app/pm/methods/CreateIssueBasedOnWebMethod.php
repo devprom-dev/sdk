@@ -24,4 +24,8 @@ class CreateIssueBasedOnWebMethod extends ObjectCreateNewWebMethod
 		);
 		return parent::getJSCall($parms);
 	}
+
+	function hasAccess() {
+        return parent::hasAccess() && (!getSession()->IsRDD() || $this->getObject() instanceof Issue);
+    }
 }

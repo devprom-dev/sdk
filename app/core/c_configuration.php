@@ -61,20 +61,6 @@
  		return array(20 * 1024, $used_by_artefacts, 'Kb');
  	}
  	
- 	function exceedMaxArtefactsVolume( $used_by_artefacts ) 
- 	{
- 		global $project_it;
- 		
- 		if ( is_object($project_it) && $project_it->get('CodeName') == 'devprom' )
- 		{
- 			return false;
- 		}
- 		else
- 		{
- 			return $used_by_artefacts > 20 * 1024;
- 		}
- 	}
- 	
  	function hasCounters() {
  		return true;
  	}
@@ -237,10 +223,6 @@
  			round($used_by_artefacts / 1024 / 1204, 1), 'Gb');
  	}
  	
- 	function exceedMaxArtefactsVolume( $used_by_artefacts ) {
- 		return false;
- 	}
-
  	function hasCounters() {
  		return false;
  	}

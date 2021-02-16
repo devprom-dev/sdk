@@ -59,8 +59,49 @@ class WikiPageIterator extends StatableIterator
         return parent::getDisplayNameExt($prefix);
     }
 
-    function getTreeDisplayName() {
-        return $this->get('Caption');
+    function getDisplayNameSearch( $prefix = '' ) {
+        if ( $this->get('DocumentVersion') != '' ) {
+            $prefix .= '['.$this->get('DocumentVersion').'] ';
+        }
+        if ( $this->get('DocumentName') != '' && $this->get('ParentPage') != '' ) {
+            $prefix .= $this->get('DocumentName') . ' / ' ;
+        }
+        return parent::getDisplayNameSearch($prefix);
+    }
+
+    function getTreeDisplayName( $options )
+    {
+        $value = $this->getDisplayName();
+
+        if ( in_array('uid', $options) ) {
+            $uid = $this->get('IncludesUID') != '' ? $this->get('IncludesUID') : $this->get('UID');
+            $value = $uid.'&nbsp; '.$value;
+        }
+
+        if ( in_array('numbers', $options) && $this->get('SectionNumber') != '' ) {
+            $value = $this->get('SectionNumber') . '.&nbsp;' . $value;
+        }
+
+        if ( in_array('state', $options) ) {
+            if ( $this->get('IncludesState') != '' ) {
+                $stateIt = WorkflowScheme::Instance()->getStateIt($this->object);
+                $stateIt->moveTo('ReferenceName', $this->get('IncludesState'));
+                $stateColor = $stateIt->get('RelatedColor');
+            } else {
+                $stateColor = $this->getStateIt()->get('RelatedColor');
+            }
+            $value = '<span class="pri-cir" style="color:'.$stateColor.'">&#x25cf;</span>' . $value;
+        }
+
+        if ( in_array('comments', $options) ) {
+            if ( $this->get('NewComments') > 0 ) {
+                $value = '<i class="icon-comment icon-white"></i> ' . $value;
+            } elseif ( $this->get('CommentsCount') > 0 ) {
+                $value = '<i class="icon-comment"></i> ' . $value;
+            }
+        }
+
+        return $value;
     }
 
     private function cacheContentAndStyle()
@@ -92,16 +133,6 @@ class WikiPageIterator extends StatableIterator
 		$parms = array( 'ParentPage' => $this->getId() );
 		
 		return $this->object->getByRefArrayCount($parms) > 0;	
-	}
-
-	function hasChanges()
-	{
-		global $model_factory;
-		
-		$change = $model_factory->getObject('WikiPageChange');
-		
-		return $change->getByRefArrayCount( 
-			array('WikiPage' => $this->getId()) );
 	}
 
 	/*
@@ -187,12 +218,6 @@ class WikiPageIterator extends StatableIterator
 		));
 	}
 	
-	function getRevertUrl()
-	{
-		$url = parent::getEditUrl();
-		return $url.'&wiki_action=revert'; 
-	}
-
 	function IsPersisted()
 	{
 		return is_numeric($this->get('RecordVersion'));
@@ -235,25 +260,26 @@ class WikiPageIterator extends StatableIterator
 		));
 	}
 	
-	function Revert()
+	function Revert($revertIt)
 	{
-		$change = getFactory()->getObject('WikiPageChange');
-   		$change->defaultsort = 'RecordCreated DESC';
+        $this->object->setNotificationEnabled(false);
+        $this->object->modify_parms($this->getId(), array(
+            'Content' => $revertIt->getHtmlDecoded('Content'),
+            'Revert' => 'true'
+        ));
 
-		$change->setAttributeType('WikiPage', 'REF_'.get_class($this->object).'Id');
-		$change_it = $change->getByRefArray( 
-			array('WikiPage' => $this->getId()), 1);
-		
-		if ( $change_it->count() > 0 )
-		{
-			$this->object->setNotificationEnabled(false);
-			$this->object->modify_parms($this->getId(), array(
-				'Content' => $change_it->getHtmlDecoded('Content'),
-				'Revert' => 'true'
-			));
-				
-			$change->delete($change_it->getId());
+        $change = getFactory()->getObject('WikiPageChange');
+        $changeIt = $change->getRegistry()->Query(
+            array(
+                new FilterAttributePredicate('WikiPage', $this->getId()),
+                new FilterNextKeyPredicate($revertIt)
+            )
+        );
+        while( !$changeIt->end() ) {
+            $change->delete($changeIt->getId());
+            $changeIt->moveNext();
 		}
+        $change->delete($revertIt->getId());
 	}
 	
 	function getValues()
@@ -261,20 +287,48 @@ class WikiPageIterator extends StatableIterator
 		return $this->object->getValues( $this );
 	}
  
- 	function getTagsIt()
-	{
-		global $model_factory;
-		
-		$tag = $model_factory->getObject('WikiTag');
-		return $tag->getTagsByWiki( $this->getId() );
-	}
-	
-	function getViewUrl()
-	{
-	    $parents = preg_split('/,/', trim($this->get('ParentPath'), ','));
-	    
-	    if ( $parents[0] < 1 ) $parents[0] = $this->getId();
-	    
-	    return parent::getViewUrl().'&document='.$parents[0];
-	}
+	function getUidUrl()
+    {
+        $parents = preg_split('/,/', trim($this->get('ParentPath'), ','));
+        if ( $parents[0] < 1 ) $parents[0] = $this->getId();
+        $queryString = array(
+            'page' => $this->getId(),
+            'document' => $parents[0]
+        );
+        if ( $this->get('ParentPage') != '' ) {
+            $queryString['viewpages'] = 1;
+        }
+        $this->object->setVpdContext($this);
+        return $this->object->getPage().http_build_query($queryString);
+    }
+
+    function getHash() {
+        return md5($this->getHtmlDecoded('Content') . $this->getHtmlDecoded('Caption') );
+    }
+
+    function getAnnotationData()
+    {
+	    if ( $this->get('CommentsCount') < 1 ) return "";
+        $commentIt = getFactory()->getObject('Comment')->getRegistryBase()->Query(
+            array(
+                new FilterAttributePredicate('ObjectId', $this->getId()),
+                new FilterAttributePredicate('ObjectClass', get_class($this->object)),
+                new FilterAttributePredicate('Closed', 'N')
+            )
+        );
+        $data = array();
+        while( !$commentIt->end() ) {
+            if ( $commentIt->get('AnnotationText') . $commentIt->getHtmlDecoded('AnnotationPath') != '' ) {
+                $data[] = array(
+                    'p' => $commentIt->getHtmlDecoded('AnnotationPath'),
+                    't' => $commentIt->getHtmlDecoded('AnnotationText'),
+                    's' => $commentIt->get('AnnotationStart'),
+                    'l' => $commentIt->get('AnnotationLength'),
+                    'i' => $commentIt->getId()
+                );
+            }
+            $commentIt->moveNext();
+        }
+        return \JsonWrapper::encode($data);
+    }
 }

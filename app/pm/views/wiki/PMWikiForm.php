@@ -1,13 +1,12 @@
 <?php
+use Devprom\ProjectBundle\Service\Wiki\WikiBaselineService;
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/watchers/FieldWatchers.php';
 include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 include_once SERVER_ROOT_PATH.'pm/methods/OpenBrokenTraceWebMethod.php';
-include_once SERVER_ROOT_PATH.'pm/methods/ReintegrateWikiPageWebMethod.php';
 include_once SERVER_ROOT_PATH.'pm/methods/ReintegrateWikiTraceWebMethod.php';
 include_once SERVER_ROOT_PATH."ext/locale/LinguaStemRu.php";
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
-
 include_once "fields/FieldWikiAttachments.php";
 include_once "fields/FieldWikiTagTrace.php";
 include_once "fields/FieldWikiTrace.php";
@@ -22,7 +21,6 @@ class PMWikiForm extends PMPageForm
 	var $form_index = '';
 
 	private $revision_it;
-    private $version_it = null;
 	private $page_to_compare_it;
 	private $document_it;
 	private $descriminator_value = null;
@@ -36,6 +34,7 @@ class PMWikiForm extends PMPageForm
     private $exportMethods = array();
     private $create_task_actions = array();
     private $attributesVisibility = array();
+    private $sectionIt = null;
 
 	function __construct($object)
 	{
@@ -45,6 +44,7 @@ class PMWikiForm extends PMPageForm
 
 		$this->editable = getFactory()->getAccessPolicy()->can_modify($object);
 		$this->appendable = getFactory()->getAccessPolicy()->can_create($object);
+		$this->sectionIt = $object->getEmptyIterator();
 
         $this->buildMethods();
 	}
@@ -57,11 +57,29 @@ class PMWikiForm extends PMPageForm
         return parent::getIterator($objectId);
     }
 
+    function setObjectIt($object_it)
+    {
+        $this->sectionIt = is_object($object_it)
+            ? $object_it
+            : $this->getObject()->getEmptyIterator();
+
+        if ( is_object($object_it) && $object_it->get('Includes') != '' && !$this->getEditMode() ) {
+            parent::setObjectIt($object_it->object->getExact($object_it->get('Includes')));
+        }
+        else {
+            parent::setObjectIt($object_it);
+        }
+    }
+
+    function getSectionIt() {
+	    return $this->sectionIt;
+    }
+
     protected function buildMethods()
 	{
 	    $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
 
-		$method = new ObjectCreateNewWebMethod($this->getObject());
+		$method = new DocNewChildWebMethod($this->getObject());
 		if ( $method->hasAccess() ) {
             $type_it = $this->getObject()->getTypeIt();
             if ( is_object($type_it) ) {
@@ -88,15 +106,12 @@ class PMWikiForm extends PMPageForm
 		if ($this->checkAccess() && !$this->getReadonly() && $method->hasAccess()) {
 			if ($this->IsFormDisplayed() || $this->getReviewMode()) {
 				$method->setRedirectUrl('function() { if ( typeof loadContentTree != \'undefined\' ) loadContentTree();}');
-			} else {
-				$method->setRedirectUrl('donothing');
 			}
 			$this->delete_method = $method;
 		}
 
         $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Task'));
         if ( $method->hasAccess() && $methodologyIt->HasTasks() ) {
-            $method->setRedirectUrl('donothing');
             $task_types = $this->getTaskTypesRelated();
             if ( count($task_types) > 0 ) {
                 $type_it = getFactory()->getObject('TaskType')->getByRefArray(
@@ -112,7 +127,7 @@ class PMWikiForm extends PMPageForm
             );
         }
 
-        $report_it = getFactory()->getObject('Module')->getExact('tasks-list');
+        $report_it = getFactory()->getObject('Module')->getExact('tasks-trace');
 		if ($methodologyIt->HasTasks() && getFactory()->getAccessPolicy()->can_read($report_it)) {
 			$this->allTasksReportIt = $report_it;
 		}
@@ -134,7 +149,8 @@ class PMWikiForm extends PMPageForm
                             $methodPageIt,
                             $converter_it->get('EngineClassName'),
                             $converter_it->get('Caption'),
-                            '%baseline%'
+                            '%baseline%',
+                            '%compare%'
                         )
             );
             $converter_it->moveNext();
@@ -148,9 +164,7 @@ class PMWikiForm extends PMPageForm
 		foreach (array('OrderNum', 'ContentEditor') as $attribute) {
 			$object->setAttributeVisible($attribute, false);
 		}
-
 		$object->setAttributeVisible('ParentPage', $this->getEditMode());
-		$object->setAttributeVisible('PageType', is_object($this->getTypeIt()));
 
         foreach (array('Caption', 'Content', 'Attachments', 'Tags', 'Watchers') as $attribute) {
             $object->setAttributeVisible($attribute, true);
@@ -164,7 +178,13 @@ class PMWikiForm extends PMPageForm
 			if ( $object_it->get('Feature') != '' ) {
 				$object->setAttributeVisible('Feature', true);
 			}
-		}
+            $object->setAttributeEditable('DocumentVersion', false);
+        }
+		else {
+		    if ( $_REQUEST['ParentPage'] != '' ) {
+                $object->setAttributeEditable('DocumentVersion', false);
+            }
+        }
 
 		parent::extendModel();
 	}
@@ -215,7 +235,7 @@ class PMWikiForm extends PMPageForm
 
 		$object_it = $this->getObjectIt();
 
-		if (is_object($object_it)) {
+		if (is_object($object_it) && $object_it->get('IsDocument') == 1) {
             $uid = new ObjectUID();
             $info = $uid->getUidInfo($object_it);
             return $info['url'];
@@ -235,7 +255,22 @@ class PMWikiForm extends PMPageForm
 		parent::processEmbeddedForms($object_it, $callback);
 	}
 
-	function getTraceObject()
+	function persist()
+    {
+        if (!parent::persist()) return false;
+
+        if ( $this->getAction() == 'add' ) {
+            $objectIt = $this->getObjectIt();
+            if ( $objectIt->get('ParentPage') == '' && $objectIt->get('DocumentVersion') != '' ) {
+                $service = new WikiBaselineService(getFactory(), getSession());
+                $service->storeInitialBaseline($objectIt);
+            }
+        }
+
+        return true;
+    }
+
+    function getTraceObject()
 	{
 		return getFactory()->getObject('WikiPageTrace');
 	}
@@ -285,14 +320,6 @@ class PMWikiForm extends PMPageForm
 		return $this->revision_it;
 	}
 
-	function setVersionIt( $version_it ) {
-	    $this->version_it = $version_it;
-    }
-
-    function getVersionIt() {
-        return $this->version_it;
-    }
-
 	function setCompareTo($page_it)
 	{
 		$this->page_to_compare_it = $page_it;
@@ -329,11 +356,11 @@ class PMWikiForm extends PMPageForm
 	{
 		$actions = array();
 
-		$report_it = getFactory()->getObject('Module')->getExact('tasks-list');
+		$report_it = getFactory()->getObject('Module')->getExact('tasks-trace');
 		if (getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && getFactory()->getAccessPolicy()->can_read($report_it)) {
 			$actions[] = array(
 				'name' => translate('Задачи'),
-				'url' => $report_it->getUrl() . '&state=all&trace=' . strtolower(get_class($this->getObject())) . ':%page-id%'
+				'url' => $report_it->getUrl('state=all&trace=' . strtolower(get_class($this->getObject())) . ':%page-id%')
 			);
 		}
 
@@ -349,16 +376,7 @@ class PMWikiForm extends PMPageForm
             $task_parms = array (
                 'Caption' => $page_it->getHtmlDecoded('CaptionLong'),
                 get_class($this->getObject()) => $page_it->getId(),
-                'Iteration' => is_object($this->getVersionIt()) ? $this->getVersionIt()->get('Release') : '',
-                'ChangeRequest' =>
-                    $page_it->get('Issues') != ''
-                        ?  getFactory()->getObject('Request')->getRegistry()->Query(
-                                array(
-                                    new FilterInPredicate($page_it->get('Issues')),
-                                    new StatePredicate('notresolved')
-                                )
-                            )->getId()
-                        : ''
+                'DocumentBaseline' => $page_it->get('CurrentBaseline')
             );
             $task_actions = array();
             foreach( $this->create_task_actions as $action ) {
@@ -376,12 +394,11 @@ class PMWikiForm extends PMPageForm
 
         if ( is_object($this->getCompareTo())) return $actions;
 
-        $not_readonly = !$this->getReadonly() && !$this->getEditMode() && $this->getReviewMode();
+        $not_readonly = !$this->getReadonly() && !$this->getEditMode();
 		if ($this->appendable && $not_readonly) {
             $appendActions = array();
 			foreach ($this->append_methods as $action) {
 				$method = $action['method'];
-				$method->setRedirectUrl('donothing');
 				if ( is_object($page_it) ) {
 					$method->setVpd($page_it->get('VPD'));
 				}
@@ -396,7 +413,7 @@ class PMWikiForm extends PMPageForm
 
 			$actions[] = array();
             $actions['children'] = array(
-                'name' => translate('Дочерние'),
+                'name' => translate('Дочернее'),
                 'items' => $appendActions
             );
 		}
@@ -404,18 +421,20 @@ class PMWikiForm extends PMPageForm
 		return $actions;
 	}
 
-	function getDeleteActions($object_it = null)
+	function getDeleteActions( $objectIt )
 	{
 		$actions = array();
-		if (!is_object($object_it)) $object_it = $this->getObjectIt();
+        $pageIt = $this->getSectionIt();
 
-		if (is_object($this->delete_method) && is_object($object_it)) {
+		if (is_object($this->delete_method) && is_object($pageIt)) {
 			$actions[] = array(
-					'name' => $this->delete_method->getCaption(),
-					'url' => $this->delete_method->url(
-							$object_it->object,
-							$object_it->getId()
-					)
+                'name' => $pageIt->getId() != $objectIt->getId()
+                            ? translate('Исключить')
+                            : $this->delete_method->getCaption(),
+                'url' => $this->delete_method->url(
+                            $pageIt->object,
+                            $pageIt->getId()
+                        )
 			);
 		}
 
@@ -431,7 +450,22 @@ class PMWikiForm extends PMPageForm
             if ( $parms != '' ) {
                 $action['url'] = preg_replace('/%(id|ids)%/', $parms, $action['url']);
             }
-            $action['url'] = preg_replace('/%baseline%/', is_object($this->getCompareTo()) ? $this->getCompareTo()->getId() : '0', $action['url']);
+            $action['url'] = preg_replace('/%baseline%/',
+                is_object($this->getRevisionIt() && $this->getRevisionIt()->getId() > 0) ? $this->getRevisionIt()->getId() : '0', $action['url']);
+
+            $compareToIt = $this->getCompareTo();
+            $compareToId = '';
+            if ( is_object($compareToIt) && $compareToIt->getId() != '' ) {
+                if ( $compareToIt->object instanceof WikiPageComparableSnapshot ) {
+                    $compareToId = $compareToIt->getId();
+                }
+                else {
+                    $compareToId = 'document'.$compareToIt->getId();
+                }
+            }
+            $action['url'] = preg_replace('/%compare%/',
+                $compareToId != '' ? $compareToId : '0', $action['url']);
+
             $actions[] = $action;
         }
 
@@ -451,6 +485,18 @@ class PMWikiForm extends PMPageForm
 
 		return $actions;
 	}
+
+    function getModifyActions( $objectIt ) {
+	    if ( $objectIt->getId() != $this->getSectionIt()->getId() ) {
+            return array(
+                'modify' => array(
+                    'name' => translate('Открыть'),
+                    'url' => $objectIt->getUidUrl()
+                )
+            );
+        }
+        return parent::getModifyActions($objectIt);
+    }
 
 	function getActions($page_it = null)
 	{
@@ -491,20 +537,9 @@ class PMWikiForm extends PMPageForm
 			));
 		}
 
-        $export_actions = $this->getExportActions( $page_it );
-        if ( count($export_actions) > 0 ) {
-            if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-            $actions[] = array(
-                'name' => translate('Экспорт'),
-                'items' => $export_actions,
-                'uid' => 'export'
-            );
-        }
-
 		if ($this->IsWatchable($page_it)) {
 			$watch_method = new WatchWebMethod($page_it);
 			if ($watch_method->hasAccess()) {
-				$watch_method->setRedirectUrl('donothing');
 				$actions[] = array();
 				$actions[] = array(
 						'name' => $watch_method->getCaption(),
@@ -520,66 +555,56 @@ class PMWikiForm extends PMPageForm
 	    $actions = array();
 		if (!is_object($object_it)) return $actions;
 
-		if ( !$object_it->IsPersisted() && $object_it->get('ParentPage') != '' && is_object($this->getCompareTo()) )
-		{
-            $trace_it = $this->getTraceObject()->getRegistry()->Query(
-                array(
-                    new FilterAttributePredicate('SourcePage', $this->getCompareTo()->get('ParentPage')),
-                    new FilterAttributePredicate('Type', 'branch'),
-                    new WikiTraceTargetDocumentPredicate($this->getDocumentIt()->getId())
-                )
-            );
-            if ($trace_it->getId() != '') {
-                $method = $this->getDuplicateMethod($object_it);
-                if (!is_object($method)) return array();
-
-                $parms = array(
-                    'class' => get_class($object_it->object),
-                    'objects' => $object_it->getId(),
-                    'CopyOption' => 'on',
-                    'parent' => $trace_it->get('TargetPage'),
-                    'Project' => getSession()->getProjectIt()->getId()
-                );
-
-                $script = "javascript: runMethod('".getSession()->getApplicationUrl($object_it)."methods.php?method=" . get_class($method) . "', " . str_replace('"', "'", JsonWrapper::encode($parms)) . ", function(){window.location.reload();}, '')";
-                $actions[] = array(
-                    'url' => $script,
-                    'name' => text(1735)
-                );
-            }
-		}
-
 		$compareIt = $this->getCompareTo();
 		if ( is_object($compareIt) ) {
-		    if ( $object_it->get('Content') != $compareIt->get('Content') ) {
+            if ( $object_it->getHash() != $compareIt->getHash() ) {
                 $actions = array_merge($actions, $this->getReintegrateActions($object_it, $compareIt));
             }
         }
 
-        if ($object_it->get('BrokenTraces') != '') {
+        if ($object_it->get('Suspected') > 0)
+        {
+            $ids = \TextUtils::parseIds($object_it->get('BrokenTraces'));
+            if ( count($ids) < 1 ) $ids = array(0);
             $trace_it = $this->getTraceObject()->getRegistry()->Query(
                 array(
-                    new FilterAttributePredicate('SourcePage', preg_split('/,/', $object_it->get('BrokenTraces'))),
-                    new FilterAttributePredicate('TargetPage', $object_it->getId())
+                    new FilterInPredicate($ids)
                 )
             );
-            if ($trace_it->count() < 1) return $actions;
 
-            while (!$trace_it->end()) {
-                $method = new OpenBrokenTraceWebMethod();
-                $actions[] = array(
-                    'name' => text(1933),
-                    'url' => $method->getJSCall(array('object' => $object_it->getId()))
-                );
-                $actions[] = array();
+            $ids = \TextUtils::parseIds($object_it->get('BrokenFeatures'));
+            if ( count($ids) < 1 ) $ids = array(0);
+            $featureTraceIt = getFactory()->getObject('pm_FunctionTrace')->getRegistry()->Query(
+                array(
+                    new FilterInPredicate($ids)
+                )
+            );
 
+            if ($trace_it->count() + $featureTraceIt->count() < 1) return $actions;
+
+            $method = new OpenBrokenTraceWebMethod();
+            $actions[] = array(
+                'name' => text(1933),
+                'url' => $method->getJSCall(array('object' => $object_it->getId()))
+            );
+            $actions[] = array();
+
+            while (!$trace_it->end())
+            {
                 if ($trace_it->get('Type') == 'branch' && $trace_it->get('UnsyncReasonType') == 'text-changed') {
-                    $method = new SyncWikiLinkWebMethod($trace_it);
-                    $method->setRedirectUrl("donothing");
-                    $actions[] = array(
-                        'url' => $method->getJSCall(),
-                        'name' => $method->getCaption()
-                    );
+                    $method = new ReintegrateWikiTraceWebMethod($trace_it->getRef('SourcePage'), $object_it);
+                    if ($method->hasAccess()) {
+                        $actions[] = array(
+                            'url' => $method->getJSCall(
+                                array(
+                                    'className' => get_class($this->getObject()),
+                                    'traceClass' => get_class($this->getTraceObject())
+                                )
+                            ),
+                            'name' => $method->getCaption(),
+                            'uid' => 'reintegrate'
+                        );
+                    }
 
                     $method = new IgnoreWikiLinkWebMethod($trace_it);
                     $method->setRedirectUrl("donothing");
@@ -597,29 +622,27 @@ class PMWikiForm extends PMPageForm
                 }
                 $trace_it->moveNext();
             }
+
+            while (!$featureTraceIt->end())
+            {
+                $method = new ModifyAttributeWebMethod($featureTraceIt->copy(), 'IsActual', 'Y');
+                $actions[] = array(
+                    'url' => $method->getJSCall(),
+                    'name' => text(1561)
+                );
+                $featureTraceIt->moveNext();
+            }
         }
 
 		return $actions;
 	}
 
-	public function getReintegrateActions($object_it, $compareIt)
+	public function getReintegrateActions($object_it, $compareIt, $postfix = '')
     {
         $actions = array();
-        $trace_it = $this->getTraceObject()->getRegistry()->Query(
-            array(
-                new FilterAttributePredicate('SourcePage', $object_it->getId()),
-                new FilterAttributePredicate('TargetPage', $compareIt->getId())
-            )
-        );
-        $documentTraceIt = $this->getTraceObject()->getRegistry()->Query(
-            array(
-                new FilterAttributePredicate('SourcePage', $object_it->get('DocumentId')),
-                new FilterAttributePredicate('TargetPage', $compareIt->get('DocumentId'))
-            )
-        );
 
-        if ( $trace_it->count() > 0 ) {
-            $method = new ReintegrateWikiTraceWebMethod($trace_it);
+        if ( $compareIt->getId() != '' ) {
+            $method = new ReintegrateWikiTraceWebMethod($compareIt, $object_it);
             if ($method->hasAccess()) {
                 $actions[] = array(
                     'url' => $method->getJSCall(
@@ -628,33 +651,21 @@ class PMWikiForm extends PMPageForm
                             'traceClass' => get_class($this->getTraceObject())
                         )
                     ),
-                    'name' => $method->getCaption()
+                    'name' => $method->getCaption(),
+                    'uid' => 'reintegrate' . $postfix
                 );
             }
-        } else if ($object_it->getId() == '' || $documentTraceIt->getId() > 0 && $object_it->get('Content') == '' ) {
-            $compareParentIt = getFactory()->getObject('WikiPage')->getExact(
-                $this->getCompareTo()->get('ParentPage')
-            );
-            $parentIt = $this->getObject()->getRegistryBase()->Query(
-                array(
-                    new FilterAttributePredicate('UID', $compareParentIt->get('UID')),
-                    new FilterAttributePredicate('DocumentId', $this->getDocumentIt()->getId())
-                )
-            );
-            $method = new ReintegrateWikiPageWebMethod($object_it, $parentIt);
+        }
+        else {
+            $method = new DeleteObjectWebMethod($object_it);
             if ($method->hasAccess()) {
                 $actions[] = array(
-                    'url' => $method->getJSCall(
-                        array(
-                            'parent' => $parentIt->getId(),
-                            'className' => get_class($this->getObject()),
-                            'traceClass' => get_class($this->getTraceObject())
-                        )
-                    ),
+                    'url' => $method->getJSCall(),
                     'name' => $method->getCaption()
                 );
             }
         }
+
         return $actions;
     }
 
@@ -665,10 +676,12 @@ class PMWikiForm extends PMPageForm
 
 	function getTreeMenu($object_it)
 	{
+	    $this->sectionIt = $object_it;
+
 		$actions = array();
 		$actions[] = array(
 				'name' => text(1556),
-				'url' => $object_it->getViewUrl(),
+				'url' => $object_it->getUidUrl(),
 				'uid' => 'open-new'
 		);
 		$actions[] = array();
@@ -678,7 +691,6 @@ class PMWikiForm extends PMPageForm
 		);
 
 		$method = new ObjectModifyWebMethod($object_it);
-		$method->setRedirectUrl('donothing');
 		if (!$this->getReadonly() && $method->hasAccess()) {
 			if ($actions[count($actions) - 1]['name'] != '') array_push($actions, array());
 			$actions[] = array(
@@ -692,9 +704,10 @@ class PMWikiForm extends PMPageForm
 		if (!$this->getReadonly() && $method->hasAccess()) {
 			if ($actions[count($actions) - 1]['name'] != '') array_push($actions, array());
 			$method->setVpd($object_it->get('VPD'));
-			$actions[] = array(
-					'name' => translate('Добавить'),
-					'url' => $method->url(array('ParentPage' => $object_it->getId()))
+			$actions['create'] = array(
+			    'uid' => 'create',
+                'name' => translate('Добавить'),
+                'url' => $method->url(array('ParentPage' => $object_it->getId()))
 			);
 		}
 
@@ -785,8 +798,14 @@ class PMWikiForm extends PMPageForm
 				    $parser = $editor->getEditorParser($object_it->get('ContentEditor'));
 				    if ( is_object($parser) ) return $parser->parse($object_it->get('Content'));
 				}
-				break;
-				
+            case 'Caption':
+            case 'SectionNumber':
+                if ( !$this->getEditMode() ) {
+                    $sectionIt = $this->getSectionIt();
+                    return $sectionIt->get_native( $field );
+                }
+                break;
+
 			case 'Template':
 				$template_it = $this->getDefaultTemplateIt();
 				if ( is_object($template_it) && $template_it->getId() > 0 ) {
@@ -810,8 +829,17 @@ class PMWikiForm extends PMPageForm
 	{
 		return array('Caption', 'UID');
 	}
-	
-	function createField( $name )
+
+	function IsAttributeEditable($attr_name)
+    {
+        switch( $attr_name ) {
+            case 'PageType':
+                if ( $this->getReviewMode() && is_object($this->getObjectIt()) && $this->getObjectIt()->getId() != $this->getSectionIt()->getId() ) return false;
+        }
+        return parent::IsAttributeEditable($attr_name);
+    }
+
+    function createField( $name )
 	{
 		$field = parent::createField( $name );
 		if ( !is_object($field) ) return $field;
@@ -844,72 +872,54 @@ class PMWikiForm extends PMPageForm
 	
 	function createFieldObject( $name )
 	{
-		$this->object_it = $this->getObjectIt();
+		$objectIt = $this->getObjectIt();
+		$sectionIt = $this->getSectionIt();
 
 		switch ( $name )
 		{		
 			case 'Watchers':
-				return new FieldWatchers( is_object($this->object_it) ? $this->object_it : $this->object );
+				return new FieldWatchers( is_object($objectIt) ? $objectIt : $this->object );
 
 			case 'Tags':
-				return new FieldWikiTagTrace( is_object($this->object_it)
-					? $this->object_it : null ); 
+				return new FieldWikiTagTrace( is_object($sectionIt)
+					? $sectionIt : null );
 					
 			case 'Caption':
-
-				if ( is_object($this->getCompareTo()) )
-				{
-					return new FieldCompareToCaption( $this->getCompareTo(), $this->getObjectIt() );
+				if ( is_object($this->getCompareTo()) ) {
+					return new FieldCompareToCaption( $objectIt, $this->getCompareTo() );
 				}
 				
-				if ( !$this->getEditMode() )
-			    {
-    				$field = new FieldWYSIWYG( get_class($this->getEditor()) );
-     					
-     				is_object($this->object_it) ? 
-    					$field->setObjectIt( $this->object_it ) : 
+				if ( !$this->getEditMode() ) {
+    				$field = new FieldTextEditable( get_class($this->getEditor()) );
+     				is_object($this->getSectionIt()) ?
+    					$field->setObjectIt($this->getSectionIt()) :
     						$field->setObject( $this->getObject() );
-    						
-    			    $field->getEditor()->setMode( WIKI_MODE_INPLACE_INPUT );
 			    }
-			    else
-			    {
+			    else {
 			        $field = parent::createFieldObject($name);
-			        
-			        if ( is_object($field) )
-			        {
+			        if ( is_object($field) ) {
 	 				    $field->setDefault( translate('Название') );
 			        }
 			    }
- 				
 				return $field;
 				
 			case 'Content':
-				
-				if ( is_object($this->getCompareTo()) )
-				{
-					return new FieldCompareToContent( $this->getCompareTo(), $this->getObjectIt() );
+				if ( is_object($this->getCompareTo()) ) {
+					return new FieldCompareToContent( $objectIt, $objectIt->getHtmlDecoded('Content'), $this->getCompareTo()->getHtmlDecoded('Content') );
 				}
 				
-				$field = new FieldWYSIWYG( get_class($this->getEditor()) );
+				$field = parent::createFieldObject($name);
 
- 				is_object($this->object_it) ? 
-					$field->setObjectIt( $this->object_it ) : 
-						$field->setObject( $this->getObject() );
+ 				is_object($this->getSectionIt()) ?
+					$field->setObjectIt($this->getSectionIt()) :
+						$field->setObject($this->getObject());
 
-				if ( $this->getEditMode() )
-				{
-					$field->setHasBorder( !$this->checkAccess() || !$this->IsAttributeEditable($name) );
-					$field->getEditor()->setMode( WIKI_MODE_NORMAL );
+				if ( $this->getEditMode() ) {
 					$field->setRows(20);
 				}
-				else
-				{
+				else {
 					$field->setRows(2);
-    				$field->setCssClassName( 'wysiwyg-text' );
 				}
-				$field->setToolbar(WikiEditorBase::ToolbarFull);
-
  				return $field;
  				
 			case 'PageType':
@@ -918,9 +928,8 @@ class PMWikiForm extends PMPageForm
                         return new FieldReferenceAttribute(
                             $this->getObjectIt(),
                             $name,
-                            null,
+                            $this->getObject()->getAttributeObject($name),
                             array(),
-                            false,
                             'btn-xs'
                         );
                     } else {
@@ -932,13 +941,15 @@ class PMWikiForm extends PMPageForm
                 }
 
 			case 'Attachments':
-			    $field = new FieldWikiAttachments( is_object($this->object_it) ? $this->object_it : $this->getObject() );
+			    $field = new FieldWikiAttachments( is_object($objectIt) ? $objectIt : $this->getObject() );
 				return $field;
 
 			case 'ParentPage':
 			    $object = $this->object->getAttributeObject($name);
 		        $object->addFilter( new FilterBaseVpdPredicate() );
-				return new FieldHierarchySelectorAppendable($object);
+				$field = new FieldHierarchySelectorAppendable($object);
+                $field->removeCrossProject();
+                return $field;
 
             case 'Dependency':
 				return new FieldWikiPageDependency();
@@ -953,7 +964,12 @@ class PMWikiForm extends PMPageForm
 				}
 				return null;
 
-			default:
+            case 'DocumentVersion':
+                $field = new FieldAutoCompleteObject( getFactory()->getObject('Baseline') );
+                $field->setAppendable();
+                return $field;
+
+            default:
 				return parent::createFieldObject( $name );
 		}
 	}
@@ -965,13 +981,13 @@ class PMWikiForm extends PMPageForm
 		if ( $message != '' ) return $message;
 		
 		// check parent page is correct
-		if ( is_object($this->object_it) && $this->getAction() != 'add' )
+		if ( is_object($this->getObjectIt()) && $this->getAction() != 'add' )
 		{
-			if ( $this->object_it->getId() == $_REQUEST['ParentPage'] ) {
+			if ( $this->getObjectIt()->getId() == $_REQUEST['ParentPage'] ) {
 				return text(971);
 			}
 			
-			$ids = $this->object_it->getAllChildrenIds();
+			$ids = $this->getObjectIt()->getAllChildrenIds();
 			if ( in_array( $_REQUEST['ParentPage'], $ids ) ) {
 				return text(971);
 			}
@@ -994,11 +1010,11 @@ class PMWikiForm extends PMPageForm
 			$attachments->setEditMode( false );
 
 			if ( !$this->getReadonly() ) {
-				$structureActions = $this->getStructureActions( $object_it );
+				$structureActions = $this->getStructureActions( $this->getSectionIt() );
 			}
         }
 
-		$parms = array (
+        $parms = array (
 			'lifecycle' => is_object($object_it) && is_a($object_it, 'StatableIterator') ? $object_it->IsTransitable() : false,
 			'formurl' =>  $object->getPage(),
 		    'index' => $this->form_index,
@@ -1043,11 +1059,13 @@ class PMWikiForm extends PMPageForm
         }
 
 		if ( $object_it->get('TotalCount') < 1 && $object_it->get('ParentPage') != '' ) {
-			$new_sibling_method = new ObjectCreateNewWebMethod($this->getObject());
+			$new_sibling_method = new DocNewChildWebMethod($this->getObject());
 			$new_sibling_method->setVpd($object_it->get('VPD'));
-			$new_sibling_method->setRedirectUrl('donothing');
 
-			$parent_id = $object_it->get('ParentPage') != '' ? $object_it->get('ParentPage') : $object_it->getId();
+			$parent_id = $object_it->get('ParentPage') != ''
+                ? $object_it->get('ParentPage')
+                : $object_it->getId();
+
 			$sort_index = $object_it->get('OrderNum') + 1;
 
 			$actions['sibling'] = array (
@@ -1057,7 +1075,8 @@ class PMWikiForm extends PMPageForm
 								$parms, array(
 								    'ParentPage'=>$parent_id,
                                     'OrderNum'=>$sort_index,
-                                    'PageType'=> is_object($defaultTypeIt) ? $defaultTypeIt->getId() : $object_it->get('PageType')
+                                    'PageType'=> is_object($defaultTypeIt)
+                                                    ? $defaultTypeIt->getId() : $object_it->get('PageType')
                                 )
 							)
 						 ),
@@ -1066,18 +1085,17 @@ class PMWikiForm extends PMPageForm
 			);
 		}
 
-		$new_child_method = new ObjectCreateNewWebMethod($this->getObject());
+		$new_child_method = new DocNewChildWebMethod($this->getObject());
 		$new_child_method->setVpd($object_it->get('VPD'));
-		$new_child_method->setRedirectUrl('donothing');
 
 		$actions['child'] = array (
 			'name' => $this->getNewChildActionName(),
 			'url' => $new_child_method->url(
 							array_merge(
 								$parms, array(
-								    'ParentPage'=>$object_it->getId(),
-                                    'OrderNum'=>1,
-                                    'PageType'=>is_object($defaultTypeIt) ? $defaultTypeIt->getId() : $object_it->get('PageType')
+								    'ParentPage' => $object_it->getId(),
+                                    'OrderNum' => 1,
+                                    'PageType' => is_object($defaultTypeIt) ? $defaultTypeIt->getId() : $object_it->get('PageType')
                                 )
 							)
 						),
@@ -1092,17 +1110,26 @@ class PMWikiForm extends PMPageForm
         );
 
 		$attachments_method = new ObjectModifyWebMethod($object_it);
-		$attachments_method->setRedirectUrl('donothing');
-		$actions['attachments'] = array (
+		$actions['tags'] = array (
 			'name' => text(2082),
 			'url' => $attachments_method->getJSCall(
 						array_merge(
-							$parms, array('tab'=>1)
+							$parms, array('tab'=>'additional')
 						)
 					 ),
 			'icon' => 'icon-tags',
             'uid' => 'new-tag-file'
 		);
+        $actions['comments'] = array (
+            'name' => translate('комментарии'),
+            'url' => $attachments_method->getJSCall(
+                array_merge(
+                    $parms, array('tab'=>'comments')
+                )
+            ),
+            'icon' => 'icon-comment',
+            'uid' => 'new-comment'
+        );
 
 		return $actions;
 	}
@@ -1117,11 +1144,8 @@ class PMWikiForm extends PMPageForm
 
 	function getTemplate()
 	{
-	    if( !$this->getEditMode() )
-	    {
-	    	return "pm/WikiPageForm.php";
-	    }
-	    
+        if ( $_REQUEST['attributesonly'] != '' ) return "core/PageFormDetails.php";
+	    if( !$this->getEditMode() ) return "pm/WikiPageForm.php";
 	    return parent::getTemplate();
 	}
 
@@ -1133,6 +1157,7 @@ class PMWikiForm extends PMPageForm
 				getFactory()->getObject('Request')->getExact($_REQUEST['Request']),
 				'Description'
 			);
+            return array_merge(parent::getSourceIt(), $result);
 		}
 		if ( $_REQUEST['Task'] != '' ) {
 			$task_it = getFactory()->getObject('Task')->getExact($_REQUEST['Task']);
@@ -1141,8 +1166,9 @@ class PMWikiForm extends PMPageForm
 				$task_it->getRef('ChangeRequest'),
 				'Description'
 			);
+            return array_merge(parent::getSourceIt(), $result);
 		}
-		if ( $_REQUEST['Requirement'] != '' && $_REQUEST['Request'] == '' ) {
+		if ( $_REQUEST['Requirement'] != '' ) {
 			$req = getFactory()->getObject('Requirement');
 			if ( $_REQUEST['Baseline'] != '' ) {
 				$req->addPersister(

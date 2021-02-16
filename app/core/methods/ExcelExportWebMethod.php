@@ -1,5 +1,4 @@
 <?php
-
 include_once "ExportWebMethod.php";
 
 class ExcelExportWebMethod extends ExportWebMethod
@@ -14,7 +13,7 @@ class ExcelExportWebMethod extends ExportWebMethod
  		return parent::getJSCall(
 			array_merge(
 				array(
-					'caption' => $caption != '' ? $caption : $this->getCaption(),
+					'caption' => \TextUtils::stripAnyTags($caption != '' ? $caption : $this->getCaption()),
 					'class' => $class
 				),
 				$parms
@@ -25,6 +24,11 @@ class ExcelExportWebMethod extends ExportWebMethod
  	function execute_request()
  	{
  		parent::execute_request();
+
+ 		unset($_POST['id']);
+        unset($_POST['object']);
+        unset($_POST['objects']);
+
  		echo '&'.http_build_query(
 				array_map(
 					function($value) {

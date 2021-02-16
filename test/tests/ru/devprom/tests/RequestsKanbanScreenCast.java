@@ -197,7 +197,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
     }
     
     ///создает новый тестовый сценарий  для пожелания 1
-    private void createTestScenario1(RequirementsTracePage requirementTracePage) {
+    private void createTestScenario1(RequirementsPage requirementTracePage) {
         requirement1.setId(requirementTracePage.getIdByName(requirement1.getName()));
         TestScenarioNewPage tnp = requirementTracePage.gotoCreateScenario(requirement1.getClearId());
         TestScenario parentTestScenary = new TestScenario("Смоук тестирование");
@@ -209,7 +209,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
     }
     
     //создает новый тестовый сценарий  для пожелания 1
-     private void createTestScenario2(RequirementsTracePage requirementTracePage) {
+     private void createTestScenario2(RequirementsPage requirementTracePage) {
           requirement2.setId(requirementTracePage.getIdByName(requirement2.getName()));
           //  kanbanPage.clickToContextSubMenuItem(wish1.getId(), "Создать", "Тестовый сценарий");
             requirementTracePage.gotoCreateScenario(requirement2.getClearId());   
@@ -255,7 +255,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
             kanbanPage.moveToAnotherRelease(wish1.getNumericId(), 0, "Тестирование (");
             Thread.sleep(timeOut);
             kanbanPage.selectWish(wish1.getId());
-            RequirementsTracePage requirementTracePage = kanbanPage.massRequirements();
+            RequirementsPage requirementTracePage = kanbanPage.massRequirements();
             createTestScenario1(requirementTracePage);
             createTestScenario2(requirementTracePage);
             Thread.sleep(timeOut);
@@ -282,8 +282,10 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
             RequirementsPage requirementPage = kanbanPage.goRequirementReestr();
             requirement1.setId(requirementPage.getIdByName(requirement1.getName()));
             RequirementViewPage requirementViewPage = requirementPage.clickToRequirement(requirement1.getId());
+            Thread.sleep(timeOut);
             requirementViewPage.addContent(requirement1.getClearId(), "\nПоявился новый шаг основного сценария");
             FILELOG.debug("Text edited");
+            Thread.sleep(3000);
             requirementViewPage.clickLink();
             RequirementEditPage requirementEditPage = requirementViewPage.editRequirement(requirement1.getId());
             ArrayList<String> recList = new ArrayList<String>();
@@ -309,8 +311,6 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
             TestScenariosPage testSuitsPage = requirementViewPage.menuTestSuit(requirement1.getId());
             TestSpecificationsPage testSuitViewPage = testSuitsPage.clickAttention();
             testSuitViewPage.addContent("\nДобавляем новые тестовые шаги для покрытия дополнительного шага сценария");
-            TestScenarioEditPage testScenarioeditPage = testSuitViewPage.edit();
-            testScenarioeditPage.addTrace(wish2.getId());
             testSuitViewPage.clickRepair();
             driver.navigate().refresh();
             viewTaskPage.gotoKanbanBoard();
@@ -338,7 +338,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
 		kanbanPage.moveToAnotherRelease(wish1.getNumericId(), 0, "Документирование (");
 		Thread.sleep(timeOut);
 		kanbanPage.moveToAnotherRelease(wish1.getNumericId(), 0, "Готово (");
-		//kanbanPage.clickSubmit();
+		kanbanPage.clickSubmit();
 		Thread.sleep(timeOut);
     }
 }

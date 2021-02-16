@@ -14,9 +14,9 @@
                             <header>
                                 <h2>
                                     <span class="icon-pages hidden-xs"></span>
-                                    <a class="product-selector" href="{{ url('issue_new', {'project': project.vpd}) }}">{{ project.name }}</a>
+                                    <a class="product-selector" href="{{ path('issue_new', {'project': project.vpd}) }}">{{ project.name | raw }}</a>
                                 </h2>
-                                <p>{{ project.description }}</p>
+                                <p>{{ project.description | raw }}</p>
                             </header>
                         {% endfor %}
                     </div>

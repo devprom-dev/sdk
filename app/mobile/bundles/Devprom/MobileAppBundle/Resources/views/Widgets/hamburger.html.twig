@@ -1,0 +1,7 @@
+<div class="md-hamb">
+    <ul id="ham-nav" class="ham-nav mbsc-cloak" style="display:none;">
+        {% for tab in tabs %}
+            <li data-icon="{{ tab.icon }}" data-url="{{ tab.selfUrl }}#{{ tab.id }}">{{ tab.title }}</li>
+        {% endfor %}
+    </ul>
+</div>

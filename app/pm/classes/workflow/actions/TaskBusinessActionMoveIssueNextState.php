@@ -1,5 +1,4 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
 include_once "BusinessActionWorkflow.php";
 
@@ -18,9 +17,11 @@ class TaskBusinessActionMoveIssueNextState extends BusinessActionWorkflow
 		getFactory()->resetCachedIterator($request);
 
 		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
-		if ( $request_it->get('OpenTasks') != '' ) return true;
 
-		$state_it = workflowScheme::Instance()->getStateIt($request_it->object);
+		if ( $request_it->get('OpenTasks') != '' ) return true;
+        if ( getSession()->IsRDD() && $request_it->object instanceof Issue ) return true;
+
+		$state_it = workflowScheme::Instance()->getStateIt($request_it);
 		$state_it->moveTo('ReferenceName', $object_it->get('IssueState'));
 		$state_it->moveNext();
 		if ( $state_it->get('ReferenceName') == '' ) return true;

@@ -8,11 +8,12 @@ class ProcessDigest extends TaskCommand
 {
  	function execute()
 	{
-		global $model_factory;
-
 		$this->logStart();
 		
-		$job = $model_factory->getObject('co_ScheduledJob');
+		$job = getFactory()->getObject('co_ScheduledJob');
+
+        $auth_factory = new AuthenticationFactory();
+        $auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
 
 		$job_it = $job->getExact($_REQUEST['job']);
 		$parameters = $job_it->getParameters();
@@ -42,11 +43,12 @@ class ProcessDigest extends TaskCommand
 				
 		 		$batch_it->delete();
 				
-		 		$this->processChunk( 
-					preg_split('/,/', $batch_parms['items']),
+		 		$this->processChunk(
+		 		    preg_split('/,/', $batch_parms['items']),
 					$batch_parms['date'], 
 					$batch_parms['length'],
-					$batch_it->get_native('RecordCreated') 
+					$batch_it->get_native('RecordCreated'),
+                    $auth_factory
 				);
 					
 				$batch_it->moveNext();
@@ -111,43 +113,34 @@ class ProcessDigest extends TaskCommand
 			}
 
 			$this->processChunk( 
-					$immediate_chunk, 
-					$batch_parms['date'], 
-					$batch_parms['length'], 
-					SystemDateTime::date('Y-m-d H:i') 
+                $immediate_chunk,
+                $batch_parms['date'],
+                $batch_parms['length'],
+                SystemDateTime::date('Y-m-d H:i'),
+                $auth_factory
 			);
 		}
 
 		if ( $notification_type == 'daily' ) {
-		    $this->processDeadlinesReport();
+		    $this->processDeadlinesReport($auth_factory);
         }
 
 		$this->logFinish();
 	}
 	
-	function processChunk( $chunk, $from_date = '', $log_items = 0, $till_date = '' )
+	function processChunk( $chunk, $from_date = '', $log_items = 0, $till_date = '', $auth_factory )
 	{
-		global $model_factory, $session;
+		global $session;
 
-		$auth_factory = new AuthenticationFactory();
-			
-		$auth_factory->setUser( $model_factory->getObject('cms_User')->getEmptyIterator() );
-		
 		$logger = $this->getLogger();
-		
-		// get sender address
-		$settings = $model_factory->getObject('cms_SystemSettings');
-		$settings_it = $settings->getAll();
-	
-		$log = $model_factory->getObject('ChangeLogAggregated');
-
-		$project = $model_factory->getObject('pm_Project');
+	    $log = getFactory()->getObject('ChangeLogAggregated');
+		$project = getFactory()->getObject('pm_Project');
 		
 		$from_date = $from_date != '' ? $from_date : '3011-01-01';
 
 		// prepare and send email to each participant
 		$recipient_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
-				array( new FilterInPredicate( $chunk ) )
+            array( new FilterInPredicate( $chunk ) )
 		);
 		
 		$notificator = new EmailNotificator();
@@ -284,14 +277,25 @@ class ProcessDigest extends TaskCommand
 		}
 	}
 
-	function processDeadlinesReport()
+	function processDeadlinesReport($auth_factory)
     {
-        $service = new DeadlinesReport(getSession());
+        global $session;
+
+        $portfolio = getFactory()->getObject('Portfolio');
+        $portfolioIt = $portfolio->getByRef('CodeName', 'all');
+        if ( $portfolioIt->getId() == '' ) {
+            $portfolioIt = $portfolio->getByRef('CodeName', 'my');
+        }
+
+        $session = new PMSession($portfolioIt->copy(), $auth_factory);
+        $service = new DeadlinesReport($session);
+
         $userIt = getFactory()->getObject('UserActive')->getRegistry()->Query(
             array(
                 new \FilterAttributePredicate('SendDeadlinesReport', 'Y')
             )
         );
+
         while( !$userIt->end() ) {
             $service->send($userIt);
             $userIt->moveNext();

@@ -19,13 +19,6 @@ class ProfileForm extends SettingsFormBase
             $object->setAttributeRequired($attribute, false);
         }
 
-        $object->addAttribute('ApiKey', 'VARCHAR', text(2285), true, false, text(2286), 400);
-        $object->setAttributeEditable('ApiKey', false);
-
-        $object->addAttribute('AppKey', 'VARCHAR', text(2544), true, false,
-            str_replace('%KEY%', $this->getFieldValue('AppKey'), text(2545)), 410);
-        $object->setAttributeEditable('AppKey', false);
-
         if ( getSession()->getProjectIt()->IsPortfolio() ) {
             $object->addAttribute('ModuleSettings', '', text(1906), true, false, text(2187));
         }
@@ -101,18 +94,6 @@ class ProfileForm extends SettingsFormBase
         }
     }
 
-	function getFieldValue($field)
-    {
-        switch( $field ) {
-            case 'ApiKey':
-                return \AuthenticationAPIKeyFactory::getAuthKey($this->getObjectIt()->getRef('SystemUser'));
-            case 'AppKey':
-                return \AuthenticationAppKeyFactory::getKey($this->getObjectIt()->getRef('SystemUser')->getId());
-            default:
-                return parent::getFieldValue($field);
-        }
-    }
-
     function getActions()
 	{
 	    return array();
@@ -154,4 +135,8 @@ class ProfileForm extends SettingsFormBase
 	function drawButtons()
 	{
 	}
+
+    function getBodyTemplate() {
+        return "core/PageFormBody.php";
+    }
 }

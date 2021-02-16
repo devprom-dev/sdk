@@ -23,10 +23,10 @@ public class RequestPrintListPage {
 		for (int i = 0; i < requests.length; i++) {
 			requests[i] = new Request(
 					rows.get(i).findElement(By.xpath("./td[1]")).getText(), 
-					rows.get(i).findElement(By.xpath("./td[2]")).getText(), 
-					rows.get(i).findElement(By.xpath("./td[3]")).getText(), 
-					rows.get(i).findElement(By.xpath("./td[5]")).getText(), 
-					rows.get(i).findElement(By.xpath("./td[4]")).getText());
+					rows.get(i).findElement(By.xpath("./td[3]")).getText(),
+					rows.get(i).findElement(By.xpath("./td[4]")).getText(), 
+					rows.get(i).findElement(By.xpath("./td[5]")).getText(),
+					rows.get(i).findElement(By.xpath("./td[2]")).getText());
 		}
 
 		return requests;

@@ -6,24 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Function;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Point;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.*;
 import org.testng.Assert;
 
 import ru.devprom.helpers.Configuration;
@@ -35,6 +26,7 @@ import ru.devprom.pages.allprojects.AllProjectsPageBase;
 import ru.devprom.pages.kanban.KanbanPageBase;
 import ru.devprom.pages.project.IProjectBase;
 import ru.devprom.pages.project.SDLCPojectPageBase;
+import ru.devprom.pages.project.requests.RequestsBoardPage;
 import ru.devprom.pages.scrum.ScrumPageBase;
 import ru.devprom.pages.support.SupportPageBase;
 import org.openqa.selenium.internal.Locatable;
@@ -125,8 +117,7 @@ public class PageBase {
 	}
 
 	public ActivitiesPage goToAdminTools() {
-		companyLink.click();
-		adminTools.click();
+		driver.navigate().to(Configuration.getBaseUrl() + "/admin");
 		FILELOG.debug("Opening Administrative Tools page");
 		return new ActivitiesPage(driver);
 	}
@@ -290,33 +281,25 @@ public class PageBase {
 	}
 
 	public void autocompleteSelect(String target, boolean strict) {
-		int times = 3;
+		int times = 5;
 		while (times-- > 0) {
 			try {
-				Thread.sleep(300);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 			}
 			try {
-				List<WebElement> list = driver
-						.findElements(
-							strict 
-								? By.xpath("//ul[contains(@class,'ui-autocomplete')]/li/*[text()='"
-										+ target + "']")
-								: By.xpath("//ul[contains(@class,'ui-autocomplete')]/li/*[contains(.,'"
-										+ target + "')]"));
-				for (WebElement el : list) {
-					if (!el.isDisplayed()) continue;
-					while( el.isDisplayed() ) {
-						try {
-							Thread.sleep(200);
-						} catch (InterruptedException e) {
-						}
-						el.click();
-					}
-					return;
-				}
-			} catch (StaleElementReferenceException e) {
-				FILELOG.debug("Autocomplete attempt failed");
+				By xpath = strict
+					? By.xpath("//ul[contains(@class,'ui-autocomplete')]/li/*[text()='"
+						+ target + "']")
+					: By.xpath("//ul[contains(@class,'ui-autocomplete')]/li[contains(.,'"
+						+ target + "')]");
+
+				clickOnInvisibleElement(driver.findElement(xpath));
+				return;
+			}
+			catch (StaleElementReferenceException e) {
+			}
+			catch (WebDriverException e) {
 			}
 		}
 		FILELOG.error("Autocomplete error");
@@ -369,15 +352,8 @@ public class PageBase {
 	public void scrollToElement(WebElement element) {
 		((JavascriptExecutor) driver).executeScript(
 				"arguments[0].scrollIntoView(true);", element);
-	}
-
-	/**
-	 * returns script load page time in seconds
-	 * 
-	 * @return
-	 */
-	public double getScriptExecutionTime() {
-		return 0.0;
+		((JavascriptExecutor) driver).executeScript(
+				"$('.table-master').animate({scrollLeft: $(arguments[0]).offset().left}, 5);", element);
 	}
 
 	public boolean isAllProjectsEnabled() {
@@ -414,13 +390,15 @@ public class PageBase {
 		return new MyReportsPageBase(driver);
 	}
 
-	public void submitDialog(WebElement btn) {
+	public void submitDialog(WebElement btn) 
+	{
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(btn));
-		while(true) {
+		int retries = 20;
+		while(retries-- > 0) {
 			try {
 				if ( btn.isEnabled() ) btn.click();
 				try {
-					(new WebDriverWait(driver, 1)).until(elementDissapeared(By.xpath("//div[@id='modal-form']")));
+					(new WebDriverWait(driver, 3)).until(elementDissapeared(By.xpath("//div[@id='modal-form']")));
 					break;
 				}
 				catch( TimeoutException e ) {
@@ -478,17 +456,7 @@ public class PageBase {
 				.implicitlyWait(Configuration.getTimeout(), TimeUnit.SECONDS);
 	}
 
-	public void waitForFilterActivity() {
-		try {
-			driver.findElement(By
-					.xpath("//*[@id='filter-settings']/i[contains(@class,'filter-activity')]"));
-		} catch (org.openqa.selenium.NoSuchElementException e) {
-			FILELOG.error("Состояние индикатора процесса не активно");
-		}
-		(new WebDriverWait(driver, waiting))
-				.until(ExpectedConditions.invisibilityOfElementLocated(By
-						.xpath("//*[@id='filter-settings']/i[contains(@class,'filter-activity')]")));
-	}
+	public void waitForFilterActivity() {}
 
 	public List<String> getProjectsList() {
 		WebElement link = driver.findElement(By.id("navbar-project"));
@@ -511,14 +479,6 @@ public class PageBase {
 	 * @param n
 	 * @return
 	 */
-
-	public PageBase showNRows(String n) {
-		filterBtn.click();
-		String script = "filterLocation.setup( 'rows=" + n + "', 0 );";
-		((JavascriptExecutor) driver).executeScript(script);
-		filterBtn.click();
-		return new PageBase(driver);
-	}
 
 	/**
 	 * Возвращает количество страниц при постраничном разбиении (по количеству
@@ -543,17 +503,6 @@ public class PageBase {
 				.findElements(
 						By.xpath("//div[@id='tablePlaceholder']//tr[contains(@id,'row')]"))
 				.size();
-	}
-
-	public void waitForFilterIconReload() {
-		driver.findElement(By.xpath("//section[contains(@class,'content')]"))
-				.click();
-		(new WebDriverWait(driver, waiting))
-				.until(ExpectedConditions.presenceOfElementLocated(By
-						.xpath("//*[@id='filter-settings']//i[contains(@class,'filter-activity')]")));
-		(new WebDriverWait(driver, waiting))
-				.until(ExpectedConditions.presenceOfElementLocated(By
-						.xpath("//*[@id='filter-settings']//i[not (contains(@class,'filter-activity'))]")));
 	}
 
 	public boolean isBoxChechedJQuery(String boxId) {
@@ -591,6 +540,21 @@ public class PageBase {
 		};
 	}
 
+	public void sleep( int seconds )
+	{
+		try {
+			driver.manage().timeouts()
+					.implicitlyWait(seconds, TimeUnit.SECONDS);
+			(new WebDriverWait(driver, seconds)).until(ExpectedConditions
+					.presenceOfElementLocated(By.id("thereIsNoSuchElementEver")));
+		} catch (TimeoutException e) {
+		}
+		finally {
+			driver.manage().timeouts()
+					.implicitlyWait(timeoutValue, TimeUnit.SECONDS);
+		}
+	}
+
 	public void clickTab(String referenceName) {
 		try {
 			WebElement tabLink = driver.findElement(
@@ -626,4 +590,43 @@ public class PageBase {
 			.until(ExpectedConditions.visibilityOfElementLocated(
 				By.xpath("//div[@id='modal-form']")));
     }
+
+	public void showAll() {
+		((JavascriptExecutor) driver).executeScript("filterLocation.resetFilter()");
+		((JavascriptExecutor) driver).executeScript("filterLocation.turnOn('rows', 'all', 1)");
+	}
+
+	public void showRows(String n) {
+		((JavascriptExecutor) driver).executeScript("filterLocation.turnOn('rows', '"+n+"', 1)");
+	}
+
+	public void setupGrouping(String parameter)	{
+		((JavascriptExecutor) driver).executeScript("javascript: filterLocation.setup( 'group="+parameter+"', 1 ); ");
+	}
+
+	public void turnOfGrouping(){
+		setupGrouping("none");
+	}
+
+	public void setFilter(String filtername, String filtervalue)
+	{
+		((JavascriptExecutor) driver).executeScript("filterLocation.setup('" + filtername + "=" + filtervalue +"', 1);");
+		if ( filtervalue != "all" ) {
+			(new WebDriverWait(driver, waiting)).until(
+					ExpectedConditions.presenceOfElementLocated(
+							By.xpath("//a[contains(@class,'btn-filter') and @uid='"+filtername+"']")));
+		}
+	}
+
+	public void removeFilter(String filtername) {
+		((JavascriptExecutor) driver).executeScript("filterLocation.setup('" + filtername + "=all', 1);");
+	}
+
+	public void showColumn(String columnname) {
+		((JavascriptExecutor) driver).executeScript("filterLocation.showColumn('" + columnname + "', 1)");
+	}
+
+	public void removeColumn(String columnname) {
+		((JavascriptExecutor) driver).executeScript("filterLocation.hideColumn('" + columnname + "', 1)");
+	}
 }

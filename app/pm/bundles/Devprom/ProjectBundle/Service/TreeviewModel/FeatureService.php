@@ -5,15 +5,16 @@ include_once SERVER_ROOT_PATH."pm/classes/product/FeatureModelExtendedBuilder.ph
 class FeatureService
 {
 	private $object = null;
-	private $object_it = null;
-	
-	public function __construct( $root )
+	private $predicates = array();
+	private $selectableObject = null;
+
+	public function __construct( $root, $selectableClass )
 	{
 		getSession()->addBuilder( new \FeatureModelExtendedBuilder() );
 		
     	$this->object = getFactory()->getObject('Feature');
 
-    	$predicates = $root > 0 
+    	$this->predicates = $root > 0
     		? array (
     				new \FilterAttributePredicate('ParentFeature', $root),
     				new \FilterVpdPredicate(),
@@ -24,63 +25,38 @@ class FeatureService
     				new \FilterVpdPredicate(),
     				new \SortFeatureHierarchyClause()
     			);
-    		
-    	$this->setObjectIt( $this->object->getRegistry()->Query($predicates) );
+    	if ( class_exists($selectableClass) ) {
+    	    $this->selectableObject = getFactory()->getObject($selectableClass);
+        }
 	}
 
-	public function setObjectIt( $object_it )
-	{
-		$this->object_it = $object_it;
-	}
-	
-	public function getObjectIt()
-	{
-		return $this->object_it;
-	}
-	
     public function getData()
     {
     	$uid = new \ObjectUID();
-    	
-    	$object_it = $this->getObjectIt();
-    	
     	$data = array();
-    	
+
+        $object_it = $this->object->getRegistry()->Query($this->predicates);
+        $checkableObjectIt = is_object($this->selectableObject)
+            ? $this->selectableObject->getRegistryBase()->Query($this->predicates)
+            : $object_it;
+
      	while ( !$object_it->end() )
  		{
- 		 	if ( $object_it->get('ChildrenCount') > 0 )
-    		{
-   				$image = 'folder';
-    		}
-    		else
-    		{
-    			$image = 'wiki_document';
-    		}
- 			
-    		$item = array();
-
-    		$title = \IteratorBase::wintoutf8($object_it->getDisplayName());
-    		
+    		$title = $object_it->getDisplayName();
     		$uid_info = $uid->getUidInfo($object_it);
-    		
     		$uid_text = '['.$uid_info['uid'].']';
-    		
-    		if ( $uid_info['alien'] ) $uid_text .= ' {'.$uid_info['project'].'}'; 
-    		
- 			$item['text'] = 
- 	 			'<div class="treeview-label '.$image.'">'.
- 	 			'<a class="treeview-title wiki_tree_node item" href="javascript:" object="'.$object_it->getId().'">'.
- 				$uid_text.' '.$title.
- 				'</a>'.
- 				'</div>';
+    		if ( $uid_info['alien'] ) $uid_text .= ' {'.$uid_info['project'].'}';
 
- 			$item['expanded'] = false;
- 			$item['classes'] = "folder ".$image;
- 			$item['id'] = $object_it->getId();
- 			$item['hasChildren'] = $object_it->get('ChildrenCount') > 0;
- 			
- 			$data[] = $item;
- 			
+            $checkableObjectIt->moveToId($object_it->getId());
+            $data[] = array (
+                'title' => $uid_text.' '.$title,
+                'folder' => $object_it->get('ChildrenCount') > 0,
+                'key' => $object_it->getId(),
+                'expanded' => false,
+                'lazy' => $object_it->get('ChildrenCount') > 0,
+                'unselectable' => $checkableObjectIt->getId() == ''
+            );
+
  			$object_it->moveNext();
  		}
  		

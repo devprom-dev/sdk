@@ -32,9 +32,13 @@ try
         $ctx = stream_context_create(array( 
             'http' => array( 
                 'timeout' => 55
-                ) 
-            ) 
-        ); 	
+                ),
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                )
+            )
+        );
         
         $result = @file_get_contents( $url.'/tasks/command.php?class=runjobs&filter='.join(',',$classes), false, $ctx );
         if ( $result === false )

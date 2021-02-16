@@ -1,6 +1,7 @@
 package ru.devprom.pages.project.testscenarios;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Action;
@@ -9,6 +10,7 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import ru.devprom.helpers.Configuration;
 import ru.devprom.items.Project;
 import ru.devprom.pages.project.SDLCPojectPageBase;
 import ru.devprom.pages.project.requirements.RequirementViewPage;
@@ -24,7 +26,7 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
         @FindBy(xpath = ".//*[@id='modify']")
 	protected WebElement editItem;
         
-        @FindBy(xpath = "//i[@class='icon-broken']")
+        @FindBy(xpath = "//a[@uid='compare-actions']")
 	protected WebElement handleBtn;
         
         @FindBy(xpath = "//a[contains(.,'Восстановить покрытие')]")
@@ -48,30 +50,37 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
 		return new TestSpecificationNewPage(driver);
 	}
 	
-	public TestSpecificationViewPage clickToSpecification(String id){
-		driver.findElement(By.xpath("//td[@id='uid']/a[contains(@href,'"+id+"')]")).click();
+	public TestSpecificationViewPage clickToSpecification(String id)
+	{
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
+		driver.findElement(By.id("restoreTree")).click();
+		By xpath = By.xpath("//td[@id='uid']/a[contains(@href,'"+id+"')]");
+		try {
+			(new WebDriverWait(driver, 3)).until(ExpectedConditions.presenceOfElementLocated(xpath));
+		} catch(TimeoutException e) {
+		}
+		driver.findElement(xpath).click();
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
 		return new TestSpecificationViewPage(driver);
 	}
 
-	public RequirementViewPage editContent(String newContent){
-		try {
-			Thread.sleep(800);
-		} catch (InterruptedException e) {
-		}
-		driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent') and @objectclass='TestScenario']")).clear();
-		driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent') and @objectclass='TestScenario']")).sendKeys(newContent);
-		return new RequirementViewPage(driver);
-	}
-	
-	public RequirementViewPage addContent(String content) {
-		WebElement editableArea = driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent') and @objectclass='TestScenario']"));
+	public TestSpecificationViewPage addContent(String content)
+	{
+		WebElement editableArea = driver.findElement(By.xpath("//div[starts-with(@id,'WikiPageContent') and @objectclass='TestScenario']"));
 		editableArea.click();
 		try {
 			Thread.sleep(800);
 		} catch (InterruptedException e) {
 		}
 		editableArea.sendKeys(content);
-		return new RequirementViewPage(driver);
+		sleep(Configuration.getPersistTimeout());
+		return new TestSpecificationViewPage(driver);
 	}
 
     public TestScenarioEditPage edit() {
@@ -91,8 +100,8 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
 
     public StartTestingPage clickStartTesting(String Id) {
         String clearID = Id.split("-")[1];
-        WebElement onElement = driver.findElement(By.xpath(".//tr[@object-id='"+clearID+"']"));
-        WebElement itemAsterixBtn = driver.findElement(By.xpath("//tr[@object-id='"+clearID+"']//*[@id='operations']/div/a"));
+        WebElement onElement = driver.findElement(By.xpath(".//tr[@raw-id='"+clearID+"']"));
+        WebElement itemAsterixBtn = driver.findElement(By.xpath("//tr[@raw-id='"+clearID+"']//*[@id='operations']/div/a"));
         (new Actions(driver)).moveToElement(onElement).click(itemAsterixBtn).build().perform();
         clickOnInvisibleElement(startTestingItem);
        return new StartTestingPage(driver);
@@ -100,7 +109,7 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
 
     public String getIdByName(String name) {
         String ids;
-        ids = driver.findElement(By.xpath("//tr[contains(@id,'testingdocsrootlist1_row_')]/td[@id='caption' and contains(.,'"+
+        ids = driver.findElement(By.xpath("//tr[@role='row']/td[@id='caption' and contains(.,'"+
                 name+"')]/preceding-sibling::td[@id='uid']")).getText();
         String id = ids.substring(1, ids.length()-1);
         FILELOG.debug("Click to UID of requirement");

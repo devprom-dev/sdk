@@ -1,16 +1,15 @@
 <?php
-include_once SERVER_ROOT_PATH . "pm/classes/project/predicates/ProjectAccessibleVpdPredicate.php";
+include_once SERVER_ROOT_PATH . "pm/classes/project/ProjectAccessibleRegistry.php";
 
-class ProjectAccessibleActiveRegistry extends ObjectRegistrySQL
+class ProjectAccessibleActiveRegistry extends ProjectAccessibleRegistry
 {
 	public function getFilters()
 	{
 		return array_merge(
-				parent::getFilters(),
-				array (
-					new ProjectAccessibleVpdPredicate(),
-                    new ProjectStatePredicate('active')
-				)
+		    parent::getFilters(),
+            array (
+                new ProjectStatePredicate('active')
+            )
 		);
 	}
 }

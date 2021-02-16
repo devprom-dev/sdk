@@ -64,7 +64,7 @@ public class TimetableReportTest extends ProjectTestBase {
 		
 		//move to Timetable Page, set "Задачи" mode and read the table
 		TimetablePage ttp = tvp.gotoTimetablePage();
-		ttp.setMode("tasks");
+		ttp.goToTasks();
 		TimetableItem[] table = ttp.readTimetable();
 	//	Arrays.sort(table);
 		FILELOG.debug("Данные со страницы:");
@@ -105,7 +105,6 @@ public class TimetableReportTest extends ProjectTestBase {
 		
 		//move to Timetable Page, set "Пожелания" mode and read the table
 		TimetablePage ttp = rvp.gotoTimetablePage();
-		ttp.setMode("issues");
 		TimetableItem[] table = ttp.readTimetable();
 	//	Arrays.sort(table);
 		FILELOG.debug("Данные со страницы:");
@@ -136,7 +135,7 @@ public class TimetableReportTest extends ProjectTestBase {
 		//move to Timetable Page, set "Проекты" mode and read the table
 		SDLCPojectPageBase page = new SDLCPojectPageBase(driver);
 		TimetablePage ttp =  page.gotoTimetablePage();
-		ttp.setMode("projects");
+		ttp.goToProjects();
 		TimetableItem[] table = ttp.readTimetable();
 	//	Arrays.sort(table);
 		FILELOG.debug("Данные со страницы:");
@@ -167,7 +166,7 @@ public class TimetableReportTest extends ProjectTestBase {
 		//move to Timetable Page, set "Участники" mode and read the table
 		SDLCPojectPageBase page = new SDLCPojectPageBase(driver);
 		TimetablePage ttp =  page.gotoTimetablePage();
-		ttp.setMode("participants");
+		ttp.goToUsers();
 		TimetableItem[] table = ttp.readTimetable();
 	//	Arrays.sort(table);
 		FILELOG.debug("Данные со страницы:");
@@ -202,19 +201,14 @@ public class TimetableReportTest extends ProjectTestBase {
 		pmp = amp.addUserToProject(member, "Заказчик", 2, "");
 		
 		TimetablePage ttp =  pmp.gotoTimetablePage();
-		ttp.addFilterRole();
-		ttp.addFilterParticipant();
-		
-		ttp = ttp.setFilterRole("Заказчик");
+
+		ttp.setFilterRole(5);
 		TimetableItem[] table = ttp.readTimetable();
 		Assert.assertEquals(table.length, 0, "В таблице присутствуют записи при фильтрации по роли Заказчик");
-		ttp.removeFilterRole();
-		ttp.setFilterParticipant(member.getUsernameLong());
+		ttp.showAll();
+
+		ttp.setFilterParticipant(member.id);
 		table = ttp.readTimetable();
 		Assert.assertEquals(table.length, 0, "В таблице присутствуют записи при фильтрации по имени нового участника");
-		ttp.removeFilterParticipant();
-		
 	}
-	
-	
 }

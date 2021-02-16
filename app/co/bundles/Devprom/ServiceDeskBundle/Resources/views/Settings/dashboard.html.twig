@@ -7,34 +7,12 @@
 {% block body -%}
     <div class="content container">
         <div class="col-md-8 col-md-offset-2">
-            <h2 class="page-title">{{ 'settings.dashboard.title'|trans({}, "settings") }}</h2>
+            <h2></h2>
             <section class="widget">
                 <div class="body">
                     <div class="well">
-                        {% autoescape false %}{{ 'settings.supportProjectId.description'|trans({}, "settings") }}{% endautoescape %}
+                        {{ 'settings.dashboard.title'|trans({}, "settings") }}
                     </div>
-                    <form role="form" class="form-horizontal" action="" method="post" {{ form_enctype(form) }}>
-                        {{ form_errors(form) }}
-
-                        <div class="control-group">
-                            {{ form_label(form.appUrl, null, {'label_attr': {'class': 'control-label'}}) }}
-                            <div class="controls form-group">
-                                <div class="col-md-10">
-                                    {{ form_widget(form.appUrl, {'attr': {'class': 'form-control'}}) }}
-                                    <span class="help-block">
-                                        {% autoescape false %}{{ 'settings.appUrl.description'|trans({'%support_url%':support_url}, 'settings') }}{% endautoescape %}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        {{ form_errors(form.appUrl) }}
-
-                        {{ form_rest(form) }}
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">{{ 'settings.dashboard.save'|trans({}, "settings") }}</button>
-                        </div>
-                    </form>
                 </div>
             </section>
         </div>

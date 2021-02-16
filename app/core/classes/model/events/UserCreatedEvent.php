@@ -18,7 +18,6 @@ class UserCreatedEvent extends SystemTriggersBase
 		);
 	    
    		$mail = new \HtmlMailbox;
-   		$mail->setFromUser(getSession()->getUserIt());
    		$mail->appendAddress($object_it->get('Email'));
    		$mail->setSubject(text(237));
    		$mail->setBody($render_service->getContent('user-registration.twig', 

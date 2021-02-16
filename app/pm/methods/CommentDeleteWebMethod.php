@@ -4,22 +4,17 @@ class CommentDeleteWebMethod extends WebMethod
 {
     var $comment_it, $control_id;
  	
- 	function CommentDeleteWebMethod ( $comment_it = null, $control = 0 )
+ 	function __construct ( $comment_it = null, $control = 0 )
  	{
  		$this->comment_it = $comment_it;
  		$this->control_id = $control;
- 		
- 		parent::WebMethod();
+ 		parent::__construct();
  	}
  	
 	function getCaption() {
 		return translate('Удалить');
 	}
 
-	function getWarning() {
-        return text(636);
-	}
-	
 	function hasAccess()
 	{
  		$project_roles = getSession()->getRoles();
@@ -37,14 +32,17 @@ class CommentDeleteWebMethod extends WebMethod
 
  	function execute_request()
  	{
- 		global $model_factory, $_REQUEST;
- 		
-		$comment = $model_factory->getObject('Comment');
+		$comment = getFactory()->getObject('Comment');
 		$this->comment_it = $comment->getExact($_REQUEST['comment']);
 		
 		if ( $this->comment_it->getId() < 1 || !$this->hasAccess() ) return;
 		
 		$this->comment_it->delete();
+
+        if ( class_exists('UndoWebMethod') && UndoLog::Instance()->valid($this->comment_it) ) {
+            $method = new UndoWebMethod(ChangeLog::getTransaction());
+            $method->setCookie();
+        }
  	}
  	
  	function getRedirectUrl()

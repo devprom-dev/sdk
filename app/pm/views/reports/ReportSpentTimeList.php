@@ -2,7 +2,7 @@
 
 class ReportSpentTimeList extends PMStaticPageList
 {
- 	var $days_map, $activities_map, $comments_map;
+ 	var $days_map;
  	var $user_it, $request_it, $task_it;
  	private $group = '';
     private $userReportUrl = '';
@@ -18,28 +18,29 @@ class ReportSpentTimeList extends PMStaticPageList
         }
     }
 
-    function getIterator()
- 	{
-		$object = $this->getObject();
+    function extendModel()
+    {
+        $object = $this->getObject();
+        $predicates = array();
+        $filterValues = $this->getTable()->getPredicateFilterValues();
 
-		$predicates = array();
+        $plugins = getFactory()->getPluginsManager();
+        $plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getTable()->getSection()) : array();
+        foreach( $plugins_interceptors as $plugin ) {
+            $plugin->interceptMethodListGetPredicates( $this, $predicates, $filterValues);
+        }
 
-		$plugins = getFactory()->getPluginsManager();
- 		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getTable()->getSection()) : array();
-		foreach( $plugins_interceptors as $plugin ) {
-		    $plugin->interceptMethodListGetPredicates( $this, $predicates, $this->getFilterValues() );
-		}
-		
-		foreach ( array_merge($predicates, $this->getTable()->getFilterPredicates()) as $predicate ) {
-			$object->addFilter( $predicate );
-		}
-		
-		$this->group = $this->getGroup();
-		if ( !in_array($this->group, array('', 'none')) ) {
-		    $object->setGroup($this->group);
-		}
+        foreach ( array_merge($predicates, $this->getTable()->getFilterPredicates($filterValues)) as $predicate ) {
+            $object->addFilter( $predicate );
+        }
 
-        $rows_object = $this->getRowsObject();
+        $this->group = $this->getGroup();
+        if ( !in_array($this->group, array('', 'none')) ) {
+            $object->setGroup($this->group);
+        }
+
+        $rows_object = $this->getTable()->getRowsObject();
+        $object->setRowsObject($rows_object);
         $attribute = $this->getGroup();
 
         if ( !$object->IsReference($attribute) && $rows_object->IsReference($attribute) ) {
@@ -51,69 +52,56 @@ class ReportSpentTimeList extends PMStaticPageList
             );
         }
 
-        $it = $object->getAll();
-        $this->days_map = $it->getDaysMap();
+        $this->it = $object->getAll();
+        $this->days_map = $this->it->getDaysMap();
 
-		$this->setupColumns();
-	
-		$items = array_filter($it->fieldToArray('ItemId'), function( $value ) {
+        foreach( $this->days_map as $dayId => $dayName ) {
+            $object->addAttribute('Day'.$dayId, 'FLOAT', $dayName, true);
+        }
+
+        $object->setAttributeCaption('Caption', $this->getTable()->getRowsObject()->getDisplayName());
+        $object->addAttribute('Total', 'FLOAT', translate('Итого'), true);
+
+        if ( $rows_object instanceof Task ) {
+            $object->addAttribute('Planned', 'INTEGER', $rows_object->getAttributeUserName('Planned'), true);
+        }
+
+        parent::extendModel();
+    }
+
+    function getIterator()
+ 	{
+		$items = array_filter($this->it->fieldToArray('ItemId'), function( $value ) {
 		    return $value > 0;
 		});
 		
 		$this->row_it = count($items) > 0
-			? $rows_object->getRegistry()->Query( array(new FilterInPredicate($items)) )
-			: $rows_object->getEmptyIterator();
+			? $this->getTable()->getRowsObject()->getRegistry()->Query( array(new FilterInPredicate($items)) )
+			: $this->getTable()->getRowsObject()->getEmptyIterator();
 
-        if ( $object->IsReference($this->getGroup()) ) {
-            $this->report_group_it = $object->getAttributeObject($this->getGroup())->getAll();
+        if ( $this->getObject()->IsReference($this->getGroup()) ) {
+            $this->report_group_it = $this->getObject()->getAttributeObject($this->getGroup())->getAll();
         }
         else {
-            $this->report_group_it = $rows_object->getEmptyIterator();
+            $this->report_group_it = $this->getTable()->getRowsObject()->getEmptyIterator();
         }
 
-		$it->moveFirst();
-		return $it;
+        $this->it->moveFirst();
+		return $this->it;
 	}
 	
-	function getRowsObject()
-	{
-		if ( is_object($this->rows_object) ) return $this->rows_object;
-		
-		switch( $this->getObject()->getView() )
-		{
-			case 'issues':
-				return getFactory()->getObject('Request');
-			case 'participants':
-				return getFactory()->getObject('User');
-			case 'projects':
-				return getFactory()->getObject('Project');
-			default:
-				return getFactory()->getObject('Task');
-		}
-	}
-	
-	function setupColumns()
-	{
-		if ( !is_array($this->days_map) ) return;
-		parent::setupColumns();
-	}
-	
-	function getColumns()
-	{
-        foreach( $this->days_map as $dayId => $dayName ) {
-            $this->object->addAttribute('Day'.$dayId, '', $dayName, true);
+    function getColumnVisibility( $attr )
+    {
+        switch ( $attr )
+        {
+            case 'Caption':
+            case 'Total':
+            case 'Planned':
+                return true;
+            default:
+                return strpos($attr, 'Day') !== false;
         }
-
-		$this->object->setAttributeCaption('Caption', $this->getRowsObject()->getDisplayName());
-		$this->object->addAttribute('Total', '', translate('Итого'), true);
-
-		$rowsObject = $this->getRowsObject();
-		if ( $rowsObject instanceof Task ) {
-            $this->object->addAttribute('Planned', 'INTEGER', $rowsObject->getAttributeUserName('Planned'), true);
-        }
-
-		return parent::getColumns();
-	}
+    }
 
 	function getGroupDefault()
 	{
@@ -121,19 +109,18 @@ class ReportSpentTimeList extends PMStaticPageList
 	
 	function getGroupFields()
 	{
-		$rows_object = $this->getRowsObject();
+		$rows_object = $this->getTable()->getRowsObject();
 
         $attributes = array();
         $skip_attributes = array_merge(
             $rows_object->getAttributesByGroup('system'),
-            $rows_object->getAttributesByGroup('trace'),
             $rows_object->getAttributesByGroup('workflow')
         );
 
 		if ( $rows_object instanceof Request )
 		{
 			foreach($rows_object->getAttributes() as $attribute => $info) {
-                if ( in_array($attribute,array('Type','Attachment','Watchers','Tasks','OpenTasks','Deadlines')) ) continue;
+                if ( in_array($attribute,array('Type','Attachment','Watchers','Tasks','OpenTasks','Deadlines','DueWeeks','ClosedInVersion','SubmittedVersion')) ) continue;
 				if ( !$rows_object->IsReference($attribute) ) continue;
 				if ( in_array($attribute, $skip_attributes) ) continue;
 				$attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
@@ -145,12 +132,12 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
         elseif ( $rows_object instanceof Task ) {
             foreach($rows_object->getAttributes() as $attribute => $info) {
-				if ( in_array($attribute,array('TaskType','ChangeRequest','Attachment','Watchers')) ) continue;
+				if ( in_array($attribute,array('TaskType','Attachment','Watchers','TraceTask','DueWeeks','TraceInversedTask')) ) continue;
                 if ( !$rows_object->IsReference($attribute) ) continue;
                 if ( in_array($attribute, $skip_attributes) ) continue;
                 $attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
             }
-            foreach( array('TypeBase') as $attribute ) {
+            foreach( array('TaskTypeBase') as $attribute ) {
                 $attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
             }
             return $attributes;
@@ -158,11 +145,11 @@ class ReportSpentTimeList extends PMStaticPageList
 		else
 		{
 			$fields = array('SystemUser', 'Project');
-			switch( $this->getObject()->getView() ) {
-				case 'participants':
+			switch( $this->getTable()->getReportBase() ) {
+				case 'activitiesreportusers':
 					$fields = array_diff($fields, array('SystemUser'));
 					break;
-				case 'projects':
+				case 'activitiesreportproject':
 					$fields = array_diff($fields, array('Project'));
 					break;
 			}
@@ -170,32 +157,7 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
 	}
 	
-	function hasDetails()
-	{
-		$object = $this->getObject();
-		return $object->getView() != '';
-	}
-	
-	function IsNeedToDisplay( $attr ) 
-	{
-		switch ( $attr )
-		{
-			case 'Caption':
-			case 'Total':
-            case 'Planned':
-				return true;
-				
-			default:
-				return strpos($attr, 'Day') !== false;
-		}
-	}
-	
-	function getColumnFields()
-	{
-		return array();
-	}
-
-	function getColumnWidth( $attr ) 
+	function getColumnWidth( $attr )
 	{
 		if( $attr == 'Caption' )
 		{
@@ -217,7 +179,7 @@ class ReportSpentTimeList extends PMStaticPageList
     	return in_array($this->group, array('', 'none')) ? 0 : 2;
 	}
 	
-	function drawGroupRow( $group, $object_it, $columns )
+	function drawGroupRow( $group, $group_field_value, $object_it, $columns, $guid )
 	{
         if ( $object_it->get('Group') == '' ) return;
 
@@ -226,7 +188,10 @@ class ReportSpentTimeList extends PMStaticPageList
 		{
 			if ( !in_array($attribute, array('Caption','Total')) && strpos($attribute, 'Day') === false ) continue;
 			echo '<td id="'.strtolower($attribute).'" style="background-color:white;font-weight:bold;">';
-				echo $this->drawCell($object_it, $attribute);
+			if ( $attribute == 'Caption' ) {
+                echo '<div class="plus-minus-toggle" data-toggle="collapse" href="#gor' . $guid . '"></div>';
+            }
+            $this->drawCell($object_it, $attribute);
 			echo '</td>';
 		}
 		echo '<td id="operations" style="background-color:white;font-weight:bold;"></td>';
@@ -238,15 +203,15 @@ class ReportSpentTimeList extends PMStaticPageList
 		{
 			if ( $object_it->get('Group') != '' ) {
 					$this->report_group_it->moveToId($object_it->get('ItemId'));
-					echo '<div style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">'; 
-						echo $this->report_group_it->getDisplayName();
+
+                        $uid = new ObjectUID;
+                        $uid->drawUidInCaption($this->report_group_it);
 
                         if ( $this->userReportUrl != '' && $this->report_group_it->object instanceof User ) {
                             echo ' &nbsp; <a target="_blank" href="'.str_replace('%1', $this->report_group_it->getId(), $this->userReportUrl).'" style="font-weight:normal;">';
                                 echo text(2274);
                             echo '</a>';
                         }
-    				echo '</div>';
 			}
 			else {
 					$this->row_it->moveToId( $object_it->get('ItemId') );
@@ -267,7 +232,7 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
 		elseif ( $attr == 'Total' )	{
 			if ( $object_it->get('Total') > 0 ) {
-				echo round($object_it->get('Total'), 0);
+			    parent::drawCell($object_it, $attr);
 			}
 			else {
 				echo '<span style="color:silver;">0</span>';
@@ -316,23 +281,37 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
 	}
 
-	function getColumnAlignment ( $attr )
-	{
-		if ( is_numeric($attr) )
-		{
-			return 'right';
-		}
-		
-		return parent::getColumnAlignment ( $attr );
+	function getColumnAlignment ( $attr ) {
+	    return $attr == 'Total' ? 'right' : 'left';
 	}
 
-	function IsNeedToDisplayRow($object_it)
-	{
+	function IsNeedToDisplayRow($object_it) {
 		return $object_it->get('Group') == '' || in_array($this->group, array('','none'));
 	}
 
-	function getRowBackgroundColor( $object_it )
-	{
+	function getRowBackgroundColor( $object_it ) {
 		return $object_it->get('Group') != '' ? '#F6F3FE' : 'white';
-	}	
+	}
+
+    function getTotalIt( $attributes )
+    {
+        $values = array();
+        $rowset = array_filter(
+            $this->getIteratorRef()->getRowset(),
+            function( $row ) {
+                return $row['Group'] < 1;
+            }
+        );
+
+        foreach( $attributes as $attribute ) {
+            $value = array_sum(
+                array_map(function($row) use($attribute) {
+                    return $row[$attribute];
+                }, $rowset)
+            );
+            if ( $value != '' ) $values[$attribute] = $value;
+        }
+
+        return $this->getObject()->createCachedIterator(array($values));
+    }
 }

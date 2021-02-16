@@ -1,10 +1,9 @@
 <?php
-
-include('LogsList.php');
+include 'LogsList.php';
 
 class LogsTable extends StaticPageTable
 {
-	function getList() {
+	function getList( $mode = '' ) {
 		return new LogsList( $this->getObject() );
 	}
 

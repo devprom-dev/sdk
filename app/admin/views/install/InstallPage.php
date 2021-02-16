@@ -46,7 +46,7 @@ class InstallPage extends AdminPage
 		}
 	}
 	
-	function getForm()
+	function getEntityForm()
 	{
 		return null;
 	}

@@ -7,7 +7,7 @@ class CustomTagFilter extends FilterPredicate
  	function CustomTagFilter( $object, $filter )
  	{
  		$this->object = $object;
- 		parent::FilterPredicate( $filter );
+ 		parent::__construct( $filter );
  	}
  	
  	function _predicate( $filter )

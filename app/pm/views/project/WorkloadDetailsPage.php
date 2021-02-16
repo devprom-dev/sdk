@@ -11,7 +11,7 @@ class WorkloadDetailsPage extends PMPage
 		return new WorkloadDetailsTable($this->getObject());
 	}
 
-	function getForm() {
+	function getEntityForm() {
 		return null;
 	}
 

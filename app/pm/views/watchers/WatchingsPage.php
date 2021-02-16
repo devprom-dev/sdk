@@ -14,7 +14,7 @@ class WatchingsPage extends PMPage
  		return new WatchingsTable();
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		return null;
  	}

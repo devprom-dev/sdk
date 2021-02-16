@@ -9,10 +9,12 @@ class MailBox
 	private $mailer_settings = null;
 	private $attachments = array();
 	private $text = '';
+	private $messageId = '';
 	
 	function __construct() {
 		$this->to_address = array();
 		$this->mailer_settings = getFactory()->getObject('MailerSettings')->getAll();
+        $this->from_address = $this->getSystemEmail();
 	}
 	
 	function appendAddress( $address ) {
@@ -36,50 +38,29 @@ class MailBox
 	    $this->text = $text;
     }
 
+    function setInReplyMessageId( $value ) {
+	    $this->messageId = $value;
+    }
+
 	function setAttachments( $attachments ) {
 	    $this->attachments = $attachments;
     }
 
-	function setFrom( $from_address, $override = true )
-	{
-        if ( is_array($from_address) ) {
-			$address = $this->quoteEmail(array_pop(array_values($from_address)).' <'.array_pop(array_keys($from_address)).'>');
+	function setFrom( $from_address ) {
+		$this->from_address = $from_address;
+	}
 
-        } else {
-			$address = $this->quoteEmail($from_address);
+	protected function getSystemEmail()
+    {
+        $settingsIt = getFactory()->getObject('cms_SystemSettings')->getAll();
+        $address = $settingsIt->getHtmlDecoded('AdminEmail');
+        $parts = preg_split('/</', $address);
+        if ( count($parts) > 1 ) {
+            return $address;
         }
-
-		if ( $override && $this->mailer_settings->get('EmailSender') == 'admin' ) {
-			$address = $this->addressUpdateEmail($address, self::getSystemEmail());
-		}
-
-		$this->from_address = $address;
-	}
-	
-	function setFromUser( $user_it )
-	{
-		if ( $user_it->getId('Email') == '' ) {
-			$this->setFrom(self::getSystemEmail(), false);
-		}
-		else {
-			$this->setFrom($user_it->get('Caption').' <'.$user_it->get('Email').'>');
-		}
-	}
-
-	static function getSystemEmail()
-	{
-		$settings_it = getFactory()->getObject('cms_SystemSettings')->getAll();
-		if ( $settings_it->get('AdminEmail') != '' )
-		{
-			$email_match = array();
-			if ( preg_match('/<([^>]+)>/', $settings_it->getHtmlDecoded('AdminEmail'), $email_match) ) {
-				return $email_match[1];
-			}
-			else {
-				return $settings_it->getHtmlDecoded('AdminEmail');
-			}
-		}
-		return '';
+        else {
+            return $settingsIt->getHtmlDecoded('Caption') . ' <' . $address . '>';
+        }
 	}
 
  	private function quoteEmail( $email )
@@ -95,40 +76,37 @@ class MailBox
 		$configuration = getConfiguration();
 		$max_recipients = $configuration->getMaxEmailRecipients();
 		
-		if ( $max_recipients > 0 )
-		{
-			if ( count($this->to_address) > $max_recipients )
-			{
-				return false;
-			}
+		if ( $max_recipients > 0 ) {
+			if ( count($this->to_address) > $max_recipients ) return false;
 		}
 
  		$queue = new Metaobject('EmailQueue');
  		$address = new Metaobject('EmailQueueAddress');
- 		$queue_id = $queue->add_parms(
+
+ 		$queueIt = $queue->getRegistry()->Merge(
  			array (
  			    'FromAddress' => $this->from_address,
  				'Caption' => $this->subject,
- 				'Description' => serialize(
+ 				'Description' => \JSONWrapper::encode(
  				    array(
  				        'native' => $this->body,
  				        'text' => $this->text
                     )
                 ),
  				'MailboxClass' => get_class($this),
-                'Attachments' => serialize($this->attachments)
+                'Attachments' => serialize($this->attachments),
+                'EmailMessageId' => $this->messageId
             )
         );
 
-		for ( $i = 0; $i < count($this->to_address); $i++ )
-		{
-	 		$address->add_parms(
-	 			array ( 'EmailQueue' => $queue_id,
-	 				    'ToAddress' => $this->to_address[$i] )
-	 			);
+		for ( $i = 0; $i < count($this->to_address); $i++ ) {
+	 		$address->getRegistry()->Merge(array(
+	 		    'EmailQueue' => $queueIt->getId(),
+	 			'ToAddress' => $this->to_address[$i]
+            ));
 		}
 
-		return $queue_id;	
+		return $queueIt->getId();
 	}
 	
 	static function getContentType() {

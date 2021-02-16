@@ -8,7 +8,8 @@ return array(
     'index.notifications' => 'Есть непросмотренные изменения или комментарии',
     'product.title' => 'Выберите категорию',
 	'index.company_title' => 'Заявки компании',
-    'index.no.issues' => 'У вас пока нет ни одной заявки',
+    'index.no.issues' => 'У вас нет ни одной открытой заявки',
+    'index.go.closed.issues' => 'Открыть завершенные заявки',
     'new.title' => 'Новая заявка',
     'edit.title' => 'Изменение заявки',
     'security.title' => 'Авторизация',
@@ -32,6 +33,10 @@ return array(
     'issue_comments' => 'Комментарии',
 	'issue_version' => 'Версия',
 	'issue_type_name' => 'Проблема',
+
+    'issue_state_all' => 'Все',
+    'issue_state_open' => 'В работе',
+    'issue_state_closed' => 'Выполнены',
 
     'issue.edit' => 'Изменить заявку',
     'issue.add' => 'Создать заявку',

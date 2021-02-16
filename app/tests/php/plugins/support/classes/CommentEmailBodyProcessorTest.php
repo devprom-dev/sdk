@@ -8,7 +8,7 @@ include_once SERVER_ROOT_PATH . "/plugins/support/classes/CommentEmailBodyProces
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  */
-class CommentEmailBodyProcessorTest extends \PHPUnit_Framework_TestCase {
+class CommentEmailBodyProcessorTest extends \PHPUnit\Framework\TestCase {
 
     /** @var  CommentEmailBodyProcessor */
     private $processor;
@@ -132,7 +132,7 @@ class CommentEmailBodyProcessorTest extends \PHPUnit_Framework_TestCase {
 
         $result = $this->processor->process($content, false);
 
-        $this->assertEquals("Some<br />\r\nmultiline reply", $result);
+        $this->assertEquals("Some<br>\r\nmultiline reply", $result);
     }
 
     /**
@@ -145,7 +145,7 @@ class CommentEmailBodyProcessorTest extends \PHPUnit_Framework_TestCase {
 
         $result = $this->processor->process($content, false);
 
-        $this->assertSame("Some reply<br />\r\n<br />\r\nSecond paragraph", $result);
+        $this->assertSame("Some reply<br>\r\n<br>\r\nSecond paragraph", $result);
     }
 
     /**

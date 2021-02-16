@@ -119,7 +119,6 @@ class CommentHandler extends EmailNotificatorHandler
  		{
 			$info = $uid->getUidInfo($comment_it);
             $text = $parser->parse( $comment_it->getHtmlDecoded('Caption') );
-            $text = TextUtils::breakLongWords($text);
 
  			$data[] = array (
 				'id' => $comment_it->getId(),

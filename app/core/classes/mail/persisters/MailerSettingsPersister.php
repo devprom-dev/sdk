@@ -50,12 +50,6 @@ class MailerSettingsPersister extends ObjectSQLPersister
 	 				'AdminEmail' => $parms['AdminEmail']
 	 			) 
  		);
-
-		$file_content = file_get_contents(DOCUMENT_ROOT.'settings_server.php');
-		if ( array_key_exists('EmailSender', $parms) ) {
-			$file_content = SettingsFile::setSettingValue('EMAIL_SENDER_TYPE', $parms['EmailSender'], $file_content);
-		}
-		file_put_contents(DOCUMENT_ROOT.'settings_server.php', $file_content);
  	}
  	
  	function getSelectColumns( $alias )
@@ -84,9 +78,6 @@ class MailerSettingsPersister extends ObjectSQLPersister
 		foreach( $values as $attribute => $value ) {
 			$columns[] = "'".addslashes(addslashes($value))."' ".$attribute;
 		}
-
-		$value = defined('EMAIL_SENDER_TYPE') ? EMAIL_SENDER_TYPE : 'admin';
-		array_push( $columns, "'".$value."' EmailSender " );
 
 		return $columns;
  	}

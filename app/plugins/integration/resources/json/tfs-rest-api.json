@@ -1,0 +1,56 @@
+[{
+  "Release": {
+    "url": "/{project}/_apis/work/teamsettings/iterations/{id}",
+    "Caption": "name",
+    "Description": "path",
+    "StartDate": "attributes.startDate",
+    "FinishDate": "attributes.finishDate"
+  },
+  "Request": {
+    "url": "/{project}/_apis/wit/workitems/{id}",
+    "link": "/{project}/_workitems?id={id}",
+    "Caption": "fields.System\\.Title",
+    "Description": "fields.System\\.Description",
+    "Type": {
+      "ReferenceName": "fields.System\\.WorkItemType",
+      "mapping": [{"bug":"Bug"},{"":"Product Backlog Item"},{"enhancement":"Feature"},{"":"*"}]
+    },
+    "Priority": {"Id":"fields.Microsoft\\.VSTS\\.Common\\.Priority"},
+    "Owner": {"Email":"fields.System\\.AssignedTo.uniqueName"},
+    "State": {
+      ".": "fields.System\\.State",
+      "mapping": [{"submitted":"New"},{"submitted":"Approved"},{"development":"Committed"},{"resolved":"Done"},{"submitted":"*"}]
+    },
+    "Iteration": {
+      "ReleaseNumber": "fields.System\\.IterationPath",
+      "readonly": "true"
+    },
+    "ExternalId": {
+      ".": "_links.self.href",
+      "readonly": "true"
+    }
+  },
+  "Task": {
+    "url": "/{project}/_apis/wit/workitems/{id}",
+    "link": "/{project}/_workitems?id={id}",
+    "Caption": "fields.System\\.Title",
+    "Description": "fields.System\\.Description",
+    "Planned": "fields.Microsoft\\.VSTS\\.Scheduling\\.OriginalEstimate",
+    "Fact": "fields.Microsoft\\.VSTS\\.Scheduling\\.CompletedWork",
+    "TaskType": {
+      "Caption": "fields.Microsoft\\.VSTS\\.Common\\.Activity"
+    },
+    "ChangeRequest": {
+      "ExternalId": "relations:(rel=System\\.LinkTypes\\.Hierarchy-Reverse).url"
+    },
+    "Priority": {"Id":"fields.Microsoft\\.VSTS\\.Common\\.Priority"},
+    "Assignee": {"Email":"fields.System\\.AssignedTo.uniqueName"},
+    "State": {
+      ".": "fields.System\\.State",
+      "mapping": [{"planned":"New"},{"submitted":"Approved"},{"development":"Committed"},{"resolved":"Done"},{"planned":"*"}]
+    },
+    "Iteration": {
+      "ReleaseNumber": "fields.System\\.IterationPath"
+    }
+  }
+}]

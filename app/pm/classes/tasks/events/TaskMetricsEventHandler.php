@@ -10,13 +10,9 @@ class TaskMetricsEventHandler extends SystemTriggersBase
 
     protected function updatePlanMetrics( $object_it )
     {
-        if ( $object_it->get('Release') != '' && $object_it->object->getAttributeType('Release') != '' ) {
-            $iterationIt = $object_it->getRef('Release');
-            getSession()->addCallbackDelayed(
-                array(
-                    'IterationMetrics' => $iterationIt->getId()
-                ),
-                function() use ( $iterationIt ) {
+        if ( $object_it->get('Release') != '' ) {
+            $iterationIt = getFactory()->getObject('Iteration')->getExact($object_it->get('Release'));
+            register_shutdown_function(function() use ( $iterationIt ) {
                     $iterationIt->storeMetrics();
                 }
             );

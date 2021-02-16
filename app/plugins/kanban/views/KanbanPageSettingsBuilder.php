@@ -8,11 +8,6 @@ class KanbanPageSettingsBuilder extends PageSettingBuilder
     {
         $setting = new PageTableSetting('KanbanRequestTable');
         $setting->setSorts( array('Priority') );
-        $setting->setFilters(array('type','priority'));
-        $settings->add( $setting );
-
-        $setting = new ReportSetting('avgleadtime');
-        $setting->setFilters( array('type','priority','modifiedafter','owner','estimation') );
         $settings->add( $setting );
     }
 }

@@ -66,7 +66,7 @@ public class SupportRequestsPage extends SupportPageBase {
 	
 	public SupportRequestsPage duplicateInProject(Request request, String projectName){
 		WebElement element = driver.findElement(By.xpath("//table[contains(@id,'requestlist')]//td[@id='uid']/a[text()='["
-				+ request.getId() + "]']/../following-sibling::td[@id='operations']//a[contains(.,'Реализовать')]"));
+				+ request.getId() + "]']/../following-sibling::td[@id='operations']//a[@id='implement']"));
 		clickOnInvisibleElement(element);
 		
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated((By.id("ProjectText"))));

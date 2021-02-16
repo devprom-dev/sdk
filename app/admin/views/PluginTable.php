@@ -1,21 +1,17 @@
 <?php
-
-include ('PluginList.php');
+include 'PluginList.php';
 
 class PluginTable extends StaticPageTable
 {
-	function getList()
-	{
+	function getList() {
 		return new PluginList( $this->getObject() );
 	}
 
-	function getCaption()
-	{
+	function getCaption() {
 		return '';
 	}
 
-	function getFilterActions()
-	{
+	function getFilterActions() {
 		return array();
 	}
 }

@@ -24,58 +24,56 @@ class ObjectRegistrySQL extends ObjectRegistry
 		if ( is_array($sorts) ) $this->setSorts($sorts);
 	}
 	
-	public function setPersisters( $persisters )
-	{
+	public function setPersisters( $persisters ) {
 		$this->persisters = $persisters;
 	}
 	
-	public function getPersisters()
-	{
+	public function getPersisters()	{
 		return $this->persisters;
 	}
+
+	public function useImportantPersistersOnly() {
+	    foreach( $this->persisters as $key => $persister ) {
+	        if ( !$persister->IsPersisterImportant() ) {
+	            unset($this->persisters[$key]);
+            }
+        }
+	    return $this;
+    }
 	
-	public function setFilters( $filters )
-	{
+	public function setFilters( $filters ) {
 		$this->filters = $filters;
 	}
 	
-	public function getFilters()
-	{
+	public function getFilters() {
 		return $this->filters;
 	}
 	
-	public function setGroups( $groups )
-	{
+	public function setGroups( $groups ) {
 		$this->groups = $groups;
 	}
 	
-	public function getGroups()
-	{
+	public function getGroups()	{
 		return $this->groups;
 	}
 	
-	public function setSorts( $sorts )
-	{
+	public function setSorts( $sorts ) {
 		$this->sorts = $sorts;
 	}
-	
-	public function addSort( $sort )
-	{
+
+	public function addSort( $sort ) {
 		$this->sorts[] = $sort;
 	}
 	
-	public function getSorts()
-	{
+	public function getSorts() {
 		return $this->sorts;
 	}
 	
-	public function setLimit( $limit )
-	{
+	public function setLimit( $limit ) {
 		$this->limit = $limit;
 	}
 	
-	public function getLimit()
-	{
+	public function getLimit() {
 		return $this->limit;
 	}
 
@@ -87,8 +85,7 @@ class ObjectRegistrySQL extends ObjectRegistry
         return $this->offset;
     }
 	
-	public function setDefaultSort( $sort_clause )
-	{
+	public function setDefaultSort( $sort_clause ) {
 		$this->default_sort = $sort_clause;
 	}
 	
@@ -118,7 +115,21 @@ class ObjectRegistrySQL extends ObjectRegistry
 			$this->setPersisters(array_merge($this->getPersisters(), $persisters));
 		}
 	}
-	
+
+    public function QueryById( $ids )
+    {
+        $ids = \TextUtils::parseItems($ids);
+        if ( count($ids) < 1 ) return $this->getObject()->getEmptyIterator();
+
+        if ( $this->getObject() instanceof MetaobjectCacheable ) {
+            return $this->getObject()->getExact($ids);
+        }
+
+        return $this->Query( array(
+           new FilterInPredicate($ids)
+        ));
+    }
+
 	public function Query( $parms = array() )
 	{
 	    if ( !is_array($parms) ) throw new Exception("parms should be array");
@@ -203,8 +214,8 @@ class ObjectRegistrySQL extends ObjectRegistry
 	public function getFilterPredicate( $alias = 't' )
 	{
 		$predicate = '';
-		foreach( $this->getFilters() as $filter )
-		{
+
+		foreach( $this->getFilters() as $filter ) {
 			$filter->setAlias($alias);
 			$filter->setObject( $this->getObject() );
 			$predicate .= $filter->getPredicate();
@@ -302,10 +313,6 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$object = $this->getObject();
         $data[$object->getIdAttribute()] = $object_it->getId();
 
-		foreach ( $this->persisters as $persister ) {
-			$persister->map( $data );
-		}
-
 		if ( $data['RecordModified'] == '' ) {
 			$data['RecordModified'] = SystemDateTime::date();
 		}
@@ -341,11 +348,11 @@ class ObjectRegistrySQL extends ObjectRegistry
 
 			if( !array_key_exists($key, $data) ) continue; 
 			
-			$sql .= '`'.$key.'` = '.$object->formatValueForDB($key, DAL::Instance()->Escape(addslashes($value))).',';
+			$sql .= '`'.$key.'` = '.$object->formatValueForDB($key, $value).',';
 		}
 
-		if ( $data['VPD'] != '' ) $sql .= "`VPD` = '".DAL::Instance()->Escape(addslashes($data['VPD']))."',";
-		
+		if ( $data['VPD'] != '' ) $sql .= "`VPD` = '".DAL::Instance()->Escape($data['VPD'])."',";
+
 		getFactory()->info( JsonWrapper::encode($data) );
 
 		if ( $sql != '' )
@@ -353,7 +360,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 			if ( $data['WasRecordVersion'] != '' )
 			{
 				$pre_sql .= "RecordVersion = RecordVersion + 1, ";
-				$data['RecordVersion'] = DAL::Instance()->Escape(addslashes($data['WasRecordVersion']));
+				$data['RecordVersion'] = DAL::Instance()->Escape($data['WasRecordVersion']);
 			}
 			
 			$sql = $pre_sql.$sql;
@@ -368,7 +375,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 			$r2 = DAL::Instance()->Query($sql);
 
 			if ( $data['RecordVersion'] != '' && DAL::Instance()->GetAffectedRows() < 1 ) {
-			    return $object->getEmptyIterator();
+			    throw new \Exception(text(612));
             }
 
 		    getFactory()->resetCachedIterator($object);
@@ -394,11 +401,11 @@ class ObjectRegistrySQL extends ObjectRegistry
 
     public function Create( array $data )
     {
+        $objectId = $this->getObject()->add_parms($data);
+        if ( $objectId < 1 ) return $this->getObject()->getEmptyIterator();
         return $this->Query(
             array (
-                new FilterInPredicate(
-                    $this->getObject()->add_parms($data)
-                )
+                new FilterInPredicate($objectId)
             )
         );
     }
@@ -408,17 +415,10 @@ class ObjectRegistrySQL extends ObjectRegistry
         $parms = array();
         if ( count($alternativeKey) < 1 ) $alternativeKey = array_keys($data);
 
-        $localSearchOnly = true;
         foreach( $alternativeKey as $attribute ) {
-            if ( $attribute == 'VPD' ) {
-                $parms[] = new FilterVpdPredicate($alternativeKey[$attribute]);
-                $localSearchOnly = false;
-            }
-            else {
-                $parms[] = new FilterAttributePredicate($attribute, $data[$attribute]);
-            }
+            $parms[] = new FilterAttributePredicate($attribute, $data[$attribute]);
         }
-        if ( $localSearchOnly ) {
+        if ( $this->getObject()->getVpdValue() != '' ) {
             $parms[] = new FilterBaseVpdPredicate();
         }
 

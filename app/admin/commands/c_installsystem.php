@@ -268,13 +268,7 @@ class InstallSystem extends CommandForm
     {
         DAL::Destroy();
         $info = new MySQLConnectionInfo( $hostname, $dbname, $username, $password );
-
-        if ( function_exists('mysqli_connect') ) {
-            DALMySQLi::Instance()->Connect($info);
-        }
-        else {
-            DALMySQL::Instance()->Connect($info);
-        }
+        DALMySQLi::Instance()->Connect($info);
     }
 
     protected function getMySQLVersion() {

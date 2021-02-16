@@ -38,7 +38,7 @@ class FeatureMetricsPersister extends ObjectSQLPersister
              
          $columns[] = 
              "	(SELECT IFNULL( ".
-             "	  (SELECT MAX(r.DeliveryDate) " .
+             "	  (SELECT TIMESTAMP(MAX(FROM_DAYS(TO_DAYS(GREATEST(r.DeliveryDate,NOW()))))) " .
              "	     FROM pm_ChangeRequest r, pm_Function f" .
              "	    WHERE r.Function = f.pm_FunctionId ".
          	 "		  AND f.ParentPath LIKE CONCAT('%,',".$this->getPK($alias).",',%')), ".

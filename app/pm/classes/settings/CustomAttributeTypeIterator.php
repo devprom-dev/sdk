@@ -1,6 +1,6 @@
 <?php
 
-class CustomAttributeTypeIterator extends OrderedIterator
+class CustomAttributeTypeIterator extends CacheableIterator
 {
  	function getDbType()
  	{
@@ -27,19 +27,6 @@ class CustomAttributeTypeIterator extends OrderedIterator
  		
  		switch ( strtolower($type) )
  		{
- 			case 'integer':
- 			case 'dictionary':
- 			case 'reference':
- 				$value_column = 'IntegerValue';
- 				break;
-
- 			case 'string':
-            case 'char':
- 			case 'date':
-			case 'computed':
- 				$value_column = 'StringValue';
- 				break;
-
  			case 'password':
  				$value_column = 'PasswordValue';
  				break;
@@ -50,7 +37,7 @@ class CustomAttributeTypeIterator extends OrderedIterator
  				break;
  				
  			default:
- 				$value_column = 'IntegerValue';
+ 				$value_column = 'StringValue';
  				break;
  		}
  		

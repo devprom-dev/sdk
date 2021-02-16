@@ -10,7 +10,7 @@ class ProjectStatePredicate extends FilterPredicate
 				 return " AND 1 = 1 ";
 
 			case 'current':
-		 		return " AND IFNULL(t.IsClosed, 'N') = 'N' " .
+		 		return " AND t.IsClosed = 'N' " .
 		 			   " AND EXISTS ( SELECT 1 FROM pm_Version v " .
 		 			   "			   WHERE v.Project = t.pm_ProjectId" .
 		 			   "				 AND TO_DAYS(NOW()) BETWEEN " .
@@ -23,10 +23,10 @@ class ProjectStatePredicate extends FilterPredicate
 		 			   "			) ";
 
 			case 'closed':
-		 		return " AND IFNULL(t.IsClosed, 'N') = 'Y' ";
+                return " AND t.IsClosed = 'Y' ";
 
 		 	default:
-				 return " AND IFNULL(t.IsClosed, 'N') = 'N' ";
+                return " AND t.IsClosed = 'N' ";
 		 }
  	}
 }

@@ -1,5 +1,5 @@
 <?php
 
-class SystemSettingsIterator extends OrderedIterator
+class SystemSettingsIterator extends CacheableIterator
 {
 }

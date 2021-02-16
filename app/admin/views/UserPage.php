@@ -1,6 +1,9 @@
 <?php
-
 include_once SERVER_ROOT_PATH."admin/classes/UserModelExtendedBuilder.php";
+include_once SERVER_ROOT_PATH."admin/methods/UserFilterRoleWebMethod.php";
+include_once SERVER_ROOT_PATH."admin/methods/UserFilterStateWebMethod.php";
+include_once SERVER_ROOT_PATH."admin/methods/BlockUserWebMethod.php";
+include_once SERVER_ROOT_PATH."admin/methods/UnBlockUserWebMethod.php";
 
 include ('UserForm.php');
 include ('UserTable.php');
@@ -22,6 +25,9 @@ class UserPage extends AdminPage
 			$this->addInfoSection(new PageSectionAttributes(
 				$this->getFormRef()->getObject(), 'additional', translate('Дополнительно'))
 			);
+            $this->addInfoSection(new PageSectionAttributes(
+                    $this->getFormRef()->getObject(), 'notifications-tab', text(1912))
+            );
 			if ( is_object($object_it) && $object_it->getId() > 0 ) {
 				$this->addInfoSection(new LastChangesSection($object_it));
 			}
@@ -40,7 +46,7 @@ class UserPage extends AdminPage
 		return new UserTable( $this->getObject() );
 	}
 
-	function getForm()
+	function getEntityForm()
 	{
 		if ( $_REQUEST['cms_UserId'] != '' ) {
 			$user_it = $this->getObject()->getRegistryBase()->Query(

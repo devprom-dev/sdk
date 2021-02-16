@@ -36,10 +36,34 @@ class Project {
     private $codeName;
 
     /**
+     * @ORM\Column(type="integer", name="Importance")
+     * @var string
+     */
+    private $importance;
+
+    /**
      * @ORM\Column(type="string", name="VPD")
      * @var string
      */
     private $vpd;
+
+    /**
+     * @ORM\Column(type="string", name="KnowledgeBaseServiceDesk")
+     * @var string
+     */
+    private $knowledgeBaseServiceDesk;
+
+    /**
+     * @ORM\Column(type="string", name="KnowledgeBaseAuthorizedAccess")
+     * @var string
+     */
+    private $knowledgeBaseAuthorizedAccess;
+
+    /**
+     * @ORM\Column(type="string", name="KnowledgeBaseUseProducts")
+     * @var string
+     */
+    private $knowledgeBaseUseProducts;
 
     /**
      * @param string $codeName
@@ -106,6 +130,22 @@ class Project {
     }
 
     /**
+     * @param int $value
+     */
+    public function setImportance($value)
+    {
+        $this->importance = $value;
+    }
+
+    /**
+     * @return int
+     */
+    public function getImportance()
+    {
+        return $this->importance;
+    }
+
+    /**
      * @param string $vpd
      */
     public function setVpd($vpd)
@@ -124,5 +164,53 @@ class Project {
     function __toString()
     {
         return $this->getName();
+    }
+
+    /**
+     * @param string $vpd
+     */
+    public function setKnowledgeBaseServiceDesk($value)
+    {
+        $this->knowledgeBaseServiceDesk = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKnowledgeBaseServiceDesk()
+    {
+        return $this->knowledgeBaseServiceDesk;
+    }
+
+    /**
+     * @param string $vpd
+     */
+    public function setKnowledgeBaseAuthorizedAccess($value)
+    {
+        $this->knowledgeBaseAuthorizedAccess = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKnowledgeBaseAuthorizedAccess()
+    {
+        return $this->knowledgeBaseAuthorizedAccess;
+    }
+
+    /**
+     * @param string $vpd
+     */
+    public function setKnowledgeBaseUseProducts($value)
+    {
+        $this->knowledgeBaseUseProducts = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKnowledgeBaseUseProducts()
+    {
+        return $this->knowledgeBaseUseProducts;
     }
 }

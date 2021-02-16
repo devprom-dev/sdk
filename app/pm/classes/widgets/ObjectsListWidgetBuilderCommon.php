@@ -5,7 +5,7 @@ class ObjectsListWidgetBuilderCommon extends ObjectsListWidgetBuilder
 {
     function build( ObjectsListWidgetRegistry & $registry )
     {
-    	$registry->addReport('Request', 'issues-trace', translate('Пожелания'));
+    	$registry->addReport('Request', 'issues-trace', text(808));
     	$registry->addReport('Task', 'tasks-trace', translate('Задачи'));
         $registry->addModule('Feature', 'features-trace');
     }

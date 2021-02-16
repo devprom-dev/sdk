@@ -23,7 +23,7 @@
 		<form class="form-search" action="<?=$search_url?>">
 			<div class="input-append">
 				<? $content = htmlentities($view->render('core/PageMenuShort.php',array('areas' => $areas))); ?>
-				<input id="quick-search" name="search-keywords" type="text" class="search-query" placeholder="<?=text(2195)?>" object="Widget" searchattrs="Caption,ReferenceName" additional="" data-content="<?=$content?>">
+				<input id="quick-search" name="search" type="text" class="search-query" placeholder="<?=text(2195)?>" object="Widget" searchattrs="Caption,ReferenceName" additional="" data-content="<?=$content?>">
 				<button type="submit" class="btn medium-blue">
 					<i class="icon-search"></i>
 				</button>
@@ -42,7 +42,7 @@
 		<?php if ( $menu['url'] != '' ) { ?>
 		<a id="<?=$menu['id']?>" class="btn <?=$menu['button_class']?>" href="<?=$menu['url']?>" title="<?=$menu['description']?>">
 		<?php } else { ?>
-		<a id="<?=$menu['id']?>" class="btn dropdown-toggle <?=$menu['button_class']?>" data-toggle="dropdown" href="#" title="<?=$menu['description']?>">
+		<a id="<?=$menu['id']?>" class="btn dropdown-toggle <?=$menu['button_class']?>" data-toggle="dropdown" href="" title="<?=$menu['description']?>">
 		<?php } ?>
 			<?php if ( $menu['icon'] != '' ) { ?>
 				<i class="<?=$menu['icon']?>"></i>
@@ -67,7 +67,7 @@
 <?php } else { ?>
 
 <div class="btn-group last">
-  <a id="navbar-user-menu" class="dropdown-toggle" data-toggle="dropdown" href="#">
+  <a id="navbar-user-menu" class="dropdown-toggle" data-toggle="dropdown" href="">
 	<?=$menu['title']?>
   </a>
 	<?php

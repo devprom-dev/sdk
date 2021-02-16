@@ -18,6 +18,10 @@ class IntegrationTaskRunWebMethod extends WebMethod
  		return '/tasks/command.php?class=runjobs&job='.$job_it->getId().'&chunk='.$this->object_it->getId().'&redirect='.urlencode($_SERVER['REQUEST_URI']);
  	}
 
-	private $object_it = null;
+ 	function execute_request() {
+        echo '/tasks/';
+    }
+
+    private $object_it = null;
 }
 

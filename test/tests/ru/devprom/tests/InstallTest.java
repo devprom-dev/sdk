@@ -70,7 +70,7 @@ public class InstallTest extends TestBase {
 		
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
 				.presenceOfElementLocated(By
-						.xpath("//input[@placeholder='Имя пользователя']")));
+						.xpath("//table[contains(@id,'userlist')]")));
 		FILELOG.debug("Installing the license done");
 	}
 

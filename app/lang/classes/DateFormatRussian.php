@@ -22,12 +22,13 @@ class DateFormatRussian extends DateFormatBase
  		return '%d.%m.%Y';
  	}
 
- 	function getDateFormatShort( $date )
+ 	function getDateFormatShort( $time )
  	{
-		if ( strftime('%Y', $date) == date('Y') ) {
-			return 'j - '.$this->names_map[date('M', $date)];
+ 	    if ( defined('DATEFORMAT_SHORT') ) return DATEFORMAT_SHORT;
+		if ( strftime('%Y', $time) == date('Y') ) {
+			return 'j - '.$this->names_map[date('M', $time)];
 		} else {
-			return 'j - '.$this->names_map[date('M', $date)].' Y';
+			return 'j - '.$this->names_map[date('M', $time)].' Y';
 		}
  	}
  	

@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import ru.devprom.items.Project;
+import ru.devprom.pages.kanban.KanbanTasksPage;
 import ru.devprom.pages.project.requests.RequestsBoardPage;
 import ru.devprom.pages.project.tasks.TaskViewPage;
 
@@ -34,7 +35,7 @@ public class CrossProjectsTasksBoard extends SDLCPojectPageBase
 		super(driver, project);
 	}
 	
-	
+
 	   public CrossProjectsTasksBoard moveToAnotherProject(String taskNumericId, String projectName, int column){
 	    	int row=0;
 	    	
@@ -56,7 +57,7 @@ public class CrossProjectsTasksBoard extends SDLCPojectPageBase
 	           mouseMove(onElement);
 	          
 	           (new WebDriverWait(driver, waiting*2)).until(ExpectedConditions
-	   				.presenceOfElementLocated(By.xpath("//table[contains(@id,'taskboardlist')]//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]//div[@object='"+taskNumericId+"']"))); 
+	   				.presenceOfElementLocated(By.xpath("//table[contains(@id,'taskboardlist')]//tr[@class='row-cards']["+srow+"]//td[contains(@class,'board-column')]["+scolumn+"]//div[@object='"+taskNumericId+"']")));
 	      	 return new CrossProjectsTasksBoard(driver);
 	      }
 	      
@@ -82,19 +83,5 @@ public class CrossProjectsTasksBoard extends SDLCPojectPageBase
    public TaskViewPage clickToTask(String id){
 	   driver.findElement(By.xpath("//a[contains(@class,'with-tooltip') and text()='["+id+"]']")).click();
 	   return new TaskViewPage(driver);
-   }
-
-   public CrossProjectsTasksBoard setupGrouping(String parameter)
-   {
-	   	asterixBtn.click();
-	   	String code = "javascript: filterLocation.setup( 'group="+parameter+"', 0 ); ";
-		((JavascriptExecutor) driver).executeScript(code);
-		asterixBtn.click();
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	   	return new CrossProjectsTasksBoard(driver);
    }
 }

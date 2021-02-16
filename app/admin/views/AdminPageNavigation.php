@@ -83,7 +83,7 @@ class AdminPageNavigation extends PageNavigation
             array(
                 array (
                     'name' => text('guide.userdocs'),
-                    'url' => 'http://devprom.ru/docs/Руководство-администратора',
+                    'url' => \EnvironmentSettings::getHelpDocsUrl('4715.html'),
                     'target' => '_blank'
                 )
             ),

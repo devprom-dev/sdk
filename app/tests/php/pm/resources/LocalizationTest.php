@@ -3,12 +3,10 @@
 class LocalizationTest extends DevpromTestCase
 {
 	private $usage = array();
-	
 	private $resources = array();
-	
 	private $files = array();
-	
 	private $skip = array('procloud', 'ext', 'cache', 'images', 'scripts', 'styles', 'ckeditor', 'js', 'css');
+	private $skipExt = array('plantuml');
 	
     function setUp()
     {   
@@ -93,33 +91,11 @@ class LocalizationTest extends DevpromTestCase
 						$this->resources[$language] = array_merge($this->resources[$language], $keys);	
 					}
 				}
-				elseif ( false && $file == 'c_generated.php' )
-				{
-					global $generated_entities , $generated_attributes;
-					
-					foreach( $generated_entities as $key => $data )
-					{
-						if ( strpos($data['Caption'], 'text') !== false ) continue;
-							
-						$this->usage[] = trim($data['Caption']);
-						
-						$this->files[$path . $file][] = trim($data['Caption']);
-					}
-					
-					foreach( $generated_attributes as $key => $entity )
-					{
-						foreach( $entity as $key => $data )
-						{
-							if ( strpos($data['Caption'], 'text') !== false ) continue;
-							
-							$this->usage[] = trim($data['Caption']);
-							
-							$this->files[$path . $file][] = trim($data['Caption']);
-						}
-					}
-				}
 				elseif ( !in_array($file, array('procloud.php') ) )
 				{
+				    $pathinfo = pathinfo($file);
+				    if ( in_array($pathinfo['extension'], $this->skipExt) ) continue;
+
 					$content = file_get_contents($path . $file);
 					
 					$content = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $content); 

@@ -101,7 +101,9 @@ class ObjectUID
  	
  	function hasUid( $object_it ) 
  	{
- 		return ( $this->map[$this->getClassName($object_it)] != '' || $this->map[get_class($object_it->object)] != '' );
+ 		return $this->map[$this->getClassName($object_it)] != ''
+            || $this->map[get_class($object_it->object)] != ''
+            || get_class($object_it->object) == 'PMWikiPage';
  	}
  	
  	function hasUidObject( $object ) 
@@ -230,6 +232,7 @@ class ObjectUID
             );
         }
 
+        $object_it = $this->specifyIterator($object_it);
 		$this->setObject($object_it->object);
 		
 	    $uid = $this->getObjectUid($object_it);
@@ -242,19 +245,54 @@ class ObjectUID
             $url = $this->server_url.$self_project_name.'/'.$uid;
 		}
 
+        if ( $object_it->object instanceof MetaobjectStatable ) {
+            $stateIt = $object_it->getStateIt();
+            $completed = $stateIt->get('IsTerminal') == 'Y';
+            $state_name = $stateIt->get('Caption');
+        }
+        else {
+            $completed = false;
+            $state_name = $object_it->get('StateName');
+        }
+
 		$result = array(
-            'uid' => $object_it->object->getAttributeType('UID') != 'integer' && $object_it->get('UID') != '' ? $object_it->getHtmlDecoded('UID') : $uid,
+            'uid' => $object_it->get('IncludesUID') != ''
+                        ? $object_it->get('IncludesUID')
+                        : ($object_it->object->getAttributeType('UID') != 'integer' && $object_it->get('UID') != ''
+                                ? $object_it->getHtmlDecoded('UID')
+                                : $uid),
             'project' => $self_project_name,
-            'completed' => $object_it->get('StateTerminal') == 'Y',
-			'state_name' => $object_it->get('StateName'),
+            'completed' => $completed,
+			'state_name' => $state_name,
+            'class' => get_class($object_it->object),
             'url' => $url,
             'alien' => $self_project_name != '' && $object_it->get('VPD') != getSession()->getProjectIt()->get('VPD'),
 			'tooltip-url' => $self_project_name == ''
 				? '/tooltip/'.get_class($object_it->object).'/'.$object_it->getId() 
 				: '/pm/'.$self_project_name.'/tooltip/'.get_class($object_it->object).'/'.$object_it->getId()
 		);
-		if ( $caption ) {
-			$result['caption'] = $object_it->getDisplayName();
+
+        if ( $this->getBaseline() != '' ) {
+            $result['tooltip-url'] .= '?baseline='.$this->getBaseline();
+            $result['url'] .= strpos($result['url'], '?') > 0 ? '&baseline='.$this->getBaseline() : '?baseline='.$this->getBaseline();
+        }
+
+		if ( $caption && !$object_it->object instanceof Comment ) {
+			$result['caption'] = $object_it->getDisplayNameSearch();
+			$additional = array();
+			foreach( $object_it->object->getAttributesByGroup('display-name') as $attribute ) {
+			    if ( $object_it->get($attribute) == '' ) continue;
+			    if ( $object_it->object->IsReference($attribute) ) {
+                    $additional[] = $object_it->getRef($attribute)->getDisplayName();
+                }
+			    else {
+                    $additional[] = $object_it->get($attribute);
+                }
+            }
+			if ( count($additional) > 0 ) {
+			    $result['caption'] .= ' ('.join(',',$additional).')';
+            }
+            $result['native'] = $object_it->get('Caption');
 		}
 
 		return $result;
@@ -330,24 +368,17 @@ class ObjectUID
 
         if ( $info['completed'] ) $text = '<strike>'.$text.'</strike>';
 
-        if ( $this->getBaseline() != '' )
-        {
-        	$info['tooltip-url'] .= '?baseline='.$this->getBaseline();
-        	
-        	$info['url'] .= strpos($info['url'], '?') > 0 ? '&baseline='.$this->getBaseline() : '?baseline='.$this->getBaseline();
-        }
-
 		if ( $object_it->object instanceof TestCaseExecution ) {
-			$info['url'] .= strpos($info['url'], '?') > 0 ? '&case='.$object_it->getId() : '?case='.$object_it->getId();
+			$info['url'] = $object_it->getUidUrl();
 		}
 
         $html = '<a class="uid with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$info['tooltip-url'].'" href="'.$info['url'].'">'.$text.'</a>';
         
         if ( $object_it->object instanceof TestExecution || $object_it->object instanceof TestCaseExecution )
         {
-        	$class = strpos($object_it->get('ResultReferenceName'), 'failed') !== false
- 				? 'label-important' 
- 				: (strpos($object_it->get('ResultReferenceName'), 'hold') !== false ? 'label-warning' : 'label-success');
+        	$class = $object_it->get('ResultColor') != ''
+                ? '" style="background-color: '. array_shift(\TextUtils::parseItems($object_it->get('ResultColor')))
+                : 'label-success';
         	$html = '<span class="label label-uid '.$class.'">'.$html.'</span>';
         }
 
@@ -381,9 +412,23 @@ class ObjectUID
  	{
 		if ( !is_object($object_it) ) return '';
 		if ( $object_it->getId() == '' ) return '';
+		$object_it = $this->specifyIterator($object_it);
  		$text = $this->getUidIcon( $object_it, $need_project );
- 		$caption = $object_it->getDisplayNameExt();
-	    $text .= $caption;
+ 		if ( $object_it->object instanceof Comment ) return $text;
+ 		$text .= ' ' . $object_it->getDisplayNameExt();
         return $text;
  	}
+
+    function specifyIterator( $iterator )
+    {
+        if ( get_class($iterator->object) == 'PMWikiPage' ) {
+            $className = getFactory()->getObject('WikiType')->getExact($iterator->get('ReferenceName'))->get('ClassName');
+            if ( class_exists($className) ) {
+                return getFactory()->getObject($className)->createCachedIterator(array(
+                    $iterator->getData()
+                ));
+            }
+        }
+        return $iterator;
+    }
 }

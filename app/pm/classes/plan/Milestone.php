@@ -2,6 +2,7 @@
 include "MilestoneIterator.php";
 include "predicates/MilestoneYearPredicate.php";
 include "predicates/MilestoneActualPredicate.php";
+include "predicates/MilestoneTimelinePredicate.php";
 
 class Milestone extends Metaobject
 {

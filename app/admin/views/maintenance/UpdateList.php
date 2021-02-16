@@ -35,13 +35,13 @@ class UpdateList extends PageList
 
 	    return $it->object->createCachedIterator($rowset);
 	}
-		
-	function getColumns()
-	{
-		$this->object->setAttributeCaption('RecordCreated', translate('Дата установки'));
-		
-		return parent::getColumns();
-	}
+
+	function extendModel()
+    {
+        $this->getObject()->setAttributeCaption('RecordCreated', translate('Дата установки'));
+        $this->getObject()->setAttributeVisible('RecordCreated', true);
+        parent::extendModel();
+    }
 
 	function drawCell( $object_it, $attr )
 	{

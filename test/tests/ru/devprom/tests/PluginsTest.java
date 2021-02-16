@@ -36,12 +36,14 @@ public class PluginsTest extends AdminTestBase
 	{
 		PageBase page = new PageBase(driver);
 		SDLCPojectPageBase project = (SDLCPojectPageBase) page.gotoProject(testProject);
+		project.gotoCodeArea();
 		Assert.assertTrue(project.isElementPresent(By.xpath("//a[@uid='operations-builds']")));
 		
 		PluginsPage pp = project.goToAdminTools().gotoPlugins();
 		pp = pp.disablePlugin("operations.php");
 		
 		project = (SDLCPojectPageBase) pp.gotoProject(testProject);
+		project.gotoCodeArea();
 		Assert.assertFalse(project.isElementPresent(By.xpath("//a[@uid='operations-builds']")));
 	}
 	
@@ -51,12 +53,14 @@ public class PluginsTest extends AdminTestBase
 	{
 		PageBase page = new PageBase(driver);
 		SDLCPojectPageBase project = (SDLCPojectPageBase) page.gotoProject(testProject);
+		project.gotoCodeArea();
 		Assert.assertFalse(project.isElementPresent(By.xpath("//a[@uid='operations-builds']")));
 		
 		PluginsPage pp = project.goToAdminTools().gotoPlugins();
 		pp = pp.enablePlugin("operations.php");
 		
 		project = (SDLCPojectPageBase) pp.gotoProject(testProject);
+		project.gotoCodeArea();
 		Assert.assertTrue(project.isElementPresent(By.xpath("//a[@uid='operations-builds']")));
 	}
 }

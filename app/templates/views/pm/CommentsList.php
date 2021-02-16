@@ -1,8 +1,8 @@
 <a name="comments"></a>
 
-<div id="commentsthread<?=$control_uid?>" url="<?=$url?>">
+<div id="commentsthread<?=$control_uid?>" url="<?=$url?>" >
 
-	<div style="display:table-cell;padding-right:30px;" class="comments-thread">
+	<div style="display:table-cell;padding-right:30px;width:75%" class="comments-thread pull-left">
 		<?php if (!$form_ready ) { ?>
 
 		<?php if ( $sort == "asc" ) $list->renderThread( $view ); ?>
@@ -10,17 +10,18 @@
 		<div class="hidden-print" id="comments-form<?=$control_uid?>" style="min-height: 48px;" modified="<?=time()?>">
 			<div class="comment">
 
-                <? if ( $form->IsAttributeModifable('Caption') ) { ?>
-				<a tabindex="5" class="btn btn-sm btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
-					<i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
-				</a>
+                <? if ( $form->IsAttributeModifiable('Caption') ) { ?>
+                    <? if ( $public_comment ) { ?>
+                        <a tabindex="5" class="btn btn-sm btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
+                            <i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
+                        </a>
+                    <? } ?>
+                    <? if ( $private_comment ) { ?>
+                        &nbsp; <a tabindex="5" class="btn btn-sm btn-secondary" type="button" title="" onclick="showCommentForm('<?=$url . '&IsPrivate=Y'?>',$('#comments-form<?=$control_uid?>'), '', '');">
+                            <i class="icon-comment icon-white"></i> <?=text(2804)?>
+                        </a>
+                    <? } ?>
                 <? } ?>
-
-				<? if ( $collapseable ) { ?>
-				<a tabindex="6" class="btn btn-sm btn-link" title="" onclick="toggleDocumentPageComments($('#comments-form<?=$control_uid?>'));">
-					<?=text(2231)?>
-				</a>
-				<? } ?>
 
 				<div class="clear-fix">&nbsp;</div>
 			</div>
@@ -36,32 +37,21 @@
 		<?php } ?>
 	</div>
 
-	<? if ( $comments_count > 0 ) { if ( !$object_it->object instanceof WikiPage ) { ?>
-	<div style="display:table-cell;vertical-align: top;width:15%;">
-		<div class="sort-btn-desc" style="display:<?=($sort=='asc'?'block':'none')?>;">
-			<a class="dashed" href="javascript:sortComments('-1')"><?=text(2320)?></a>
-		</div>
-		<div class="sort-btn-asc" style="display:<?=($sort=='desc'?'block':'none')?>;">
-			<a class="dashed" href="javascript:sortComments('1')"><?=text(2321)?></a>
-		</div>
+	<? if ( $comments_count > 0 ) { ?>
+	<div style="vertical-align: top;position:absolute;right:0;">
+        <div class="comments-toolbar">
+            <?php foreach( $options as $optionKey => $optionName ) { ?>
+                <label class="checkbox">
+                    <input name="<?=$optionKey?>" onclick="javascript: filterComments();" class="comments-filter" type="checkbox" <?=(in_array($optionKey, $optionsDefault) ? 'checked' : '')?> > <?=$optionName?>
+                </label>
+            <?php } ?>
+            <div class="comments-toolbar-btn"></div>
+        </div>
 	</div>
-	<? }} ?>
+	<? } ?>
 </div>
 
 <script type="text/javascript">
-	$(function()
-	{
-		var locstr = String(window.location);
-		if ( locstr.indexOf('#comment') > 0 )
-		{
-			var commentString = locstr.substring(locstr.indexOf('#comment'));
-			var parts = commentString.split('#');
-			if ( parts.length > 0 ) {
-				$('#'+parts[1]).addClass('active');
-			}
-		}
-	});
-
 	var lastForm = $('#comments-form<?=$control_uid?>');
 	var lastFormContent = $(lastForm).html();
 

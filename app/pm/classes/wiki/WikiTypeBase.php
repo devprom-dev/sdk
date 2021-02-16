@@ -8,6 +8,7 @@ class WikiTypeBase extends Metaobject
  	function __construct() 
  	{
  		parent::__construct('WikiPageType', new WikiTypeBaseRegistry($this));
+        $this->setAttributeType('DefaultPageTemplate', 'REF_TextTemplateId');
 		$this->addAttributeGroup('PageReferenceName', 'system');
         $this->addAttributeGroup('ReferenceName', 'alternative-key');
         $this->setSortDefault(

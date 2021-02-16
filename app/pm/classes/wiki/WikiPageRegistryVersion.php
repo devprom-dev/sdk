@@ -15,13 +15,11 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
         );
     }
 
-    public function setDocumentIt($document_it)
-	{
-		$this->document_it = $document_it->copy();
-	}
-	
-	public function setSnapshotIt($snapshot_it)
-	{
+    public function setDocumentIt($documentIt) {
+        $this->document_it = $documentIt;
+    }
+
+	public function setSnapshotIt($snapshot_it) {
 		$this->snapshot_it = $snapshot_it->copy();
 	}
 
@@ -31,18 +29,22 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
 
 	function getQueryClause()
 	{
-		$versioned = new VersionedObject();
-		$versionedIt = $versioned->getExact(get_class($this->getObject()));
- 		$real_attributes = $versionedIt->get('Attributes');
 	    $attributes = array();
 	    $stub_attributes = array();
+        $versioned = new VersionedObject();
+        $versionedIt = $versioned->getExact(get_class($this->getObject()));
+        $real_attributes = $versionedIt->get('Attributes');
+        $syntethicAttributes = array('Caption','Content');
 
 	    foreach( $this->getObject()->getAttributes() as $attribute => $data )
 	    {
+            if ( !$this->getObject()->IsAttributeStored($attribute) ) {
+                $syntethicAttributes[] = $attribute;
+                continue;
+            }
 	    	if ( in_array($attribute, $real_attributes) ) continue;
-			if ( in_array($attribute, array('UID', 'DocumentId')) ) continue;
-	        if ( $attribute != 'DocumentVersion' && !$this->getObject()->IsAttributeStored($attribute) ) continue;
-	        
+			if ( in_array($attribute, array('UID', 'DocumentId', 'DocumentVersion')) ) continue;
+
 	        $attributes[] = $attribute;
             $stub_attributes[] = "NULL as ".$attribute;
 	    }
@@ -59,7 +61,7 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
 
         $persister = new SnapshotItemValuePersister($this->snapshot_it->getId());
         $persister->setObject( $this->getObject() );
-        $columns = $persister->getSelectColumns( "t" );
+        $columns = $persister->getSelectColumns( "p" );
         $real_attributes = array_merge(
             array_map(
                 function($value) {
@@ -68,12 +70,13 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
                 $attributes
             ),
             array_map(
-                function($value) {
-                    return in_array($value, array('Caption','Content')) ? ' NULL as '.$value : 't.'.$value;
+                function($value) use($syntethicAttributes) {
+                    return in_array($value, $syntethicAttributes) ? ' NULL as '.$value : 't.'.$value;
                 },
                 $real_attributes
             )
         );
+
         $attributes = array_merge(
             array_map(
                 function($value) {
@@ -83,25 +86,26 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
             ), $columns);
         $stub_attributes = array_merge( $stub_attributes, $columns);
 
-	    return " (SELECT t.WikiPageId, t.UID, t.DocumentId, t.VPD, t.RecordVersion, ".join(",",$attributes).
-	    	   "	FROM WikiPage t ".
-	    	   "   WHERE t.DocumentId = ".$this->document_it->getId().$sqlPredicate.
-               "     AND EXISTS (SELECT 1 FROM cms_SnapshotItem i WHERE i.ObjectId = t.WikiPageId AND i.ObjectClass = '".$versionedIt->getId()."')".
+	    return " (SELECT t.WikiPageId, t.UID, t.DocumentId, t.DocumentVersion, t.VPD, t.RecordVersion, ".join(",",$attributes).
+	    	   "	FROM WikiPage t, cms_SnapshotItem i, WikiPage p ".
+	    	   "   WHERE t.DocumentId = " . $this->document_it->getId() . $sqlPredicate .
+               "     AND i.Snapshot = ".$this->snapshot_it->getId()." AND i.ObjectId = p.WikiPageId AND p.UID = t.UID ".
 	    	   "   UNION ".
             ($this->comparisonMode ?
-               "  SELECT t.WikiPageId, t.UID, t.DocumentId, t.VPD, t.RecordVersion, ".join(",",$real_attributes).
+               "  SELECT t.WikiPageId, t.UID, t.DocumentId, t.DocumentVersion, t.VPD, t.RecordVersion, ".join(",",$real_attributes).
 	    	   "	FROM WikiPage t ".
-	    	   "   WHERE t.DocumentId = ".$this->document_it->getId().$sqlPredicate.
-               "     AND NOT EXISTS (SELECT 1 FROM cms_SnapshotItem i WHERE i.ObjectId = t.WikiPageId AND i.ObjectClass = '".$versionedIt->getId()."')".
+	    	   "   WHERE t.DocumentId = " . $this->document_it->getId() . $sqlPredicate .
+               "     AND NOT EXISTS (SELECT 1 FROM cms_SnapshotItem i, WikiPage p ".
+               "                      WHERE i.Snapshot = ".$this->snapshot_it->getId()." AND i.ObjectId = p.WikiPageId AND p.UID = t.UID)".
 	    	   "   UNION " : "").
-	    	   "  SELECT t.WikiPageId, (SELECT p.UID FROM WikiPage p WHERE p.WikiPageId = t.WikiPageId AND p.DocumentId = ".$this->document_it->getId()."), ".$this->document_it->getId().", ".
-		       "		 t.VPD, NULL, ".join(",",$stub_attributes).
-	    	   "	FROM (SELECT t.ObjectId WikiPageId, t.VPD FROM cms_SnapshotItem t WHERE t.Snapshot = ".$this->snapshot_it->getId().") t ".
-	    	   "   WHERE NOT EXISTS (SELECT 1 FROM WikiPage p ".
-	    	   "					  WHERE p.DocumentId = ".$this->document_it->getId()." AND p.WikiPageId = t.WikiPageId) ".
+	    	   "  SELECT p.WikiPageId, (SELECT t.UID FROM WikiPage t WHERE p.WikiPageId = t.WikiPageId), ".$this->document_it->getId().", '".$this->document_it->get('DocumentVersion')."', ".
+		       "		 p.VPD, NULL, ".join(",",$stub_attributes).
+	    	   "	FROM (SELECT t.ObjectId WikiPageId, t.VPD FROM cms_SnapshotItem t WHERE t.Snapshot = ".$this->snapshot_it->getId().") p ".
+	    	   "   WHERE NOT EXISTS (SELECT 1 FROM WikiPage p1, WikiPage p2 ".
+               "					  WHERE p1.DocumentId = ".$this->document_it->getId()." AND p1.UID = p2.UID AND p2.WikiPageId = p.WikiPageId) ".
 	    	   "  ) ";
 	}
 	
 	private $snapshot_it;
-	private $document_it;
+    private $document_it;
 }

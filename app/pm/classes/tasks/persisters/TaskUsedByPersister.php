@@ -2,8 +2,7 @@
 
 class TaskUsedByPersister extends ObjectSQLPersister
 {
-	function getAttributes()
-	{
+	function getAttributes() {
 		return array('ProjectPage');
 	}
 
@@ -13,7 +12,8 @@ class TaskUsedByPersister extends ObjectSQLPersister
 			" (SELECT GROUP_CONCAT(CAST(ub.WikiPageId AS CHAR)) 
 			     FROM WikiPage ub 
 			    WHERE ub.ReferenceName = ".WikiTypeRegistry::KnowledgeBase."
-			      AND ub.Dependency LIKE CONCAT('%".$this->getObject()->getEntityRefName().":',".$this->getPK($alias).",'%')) ProjectPage "
+			      AND ub.Dependency IS NOT NULL
+			      AND LOCATE(CONCAT('".$this->getObject()->getEntityRefName().":',".$this->getPK($alias)."),ub.Dependency)) ProjectPage "
 		);
  	}
 }

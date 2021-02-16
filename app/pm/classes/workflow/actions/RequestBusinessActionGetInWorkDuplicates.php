@@ -1,62 +1,25 @@
 <?php
+include_once "RequestBusinessActionChangeStateBase.php";
 
-use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
-include_once "BusinessActionWorkflow.php";
-
-class RequestBusinessActionGetInWorkDuplicates extends BusinessActionWorkflow
+class RequestBusinessActionGetInWorkDuplicates extends RequestBusinessActionChangeStateBase
 {
- 	function getId()
- 	{
+ 	function getId() {
  		return 'fa52bf30-6cb0-4bcf-92a4-d3ff4f365ee9';
  	}
-	
-	function apply( $object_it )
- 	{
- 	    $request_it = $object_it->object->getRegistry()->Query(
-				array (
- 	    				new RequestDuplicatesOfFilter($object_it->getId())
-				)
-		);
 
- 	    while( !$request_it->end() )
- 	    {
- 	        $request = new Request();
- 	        
- 	        $duplicate_it = $request->getRegistry()->Query( 
- 	        		array(new FilterInPredicate($request_it->getId())) 
- 	            )->getSpecifiedIt();
- 	        
- 	        $state_it = getFactory()->getObject($duplicate_it->object->getStateClassName())->getRegistry()->Query(
-                array(
-                    new FilterHasNoAttributePredicate('IsTerminal', 'Y'),
-                    new FilterVpdPredicate($duplicate_it->get('VPD'))
-                )
- 	        );
+ 	function getFilters($object_it) {
+        return array (
+            new RequestDuplicatesOfFilter($object_it->getId())
+        );
+    }
 
- 	        // move to the second state
- 	        $state_it->moveNext();
- 	        
- 	        if ( $state_it->getId() > 0 ) {
-				$service = new WorkflowService($request);
-				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'));
- 	        }
- 	        else {
- 	        	throw new Exception('There is no initial state for the issue "'.$duplicate_it->getId().'"');
- 	        }
- 	    
- 	        $request_it->moveNext();
- 	    }
- 	    
- 		return true;
- 	}
+    function getStateFilters( $object_it ) {
+        return array(
+            new FilterAttributePredicate('IsTerminal', 'I'),
+        );
+    }
 
- 	function getObject()
- 	{
- 		return getFactory()->getObject('pm_ChangeRequest');
- 	}
- 	
- 	function getDisplayName()
- 	{
+ 	function getDisplayName() {
  		return text(1879);
  	}
 }

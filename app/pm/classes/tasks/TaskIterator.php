@@ -13,14 +13,25 @@ class TaskIterator extends StatableIterator
         if ( $this->get('TaskAssigneePhotoTitle') != '' ) {
             $title .= ' ['.$this->get('TaskAssigneePhotoTitle').']';
         }
+
+        $stateIt = $this->getStateIt();
+        if ( $stateIt->get('Caption') != '' ) {
+            $title .= ' ('.$stateIt->get('Caption').')';
+        }
+
         return $title;
     }
 
     function getDisplayNameExt($prefix = '')
     {
-        if ( $this->get('PlannedFinishDate') != '' && $this->get('DueWeeks') < 4 ) {
+        $priorityColor = parent::get('PriorityColor');
+        if ( $priorityColor != '' ) {
+            $prefix .= '<span class="pri-cir" style="color:'.$priorityColor.'">&#x25cf;</span>';
+        }
+
+        if ( $this->get('PlannedFinishDate') != '' && $this->get('DueWeeks') > -3 && $this->get('DueWeeks') < 4 ) {
             $prefix .= '<span class="label '.($this->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'" title="'.$this->object->getAttributeUserName('PlannedFinishDate').'">';
-            $prefix .= $this->getDateFormatShort('PlannedFinishDate');
+            $prefix .= $this->getDateFormattedShort('PlannedFinishDate');
             $prefix .= '</span> ';
         }
 
@@ -29,6 +40,15 @@ class TaskIterator extends StatableIterator
                 return ' <span class="label label-info label-tag">'.$value.'</span> ';
             }, preg_split('/,/', $this->get('TagNames')));
             $prefix = join('',$tags) . $prefix;
+        }
+
+        $displayAttributes = array();
+        foreach( $this->object->getAttributesByGroup('display-name') as $attribute ) {
+            if ( $this->get($attribute) == '' ) continue;
+            $displayAttributes[] = '['.$this->get($attribute).']';
+        }
+        if ( count($displayAttributes) > 0 ) {
+            $prefix = $prefix . join(' ', $displayAttributes) . ' ';
         }
 
         return parent::getDisplayNameExt($prefix);
@@ -66,34 +86,20 @@ class TaskIterator extends StatableIterator
 	}
 	
 	function IsFinished() {
-		return $this->get('StateTerminal') == 'Y';
+		return $this->get('FinishDate') != '';
 	}
 	
 	function IsBlocked()
 	{
-		global $model_factory;
-		
-		$trace = $model_factory->getObject('TaskTraceTask');
+		$trace = getFactory()->getObject('TaskTraceTask');
 		$task_it = $trace->getObjectIt( $this );
 
-		while ( !$task_it->end() )
-		{
-			if ( !$task_it->IsFinished() )
-			{
-				return true;
-			}
+		while ( !$task_it->end() ) {
+			if ( !$task_it->IsFinished() ) return true;
 			$task_it->moveNext();
 		}
 		
 		return false;
-	}
-	
-	function getPrecedingIt()
-	{
-		global $model_factory;
-		
-		$trace = $model_factory->getObject('TaskTraceTask');
-		return $trace->getObjectIt( $this );
 	}
 	
   	function getProgress()
@@ -103,10 +109,7 @@ class TaskIterator extends StatableIterator
  	
  	function getStatesArray()
 	{
-		global $model_factory;
-		
 		$tasks = array();
- 		$has_tasks = false;
  		$tasks_total = $tasks;
  		$tasks_resolved = $tasks;
  		$phases = $tasks;
@@ -131,8 +134,6 @@ class TaskIterator extends StatableIterator
 	 		$tasks_total[$this->get('TaskType')] += $items;
 				
 			$phases[$this->get('TaskType')] = translate($this->get('TaskTypeShortName'));
-			
-			$has_tasks = true;
 			
  			$this->moveNext();
  		}

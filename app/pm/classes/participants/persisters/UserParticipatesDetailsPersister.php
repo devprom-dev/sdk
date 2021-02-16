@@ -28,8 +28,16 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
 			" 	WHERE r.Participant = t.pm_ParticipantId ".
 			"     AND t.Project = ".$project_it->getId().
 			"     AND t.SystemUser = ".$this->getPK($alias).") ProjectRole ";
- 			
- 		$linked_ids = join(',', 
+
+        $columns[] =
+            "( SELECT GROUP_CONCAT(DISTINCT CAST(pr.ProjectRoleBase AS CHAR))" .
+            "  	 FROM pm_ParticipantRole r, pm_Participant t, pm_ProjectRole pr " .
+            " 	WHERE r.Participant = t.pm_ParticipantId ".
+            "     AND t.VPD = r.VPD " .
+            "     AND r.ProjectRole = pr.pm_ProjectRoleId " .
+            "     AND t.SystemUser = ".$this->getPK($alias).") ProjectRoleBase ";
+
+ 		$linked_ids = join(',',
  				array_filter(
  						array_merge(
 			 				preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject')),

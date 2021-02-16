@@ -1,5 +1,4 @@
 <?php
-
 include_once "ModelDataTypeMappingDate.php";
 include_once "ModelDataTypeMappingDateTime.php";
 include_once "ModelDataTypeMappingNull.php";
@@ -8,6 +7,7 @@ include_once "ModelDataTypeMappingInteger.php";
 include_once "ModelDataTypeMappingFloat.php";
 include_once "ModelDataTypeMappingReference.php";
 include_once "ModelDataTypeMappingString.php";
+include_once "ModelDataTypeMappingWYSIWYG.php";
 include_once "ModelDataTypeMappingPassword.php";
 include_once "ModelDataTypeMappingFile.php";
 include_once "ModelDataTypeMappingPositives.php";
@@ -19,13 +19,14 @@ class ModelDataTypeMapper
 	public function __construct()
 	{
 		$this->mappers = array (
+            new ModelDataTypeMappingReference(),
             new ModelDataTypeMappingDate(),
             new ModelDataTypeMappingDateTime(),
             new ModelDataTypeMappingBoolean(),
             new ModelDataTypeMappingInteger(),
             new ModelDataTypeMappingFloat(),
-            new ModelDataTypeMappingReference(),
             new ModelDataTypeMappingString(),
+            new ModelDataTypeMappingWYSIWYG(),
             new ModelDataTypeMappingPassword(),
             new ModelDataTypeMappingFile()
 		);
@@ -34,10 +35,15 @@ class ModelDataTypeMapper
 	public function map( Metaobject $object, & $values )
 	{
 		$skip_attributes = $object->getAttributesByGroup('skip-mapper');
+		$multiple_attributes = $object->getAttributesByGroup('multiselect');
+
+        foreach ( $object->getPersisters() as $persister ) {
+            $persister->map($values);
+        }
 
 		foreach( $object->getAttributes() as $attribute => $attribute_data )
 		{
-			if ( !array_key_exists($attribute, $values) ) continue;
+			if ( !array_key_exists($attribute, $values) && !in_array($attribute, $multiple_attributes) ) continue;
 			if ( in_array($attribute, $skip_attributes) ) continue;
 
 			$mapped_value = $this->getMapper($object->getAttributeType($attribute))->mapInstance($attribute, $values);

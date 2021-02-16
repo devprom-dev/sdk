@@ -8,7 +8,7 @@ class ProjectDashboardSettingBuilder extends PageSettingBuilder
         $setting = new PageListSetting('ProjectDashboardList');
         $setting->setVisibleColumns( array(
             'UID', 'Caption', 'Description', 'Importance', 'StartDate', 'FinishDate',
-            'Features', 'Deadlines', 'SpentHoursWeek', 'Progress'
+            'Features', 'Deadlines', 'SpentHoursWeek', 'Progress', 'RecentBuild'
         ) );
         $settings->add( $setting );
     }

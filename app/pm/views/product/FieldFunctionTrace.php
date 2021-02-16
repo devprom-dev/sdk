@@ -34,23 +34,22 @@ class FieldFunctionTrace extends FieldForm
  	
  	function getForm( & $trace )
 	{
-		return new ObjectTraceFormEmbedded( $trace, 'Feature', $this->getName() );
+	    $form = new ObjectTraceFormEmbedded($trace, 'Feature', $this->getName());
+        $form->setTraceObject(getFactory()->getObject($this->trace->getObjectClass()));
+		return $form;
 	}
 	
- 	function render( $view )
-	{
+ 	function render( $view ) {
 	    $this->drawBody( $view );    
 	}
 	
 	function drawBody( $view = null )
 	{
 		$this->setFilters( $this->trace );
-		
+        $this->trace->disableVPD();
+
  		$form = $this->getForm( $this->trace );
  		
- 		$form->setTraceObject( getFactory()->getObject(
- 			$this->trace->getObjectClass()) );
- 			
 		$object_it = $this->getObjectIt();
  		if ( is_object($object_it) ) {
  			if ( !$this->getEditMode() ) {

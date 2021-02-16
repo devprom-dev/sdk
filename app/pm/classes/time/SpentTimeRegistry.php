@@ -29,31 +29,27 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		}
 
  		$group_function = "TO_DAYS(%1)";
-        $group = preg_replace(
-            '/%1/',
-            "CONVERT_TZ(t2.ReportDate, '".EnvironmentSettings::getUTCOffset().":00', '".EnvironmentSettings::getClientTimeZoneUTC()."')",
-            $group_function
-        );
+        $group = preg_replace( '/%1/',"t2.ReportDate", $group_function);
 
- 		switch( $this->getObject()->getView() )
-		{
-			case 'issues':
-				$row_field = 'ChangeRequest';
-				$row_object = getFactory()->getObject('Request');
-				break;
-			case 'participants':
-				$row_field = 'SystemUser';
-				$row_object = getFactory()->getObject('User');
-				break;
-			case 'projects':
-				$row_field = 'Project';
-				$row_object = getFactory()->getObject('Project');
-				break;
-			default:
-				$row_field = 'Task';
-				$row_object = getFactory()->getObject('Task');
-				break;
-		}
+        $row_field = 'ChangeRequest';
+        $row_object = $this->getObject()->getRowsObject();
+        if ( is_object($row_object) ) {
+            switch( $row_object->getEntityRefName() )
+            {
+                case 'pm_Task':
+                    $row_field = 'Task';
+                    break;
+                case 'cms_User':
+                    $row_field = 'SystemUser';
+                    break;
+                case 'pm_Project':
+                    $row_field = 'Project';
+                    break;
+            }
+        }
+        else {
+            $row_object = getFactory()->getObject('Request');
+        }
 
 		if ( !getFactory()->getAccessPolicy()->can_read($row_object) ) {
             $row_field = 'Project';
@@ -65,14 +61,14 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 			   "        ".$group." Day, ".
 		       "		t2.* " .
 			   "   FROM (SELECT t.ChangeRequest, (SELECT r.Caption FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) RequestCaption, ".
-               "                t.Caption TaskCaption, a.Task, a.Capacity, a.ReportDate, a.Description, " .
+               "                t.Caption TaskCaption, a.Task, a.Capacity, a.ReportDate, a.Description, a.Issue, " .
 			   "				a.VPD, a.Participant ".$userField.", ".($userField != 'SystemUser' ? "a.Participant SystemUser," : "").
-			   " 				(SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project" .
+			   " 				(SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project, t.State" .
 			   "		   FROM pm_Activity a, pm_Task t ".
 			   "  	      WHERE a.Task = t.pm_TaskId AND DATE(a.ReportDate) BETWEEN ".$startDate." AND ".$finishDate." ".
                $this->getObject()->getVpdPredicate('t').
 			   "        ) t2, ".
-			   "		".$registry->getQueryClause()." t " .
+			   "		(SELECT t.* FROM ".$registry->getQueryClause()." t WHERE 1 = 1 ".$row_object->getFilterPredicate('t').") t " .
 			   "  WHERE 1 = 1 ".$this->getFilterPredicate('t2').
 			   "	AND t2.".$row_field." = t.".$row_object->getIdAttribute();
 
@@ -148,7 +144,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
         while( !$it->end() ) {
             $map[$it->get('DayId')] =
                 $it->get('DayName') == 1 || count($map) < 1 || count($map) == $it->count() - 1
-                    ? getSession()->getLanguage()->getDateFormattedShort($it->get('StartDateOnly'))
+                    ? $it->getDateFormattedShort('StartDateOnly')
                     : $it->get('DayName');
             $it->moveNext();
         }

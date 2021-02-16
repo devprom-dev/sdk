@@ -1,11 +1,6 @@
 package ru.devprom.pages.project;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.NotFoundException;
-import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -110,7 +105,7 @@ public ProjectPageBase gotoCustomReport(String headMenu, String leftMenuId, Stri
 		catch( NotFoundException ex ) {
 		}
     }
-    
+
     public ProjectPageBase gotoSettingsPage() {
     	settingsLink.click();
     	return this;
@@ -118,5 +113,9 @@ public ProjectPageBase gotoCustomReport(String headMenu, String leftMenuId, Stri
 
 	public boolean isSettingAccessible (String uid) {
 		return !driver.findElements(By.xpath("//a[@uid='"+uid+"']")).isEmpty();
+	}
+
+	public String getPageTitle() {
+		return driver.findElement(By.xpath("//li[contains(@class,'page-title')]//*[contains(@class,'title')]")).getText();
 	}
 }

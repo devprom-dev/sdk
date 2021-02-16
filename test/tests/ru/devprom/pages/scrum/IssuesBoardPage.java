@@ -65,8 +65,8 @@ public class IssuesBoardPage extends ScrumPageBase {
     	FILELOG.debug("Created Issue: " + issue.getId());
 		return new IssuesBoardPage(driver);
 	}
-	
 	public boolean isIssuePresent(String numericId) {
 		return !driver.findElements(By.xpath("//div[@object='"+numericId+"']")).isEmpty();
 	}
+
 }

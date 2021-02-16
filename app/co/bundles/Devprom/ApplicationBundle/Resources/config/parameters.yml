@@ -4,3 +4,4 @@ parameters:
     mailer_port: 25
     mailer_user: ''
     mailer_password: ''
+    mailer_auth_mode: null

@@ -72,23 +72,23 @@ public class TestScenarioNewPage extends SDLCPojectPageBase {
     public void createNewScenarioWithTemplate(TestScenario testScenario)
 	{
 		clickMainTab();
+		captionEdit.sendKeys(testScenario.getName());
 		if(testScenario.getTemplate() != null) {
 			CKEditor editor = new CKEditor(driver);
 			editor.typeTemplate(testScenario.getTemplate());
 		}
-		captionEdit.sendKeys(testScenario.getName());
 		submitDialog(submitBtn);
+		sleep(Configuration.getPersistTimeout());
 	}
         
     public void createNewScenario(TestScenario testScenario)
 	{
 		clickMainTab();
+		captionEdit.sendKeys(testScenario.getName());
 		if(testScenario.getContent() != null) {
 			CKEditor editor = new CKEditor(driver);
 			editor.typeText(testScenario.getContent());
 		}
-		captionEdit.sendKeys(testScenario.getName());
-		
 		setParentPage(testScenario);
 		submitDialog(submitBtn);
 	}

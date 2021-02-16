@@ -257,11 +257,9 @@ class PluginsFactory
  	{
  		$module = $this->getModule( $namespace, $section, $name );
  		
-		if ( is_array($module) )
-		{
-		 	foreach ( $module['includes'] as $include )
-		 	{
-		 		include ( SERVER_ROOT_PATH.'plugins/'.$include );
+		if ( is_array($module) ) {
+		 	foreach ( $module['includes'] as $include ) {
+		 		include_once SERVER_ROOT_PATH.'plugins/'.$include;
 		 	}
 		}
 		
@@ -277,7 +275,7 @@ class PluginsFactory
 
 			$command = $plugin->getCommand( $name );
 			foreach ( $command['includes'] as $include ) {
-				include ( SERVER_ROOT_PATH.'plugins/'.$include );
+				include_once SERVER_ROOT_PATH.'plugins/'.$include;
 			}
 
 			if ( class_exists($name, false) ) {
@@ -339,8 +337,6 @@ class PluginsFactory
 
  	function getHeaderTabs( $section )
  	{
- 		global $project_it;
- 		
  		$tabs = array();
  		
  		foreach ( $this->plugins as $namespace )
@@ -350,7 +346,7 @@ class PluginsFactory
 	 			switch ( $section )
 	 			{
 	 				case 'pm':
-	 					$base_url = '/pm/'.$project_it->get('CodeName').'/module/'.$plugin->getNamespace().'/';
+	 					$base_url = '/pm/'.getSession()->getProjectIt()->get('CodeName').'/module/'.$plugin->getNamespace().'/';
 	 					break;
 	 					
 	 				default:
@@ -574,6 +570,7 @@ class PluginsFactory
 		    	$path = SERVER_ROOT_PATH.'plugins/'.$file;
 		    	if ( in_array($file, array(".","..","plugins.php","_factory.php","_methods.php")) || is_dir($path) ) continue;
 		    	if ( file_exists(SERVER_ROOT_PATH.'plugins/blocked/'.$file) ) continue;
+		    	if ( pathinfo($file, PATHINFO_EXTENSION) != 'php' ) continue;
 		    	$files[] = $file;
 		    }
 	    	closedir($handle);

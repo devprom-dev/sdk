@@ -6,8 +6,7 @@ class SearchableObjectsCommonBuilder extends SearchableObjectsBuilder
     public function build ( SearchableObjectRegistry $set )
     {
  		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
- 		$project_it = getSession()->getProjectIt();
- 		
+
  		$set->add( 'Request', array('Caption', 'Description'), 'allissues' );
 
  		if ( $methodology_it->HasTasks() ) {

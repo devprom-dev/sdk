@@ -7,7 +7,8 @@ class ProjectDashboardPersister extends ObjectSQLPersister
         return array(
             'Features',
             'SpentHours',
-            'SpentHoursWeek'
+            'SpentHoursWeek',
+            'Progress'
         );
     }
 

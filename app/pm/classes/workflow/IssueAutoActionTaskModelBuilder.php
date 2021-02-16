@@ -24,8 +24,11 @@ class IssueAutoActionTaskModelBuilder extends ObjectModelBuilder
         );
 
     	foreach( $attributes as $attribute ) {
+            $groups = $task->getAttributeGroups($attribute);
             if ( !$task->IsAttributeStored($attribute) && $task->getAttributeOrigin($attribute) != ORIGIN_CUSTOM ) continue;
             if ( !$task->IsAttributeVisible($attribute) ) continue;
+            if ( in_array('computed', $groups) ) continue;
+
             $key = 'Task_'.$attribute;
             $object->addAttribute(
                 $key,
@@ -35,7 +38,6 @@ class IssueAutoActionTaskModelBuilder extends ObjectModelBuilder
                 false
             );
             $object->addAttributeGroup($key, 'task');
-            $object->addAttributeGroup($key, 'system');
             $object->setAttributeType('Task_Assignee', 'REF_ProjectUserId');
         }
    }

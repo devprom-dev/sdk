@@ -1,9 +1,11 @@
 <?php
-
 include_once "AuthenticationAppKeyFactory.php";
 include_once "AuthenticationCookiesFactory.php";
 include_once "AuthenticationHttpBasicFactory.php";
 include_once "AuthenticationAPIKeyFactory.php";
+include_once 'AuthenticationLDAPFactory.php';
+include_once 'AuthenticationLDAPMixedFactory.php';
+include_once 'AuthenticationAuthFormFactory.php';
 
 class AuthenticationFactorySet
 {
@@ -21,23 +23,22 @@ class AuthenticationFactorySet
  	
  	function getFactories()
  	{
- 	    $result = array();
- 	    
-        $result[] = new AuthenticationAppKeyFactory();
- 	    $result[] = new AuthenticationAPIKeyFactory();
+ 	    $result = array(
+            new AuthenticationAppKeyFactory(),
+            new AuthenticationAPIKeyFactory(),
+            new AuthenticationAuthFormFactory(),
+            new AuthenticationLDAPFactory(),
+            new AuthenticationLDAPMixedFactory()
+        );
 
         $plugins = getFactory()->getPluginsManager();
- 	    
-        if ( is_object($plugins) )
-        {
-		    foreach( $plugins->getAuthFactories() as $factory )
-		    {
+        if ( is_object($plugins) ) {
+		    foreach( $plugins->getAuthFactories() as $factory ) {
 		        $result[] = $factory;
 		    }
         }
  		
         $result[] = new AuthenticationHttpBasicFactory();
-        
         $result[] = $this->getDefaultFactory();
         
         return $result;

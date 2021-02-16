@@ -18,11 +18,8 @@ public class PluginsPage extends AdminPageBase {
 	{
        WebElement element = driver.findElement(By.xpath("//tr[contains(@id,'pluginlist1_row_')]/td[@id='file' and text()='"+pluginName+"']/following-sibling::td//a[contains(.,'Отключить')]"));
        clickOnInvisibleElement(element);
-       (new WebDriverWait(driver, waiting)).until(
-    		   ExpectedConditions.presenceOfElementLocated(By.xpath("//tr[contains(@id,'pluginlist1_row_')]/td[@id='file' and text()='"+pluginName+"' and contains(@style, 'color:silver')]"))
-    		   );
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 		}
        return new PluginsPage(driver);
@@ -32,11 +29,8 @@ public class PluginsPage extends AdminPageBase {
 	{
 		WebElement element = driver.findElement(By.xpath("//tr[contains(@id,'pluginlist1_row_')]/td[@id='file' and text()='"+pluginName+"']/following-sibling::td//a[contains(.,'Подключить')]"));
 	    clickOnInvisibleElement(element);
-		(new WebDriverWait(driver, waiting)).until(
-				ExpectedConditions.presenceOfElementLocated(By.xpath("//tr[contains(@id,'pluginlist1_row_')]/td[@id='file' and text()='"+pluginName+"' and not(contains(@style, 'color:silver'))]"))
-				);
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 		}
 	    return new PluginsPage(driver);

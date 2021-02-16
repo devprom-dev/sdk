@@ -36,17 +36,18 @@ class InviteService
 			if ( $user_it->getId() > 0 ) continue;
 			
 			list($login, $domain) = preg_split('/@/', $email);
-			$password = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-+{}[]()"),0,16);
+			$password = \TextUtils::generatePassword();
 			
 			$user->add_parms(
-					array (
- 							'Caption' => $login,
-	 						'Login' => $login,
- 							'Email' => $email,
- 							'Password' => $password,
- 							'RepeatPassword' => $password,
- 							'Language' => getFactory()->getObject('SystemSettings')->getAll()->get('Language')
-					)
+                array (
+                    'Caption' => $login,
+                    'Login' => $login,
+                    'Email' => $email,
+                    'Password' => $password,
+                    'RepeatPassword' => $password,
+                    'IsReadonly' => 'Y',
+                    'Language' => getFactory()->getObject('SystemSettings')->getAll()->get('Language')
+                )
 			);
 		}
 

@@ -36,67 +36,56 @@ function refreshTreeGridItems()
 		dataType: "html",
 		success: function(data) 
 	    {
-			var skip = [];
+            var skip = [];
 			var update = [];
+            var updateKeys = [];
 			var html = $('<div>'+data+'</div>');
 
             updateUI(html);
 
+            var className = '';
 			html.find(".object-changed[object-id]").each( function(index, value) {
-                var object_id = $(this).attr('object-id');
-
-				itemSelector = 'tr[object-id="'+object_id+'"]';
-				if ( html.find(itemSelector).length < 1 ) {
-                    var item = $('#tablePlaceholder .table-inner:first').find(itemSelector);
-                    if ( item.length > 0 ) {
-                        var tree = $("#tablePlaceholder table.fancytree-ext-table").fancytree("getTree");
-						var node = tree.getNodeByKey(object_id);
-						if ( node ) node.remove();
-                        return true;
-                    }
-                }
-                update.push(object_id);
+                className = $(this).attr('object-class');
+                var object_id = className + $(this).attr('object-id');
+                update.push($(this).attr('object-id'));
+                updateKeys.push(object_id);
 			});
 
 			if ( update.length < 1 ) return;
 
-            var tree = $("#tablePlaceholder table.fancytree-ext-table").fancytree("getTree");
+            var tree = $.ui.fancytree.getTree("#tablePlaceholder table.fancytree-ext-table");
             try {
                 $.ajax({
                     type: "POST",
-                    url: tree.options.source.url + '&parent=all&roots='+update.join('-'),
+                    url: tree.options.dataUrl + '&parent=all&' + className.toLowerCase() + '=' + update.join(','),
                     dataType: "html",
                     proccessData: false,
                     success: function (result, status, xhr) {
                         try {
                             data = jQuery.parseJSON(result);
                             $.each(data, function(index, item) {
-                            	var node = tree.getNodeByKey(item.id);
+                            	var node = tree.getNodeByKey(item.key);
                             	if ( node ) {
-                            	    if ( node.parent && node.parent.key != item.parentid ) {
-                                        node.remove();
-                                        node = tree.getNodeByKey(item.id);
-                                        if ( !node ) {
-                                            var parent = item.parentid > 0
-                                                ? tree.getNodeByKey(item.parentid)
-                                                : tree.getRootNode();
-                                            parent.addChildren(item);
-                                        }
-                                        tree.activateKey(item.id);
-                                    }
-                                    else {
-                                        treeGridRemoveChildren(tree, item);
+                            	    if ( node.data.modified != item.modified ) {
                                         node.fromDict(item);
                                     }
 								}
 								else {
-									var parent = item.parentid > 0
-                                        ? tree.getNodeByKey(item.parentid)
+									var parent = item.parentkey != ''
+                                        ? tree.getNodeByKey(item.parentkey)
                                         : tree.getRootNode();
-
-                                    parent.addChildren(item);
-									tree.activateKey(item.id);
+									if ( parent ) {
+                                        parent.addChildren(item);
+                                    }
 								}
+                                var updateIndex = $.inArray(item.key, updateKeys);
+                                if (updateIndex != -1) {
+                                    updateKeys.splice(updateIndex, 1);
+                                }
+                            });
+                            $.each(updateKeys, function(index, key) {
+                                var node = tree.getNodeByKey(key);
+                                if (node) node.remove();
                             });
                         }
                         catch( e )
@@ -123,12 +112,18 @@ function refreshTreeGridItems()
 	});
 }	
 
-function treeGridRemoveChildren( tree, item )
+function treeGridRemoveChildren( tree, item, updateKeys )
 {
     if ( !item.children ) return;
     $.each(item.children, function(index, child) {
-        var node = tree.getNodeByKey(child.id);
-        if ( node ) node.remove();
-        treeGridRemoveChildren(tree, child);
+        var node = tree.getNodeByKey(child.key);
+        if ( node ) {
+            node.remove();
+        }
+        var updateIndex = $.inArray(child.key, updateKeys);
+        if (updateIndex != -1) {
+            updateKeys.splice(updateIndex, 1);
+        }
+        treeGridRemoveChildren(tree, child, updateKeys);
     })
 }

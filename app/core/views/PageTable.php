@@ -1,31 +1,29 @@
 <?php
-
 include SERVER_ROOT_PATH.'/cms/c_view.php';
- 
 include_once SERVER_ROOT_PATH.'core/methods/FilterFreezeWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
 include_once SERVER_ROOT_PATH."core/methods/DeleteObjectWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ModifyAttributeWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/AutoSaveFieldWebMethod.php";
-include_once SERVER_ROOT_PATH."core/methods/FilterAutoCompleteWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterObjectMethod.php";
+include_once SERVER_ROOT_PATH."core/methods/FilterCheckMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterTextWebMethod.php";
 include_once SERVER_ROOT_PATH.'core/methods/ObjectCreateNewWebMethod.php';
+include_once SERVER_ROOT_PATH.'core/methods/FilterReferenceWebMethod.php';
 
 class PageTable extends ViewTable
 {
- 	var $rows, $filters, $filter_values, $infosections, $page, $view;
- 	
+ 	var $rows, $filters, $filter_values, $page, $view;
  	private $system_attributes = array();
  	private $persistent_filter = null;
  	private $filter_defaults = array();
 	private $filters_name = '';
+	const FILTER_OPTIONS = array('all','hide','');
  	
  	function PageTable( $object )
  	{
 		parent::ViewTable( $object );
-
  		$this->system_attributes = $this->buildSystemAttributes();
  	}
  	
@@ -41,11 +39,6 @@ class PageTable extends ViewTable
  	function getId()
  	{
  	    return md5(get_class($this));
- 	}
-
- 	function resetData()
- 	{
- 	    $this->getListRef()->setIterator(null);
  	}
 
 	function getListIterator()
@@ -77,11 +70,6 @@ class PageTable extends ViewTable
  	    return 'co';
  	}
 
- 	function getSectionsDefault()
- 	{
- 		return array_keys($this->getPage()->getInfoSections());
- 	}
- 	
  	protected function getPersistentFilter()
  	{
  		if ( is_object($this->persistent_filter) ) return $this->persistent_filter;
@@ -95,22 +83,8 @@ class PageTable extends ViewTable
  	
  	function getFilters()
  	{
- 		return array();
+ 	    return array();
  	}
-
-	function getFiltersDefault()
-	{
-		if ( count($this->filters) < 5 )  return array('any');
-		
-		$values = $this->getFilterValues();
-		foreach( $this->getFilterParms() as $parm ) unset($values[$parm]);
-		
-		$filters = array_filter($values, function($value) {
-				return $value != '';
-		});
-
-		return count($filters) > 0 ? $filters : array('any');
-	}
 
 	function getFiltersName()
 	{
@@ -122,9 +96,13 @@ class PageTable extends ViewTable
 		return md5(strtolower(get_class($this)));
 	}
 	
- 	function getFilterPredicates()
+ 	function getFilterPredicates( $values )
  	{
- 		return array();
+ 		return array(
+            new FilterSearchAttributesPredicate(
+                    $values['search'], $this->getObject()->getSearchableAttributes()
+                )
+        );
  	}
  	
 	function buildFilters()
@@ -144,7 +122,7 @@ class PageTable extends ViewTable
 
 	    return $this->filters;
 	}
- 	
+
 	function getFilterValues()
 	{
 		if ( is_array($this->filter_values) ) return $this->filter_values;
@@ -177,13 +155,13 @@ class PageTable extends ViewTable
             // backward compatiibility to old settings
             foreach( $this->getFilterParms() as $parm )
             {
-                if ( $parm == 'infosections' ) continue;
+                if ( !$this->IsFilterParmPersisted($parm) ) continue;
                 $filter_value = $persistent_filter->getValue($parm);
                 if ( $filter_value == '' ) continue;
                 if ( $parm == 'hide' )
                 {
                     // backward compatibility
-                    $columns = preg_split('/-/', $persistent_filter->getValue('show'));
+                    $columns = array_unique(preg_split('/-/', $persistent_filter->getValue('show')));
                     $filter_value = join('-',array_diff(preg_split('/-/',$filter_value), $columns));
                 }
                 $this->filter_values[$parm] = $filter_value;
@@ -192,34 +170,58 @@ class PageTable extends ViewTable
 		$this->filter_defaults = $this->filter_values;
 
 		// apply web-session based filters settings
-		foreach( array_merge($filter_keys, $this->getFilterParms()) as $parm ) {
+		foreach( array_merge($filter_keys, $this->getFilterParms()) as $parm )
+		{
 		    if ( !array_key_exists($parm, $_REQUEST) ) continue;
-			$this->filter_values[$parm] = $_REQUEST[$parm];
+            $this->filter_values[$parm] = stripslashes($_REQUEST[$parm]);
 		}
 
-        $this->filter_values = array_map(
-            function($value) {
-                return SystemDateTime::parseRelativeDateTime($value, getLanguage());
-            },
-            $this->filter_values
-        );
 		return $this->filter_values;
 	}
 
-	public function parseFilterValues( &$values )
+	public function getPredicateFilterValues()
     {
+        $values = $this->getFilterValues();
+
+        $values = array_map(
+            function($value) {
+                return SystemDateTime::parseRelativeDateTime($value, getLanguage());
+            },
+            $values
+        );
+
+        foreach( $this->buildFilters() as $filter ) {
+            array_walk( $values, function(&$value, $key) use($filter) {
+                if ( $filter->getValueParm() == $key ) {
+                    $value = $filter->parseFilterValue($value);
+                }
+            });
+        }
+
+        return $values;
     }
 
 	public function buildFilterValuesByDefault( & $filters )
 	{
 		$values = array();
 
-		foreach( array('sort', 'sort2', 'sort3', 'sort4') as $parm )
-		{
+		foreach( array('sort', 'sort2', 'sort3', 'sort4') as $parm ) {
 		    $values[$parm] = $this->getSortDefault($parm);
 		}
 		$values['color'] = $this->getDefaultColorScheme();
-		$values['infosections'] = join(',', $this->getSectionsDefault());
+
+		$visibleAttributes = array();
+		$attributes = array_diff(
+		    array_keys($this->getObject()->getAttributes()),
+            $this->getObject()->getAttributesByGroup('system')
+        );
+
+		foreach( $attributes as $attribute ) {
+            if ( !$this->getObject()->IsAttributeVisible($attribute) ) continue;
+		    if ( in_array($this->getObject()->getAttributeType($attribute),array('char','password')) ) continue;
+		    $visibleAttributes[] = $attribute;
+        }
+        $values['show'] = join("-", array_unique($visibleAttributes));
 
         foreach( $this->filters as $filter ) {
             if ( ! $filter instanceof FilterWebMethod ) continue;
@@ -245,32 +247,45 @@ class PageTable extends ViewTable
 
 	function getFilterIds() {
 		if ( $_REQUEST['wait'] == 'true' ) return '';
+        if ( $_REQUEST['ids'] != '' || array_key_exists('clear', $_REQUEST) ) return '0';
 		return $_REQUEST[strtolower(get_class($this->getObject()))];
 	}
 
 	function getFilterParms()
 	{
-		return array(
-            'rows',
-            'group',
-            'sort',
-            'sort2',
-			'sort3',
-            'sort4',
-            'show',
-            'hide',
-            'aggby',
-			'aggregator',
-            'infosections',
-            'hiddencolumns',
-			'chartlegend',
-            'chartdata',
-            'addobjects',
-            'color',
-			'groupfunc',
-            'sortgroup'
+		return array_merge(
+            array(
+                'rows',
+                'group',
+                'sort',
+                'sort2',
+                'sort3',
+                'sort4',
+                'show',
+                'hide',
+                'aggby',
+                'aggregator',
+                'infosections',
+                'hiddencolumns',
+                'chartlegend',
+                'chartdata',
+                'addobjects',
+                'color',
+                'groupfunc',
+                'sortgroup',
+                'search'
+            ),
+            array_keys($this->getObject()->getAttributes())
         );
 	}
+
+	function IsFilterParmPersisted( $parm ) {
+ 	    switch ($parm) {
+            case 'infosections':
+                return false;
+        }
+        return true;
+    }
 	
 	function IsFilterPersisted()
 	{
@@ -314,21 +329,6 @@ class PageTable extends ViewTable
 		return parent::IsNeedNavigator();
 	}
 
-	function IsFilterVisible( $filter )
-	{
-		$defaults = $this->getFiltersDefault();
-		
-		if ( $this->filter_values[$filter] == 'hide' ) return false;
-		if ( $this->filter_values[$filter] != '' ) return true;
-		
-		if ( count($defaults) > 0 )
-		{
-			return in_array('any', $defaults) || in_array($filter, $defaults);
-		}
-		
-		return count($this->filters) < 11;
-	}
-
 	function getActions()
 	{
 		return array();
@@ -356,28 +356,24 @@ class PageTable extends ViewTable
 	function getNewActions()
 	{
 		$actions = array();
-
 		if( !$this->IsNeedToAdd() ) return $actions;
 
-		$method = new ObjectCreateNewWebMethod($this->getObject());
+		$object = $this->getObject();
+		if ( !is_object($object) ) return $actions;
 
-		$method->setRedirectUrl('donothing');
-		
-		if ( $method->hasAccess() )
-		{
+		$method = new ObjectCreateNewWebMethod($object);
+		if ( $method->hasAccess() ) {
 			$uid = strtolower('new-'.get_class($this->getObject()));
-			
-			$actions[$uid] = array ( 
+			$actions[$uid] = array (
 					'name' => translate('Добавить'),
 					'uid' => $uid,
 					'url' => $method->getJSCall(
-									array( 
-											'area' => $this->getPage()->getArea()
-									)
+                                array(
+                                    'area' => $this->getPage()->getArea()
+                                )
 							 ) 
 			);
 		}
-
 		return $actions;
 	}
 
@@ -393,7 +389,7 @@ class PageTable extends ViewTable
                 'url' => $filter->url(
                     "li[uid=personal-persist]>a",
                     $persisted,
-                    "function() { $('.alert-filter').hide(); ".($persisted ? "filterLocation.restoreFilter();" : "")." }"
+                    "function() { hidePersistButton(); ".($persisted ? "filterLocation.restoreFilter();" : "")." }"
                 ),
                 'name' => $persisted ? text(2112) : $filter->getCaption(),
                 'title' => !$persisted ? $filter->getDescription() : '',
@@ -411,55 +407,7 @@ class PageTable extends ViewTable
 
     function getFilterActions()
 	{
-		$actions = array();
-		
-		$list = $this->getListRef();
-		if ( !is_object($list) ) return $actions;
-
-		$list->setupColumns();
-
-		// filters
-		$filters = array();
-		foreach ( $this->filters as $filter )
-		{
-			if ( !$filter->hasAccess() ) continue;
-			
-			$parm = $filter->getValueParm();
-			
-			if ( $parm == 'view' ) continue;
-			
-			$checked = $this->IsFilterVisible($parm) ? true : false;
-			
-			$script = "javascript: filterLocation.setup( '".$parm."=' + ($(this).hasClass('checked') ? 'all' : 'hide'), 0 ); ";
-			$filters[$filter->getCaption()] = array ( 'url' => $script, 'checked' => $checked );
-		}
-		
-		ksort($filters);
-		$filter_actions = array();
-		
-		foreach ( $filters as $caption => $filter )
-		{
-            $filter_actions[] = array (
-                'url' => $filter['url'],
-                'name' => $caption,
-                'checked' => $filter['checked'],
-                'multiselect' => true
-			);
-		}
-		
-		if ( count($filter_actions) > 1 )
-		{
-            $actions['filters'] = array (
-                'name' => translate('Фильтры'),
-				'items' => $filter_actions,
-                'title' => '',
-                'uid' => 'filters'
-            );
-		}
-
-		$list->buildFilterActions( $actions );
-				    	
-		return $actions;
+		return array();
 	}
 	
 	function getBulkActions()
@@ -523,38 +471,6 @@ class PageTable extends ViewTable
 		);
 	}
 	
-	function getUrl() 
-	{
-		global $_SERVER;
-
-		$parts = preg_split('/\&/', $_SERVER['QUERY_STRING']);
-		
-		foreach ( array_keys($parts) as $key )
-		{ 
-			if ( strpos($parts[$key], 'project=') !== false )
-			{
-				unset($parts[$key]);
-			}
-
-			if ( strpos($parts[$key], 'offset') !== false )
-			{
-				unset($parts[$key]);
-			}
-
-			if ( strpos($parts[$key], 'namespace=') !== false )
-			{
-				unset($parts[$key]);
-			}
-
-			if ( strpos($parts[$key], 'module=') !== false )
-			{
-				unset($parts[$key]);
-			}
-		}
-		
-		return '?'.join($parts, '&');
-	}
-	
 	function getList( $mode = '' )
 	{
 		return null;
@@ -607,8 +523,8 @@ class PageTable extends ViewTable
 			
 			$type = $object->getAttributeType($field);
 
-			if ( in_array($type, array('text','wysiwyg','password','file')) ) continue;
-			
+			if ( in_array($type, array('text','wysiwyg','password','file')) && $field != 'State' ) continue;
+
 			if ( $object->getAttributeUserName($field) == '' ) continue;
 			
 			$fields[] = $field;
@@ -622,8 +538,14 @@ class PageTable extends ViewTable
  	function getSortAttributeClause( $field )
 	{
 	    $parts = preg_split('/\./', $field);
-
 	    if ( !$this->getObject()->hasAttribute($parts[0]) ) return null;
+
+	    if ( $this->getObject()->IsReference($parts[0]) ) {
+	        $refObject = $this->getObject()->getAttributeObject($parts[0]);
+	        if ( $refObject->IsDictionary() && $refObject->hasAttribute('ReferenceName') && $refObject->getEntityRefName() != 'entity' ) {
+	            return new SortReferenceNameClause($refObject, $parts[0]);
+            }
+        }
 
 		return new SortAttributeClause( $field );
 	}
@@ -672,10 +594,11 @@ class PageTable extends ViewTable
 		
 		?>
 		<script type="text/javascript">
+            devpromOpts.updateUI = function() {};
 			filterLocation.visibleColumns = ['<? echo join(preg_split('/-/', trim(SanitizeUrl::parseScript($values['show']), '-')),"','") ?>'];
 			filterLocation.hiddenColumns = ['<? echo join(preg_split('/-/', trim(SanitizeUrl::parseScript($values['hide']), '-')),"','") ?>'];
 			<?php foreach( $values as $key => $value ) { ?>
-			    filterLocation.parms['<?=$key?>'] = '<?=SanitizeUrl::parseScript($value)?>';
+			    filterLocation.parms['<?=$key?>'] = '<?=SanitizeUrl::parseUrl($value)?>';
 			<?php } ?>
 		</script>
 		<?php				
@@ -711,156 +634,123 @@ class PageTable extends ViewTable
     {
     }
 
+    function getFilterItems()
+    {
+        $this->buildFilters();
+        $filter_values = $this->getFilterValues();
+        $filter_items = array();
+
+        if ( $_REQUEST['parameter'] != '' ) {
+            $filter_values = \TextUtils::parseAttributeFilter($filter_values[$_REQUEST['parameter']]);
+        }
+
+        foreach ( $this->filters as $filter )
+        {
+            if ( !$filter->hasAccess() ) continue;
+            $this->renderFilter($filter, $filter_values);
+
+            $filter->setFilter( $this->getFiltersName() );
+            if ( is_object($filter->getFreezeMethod()) ) $filter->getFreezeMethod()->setValues($filter_values);
+
+            $filterId = $filter->getCaption();
+            if ( is_a($filter, 'SelectDateRefreshWebMethod') )
+            {
+                ob_start();
+                $filter->drawSelect();
+                $html = ob_get_contents();
+                ob_end_clean();
+
+                $filter_items[$filterId] = array (
+                    'html' => $html,
+                    'caption' => $filter->getCaption(),
+                    'class' => get_class($filter),
+                    'value' => $filter->getValue(),
+                    'name' => $filter->getValueParm()
+                );
+            }
+
+            if ( is_a($filter, 'FilterWebMethod') ) {
+                $filter_items[$filterId] = array (
+                    'type' => $filter->getType(),
+                    'name' => $filter->getName(),
+                    'caption' => $filter->getCaption(),
+                    'options' => array_map(function($item) { return htmlentities($item); }, $filter->getValues()),
+                    'value' => $filter_values[$filter->getName()],
+                    'class' => get_class($filter),
+                    'attribute' => $filter->getType() != 'singlevalue' ? 'multiple' : '',
+                    'lazyurl' => ''
+                );
+                if ( $filter instanceof FilterObjectMethod ) {
+                    $filter_items[$filterId]['lazyurl'] = $filter->getLazyLoad() ? $filter->getLazyLoadUrl() : '';
+
+                    $values = \TextUtils::parseFilterItems($filter_items[$filterId]['value']);
+                    $options = array_map(
+                            function($item) {
+                                return trim($item);
+                            }, array_keys($filter_items[$filterId]['options'])
+                        );
+                    $options = explode(',',join(',',$options));
+
+                    $missedValues = array_diff($values, $options);
+                    foreach( $missedValues as $value ) {
+                        $filter_items[$filterId]['options'][' '.trim($value)] = $filter->getValueText($value);
+                    }
+                }
+            }
+        }
+
+        ksort($filter_items);
+        return $filter_items;
+    }
+
 	function getFullPageRenderParms( $parms )
 	{
-	    $filter_values = $this->getFilterValues();
-	     
-	    $filter_items = array();
+        $filter_values = $this->getFilterValues();
 
-	    foreach ( $this->filters as $filter )
-	    {
-	        if ( !$filter->hasAccess() ) continue;
-	        $this->renderFilter($filter, $filter_values);
+        $filter_buttons = array();
+        foreach ( $this->filters as $filter ) {
+            if ( !$filter->hasAccess() ) continue;
+            $this->renderFilter($filter, $filter_values);
 
-	        $filter->setFilter( $this->getFiltersName() );
-	        if ( is_object($filter->getFreezeMethod()) ) $filter->getFreezeMethod()->setValues($filter_values);
-	    
-	        if ( !$this->IsFilterVisible($filter->getValueParm()) ) continue;
-	        
-	        if ( !is_a($filter, 'FilterWebMethod') )
-	        {
-                ob_start();
-                
-                $filter->drawSelect();
-                
-                $html = ob_get_contents();
-                
-                ob_end_clean();
-                
-                $filter_items[] = array ( 
-					'html' => $html
-				);
-                
-                continue;
-	        }
-	        
-	        $filter_value = $filter_values[$filter->getName()];
-	        $title_items = array();
-	        $actions = array();
-	        
-	        if ( $filter->getType() == 'singlevalue' )
-	        {
-    	        foreach( $filter->getValues() as $key => $value )
-    	        {
-                    if ( in_array($key, array('search','_options')) ) {
-                        $actions[] = $value;
-                        continue;
-                    }
+            $filter->setFilter( $this->getFiltersName() );
+            if ( is_object($filter->getFreezeMethod()) ) $filter->getFreezeMethod()->setValues($filter_values);
 
-    	            $script = "javascript: filterLocation.setup('".$filter->getName()."=".urlencode(trim($key))."', 1); ";
-    	            
-    	            $checked_item = in_array(trim($key), preg_split('/,/', $filter_value));
-    	            
-    	            $checked_all = in_array(trim($key), array('', 'all')) && in_array($filter_value, array('', 'all'));
-    	            
-    	            $actions[] = array(
-	                    'name' => $value,
-	                    'url' => $script,
-                        'checked' => $checked_item || $checked_all
-    	            );
+            $values = \TextUtils::parseFilterItems($filter_values[$filter->getValueParm()]);
+            if ( count($values) < 1 ) continue;
 
-                    if ( $checked_item && !$checked_all ) $title_items[] = $value;
-    	        }
-	        }
-	        else
-	        {
-    	        $filter_options = $filter->getValues();
-    	        
-    	        $group_of_values_selected = false;
-	        	foreach( $filter_options as $key => $value )
-    	        {
-    	            if ( count(preg_split('/,/', $key)) > 1 )
-    	            {
-    	            	$diff_items = 
-    	            		count(
-									array_diff(
-											preg_split('/,/', trim($key)),
-											preg_split('/,/', trim($filter_value)) 
-   	                				)
-	                		) + count(
-									array_diff(
-											preg_split('/,/', trim($filter_value)),
-											preg_split('/,/', trim($key))
-   	                				)
-	                		);
+            if ( !is_a($filter, 'FilterWebMethod') )
+            {
+                $filter_buttons[$filter->getCaption()] = array (
+                    'caption' => $filter->getCaption(),
+                    'value' => \TextUtils::getWords($filter->getValue(), 2),
+                    'name' => $filter->getValueParm()
+                );
+            }
+            else {
+                $filter_options = array_filter(
+                    $filter->getValues(),
+                    function($item,$key) use($values) {
+                        return count(array_intersect(\TextUtils::parseItems($key), $values)) > 0;
+                    },
+                    ARRAY_FILTER_USE_BOTH
+                );
 
-    	            	$group_of_values_selected = $diff_items < 1;
-    	            	
-    	            	break; 
-    	            }
-    	        }
+                if ( $filter instanceof FilterObjectMethod) {
+                    $filter_options = array_unique( array_merge(
+                        $filter_options, $filter->getValuesText($values)
+                    ));
+                }
 
-	            foreach( $filter_options as $key => $value )
-    	        {
-					if ( in_array($key, array('search','_options')) ) {
-						$actions[] = $value;
-						continue;
-					}
+                $title = \TextUtils::getWords(join(', ',$filter_options), 2);
+                $filter_buttons[$filter->getCaption()] = array (
+                    'caption' => $filter->getCaption(),
+                    'value' => $title,
+                    'name' => $filter->getValueParm()
+                );
+            }
+        }
+        ksort($filter_buttons);
 
-    	            $script = "javscript: $(this).hasClass('checked') ? filterLocation.turnOn('".$filter->getName()."', '".trim($key)."', 0) : filterLocation.turnOff('".$filter->getName()."', '".trim($key)."', 0);";
-    	            
-    	            $checked_item =
-    	            		count(
-									array_diff(
-											preg_split('/,/', trim($key)),
-											preg_split('/,/', trim($filter_value))
-   	                				)
-   	                		) + count(
-									array_diff(
-											preg_split('/,/', trim($filter_value)),
-											preg_split('/,/', trim($key))
-   	                				)
-   	                		) < 1
-							|| !$group_of_values_selected && in_array(trim($key), preg_split('/,/', $filter_value));
-    	             
-                    $checked_all = in_array(trim($key), array('', 'all')) && in_array($filter_value, array('', 'all'));
-    	            
-    	            $actions[] = array(
-                        'name' => $value,
-                        'url' => $script,
-                        'checked' => $checked_item || $checked_all,
-						'uid' => in_array($key,array('none','')) ? $key : ''
-    	            );
-
-                    if ( count($filter_options) > 1 && ($key == '' || $key == 'all') )
-                    {
-                        // reset filter to nothing
-                        $actions[count($actions)-1]['radio'] = '';
-                        $actions[] = array();
-                    }
-                    else
-                    {
-                        $actions[count($actions)-1]['multiselect'] = '';
-                    }
-
-                    if ( $checked_item && !$checked_all ) $title_items[] = $value;
-    	        }
-	        }
-
-	        $title = join(',',$title_items);
-	        
-	        if ( mb_strlen($title) > 12 ) $title = mb_substr(html_entity_decode($title,ENT_QUOTES | ENT_HTML401,APP_ENCODING), 0, 12).'...';
-
-	        $filter_items[] = array (
-                'type' => $filter->getType(),
-                'name' => $filter->getName(),
-                'title' => count($title_items) > 0 ? $filter->getCaption().': '.$title : $filter->getCaption(),
-                'actions' => $actions,
-                'value' => $filter_value,
-            	'description' => $this->getDescription()
-	        );
-	    }
-	    
 	    $additional_actions = array();
 	    
 	    $new_actions = $this->getNewActions();
@@ -911,16 +801,16 @@ class PageTable extends ViewTable
 	    	$actions = array_merge($actions, $delete_actions);
 	    }
 
-	    if ( is_array($parms['sections']) ) {
-	        $values = $filter_values;
-    	    $sectionnames = preg_split('/,/', $values['infosections']);
-    		foreach ( $parms['sections'] as $key => $section ) {
-    			if ( !in_array($key, $sectionnames) ) unset($parms['sections'][$key]);
-    		}
-	    }
-
 		return array_merge($parms, array(
-            'filter_items' => $filter_items,
+            'filter_visible' => count($this->filters) > 0,
+            'filter_buttons' => $filter_buttons,
+            'filter_search' =>
+                array(
+                    'searchable' => $this->getObject() instanceof Metaobject
+                        && $this->getObject()->getSearchableAttributes(),
+                    'value' => addslashes(join(' ', \TextUtils::parseFilterItems($filter_values['search']))),
+                    'script' => "javascript: filterLocation.setup('search='+$(this).val())"
+                ),
             'filter_modified' => !$this->IsFilterPersisted(),
             'actions' => $actions,
             'filterMoreActions' => $this->getFilterMoreActions(),
@@ -930,8 +820,7 @@ class PageTable extends ViewTable
 		));
 	}
 
-	function getTemplate()
-	{
+	function getTemplate() {
 		return "core/PageTable.php";
 	}
 
@@ -941,12 +830,30 @@ class PageTable extends ViewTable
 
 	function render( $view, $parms )
 	{
-		$parms = $this->getRenderParms($parms);
-
 		$this->view = $view;
 
-		$this->touch();
-		echo $view->render( $this->getTemplate(), $parms );
+        if ( $_REQUEST['settings'] == 'true' ) {
+            echo $view->render( "core/PageTableFilterSettings.php", array(
+                'filter_items' => $this->getFilterItems()
+            ));
+        }
+        elseif ( $_REQUEST['view-settings'] == 'true' ) {
+            $list = $this->getList($this->getMode());
+            $this->setList($list);
+            $list->extendModel();
+            $titles = array();
+            foreach( $this->getObject()->getAttributes() as $attribute => $data ) {
+                $titles[$attribute] = $this->getObject()->getAttributeDescription($attribute);
+            }
+            echo $view->render( "core/PageTableViewSettings.php", array(
+                'parms' => $list->getSettingsViewParms(),
+                'titles' => $titles
+            ));
+        }
+        else {
+            $this->touch();
+            echo $view->render( $this->getTemplate(), $this->getRenderParms($parms) );
+        }
 	}
 
 	function getRenderView() {

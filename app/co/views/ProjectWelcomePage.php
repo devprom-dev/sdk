@@ -1,16 +1,13 @@
 <?php
-
 include "ProjectWelcomeTable.php";
 
 class ProjectWelcomePage extends CoPage
 {
- 	function getTable()
- 	{
+ 	function getTable() {
 		return new ProjectWelcomeTable(getFactory()->getObject('pm_Project'));
  	}
 
- 	function getTitle()
- 	{
+ 	function getTitle() {
  		return text('co35');
  	}
 }

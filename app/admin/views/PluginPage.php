@@ -1,22 +1,17 @@
 <?php
-
-include ('PluginTable.php');
+include 'PluginTable.php';
 
 class PluginPage extends AdminPage
 {
-	function getObject()
-	{
-		global $model_factory;
-		return $model_factory->getObject('pm_Project');
+	function getObject() {
+		return getFactory()->getObject('pm_Project');
 	}
 
-	function getTable()
-	{
+	function getTable() {
 		return new PluginTable($this->getObject());
 	}
 
-	function getForm()
-	{
+	function getEntityForm() {
 		return null;
 	}
 }

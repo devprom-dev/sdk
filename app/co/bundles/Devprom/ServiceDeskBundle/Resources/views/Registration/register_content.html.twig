@@ -6,7 +6,7 @@
                     <div class="section-subtitle">{{ 'registration.title'|trans({}, 'FOSUserBundle') }}</div>
                 </header>
                 <div class="body">
-                    <form role="form" action="{{ path('fos_user_registration_register') }}" {{ form_enctype(form) }} method="POST" class="form-horizontal">
+                    {{ form_start(form, {"attr": {"class":"form-horizontal","action":path('fos_user_registration_register')}}) }}
                         {% if invalid_username is defined %}
                             <div class="alert alert-warning">{{ 'resetting.request.invalid_username'|trans({'%username%': invalid_username}, 'FOSUserBundle') }}</div>
                         {% endif %}
@@ -14,7 +14,7 @@
                         <div class="row">
                             <input type="submit" class="btn btn-success" value="{{ 'registration.submit'|trans({}, 'FOSUserBundle') }}">
                         </div>
-                    </form>
+                    {{ form_end(form) }}
                 </div>
             </div>
         </div>

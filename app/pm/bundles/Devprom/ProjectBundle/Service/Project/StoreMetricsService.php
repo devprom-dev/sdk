@@ -1,9 +1,9 @@
 <?php
-
 namespace Devprom\ProjectBundle\Service\Project;
 
-include_once SERVER_ROOT_PATH."pm/classes/product/persisters/FeatureMetricsPersister.php";
-include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestMetricsPersister.php";
+include_once SERVER_ROOT_PATH . "pm/classes/project/MetricIssueBuilder.php";
+include_once SERVER_ROOT_PATH . "pm/classes/product/persisters/FeatureMetricsPersister.php";
+include_once SERVER_ROOT_PATH . "pm/classes/issues/persisters/RequestMetricsPersister.php";
 
 class StoreMetricsService
 {
@@ -22,7 +22,7 @@ class StoreMetricsService
             getFactory()->getObject('Iteration')->getRegistry()->Query(
                 array (
                     new \FilterAttributePredicate('Project', $project_it->getId()),
-                    new \FilterHasNoAttributePredicate('Version'),
+                    new \FilterAttributeNullPredicate('Version'),
                     $force
                         ? new \FilterDummyPredicate()
                         : new \IterationTimelinePredicate(\IterationTimelinePredicate::NOTPASSED)
@@ -136,9 +136,11 @@ class StoreMetricsService
             )
 		);
 
+ 		$metricIt = getFactory()->getObject('Metric')->getAll();
         $metrics_registry = getFactory()->getObject('ProjectMetric')->getRegistry();
         foreach( $project_it->object->getAttributesByGroup('metrics') as $attribute ) {
-            $metrics_registry->setMetric($attribute, $project_it->get($attribute));
+            $metricIt->moveToId($attribute);
+            $metrics_registry->setMetric($attribute, $project_it->get($attribute), $metricIt->getDisplayName());
         }
  	}
  	
@@ -169,11 +171,13 @@ class StoreMetricsService
  	
  	function storeIssueMetrics( $registry, $queryParms  )
  	{
-		$registry->setPersisters(array());
 		$issue_it = $registry->Query($queryParms);
 
         getFactory()->resetCachedIterator($issue_it->object);
         $issue_it->object->setNotificationEnabled(false);
+
+        $registry->getObject()->setNotificationEnabled(false);
+        $customBuilders = getSession()->getBuilders('MetricIssueBuilder');
 
  		while( !$issue_it->end() )
  		{
@@ -184,18 +188,21 @@ class StoreMetricsService
             }
 
             list($total, $tasks) = preg_split('/:/', $issue_it->get('MetricSpentHoursData'));
-            list($total_parent, $tasks_parent) = preg_split('/:/', $issue_it->get('MetricSpentHoursParentData'));
-            $total += $total_parent;
+ 			if ( !is_array($tasks) ) $tasks = array();
+
             if ( $issue_it->get('Fact') != $total ) {
                 $parms['Fact'] = $total;
             }
             $tasks = join(',',
-                array_filter(array_unique(array_merge($tasks, $tasks_parent)), function($value){
+                array_filter(array_unique($tasks), function($value){
                     return $value > 0;
                 })
             );
             if ( $issue_it->get('FactTasks') != $tasks ) {
                 $parms['FactTasks'] = $tasks;
+            }
+            foreach( $customBuilders as $builder ) {
+                $builder->build($issue_it, $parms);
             }
             if ( count($parms) > 0 ) {
                 $parms['RecordModified'] = $issue_it->get('RecordModified');

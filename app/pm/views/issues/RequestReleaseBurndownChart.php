@@ -26,7 +26,43 @@ class RequestReleaseBurndownChart extends RequestChart
         return $flot;
 	}
 
-	function getDemo() {
+    function getDemo()
+    {
         return false;
+    }
+
+    function getAggByFields()
+    {
+        return array();
+    }
+
+    function getAggregateBy()
+    {
+        return array();
+    }
+
+    function getAggregates()
+    {
+        return array();
+    }
+
+    function getAggregators()
+    {
+        return array();
+    }
+
+    function getLegendVisible()
+    {
+        return true;
+    }
+
+    function getOptions($filter_values)
+    {
+        return array();
+    }
+
+    function getGroupFields()
+    {
+        return array();
     }
 }

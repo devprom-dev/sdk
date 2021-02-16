@@ -32,6 +32,7 @@ include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderTask.php
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderWikiPage.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderRequest.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderIssue.php";
+include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderIssueType.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderObsolete.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderTask.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/TransitionMetadataBuilder.php";
@@ -52,7 +53,7 @@ include SERVER_ROOT_PATH."pm/classes/settings/EstimationStrategyCommonBuilder.ph
 
 include SERVER_ROOT_PATH."pm/classes/report/ReportsCommonBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/report/events/CustomReportModelEventsHandler.php";
-
+include SERVER_ROOT_PATH."pm/classes/tags/TagMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/communications/QuestionMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/issues/RequestMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueOrderNumTrigger.php";
@@ -97,11 +98,11 @@ include_once SERVER_ROOT_PATH."pm/classes/model/events/ClearChangeNotificationsE
 include_once SERVER_ROOT_PATH."pm/classes/model/events/StoreTextChangesEvent.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/events/BusinessActionModifiedEvent.php";
 
-include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiPageNewVersionTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiBreakTraceTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageMetadataBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/wiki/events/DocumentStateChangedEventHandler.php";
+include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageBusinessActionBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/events/RemoveObsoleteAttachmentsEventHandler.php";
+include_once SERVER_ROOT_PATH."pm/classes/communications/ProjectPageMetadataBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/events/AttachmentEntityRemoveEvent.php";
 
 ///////////////////////////////////////////////////////////////////////
@@ -111,7 +112,6 @@ class PMSession extends SessionBase
     protected $project_roles;
     protected $project_it;
     protected $linked_it;
-    protected $shareable;
     protected $module;
     protected $project_info = null;
  	
@@ -124,7 +124,7 @@ class PMSession extends SessionBase
  	function __sleep()
     {
         return array_merge( parent::__sleep(),
-            array ('part_it', 'project_roles', 'project_it', 'linked_it', 'shareable', 'module', 'project_info')
+            array ('part_it', 'project_roles', 'project_it', 'linked_it', 'module', 'project_info')
         );
     }
 
@@ -180,6 +180,7 @@ class PMSession extends SessionBase
  	{
  	    return array_merge( 
  	            array (
+                        new ProjectArtifactMetadataBuilder(),
  	            		new ResourceBuilderCoLanguageFile(),
                         new PortfolioAllBuilder(),
                         new CacheResetTrigger(),
@@ -193,6 +194,7 @@ class PMSession extends SessionBase
  	                    new ReportsCommonBuilder(),
  	                    new SearchableObjectsCommonBuilder(),
  	                    new AccessRightEntitySetCommonBuilder(),
+ 	                    new TagMetadataBuilder(),
  	                    new RequestMetadataBuilder(),
  	            		new TaskTypeMetadataBuilder(),
  	                    new TaskMetadataBuilder(),
@@ -210,6 +212,7 @@ class PMSession extends SessionBase
  	                    new StateBusinessActionBuilderRequest(),
 						new StateBusinessActionBuilderWikiPage(),
  	                    new StateBusinessRuleBuilderIssue(),
+                        new StateBusinessRuleBuilderIssueType(),
  	                    new StateBusinessRuleBuilderTask(),
                         new StateBusinessRuleBuilderObsolete(),
  	            		new DictionaryBuilderCommon($this),
@@ -220,9 +223,9 @@ class PMSession extends SessionBase
 						new ProjectTemplateArtefactsBuilderWorkItems($this),
  	            		new TransitionMetadataBuilder(),
 						new QuestionMetadataBuilder(),
-						new ProjectArtifactMetadataBuilder(),
  	            		new IssueAutoActionMetadataBuilder(),
  	            		new CommentMetadataBuilder(),
+ 	            		new ProjectPageMetadataBuilder(),
  	            		
  	            		// widgets
  	            		new ModuleCategoryBuilderCommon(),
@@ -231,8 +234,6 @@ class PMSession extends SessionBase
  	            		new ModuleBuilderProduct(),
  	            		
  	            		// triggers
- 	            		new WikiPageNewVersionTrigger(),
- 	            		new DocumentStateChangedEventHandler(),
  	            		new WikiBreakTraceTrigger(),
  	            		new CustomReportModelEventsHandler(),
  	            		new FeatureUpdateMetricsEventHandler(),
@@ -251,7 +252,8 @@ class PMSession extends SessionBase
                         new StoreTextChangesEvent($this),
                         new TimeSpentEvent(),
                         new ProjectMetricsModelBuilderDates(),
-                        new AttachmentEntityRemoveEvent()
+                        new AttachmentEntityRemoveEvent(),
+                        new WikiPageBusinessActionBuilder()
                 ),
  	            parent::createBuilders(),
  	            array (
@@ -268,16 +270,23 @@ class PMSession extends SessionBase
  	            		// model
                         new PMChangeLogNotificator(),
                         new EmailNotificator(),
-
-						// latest to override custom builders
-					    new ObjectMetadataPermissionsBuilder(),
-                        new ApplyBusinessActionsEventHandler(),
-                        new BusinessActionModifiedEvent()
 				)
  	    );
  	}
- 	
- 	private function resetCaches()
+
+ 	function createLatestBuilders()
+    {
+        return array_merge(
+            parent::createLatestBuilders(),
+            array(
+                new ObjectMetadataPermissionsBuilder(),
+                new ApplyBusinessActionsEventHandler(),
+                new BusinessActionModifiedEvent()
+            )
+        );
+    }
+
+    private function resetCaches()
  	{
  		global $model_factory;
  		
@@ -442,7 +451,7 @@ class PMSession extends SessionBase
  	    return $this->part_it;
  	}
  	
- 	function getSessionKey( & $project_it = null, & $user_it = null )
+ 	function getSessionKey( $project_it = null, $user_it = null )
  	{
  		if ( !is_object($project_it) ) $project_it = $this->getProjectIt();
  		
@@ -455,7 +464,7 @@ class PMSession extends SessionBase
  		return 'session-pm-'.md5($key);
  	}
  	
- 	function getCacheKey( & $project_it = null, & $user_it = null )
+ 	function getCacheKey( $project_it = null, $user_it = null )
  	{
  		if ( is_null($project_it) || $project_it === '' ) $project_it = $this->getProjectIt();
  		if ( !is_object($user_it) ) $user_it = $this->getUserIt();
@@ -488,7 +497,7 @@ class PMSession extends SessionBase
  		
  		// reset cached values for the current user
  		
-		$cache_key = $this->getCacheKey( $project_it, $this->getUserIt() );
+		$cache_key = $this->getCacheKey( $this->getProjectIt(), $this->getUserIt() );
 			
 		parent::truncate( $cache_key );
 			
@@ -545,4 +554,9 @@ class PMSession extends SessionBase
  	{
  	    return 'pm';
  	}
+
+ 	function IsRDD() {
+        return $this->getProjectIt()->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD
+            && class_exists('Issue');
+    }
 }

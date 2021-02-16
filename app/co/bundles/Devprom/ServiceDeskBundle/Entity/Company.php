@@ -3,7 +3,6 @@
 namespace Devprom\ServiceDeskBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
-
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  * @ORM\Entity
@@ -24,6 +23,12 @@ class Company extends BaseEntity {
      * @var integer
      */
     private $seecompanyissues;
+
+    /**
+     * @ORM\Column(type="string", name="Domains")
+     * @var string
+     */
+    private $domains;
 
     /**
      * @ORM\OneToMany(targetEntity="CompanyProject", mappedBy="company", fetch="EAGER", cascade={"all"})
@@ -99,5 +104,21 @@ class Company extends BaseEntity {
     public function getProducts()
     {
         return $this->products->toArray();
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setDomains($value)
+    {
+        $this->domains = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDomains()
+    {
+        return $this->domains;
     }
 }

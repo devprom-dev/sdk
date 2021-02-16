@@ -21,7 +21,6 @@
 
             // Creating lens
             var target = $("<div style='" + lensStyle + "' class='" + options.lensCss + "'>&nbsp;</div>").appendTo($("body"));
-            var targetSize = target.size();
 
             // Calculating actual size of image
             var imageSrc = options.imageSrc ? options.imageSrc : $(this).attr("src");
@@ -30,7 +29,7 @@
             var widthRatio = 0;
             var heightRatio = 0;
 
-            $(imageTag).load(function () {
+            $(imageTag).on('load', function () {
                 widthRatio = $(this).width() / obj.width();
                 heightRatio = $(this).height() / obj.height();
             }).appendTo('html');
@@ -39,6 +38,10 @@
             target.add($(this)).mousemove(function (e)
             {
                 if ( widthRatio <= 1 ) return;
+                if ( !(e.altKey || e.ctrlKey || e.metaKey) ) {
+                    target.hide();
+                    return;
+                }
                 var leftPos = parseInt(e.pageX - offset.left);
                 var topPos = parseInt(e.pageY - offset.top);
 
@@ -55,9 +58,6 @@
                     target.css({ left: leftPos + 'px', top: topPos + 'px' });
                     target.show();
                 }
-            }).
-            mousedown(function() {
-                target.remove();
             });
         });
     };

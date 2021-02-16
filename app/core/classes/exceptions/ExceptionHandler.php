@@ -167,7 +167,7 @@ class ExceptionHandler
      *                                 в области видимости, где произошла ошибка. Пользовательский обработчик
      *                                 не должен изменять этот контекст.
      */
-    public function captureError($errno, $errstr, $errfile, $errline, $errcontext)
+    public function captureError($errno, $errstr, $errfile = '', $errline = '', $errcontext = array())
     {
         if ( in_array($errno, array(E_NOTICE,E_STRICT,E_WARNING,E_DEPRECATED,E_USER_DEPRECATED)) ) return true;
         if ( strpos($_SERVER['REQUEST_URI'], '/500', 0) !== false ) return true;
@@ -193,7 +193,7 @@ class ExceptionHandler
                     } else if (gettype($value) == 'object') {
                         $value = get_class($value);
                     }
-                    return substr($value, 0, 1024);
+                    return substr(htmlentities($value), 0, 1024);
                 }, is_array($value['args']) ? $value['args'] : array());
                 
                 return $value;
@@ -240,7 +240,7 @@ class ExceptionHandler
                     } else if (gettype($value) == 'object') {
                         $value = get_class($value);
                     }
-                    return substr($value, 0, 1024);
+                    return substr(htmlentities($value), 0, 1024);
                 }, is_array($value['args']) ? $value['args'] : array());
 
                 return $value;

@@ -40,8 +40,9 @@ public class RequirementEditPage extends RequirementNewPage
 	
 	public String getType() {
 		clickMoreTab();
-	    (new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.id("WikiPagePageType")));
-		return new Select(driver.findElement(By.id("WikiPagePageType"))).getFirstSelectedOption().getText();
+		By locator = By.xpath("//div[@id='modal-form']//*[@id='WikiPagePageType']");
+	    (new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(locator));
+		return new Select(driver.findElement(locator )).getFirstSelectedOption().getText();
 	}
 	
 	public String getAuthor() {

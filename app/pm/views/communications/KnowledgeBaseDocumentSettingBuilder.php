@@ -7,7 +7,7 @@ class KnowledgeBaseDocumentSettingBuilder extends PageSettingBuilder
     {
         $setting = new PageListSetting('KnowledgeBaseDocumentList');
         $setting->setGroup( 'none' );
-        $setting->setVisibleColumns( array('Content') );
+        $setting->setVisibleColumns( array('Content','PageType') );
         $settings->add( $setting );
 
         $setting = new PageTableSetting('KnowledgeBaseDocument');

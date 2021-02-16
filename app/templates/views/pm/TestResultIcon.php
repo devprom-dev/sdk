@@ -22,12 +22,10 @@ else {
 $id = md5(uniqid(time().$random,true));
 ?>
 <div class="btn-group" style="text-align:left;" title="<?=$title?>">
-	<a class="dropdown-toggle actions-button" data-toggle="dropdown" href="#" data-placement="right" data-target="#testresult<?=$id?>">
+	<a class="dropdown-toggle actions-button" data-toggle="dropdown" href="" data-placement="right">
 		<span class="label <?=$class?>" data-toggle="context" style="<?=$style?>">
 			<?=$data?>
 		</span>
 	</a>
-</div>
-<div class="btn-group dropdown-fixed" id="testresult<?=$id?>">
-	<? echo $this->render('core/PopupMenu.php', array ( 'items' => $items ));?>
+    <? echo $this->render('core/PopupMenu.php', array ( 'items' => $items ));?>
 </div>

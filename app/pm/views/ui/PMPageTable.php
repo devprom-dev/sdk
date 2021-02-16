@@ -1,29 +1,27 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 
-include_once SERVER_ROOT_PATH."pm/methods/c_common_methods.php";
-include_once SERVER_ROOT_PATH.'pm/methods/StateExFilterWebMethod.php';
+include_once SERVER_ROOT_PATH . "pm/methods/ViewCustomDictionaryWebMethod.php";
+include_once SERVER_ROOT_PATH . 'pm/methods/StateExFilterWebMethod.php';
+include_once SERVER_ROOT_PATH . "pm/methods/ViewModifiedAfterDateWebMethod.php";
+include_once SERVER_ROOT_PATH . "pm/methods/ViewModifiedBeforeDateWebMethod.php";
+include_once SERVER_ROOT_PATH . "pm/methods/ViewFinishDateWebMethod.php";
+include_once SERVER_ROOT_PATH . "pm/methods/ViewStartDateWebMethod.php";
+include SERVER_ROOT_PATH . "pm/methods/FilterTraceWebMethod.php";
+include_once SERVER_ROOT_PATH . "core/classes/versioning/VersionedObject.php";
+include_once SERVER_ROOT_PATH . "pm/classes/watchers/predicates/WatcherUserPredicate.php";
+include_once SERVER_ROOT_PATH . "pm/classes/model/predicates/AttributeTracePredicate.php";
+include_once SERVER_ROOT_PATH . "pm/classes/participants/predicates/UserParticipanceRolePredicate.php";
 include "PMPageList.php";
 include "PMStaticPageList.php";
 include "PMPageChart.php";
 include "PMPageBoard.php";
-include_once SERVER_ROOT_PATH."core/classes/versioning/VersionedObject.php";
-include_once SERVER_ROOT_PATH."pm/classes/watchers/predicates/WatcherUserPredicate.php";
-include_once SERVER_ROOT_PATH."pm/classes/participants/predicates/UserParticipanceRolePredicate.php";
-
 
 class PMPageTable extends PageTable
 {
 	private $traces = array();
 
-    function PMPageTable( $object )
-    {
-        parent::PageTable( $object );
-    }
-    
-  	function getSection()
- 	{
+  	function getSection() {
  	    return 'pm';
  	}
  	
@@ -92,14 +90,33 @@ class PMPageTable extends PageTable
     	$actions = parent::getActions();
     	
     	$v_actions = $this->getVersioningActions();
-    	
-    	if ( count($v_actions) > 0 )
-    	{
-    		$actions[] = array();
+    	if ( count($v_actions) > 0 ) {
     		$actions = array_merge($actions, $v_actions);
+            $actions[] = array();
     	}
-    	
+
+        $importActions = $this->getImportActions();
+    	if ( count($importActions) > 0 ) {
+            $actions[] = array();
+            $actions = array_merge($actions, $importActions);
+        }
+
     	return $actions;
+    }
+
+    function getImportActions()
+    {
+        $actions = array();
+
+        if ( getFactory()->getAccessPolicy()->can_create($this->getObject()) ) {
+            $actions['import-excel'] = array(
+                'name' => text(2280),
+                'url' => '?view=import&object=' . strtolower(get_class($this->getObject())),
+                'uid' => 'import-excel'
+            );
+        }
+
+        return $actions;
     }
     
     function getVersioningActions()
@@ -111,21 +128,9 @@ class PMPageTable extends PageTable
     {
         $actions = array();
 
-        $actions['share'] = array(
-            'name' => text(2481),
-            'url' => $this->getWidgetShareUrl(),
-            'uid' => 'share'
-        );
-        $actions['reset'] = array(
-            'name' => text(2088),
-            'url' => 'javascript: filterLocation.resetFilter();',
-            'uid' => 'reset'
-        );
-
         $save_actions = parent::getFilterMoreActions();
 
         $this->buildSaveAsAction($save_actions);
-
         if ( count($save_actions) > 0 ) {
             $actions = array_merge($actions, array(array()), $save_actions);
         }
@@ -156,6 +161,12 @@ class PMPageTable extends PageTable
 			'name' => $method->getCaption(),
 			'url' => $method->url()
 		);
+        $method = new PrintPDFExportWebMethod();
+        $actions[] = array(
+            'uid' => 'export-pdf-p',
+            'name' => $method->getCaption(),
+            'url' => $method->url()
+        );
         $method = new XmlExportWebMethod();
         $actions[] = array(
             'uid' => 'export-xml',
@@ -214,10 +225,7 @@ class PMPageTable extends PageTable
     function getFilterActions()
     {
 		$base_actions = parent::getFilterActions();
-        if ( count($base_actions) < 1 ) return $base_actions;
-
 		$this->buildQuickReports($base_actions);
-        	
         return $base_actions;
     }
 
@@ -229,8 +237,11 @@ class PMPageTable extends PageTable
 	{
 	    $queryParms = $this->getFilterValues();
 	    $idKey = strtolower(get_class($this->getObject()));
-	    if ( $_REQUEST[$idKey] != '' ) {
-            $queryParms[$idKey] = $_REQUEST[$idKey];
+
+	    foreach( array($idKey, 'ids', 'offset1') as $parmKey ) {
+	        if ( $_REQUEST[$parmKey] != '' ) {
+                $queryParms[$parmKey] = $_REQUEST[$parmKey];
+            }
         }
 
 		$action_url = $this->getWidgetIt()->getUrl(http_build_query(array_merge($this->getShareUrlParms(), $queryParms)));
@@ -241,17 +252,17 @@ class PMPageTable extends PageTable
 
 	function getFilterUsers( $selectedValue, $allValues )
 	{
-		if ( !in_array($selectedValue,array('all','')) ) return $selectedValue;
+		if ( !in_array($selectedValue,PageTable::FILTER_OPTIONS) ) return $selectedValue;
 
 		$parms = array();
 		$additionalValues = array();
-		if ( !in_array($allValues['usergroup'],array('','all')) ) {
+		if ( !in_array($allValues['usergroup'],PageTable::FILTER_OPTIONS) ) {
 			$parms[] = new EEUserGroupPredicate($allValues['usergroup']);
 			if ( strpos($allValues['usergroup'],'none') !== false ) {
 				$additionalValues[] = 'none';
 			}
 		}
-		if ( !in_array($allValues['userrole'],array('','all')) ) {
+		if ( !in_array($allValues['userrole'],PageTable::FILTER_OPTIONS) ) {
 			if ( defined('PERMISSIONS_ENABLED') && !getSession()->getProjectIt()->IsPortfolio() ) {
 				$parms[] = new UserParticipanceRolePredicate($allValues['userrole']);
 			}
@@ -278,7 +289,7 @@ class PMPageTable extends PageTable
                 $actions['common-persist'] = array(
                     'name' => text(977),
                     'uid' => 'common-persist',
-                    'click' => $this->getPersistentFilter()->urlCommon("function() { $('.alert-filter').hide();} ")
+                    'click' => $this->getPersistentFilter()->urlCommon("function() {hidePersistButton();} ")
                 );
             }
         }
@@ -325,7 +336,7 @@ class PMPageTable extends PageTable
 				    unset($actions['personal-persist']);
                     $actions[] = array();
 
-					$store->setRedirectUrl("function() { $('.alert-filter').hide(); }");
+					$store->setRedirectUrl("function() {hidePersistButton();}");
                     $actions['common-persist'] =
 						array (
 							'uid' => 'common-persist',
@@ -364,7 +375,7 @@ class PMPageTable extends PageTable
 
     function getWidgetShareUrl() {
         $url = getSession()->getApplicationUrl().'widget/share?URL='.urlencode(urlencode($this->getFiltersUrl()));
-        return "javascript: workflowModify({'form_url':'".$url."','class_name':'cms_Language','entity_ref':'cms_Language','object_id':'1','form_title':'".text(2481)."','can_delete':'false','can_modify':'true','delete_reason':null,'modifyButtonText':'".translate('Отправить')."'}, donothing);";
+        return "javascript: workflowModify({'form_url':'".$url."','class_name':'cms_Language','entity_ref':'cms_Language','object_id':'1','can_delete':'false','can_modify':'true','delete_reason':null,'modifyButtonText':'".translate('Отправить')."'}, donothing);";
     }
 
     protected function getFamilyModules( $module )
@@ -579,17 +590,45 @@ class PMPageTable extends PageTable
             );
         }
 
+        $widgetActions = array();
         $service = new WorkspaceService();
+
         $widget_it = $this->getWidgetIt();
         if ( count($service->getItemOnFavoritesWorkspace(array($widget_it->getId()))) < 1 ) {
             $info = $widget_it->buildMenuItem();
-            $items['actions'] =
+            $widgetActions[] =
                 array(
                     'uid' => 'add-favorites',
                     'name' => text(1327),
                     'url' => "javascript:addToFavorites('".$widget_it->getId()."','".urlencode($info['url'])."', '".($this->getReport() != '' ? 'report' : 'module')."');"
                 );
         }
+
+        $widgetIt = $this->getWidgetIt();
+        if ( !$this instanceof DashboardTable && $widgetIt->getId() != '' ) {
+            $list = $this->getListRef();
+            if ( !$list instanceof PageBoard && $list->getTemplate() != "core/PageTreeGrid.php" ) {
+                $method = new ObjectCreateNewWebMethod(getFactory()->getObject('DashboardItem'));
+                $widgetActions[] = array(
+                    'name' => text(2926),
+                    'url' => $method->getJSCall(
+                        array(
+                            'Caption' => $widgetIt->getDisplayName(),
+                            'WidgetUID' => $widgetIt->getId(),
+                            'Width' => $list instanceof PageChart && $list->getChartWidget() instanceof FlotChartPieWidget ? '300' : ''
+                        )
+                    ),
+                    'uid' => 'add-dashboard'
+                );
+            }
+        }
+
+        $widgetActions[] = array(
+            'name' => text(2481),
+            'url' => $this->getWidgetShareUrl(),
+            'uid' => 'share'
+        );
+        $items['actions'] = $widgetActions;
 
         if ( count($items) > 0 ) {
             $base_actions = array_merge($items, array(array()), $base_actions);
@@ -599,16 +638,35 @@ class PMPageTable extends PageTable
 	function buildOpenInOtherMenu()
     {
         $parentActions = array();
-        $selfUrl = $widgetIt = $this->getWidgetIt()->getUrl();
+        $selfUrl = $widgetIt = $this->getWidgetIt()->getUrl(\SanitizeUrl::getSelfUrl());
         $selfIt = getSession()->getProjectIt();
 
-        $project_it = getFactory()->getObject('ProjectActive')->getRegistry()->Query(
+        $linked_it = getFactory()->getObject('ProjectLinkedActive')->getRegistry()->Query(
             array(
-                new ProjectAccessiblePredicate(getSession()->getUserIt()),
+                new ProjectStatePredicate('active')
+            )
+        );
+        while ( !$linked_it->end() ) {
+            $parentActions[$linked_it->get('CodeName')] = array(
+                'name' => $linked_it->getDisplayName(),
+                'url' => str_replace(
+                    '/pm/'.$selfIt->get('CodeName'),
+                    '/pm/'.$linked_it->get('CodeName'),
+                    $selfUrl)
+            );
+            $linked_it->moveNext();
+        }
+        if ( count($parentActions) > 0 ) {
+            $parentActions[] = array();
+        }
+
+        $project_it = getFactory()->getObject('Project')->getRegistry()->Query(
+            array(
+                new ProjectAccessibleActiveVpdPredicate(),
             )
         );
         while ( !$project_it->end() ) {
-            $parentActions[] = array(
+            $parentActions[$project_it->get('CodeName')] = array(
                 'name' => $project_it->getDisplayName(),
                 'url' => str_replace(
                     '/pm/'.$selfIt->get('CodeName'),
@@ -620,7 +678,7 @@ class PMPageTable extends PageTable
 
         $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
         while ( !$portfolio_it->end() ) {
-            $project_ids = preg_split('/,/',$portfolio_it->get('LinkedProject'));
+            $project_ids = \TextUtils::parseIds($portfolio_it->get('LinkedProject'));
             if ( in_array($selfIt->getId(), $project_ids) || in_array($portfolio_it->get('CodeName'), array('my','all')) ) {
                 array_unshift($parentActions,
                     array(
@@ -649,17 +707,17 @@ class PMPageTable extends PageTable
 		return md5($report.parent::buildFiltersName());
 	}
 
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
 		$predicates = array();
 
-        $values = $this->getFilterValues();
-        
         $predicates = array_merge($predicates, $this->buildCustomPredicates($values));
 
         $predicates[] = new ProjectVpdPredicate($values['target']);
         $predicates[] = new WatcherUserPredicate($values['watcher']);
         $predicates[] = new TransitionWasPredicate( $values['was-transition'] );
+        $predicates[] = new AttributeTracePredicate($values['coverage']);
+        $predicates[] = new CommentStateFilter($values['commentstate']);
 
 		if ( $values['target'] == getSession()->getProjectIt() ) {
             $predicates[] = new FilterBaseVpdPredicate();
@@ -669,7 +727,7 @@ class PMPageTable extends PageTable
 
 		return array_merge(
             $predicates,
-            parent::getFilterPredicates(),
+            parent::getFilterPredicates( $values ),
             $this->buildDateFilterPredicates($values)
         );
 	}
@@ -686,7 +744,7 @@ class PMPageTable extends PageTable
 
     function buildStatePredicate( $value )
     {
-        if ( !$this->hasCommonStates() ) {
+        if ( !$this->hasCommonStates() && $this->getListRef() instanceof PageBoard ) {
             return new StateCommonPredicate( $value );
         }
         else {
@@ -706,7 +764,7 @@ class PMPageTable extends PageTable
         	$type = $attr_it->getRef('AttributeType')->get('ReferenceName');
         	$value = $attr_it->get('ReferenceName');
         	
-            if ( in_array($type, array('dictionary','reference')) ) {
+            if ( in_array($type, array('dictionary','reference','char')) ) {
             	$predicates[$attr_it->get('ReferenceName')] = new CustomAttributeValuePredicate($value, $values[$value]);
             } 
 
@@ -718,43 +776,58 @@ class PMPageTable extends PageTable
     
 	public function buildFilterValuesByDefault( & $filters )
 	{
-		$values = parent::buildFilterValuesByDefault($filters);
+        $values = parent::buildFilterValuesByDefault($filters);
+
+        $filterNames = array();
+        foreach( $this->filters as $filter ) {
+            if ( ! $filter instanceof WebMethod ) continue;
+            $filterNames[] = $filter->getValueParm();
+        }
 
 		// overrride defaults with custom settings
 		$values = array_merge(
-				$values,
-				$this->buildFilterValuesBySettings(
-						$values,
-						$this->getPage()->getSettingsBuilder()->getByPageTable($this)
-        		)
+            $values,
+            $this->buildFilterValuesBySettings(
+                $values,
+                $this->getPage()->getSettingsBuilder()->getByPageTable($this)
+            )
         );
 
 		// override default filter values with specific ones for the given report
 		if ( $this->getReport() != '' )
 		{
-			$values = array_merge(
-					$values,
-					$this->buildFilterValuesBySettings(
-							$values,
-							$this->getPage()->getSettingsBuilder()->getByReport($this->getReportBase())
-        			)
-			);
-			$query_string = $this->getWidgetIt()->get('QueryString');
-		}
+		    if ( is_numeric($this->getReport()) ) {
+		        $reportIt = getFactory()->getObject('pm_CustomReport')->getExact($this->getReport());
+		        $reportValues = array();
+                parse_str($reportIt->getHtmlDecoded('Url'), $reportValues);
 
-		if ( $query_string != '' ) {
-			foreach( preg_split('/\&/', $query_string) as $query ) {
-				list($query_parm, $query_value) = preg_split('/\=/' ,$query);
+                foreach( array_merge($filterNames, $this->getFilterParms()) as $key ) {
+                    if ( array_key_exists($key, $reportValues) ) {
+                        $values[$key] = $reportValues[$key];
+                    }
+                }
+            }
+		    else {
+                $reportIt = getFactory()->getObject('PMReport')->getExact($this->getReport());
+                if ( $reportIt->getId() != '' ) {
+                    $reportValues = array();
+                    parse_str($reportIt->getHtmlDecoded('QueryString'), $reportValues);
 
-				if ( $query_parm == 'infosections' ) continue;
-				if ( $query_parm == 'hide' ) {
-					$values[$query_parm] = join('-', array($values[$query_parm], $query_value));
-				}
-				else {
-					$values[$query_parm] = $query_value;
-				}
-			}
-			$values['hide'] = join('-',array_diff(preg_split('/-/',$values['hide']), preg_split('/-/',$values['show'])));
+                    foreach( array_merge($filterNames, $this->getFilterParms()) as $key ) {
+                        if ( array_key_exists($key, $reportValues) ) {
+                            $values[$key] = $reportValues[$key];
+                        }
+                    }
+                }
+
+                $values = array_merge(
+                    $values,
+                    $this->buildFilterValuesBySettings(
+                        $values,
+                        $this->getPage()->getSettingsBuilder()->getByReport($this->getReportBase())
+                    )
+                );
+            }
 		}
 
 		return $values;
@@ -777,22 +850,13 @@ class PMPageTable extends PageTable
 		    	}
 	    	}
 
-	    	if ( is_array($setting->getFilters()) )
-	    	{
-		    	foreach( $setting->getFilters() as $filter )
-		    	{
-		    		if ( $default_values[$filter] != '' ) continue;
-		    		$values[$filter] = 'all';
-		    	}
-	    	}
-	 	    	
 	    	if ( $setting->getRowsNumber() != '' ) $values['rows'] = $setting->getRowsNumber();
 	 	}
 
 		$alt_setting = $setting instanceof ReportSetting 
 			? $setting 
 			: $this->getPage()->getSettingsBuilder()->getByPageList($this->getListRef());
-    	
+
  	    if ( is_object($alt_setting) )
  	    {
  	    	if ( $alt_setting->getGroup() != '' ) $values['group'] = $alt_setting->getGroup();
@@ -816,28 +880,15 @@ class PMPageTable extends PageTable
 		return $values;
 	}
 
-    public function parseFilterValues( &$values )
-    {
-        if ( $values['release'] != '' ) {
-            $values['release'] = preg_replace_callback('/notpassed/i', function() {
-                return join(',',getFactory()->getObject('ReleaseActual')->getAll()->idsToArray());
-            }, $values['release']);
-        }
-        if ( $values['iteration'] != '' ) {
-            $values['iteration'] = preg_replace_callback('/notpassed/i', function() {
-                return join(',',getFactory()->getObject('IterationActual')->getAll()->idsToArray());
-            }, $values['iteration']);
-        }
-    }
-
     protected function getPersistentFilter()
     {
-        $filter = parent::getPersistentFilter();
         if ( is_numeric($this->getReport()) ) {
-            // skip store common settings for custom reports, modify report's query string instead
-            $filter->extendToCommon(false);
+            $reportIt = getFactory()->getObject('pm_CustomReport')->getExact($this->getReport());
+            if ( $reportIt->getId() != '' && getFactory()->getAccessPolicy()->can_modify($reportIt) ) {
+                return new ReportModifyWebMethod($reportIt);
+            }
         }
-        return $filter;
+        return parent::getPersistentFilter();
     }
 
     function getFilters()
@@ -862,13 +913,36 @@ class PMPageTable extends PageTable
 	        	break;
 	    }
 
-	    if ( $this->getObject() instanceof MetaobjectStatable ) {
+	    if ( $this->getObject() instanceof MetaobjectStatable && $this->getObject()->getStateClassName() != '' ) {
 	        $filters[] = $this->buildFilterTransition();
+        }
+
+	    if ( count($this->getObject()->getAttributesByGroup('trace')) > 0 ) {
+            $filters[] = $this->buildTraceFilter();
+        }
+
+        if ( $this->getObject()->hasAttribute('RecentComment') ) {
+            $filters[] = $this->buildFilterComments();
         }
 
         return $filters;
     }
-    
+
+    protected function buildFilterComments()
+    {
+        $filter = new FilterObjectMethod(getFactory()->getObject('CommentState'),
+            translate('Комментарии'), 'commentstate');
+        $filter->setIdFieldName('ReferenceName');
+        $filter->setHasAny(false);
+        return $filter;
+    }
+
+    protected function buildTraceFilter()
+    {
+        $method = new FilterTraceWebMethod($this->getObject());
+        return $method;
+    }
+
     protected function buildProjectFilter()
     {
    		$project = getFactory()->getObject('pm_Project');
@@ -904,15 +978,25 @@ class PMPageTable extends PageTable
 
             if ( $attr_it->getRef('AttributeType')->get('ReferenceName') == 'reference' )
             {
-            	$filter = new FilterObjectMethod( 
-            			getFactory()->getObject($attr_it->get('AttributeTypeClassName')),
-            			$attr_it->getDisplayName(),
-            			$attr_it->get('ReferenceName')
-        		);
-            	
-            	$filters[$attr_it->get('ReferenceName')] = $filter;
+                $className = getFactory()->getClass($attr_it->get('AttributeTypeClassName'));
+                if ( class_exists($className) ) {
+                    $filter = new FilterObjectMethod(
+                        getFactory()->getObject($className),
+                        $attr_it->getDisplayName(),
+                        $attr_it->get('ReferenceName')
+                    );
+                    $filters[$attr_it->get('ReferenceName')] = $filter;
+                }
             }
-            
+
+            if ( $attr_it->getRef('AttributeType')->get('ReferenceName') == 'char' ) {
+                $filter = new FilterCheckMethod(
+                    $attr_it->getDisplayName(),
+                    $attr_it->get('ReferenceName')
+                );
+                $filters[$attr_it->get('ReferenceName')] = $filter;
+            }
+
             $attr_it->moveNext();
         }
     	
@@ -946,6 +1030,7 @@ class PMPageTable extends PageTable
 	{
 		$filter = new FilterObjectMethod( getFactory()->getObject('WatcherUser'), translate('Наблюдатели'), 'watcher' );
 		$filter->setHasNone(false);
+        $filter->setLazyLoad(true);
 		return $filter;
 	}
 
@@ -974,9 +1059,7 @@ class PMPageTable extends PageTable
 		else {
 			$object = getFactory()->getObject('ProjectRoleBase');
 		}
-		$filter = new FilterObjectMethod( $object, $title, 'userrole' );
-		$filter->setHasNone(false);
-		return $filter;
+		return new FilterObjectMethod( $object, $title, 'userrole' );
 	}
 
     protected function buildFilterState( $filterValues = array() )
@@ -1045,37 +1128,31 @@ class PMPageTable extends PageTable
 		return $fields;
 	}
 
-	function getFullPageRenderParms( $parms )
-	{
-        $report = getFactory()->getObject('PMReport');
-        $report_it = $report->getAll();
-        $module = getFactory()->getObject('Module');
-        $module_it = $module->getAll();
-
+	function getRenderParms($parms)
+    {
         $it = getFactory()->getObject('ObjectsListWidget')->getAll();
         while( !$it->end() )
         {
-            switch( $it->get('ReferenceName') ) {
-                case 'PMReport':
-                    $widget_it = $report_it->moveToId($it->getId());
-                    break;
-                case 'Module':
-                    $widget_it = $module_it->moveToId($it->getId());
-                    break;
-                default:
-                    $it->moveNext();
-                    continue;
-            }
-            $this->reference_widgets[$it->get('Caption')] = $widget_it->copy();
+            $this->reference_widgets[$it->get('Caption')] = $it->getWidgetIt();
             $it->moveNext();
         }
 
-		return array_merge(
-            parent::getFullPageRenderParms( $parms ),
+        return parent::getRenderParms($parms); // TODO: Change the autogenerated stub
+    }
+
+    function getFullPageRenderParms( $parms )
+	{
+	    $parms = parent::getFullPageRenderParms( $parms );
+	    if ( is_object($this->getListRef()) ) {
+            $it = $this->getListRef()->getIteratorRef();
+        }
+		return array_merge( $parms,
             array(
                 'title' => $this->getCaption(),
-                'details' => $this->getDetails(),
-                'details_parms' => $this->getDetailsParms(),
+                'details' => $this->getPage()->getReportChart() ? array() : $this->getDetails(),
+                'details_parms' => is_object($it) && $it->count() > 0
+                                        ? $this->getDetailsParms()
+                                        : array(),
                 'list_slider' => count($this->getObject()->getAttributesByGroup('trace')) > 0,
                 'sliderClass' => $_COOKIE['list-slider-pos'] > 0 ? 'list-slider-'.$_COOKIE['list-slider-pos'] : 'list-slider-2'
             )
@@ -1106,6 +1183,11 @@ class PMPageTable extends PageTable
     function getDetails()
     {
         return array(
+            'form' => array (
+                'image' => 'icon-list-alt',
+                'title' => text(2167),
+                'url' => getSession()->getApplicationUrl().'form/%class%/%id%'
+            ),
             'props' => array (
                 'image' => 'icon-zoom-in',
                 'title' => text(2167),
@@ -1125,9 +1207,7 @@ class PMPageTable extends PageTable
     }
 
     function getDetailsParms() {
-        return array (
-            'active' => 'props'
-        );
+        return array ();
     }
 
     function getReferencesListWidget( $parm, $referenceName )
@@ -1143,6 +1223,19 @@ class PMPageTable extends PageTable
         if ( is_object($widget_it) ) return $widget_it;
 
         return parent::getReferencesListWidget( $parm, $referenceName );
+    }
+
+    function getReferencesListProjectIt( $vpds )
+    {
+  	    if ( count($vpds) < 2 ) return getSession()->getProjectIt();
+  	    if ( !is_object($this->referencesProjectIt) ) {
+  	        $portfolio = getFactory()->getObject('Portfolio');
+            $this->referencesProjectIt = $portfolio->getByRef('CodeName', 'my');
+            if ( $this->referencesProjectIt->getId() == '' ) {
+                $this->referencesProjectIt = $portfolio->getByRef('CodeName', 'all');
+            }
+        }
+  	    return $this->referencesProjectIt;
     }
 
     function touch() {

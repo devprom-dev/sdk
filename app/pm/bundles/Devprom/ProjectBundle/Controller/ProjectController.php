@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 include_once SERVER_ROOT_PATH . "pm/views/ui/Common.php";
 include_once SERVER_ROOT_PATH . "pm/views/communications/WhatsNewPage.php";
 include_once SERVER_ROOT_PATH . "pm/views/project/ProjectDashboardPage.php";
+include_once SERVER_ROOT_PATH . "pm/views/product/DeliveryPage.php";
 
 class ProjectController extends PageController
 {
@@ -29,5 +30,9 @@ class ProjectController extends PageController
 
     public function listAction(Request $request) {
         return $this->responsePage( new \ProjectDashboardPage() );
+    }
+
+    public function roadmapAction(Request $request) {
+        return $this->responsePage( new \DeliveryPage() );
     }
 }

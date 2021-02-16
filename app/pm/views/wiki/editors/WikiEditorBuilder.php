@@ -1,15 +1,12 @@
 <?php
 
-include "WikiSyntaxEditor.php";
-
 class WikiEditorBuilder
 {
     static function build( $class = '' )
     {
-		if ( $class == '' ) $class = getSession()->getProjectIt()->get('WikiEditorClass');
-
-		if ( class_exists($class, false) ) return new $class;
-		
-		return new WikiSyntaxEditor;
+		if ( $class != '' && class_exists($class, false) ) return new $class;
+        $class = getSession()->getProjectIt()->get('WikiEditorClass');
+        if ( $class == '' ) $class = 'WikiRtfCKEditor';
+		return new $class;
     }
 }

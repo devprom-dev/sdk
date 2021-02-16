@@ -16,8 +16,7 @@ class ObjectModifyWebMethod extends WebMethod
 		 
 		$this->object_it = $object_it;
 		$this->setObjectUrl($this->object_it->getEditUrl());
-		
-		$this->setRedirectUrl( 'function() { window.location.reload(); }' );
+		$this->setRedirectUrl( 'devpromOpts.updateUI' );
 	}
 
 	function getCaption()
@@ -51,7 +50,6 @@ class ObjectModifyWebMethod extends WebMethod
 				'class_name' => get_class($this->getObject()),
 				'entity_ref' => $this->getObject()->getEntityRefName(),
 				'object_id' => $this->object_it->getId(),
-				'form_title' => $this->object_it->getObjectDisplayName(),
 				'can_delete' => var_export(getFactory()->getAccessPolicy()->can_delete($this->object_it), true),
 				'can_modify' => var_export(getFactory()->getAccessPolicy()->can_modify($this->object_it), true),
 				'delete_reason' => getFactory()->getAccessPolicy()->getReason()

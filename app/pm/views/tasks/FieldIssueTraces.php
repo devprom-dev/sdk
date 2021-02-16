@@ -1,6 +1,6 @@
 <?php
 
-class FieldIssueTraces extends Field
+class FieldIssueTraces extends FieldForm
 {
 	private $traces = '';
 
@@ -23,6 +23,7 @@ class FieldIssueTraces extends Field
 
         $uids = array();
 		foreach( $items as $class => $ids ) {
+		    if ( !class_exists($class) ) continue;
             $ids = array_filter($ids, function($value) {
 		        return $value > 0;
             });
@@ -37,20 +38,18 @@ class FieldIssueTraces extends Field
                 $names[$ref_it->getId()] = $uid->getUidWithCaption($ref_it);
                 $ref_it->moveNext();
             }
+
             $uids[$class] = array_slice(array_values($names), 0, 5);
             if ( count($names) > 5 ) {
-                $widget_it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', $class);
-                if ( $widget_it->getId() != '' ) {
-                    $widget_it = getFactory()->getObject($widget_it->get('ReferenceName'))->getExact($widget_it->getId());
-                    $uids[$class][] = '<a href="'.$widget_it->getUrl($class.'='.\TextUtils::buildIds(array_keys($names))).'">'.translate('список').'</a>';
+                $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIt($ref_it);
+                if ( $url != '' ) {
+                    $uids[$class][] = '<a href="'. $url . '" class="dashed embedded-add-button" target="_blank">'.translate('список').'</a>';
                 }
             }
         }
 
-		echo '<div class="input-block-level well well-text">';
-		    foreach( $uids as $items ) {
-                echo join('<br/>', $items).'<br/><br/>';
-            }
-		echo '</div>';
+        foreach( $uids as $items ) {
+            echo join('<br/>', $items).'<br/><br/>';
+        }
 	}
 }

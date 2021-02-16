@@ -7,15 +7,15 @@
 {% block content -%}
     <section class="card-section">
         <div class="container">
-            <div class="col-lg-8 col-lg-offset-2">
+            <div class="col-lg-10 col-lg-offset-1">
                 <div class="card text-center">
                     <div class="body">
-                        <form role="form" class="form-horizontal" action="{{ path('issue_create') }}" method="POST" {{ form_enctype(form) }}>
+                        {{ form_start(form, {"attr": {"class":"form-horizontal","action":path('issue_create')}}) }}
                             {{ form_widget(form) }}
                             <div class="row">
                                <input type="submit" class="btn btn-success" value="{{ 'issue.create'|trans }}">
                             </div>
-                        </form>
+                        {{ form_end(form) }}
                     </div>
                 </div>
             </div>
@@ -24,4 +24,16 @@
 {% endblock %}
 
 {% block javascripts %}
+    <script src="//{{ app.request.getHttpHost() ~ '/plugins/wrtfckeditor/ckeditor/ckeditor.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/locale/underi18n.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/plugins/wrtfckeditor/resources/js/locals/ru/resource.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/jquery/paste.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/flow/flow.min.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/co/bundles/Devprom/ServiceDeskBundle/public/js/wysiwyg.js?v=' ~ app_version }}"></script>
+    <script type="text/javascript">
+        $(document).ready( function() {
+            setupEditorGlobal();
+            setupWysiwygEditor('issue_form_description', 450);
+        });
+    </script>
 {% endblock %}

@@ -2,6 +2,7 @@
 include "WorkItemRegistry.php";
 include "WorkItemIterator.php";
 include "predicates/WorkItemStatePredicate.php";
+include "predicates/WorkItemExactTypeStatePredicate.php";
 
 class WorkItem extends MetaobjectStatable
 {
@@ -13,6 +14,7 @@ class WorkItem extends MetaobjectStatable
         $this->setAttributeType('TaskType', 'REF_WorkItemTypeId');
         $this->addAttribute('Description', 'WYSIWYG', translate('Описание'), false, false, '', 6);
         $this->addAttribute('IsTerminal', 'VARCHAR', '', false, false, '', 0);
+        $this->addAttribute('PlannedRelease', 'REF_ReleaseId', '', false, false, '', 0);
 
         $available = array (
             'Caption',

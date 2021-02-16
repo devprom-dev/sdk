@@ -1,7 +1,5 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/methods/ActuateWikiLinkWebMethod.php";
-include_once SERVER_ROOT_PATH."pm/methods/SyncWikiLinkWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/IgnoreWikiLinkWebMethod.php";
 include_once "FieldWikiPageTrace.php";
 
@@ -55,83 +53,15 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
  	
  	function getActions( $object_it, $item )
  	{
- 		global $model_factory;
- 		
  		$actions = array();
  		
  		$page_it = $object_it->getRef($this->getMenuField());
  		
 		array_push ( $actions, array( 
-			'click' => "javascript: window.location = '".$page_it->getViewUrl()."&baseline=".$object_it->get($object_it->object->getBaselineReference())."';",
+			'click' => "javascript: window.location = '".$page_it->getUidUrl()."&baseline=".$object_it->get($object_it->object->getBaselineReference())."';",
 			'name' => translate('Открыть') ) 
 		);
 
-		$baseline_it = $model_factory->getObject('Snapshot')->getRegistry()->Query( array (
-				new SnapshotsByObjectPredicate( $object_it->getRef('SourcePage') )
-		));
-		
-		if ( $object_it->get('IsActual') == 'N')
-		{
-			if ( $object_it->get('Type') == 'branch' )
-			{
-				$method = new SyncWikiLinkWebMethod($object_it);
-				
-				$method->setRedirectUrl("function() { $('#trace-state-".$object_it->getId()."').remove(); }");
-				
-				$actions[] = array();
-				
-				$actions[] = array( 
-					'click' => $method->getJSCall(),
-					'name' => $method->getCaption() 
-				);
-				
-				$method = new IgnoreWikiLinkWebMethod($object_it);
-						
-				$method->setRedirectUrl("function() { $('#trace-state-".$object_it->getId()."').remove(); }");
-				
-				$actions[] = array( 
-					'click' => $method->getJSCall(),
-					'name' => $method->getCaption() 
-				);
-			}
-			else
-			{
-				$method = new ActuateWikiLinkWebMethod($object_it);
-				
-				$method->setRedirectUrl("function() { $('#trace-state-".$object_it->getId()."').remove(); }");
-				
-				$actions[] = array();
-				
-				$actions[] = array( 
-					'click' => $method->getJSCall(),
-					'name' => $method->getCaption() 
-				);
-				
-				$baseline_it->moveFirst();
-				
-				$separator = true;
-				
-				while( !$baseline_it->end() )
-				{
-					if ( $separator )
-					{
-						$actions[] = array();
-						
-						$separator = false;
-					}
-					
-					$method = new ActuateWikiLinkWebMethod($object_it, $baseline_it);
-							
-					$actions[] = array( 
-						'click' => $method->getJSCall(),
-						'name' => $method->getCaption() 
-					);
-					
-					$baseline_it->moveNext();
-				}
-			}
-		}
-		
 		array_push ( $actions, array() );
 
 		$history_url = $page_it->getHistoryUrl();

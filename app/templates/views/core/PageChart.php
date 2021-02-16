@@ -1,5 +1,5 @@
-<?php if ( count($chartSettingsItems) > 0 ) { ?>
-    <div class="hidden-print filter">
+<?php if ( count($chartSettingsItems) > 0 && !$tableonly ) { ?>
+    <div class="hidden-print">
         <?php
         foreach ($chartSettingsItems as $filter) {
             $title = $filter['title'];
@@ -13,12 +13,10 @@
             }
             ?>
             <div class="btn-group pull-left">
-                <a class="btn btn-sm dropdown-toggle <?= ($selected ? 'btn-info' : 'btn-light') ?>" uid="<?=$filter['name']?>" href="#" data-toggle="dropdown" data-target="#chartsettings<?=$filter['name']?>">
+                <a class="btn btn-sm dropdown-toggle <?= ($selected ? 'btn-info' : 'btn-light') ?>" uid="<?=$filter['name']?>" data-toggle="dropdown">
                     <?=$title?>
                     <span class="caret"></span>
                 </a>
-            </div>
-            <div class="btn-group dropdown-fixed" id="chartsettings<?=$filter['name']?>">
                 <? echo $view->render('core/PopupMenu.php', array('items' => $filter['items'], 'uid' => $filter['name'])); ?>
             </div>
         <?php } ?>
@@ -28,7 +26,7 @@
     <br/>
 <?php } ?>
 
-<? if ( $demo_hint != '' ) { ?>
+<? if ( $demo_hint != '' && !$tableonly ) { ?>
 <div class="alert alert-hint">
     <?=$demo_hint?>
 </div>

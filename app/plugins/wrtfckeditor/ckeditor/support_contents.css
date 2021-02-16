@@ -1,0 +1,91 @@
+/*
+Copyright (c) 2003-2013, CKSource - Frederico Knabben. All rights reserved.
+For licensing, see LICENSE.html or http://ckeditor.com/license
+*/
+
+.cke_editable_themed
+{
+    padding: 6px 10px;
+}
+
+body.cke_editable
+{
+	/* Text color */
+	color: #333;
+
+	/* Remove the background color to make it transparent */
+	background-color: #fff;
+
+	margin: 10px 0 10px 0;
+
+    /* bootstrap theme */
+	font-family: "Roboto", sans-serif;
+	font-size: 14px;
+	color: #43484d;
+}
+
+.cke_contents_ltr p
+{
+	font-weight: normal;
+	margin: 0;
+	padding: 0;
+}
+.cke_contents_ltr table {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+a
+{
+	color: #0782C1;
+}
+
+ol,ul,dl
+{
+	/* IE7: reset rtl list margin. (#7334) */
+	*margin-right: 0px;
+}
+
+h1,h2,h3,h4,h5,h6
+{
+	line-height: 1.2em;
+}
+
+hr
+{
+	border: 0px;
+	border-top: 1px solid #ccc;
+}
+
+img.right {
+    border: 1px solid #ccc;
+    float: right;
+    margin-left: 15px;
+    padding: 5px;
+}
+
+img.left {
+    border: 1px solid #ccc;
+    float: left;
+    margin-right: 15px;
+    padding: 5px;
+}
+
+img:hover {
+	opacity: .9;
+	filter: alpha(opacity = 90);
+}
+
+pre
+{
+	white-space: pre-wrap; /* CSS 2.1 */
+	word-wrap: break-word; /* IE7 */
+}
+
+span.math-tex {
+	font-size: 180%;
+}
+
+.cke_editable td {
+	min-width: 18px;
+}

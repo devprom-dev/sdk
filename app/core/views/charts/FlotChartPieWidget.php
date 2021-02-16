@@ -1,5 +1,4 @@
 <?php
-
 include_once "FlotChartWidget.php";
 
 class FlotChartPieWidget extends FlotChartWidget
@@ -50,19 +49,15 @@ class FlotChartPieWidget extends FlotChartWidget
                                 color: '#000'
                             },
                             formatter: function(label, series){
-						        if ( label.length > 30 ) {
-                                    return '<div style="font-size:8pt;text-align:center;padding:2px;color:white;">'+Math.round(series.percent)+'%</div>';
-                                }
-                                else {
-                                    return '<div style="font-size:8pt;text-align:center;padding:2px;color:white;">'+label+'<br/>'+Math.round(series.percent)+'%</div>';
-                                }
+                                return '<div style="font-size:8pt;text-align:center;padding:2px;color:white;">'+
+                                    label.replace(/(.{30})..+/, "$1&hellip;")+'<br/>'+Math.round(series.percent)+'%</div>';
                             },
 						},
 						innerRadius: 0.5
 					}
 				},
 				legend: {
-					show: <?=($maxLabelLength > 30 ? "true" : "false")?>
+					show: <?=($maxLabelLength > 30 && $this->getShowLegend() && $_REQUEST['dashboard'] == '' ? "true" : "false")?>
 				},
 				radius: 1
 				<? if ( count($colors) > 0 ) { ?> ,colors: ['<?=join("','",$colors)?>'] <? } ?>
@@ -71,7 +66,10 @@ class FlotChartPieWidget extends FlotChartWidget
 		</script>
 		<?
     }
+
 	function getStyle() {
-		return "height:560px;width:560px;float:left;";
+        $height = $_REQUEST['height'] > 0 ? 'height:' . ($_REQUEST['height']) . 'px;' : 'height:560px;';
+        $width = $_REQUEST['width'] > 0 ? 'width:' . ($_REQUEST['width']) . 'px;' : 'width:65%;';
+		return $height . $width . "float:left;";
 	}
 }

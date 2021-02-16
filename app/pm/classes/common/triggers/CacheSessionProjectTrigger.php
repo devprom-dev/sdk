@@ -20,7 +20,6 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
             case 'pm_WorkspaceMenu':
             case 'pm_WorkspaceMenuItem':
             case 'pm_CustomReport':
-            case 'pm_State':
             case 'pm_Transition':
             case 'pm_TransitionPredicate':
             case 'pm_TransitionRole':
@@ -29,6 +28,7 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
                 $this->invalidateProjectCache();
 			    break;
 
+            case 'pm_State':
             case 'pm_Project':
 			case 'pm_ProjectLink':
             case 'pm_Participant':

@@ -76,38 +76,33 @@ class PMFormEmbedded extends FormEmbedded
         if( $this->getIteratorRef()->count() > 0 )
         {
             $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank';
+            $vpds = array();
 
             $attribute = $this->getListItemsAttribute();
             if ( $attribute == '' ) {
                 $object = $this->getIteratorRef()->object;
                 $ids = $this->getIteratorRef()->idsToArray();
+                $vpds = $this->getIteratorRef()->fieldToArray('VPD');
             }
             else {
                 $object = $this->getIteratorRef()->object->getAttributeObject($attribute);
                 $ids = preg_split('/,/',join(',',$this->getIteratorRef()->fieldToArray($attribute)));
-            }
 
-            $it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', get_class($object));
-            if ( $it->getId() != '' ) {
-                $widget_it = getFactory()->getObject($it->get('ReferenceName'))->getExact($it->getId());
-                if ( $widget_it->getId() != '' ) {
-                    $url = $widget_it->getUrl($this->getListUrlParms($object, $ids));
-                    echo '<a class="dashed embedded-add-button" target="'.$target.'" href="'.$url.'" tabindex="-1">';
-                        echo $this->getListItemsTitle();
-                    echo '</a>';
+                if ( count($ids) > 0 ) {
+                    $vpds = $object->getRegistryBase()->Query(array(new FilterInPredicate($ids)))->fieldToArray('VPD');
                 }
             }
 
-            if ( $object instanceof WikiPage ) {
-                $url = $object->getPageVersions().'page='.join(',',$ids);
-                echo '<a class="dashed embedded-add-button" target="'.$target.'" href="'.$url.'" tabindex="-1">';
-                    echo text(2242);
+            $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIds(get_class($object), $ids, $vpds, $this->getListUrlKey());
+            if ( $url != '' ) {
+                echo '<a class="dashed embedded-add-button items-list" target="'.$target.'" href="'.$url.'" tabindex="-1">';
+                    echo $this->getListItemsTitle();
                 echo '</a>';
             }
         }
     }
 
-    function getListUrlParms($object, $ids) {
-        return strtolower(get_class($object)).'='.\TextUtils::buildIds($ids).'&clickedonform';
+    function getListUrlKey() {
+        return 'ids';
     }
 }

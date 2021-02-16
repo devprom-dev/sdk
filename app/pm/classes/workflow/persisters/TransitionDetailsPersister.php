@@ -18,4 +18,8 @@ class TransitionDetailsPersister extends ObjectSQLPersister
             "	  FROM pm_TransitionRole a WHERE a.Transition = ".$this->getPK($alias)." ) ProjectRoles "
         );
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }

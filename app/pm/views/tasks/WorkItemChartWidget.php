@@ -4,12 +4,24 @@ include_once SERVER_ROOT_PATH."core/views/charts/FlotChartWidget.php";
 class WorkItemChartWidget extends FlotChartWidget
 {
 	private $iterator = null;
+	private $userIt = null;
 	private $start = '';
 	private $finish = '';
 	
 	public function __construct( $iterator, $start, $finish )
 	{
 		$this->iterator = $iterator;
+		$assignee = $this->iterator->fieldToArray('Assignee');
+		if ( count($assignee) < 1 ) {
+            $this->userIt = getFactory()->getObject('User')->getEmptyIterator();
+        }
+		else {
+            $this->userIt = getFactory()->getObject('User')->getRegistry()->Query(
+                array(
+                    new FilterInPredicate($assignee)
+                )
+            );
+        }
 		$this->start = $start;
 		$this->finish = $finish;
 		parent::__construct();
@@ -21,9 +33,9 @@ class WorkItemChartWidget extends FlotChartWidget
 		<link rel="stylesheet" href="/scripts/vis/vis.min.css?v=<?=$_SERVER['APP_VERSION']?>" />
 		<script src="/scripts/vis/moment-with-locales.min.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
 		<script src="/scripts/vis/vis.min.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
-		<script src="/scripts/vis/handlebars-v2.0.0.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
+		<script src="/scripts/vis/handlebars-v4.1.0.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
 		<script id="task-template" type="text/x-handlebars-template">
-            {{uidText}} {{title}}
+            {{uidText}} {{{title}}}
 		</script>
 
 		<?php
@@ -40,9 +52,9 @@ class WorkItemChartWidget extends FlotChartWidget
 				 start: '<?=$this->start?>',
 				 end: '<?=$this->finish?>',
 				 editable: false,
-				margin: {
+                 margin: {
 					item: {
-						horizontal: 0
+						horizontal: -1
 					}
 				},
                 hiddenDates: [
@@ -87,18 +99,14 @@ class WorkItemChartWidget extends FlotChartWidget
         $groups = array();
         $index = 0;
 
-        $userIt = getFactory()->getObject('User')->getRegistry()->Query(
-            array(
-                new FilterInPredicate($this->iterator->fieldToArray('Assignee'))
-            )
-        );
-        while( !$userIt->end() ) {
-            $groups[$userIt->getId()] = array (
-                'id' => $userIt->getId(),
-                'content' => $userIt->getDisplayName(),
+        $this->userIt->moveFirst();
+        while( !$this->userIt->end() ) {
+            $groups[$this->userIt->getId()] = array (
+                'id' => $this->userIt->getId(),
+                'content' => $this->userIt->getDisplayName(),
                 'index' => $index++
             );
-            $userIt->moveNext();
+            $this->userIt->moveNext();
         }
 
     	return array_values($groups);
@@ -132,27 +140,35 @@ class WorkItemChartWidget extends FlotChartWidget
 
             $end[$userId] = $this->iterator->getDateFormatUser('FinishDate', '%Y-%m-%d %H:%M:%S');
     	    if ( $end[$userId] == '' ) {
-                $leftHours = max($this->iterator->get('LeftWork'), $this->iterator->get('EstimationLeft'));
+                $leftHours = $this->iterator->get('LeftWork');
                 if ( $leftHours == '' ) $leftHours = $this->iterator->get('Planned');
                 if ( $leftHours == '' ) $leftHours = 1;
 
                 $end[$userId] = date('Y-m-d H:i:s',
-                    $this->addWorkingHours(strtotime($start[$userId]), $leftHours, true));
+                        $this->addWorkingHours(
+                                strtotime(max(date('Y-m-d H:i:s'),$start[$userId])),
+                                $leftHours,
+                                $this->iterator->get('Capacity'),
+                                true
+                        )
+                    );
             }
 
     		$item = array (
 				'id' => $this->iterator->get('ObjectClass').$this->iterator->getId(),
-				'start' => $start[$userId],
-                'end' => $end[$userId],
+				'start' => date('Y-m-d\TH:i:s', strtotime($start[$userId])),
+                'end' => date('Y-m-d\TH:i:s', strtotime($end[$userId])),
 				'template' => 'task-template',
-				'group' => $this->iterator->get('Assignee')
+				'group' => $this->iterator->get('Assignee'),
+                'style' => 'border-color:' . $this->iterator->get('PriorityColor') . ';background-color:' . \ColorUtils::hex2rgb($this->iterator->get('PriorityColor'), 0.3),
+                'className' => 'wich'
     		);
 
     	    if ( in_array($this->iterator->get('VPD'), $accessibleVpds) )
     	    {
                 $method = new ObjectModifyWebMethod($objectIt);
                 $item['url'] = $method->getJSCall();
-                $item['title'] = $this->iterator->getHtmlDecoded('Caption');
+                $item['title'] = $this->iterator->get('Caption');
                 $item['uidText'] = $uid->getObjectUid($objectIt);
             }
             $items[] = $item;
@@ -162,11 +178,11 @@ class WorkItemChartWidget extends FlotChartWidget
     	return $items;
     }
 
-    function addWorkingHours($timestamp, $hoursToAdd, $skipWeekends = false)
+    function addWorkingHours($timestamp, $hoursToAdd, $workingHours = 8, $skipWeekends = false)
     {
         // Set constants
         $dayStart = 10;
-        $dayEnd = 18;
+        $dayEnd = $dayStart + $workingHours;
 
         // For every hour to add
         for($i = 0; $i < $hoursToAdd; $i++)

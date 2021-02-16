@@ -1,5 +1,4 @@
 var resource = {
-    "kanban-intro": "Принципы <strong>Lean</strong> нашли отражение в подходе к разработке под названием <a href=\"http://devprom.ru/news/tag/Kanban\">Software Kanban</a>&nbsp;-&nbsp;максимизировать <strong>продуктивность команды</strong> за счет непрерывного совершенствования процесса и сокращения потерь внутри производственного цикла.</p><p><br />По аналогии с Waterfall каждое требование проходит ряд <strong>этапов обработки</strong>: анализ, проектирование, разработку, тестирование, документирование и т.д.&nbsp;Основное отличие в том, что любое требование может быть перенесено на следующий этап сразу, как только закончен предыдущий.</p><p><br />Kanban эффективно справляется с потоком <strong>незапланированной работы</strong>, то есть когда сложно оценить какие изменения и сколько их будет завтра.</p><p>&nbsp;</p><p><strong>Время цикла</strong> (с момента начала работы над требованием до момента завершения всех работ по нему)&nbsp;является одной из основных метрик и непрерывно уменьшается за счет внедрения эффективных практик разработки.</p><p>&nbsp;</p><p>Kanban опирается на <strong>самоорганизацию</strong> членов&nbsp;команд, активное взаимодействие между ними, интенсивный обмен опытом и знаниями, <a href=\"http://devprom.ru/features/Kanban-для-оптимизации-потока-задач\">подробнее...</a>",
     "kanban-backlog": "<strong>Визуализируйте процесс</strong> производства в виде столбцов на Kanban-доске, отражающих этапы обработки требований в вашем проекте. Удаляйте и добавляйте столбцы по мере выявления этапов производства.</p><p>&nbsp;</p><p>Задайте ограничения для количества <strong>незавершенной работы</strong>&nbsp;(Work In Progress) на каждом из этапов производства. Установите ограничение из рассчета количества задач, которые переносятся в следующий этап в течение одного дня. Перед <strong>узким местом</strong> в вашем процессе выстроится очередь задач.</p><p>&nbsp;</p><p>Пользовательские требования&nbsp;попадают в <strong>бэклог</strong> и располагаются в нем в порядке приоритета их реализации. Для документирования требований вы можете воспользоваться форматом&nbsp;<a href=\"http://devprom.ru/glossary/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%8F-%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D1%8F\">пользовательских&nbsp;историй</a>&nbsp;или описывать более подробные требования в формате <strong>вариантов использования</strong> и т.п.",
     "kanban-taskboard": "Электронная <strong>Kanban доска</strong>&nbsp;в показывает какие пожелания&nbsp;на каком этапе находятся. <strong>Визуализируйте процесс</strong> разработки, добавьте нужные столбцы или удалите лишние.</p><p><br />Участники команды берут в работу наиболее <strong>приоритетную&nbsp;карточку</strong>&nbsp;с описанием требований, обработанную&nbsp;на предыдущем этапе. Затем выполняют необходимую работу и переносят карточку&nbsp;в&nbsp;столбец с карточками,&nbsp;готовыми к очередному <strong>этапу обработки</strong>.</p><p>&nbsp;</p><p>Если в работе над требованием необходимо задействовать <strong>более одного участника</strong>, то можно создать дополнительные задачи из контекстного меню для карточки.</p><p>&nbsp;</p><p>В&nbsp;отличии от <strong>физической доски</strong> вам не нужно тратить время на запись и расшифровку текста задачи, карточки задач не окажутся случайно на полу, можно работать с распределенными командами и удаленными сотрудниками.",
     "kanban-leadtime": "Время решения пожелания или <strong>время цикла</strong>, то есть от момента начала работы над требованием, до момента завершения всех работ по нему, является основной характеристикой вашего процесса разработки.&nbsp;</p><p>&nbsp;</p><p>При помощи графика <strong>среднего времени решения</strong> следите за тем, чтобы скользящее среднее (среднее значение за предыдущую неделю) непрерывно <strong>снижалось</strong>. Это будет означать, что команда работает над своей эффективностью и повышает продуктивность.</p><p>&nbsp;</p><p>Для реализации нового требования и исправления ошибки часто требуется различное время. Изучайте показатели среднего времени цикла для <strong>разных типов</strong> пожеланий (требований) при помощи фильтров&nbsp;\"Тип\" и \"Приоритет\".",
@@ -27,12 +26,6 @@ var kanbanTourTemplate = "<div class='popover tour' style='max-width:550px;'>"+
 
 var kanbanSteps = [
     {
-        orphan: true,
-        content: tc('kanban-intro'),
-        template: kanbanTourTemplate.replace('550px', '650px'),
-        title: kanbanTourTitle
-    },
-    {
         element: "table.board-table tr:eq(0) th:eq(3)",
         content: tc('kanban-backlog'),
         placement: 'bottom',
@@ -40,7 +33,7 @@ var kanbanSteps = [
         title: kanbanTourTitle
     },
     {
-        element: "table.board-table tr.row-cards:eq(0) td.board-column:eq(2)",
+        element: "table.board-table tr.row-cards:eq(1) td.board-column:eq(1)",
         content: tc('kanban-taskboard'),
         placement: 'right',
         path: '/pm/%project%/module/kanban/requests/kanbanboard?tour='+kanbanTourId,
@@ -50,13 +43,6 @@ var kanbanSteps = [
         orphan: true,
         content: tc('kanban-leadtime'),
         path: '/pm/%project%/module/kanban/avgleadtime/avgleadtime?report=avgleadtime&tour='+kanbanTourId,
-        title: kanbanTourTitle
-    },
-    {
-        orphan: true,
-        content: tc('kanban-leadtime-details'),
-        placement: 'right',
-        path: '/pm/%project%/module/customs/workflowanalysis/workflowanalysis?report=workflowanalysis&tour='+kanbanTourId,
         title: kanbanTourTitle
     },
     {
@@ -82,7 +68,7 @@ if ( mode_reqs ) {
 if ( mode_qa ) {
     kanbanSteps.push(
         {
-            element: "table.table-inner tr:eq(1)",
+            element: "table.table-inner tr:eq(2)",
             content: tc('kanban-testing'),
             placement: 'bottom',
             path: '/pm/%project%/module/testing/results/testsofreleasereport?report=testsofreleasereport&basemodule=testing/results&&area=qa&tour='+kanbanTourId,

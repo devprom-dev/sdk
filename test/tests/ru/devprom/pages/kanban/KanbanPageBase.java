@@ -1,8 +1,5 @@
 package ru.devprom.pages.kanban;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -11,12 +8,12 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import ru.devprom.helpers.WebDriverPointerRobot;
 import ru.devprom.items.Project;
-import ru.devprom.pages.CKEditor;
 import ru.devprom.pages.project.IProjectBase;
 import ru.devprom.pages.project.ProjectPageBase;
 import ru.devprom.pages.project.ReleaseNewPage;
+import ru.devprom.pages.project.autoactions.AutoActionSettingsPage;
+import ru.devprom.pages.project.logs.LogPage;
 import ru.devprom.pages.project.requests.RequestsBoardPage;
 import ru.devprom.pages.project.requests.RequestsPage;
 import ru.devprom.pages.project.requirements.RequirementNewPage;
@@ -24,13 +21,16 @@ import ru.devprom.pages.project.requirements.RequirementsDocsPage;
 import ru.devprom.pages.project.requirements.RequirementsPage;
 import ru.devprom.pages.project.requirements.RequirementsTracePage;
 import ru.devprom.pages.project.settings.ProjectMembersPage;
-import ru.devprom.pages.project.tasks.TasksStatePage;
 import ru.devprom.pages.project.testscenarios.TestScenarioTestingPage;
 import ru.devprom.pages.project.testscenarios.TestScenariosPage;
 import ru.devprom.pages.project.testscenarios.TestSpecificationsPage;
 
 public class KanbanPageBase extends ProjectPageBase implements IProjectBase 
 {
+	//Автоматические действия
+	@FindBy(xpath = ".//a[@uid='autoactions']")
+	protected WebElement autoactionsItem;
+
 	@FindBy(xpath = "//a[@id='navbar-quick-create']")
 	protected WebElement addBtn;
 
@@ -53,7 +53,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 	protected WebElement versionField;
         
         //кнопка сохранить на форме начать тестирование
-        @FindBy(xpath = ".//*[@id='pm_TestSubmitBtn']")
+        @FindBy(xpath = ".//*[@id='pm_TestSubmitOpenBtn']")
 	protected WebElement saveTestingBtn;
         
         //кнопка сохранить на форме подтверждения перехода
@@ -80,9 +80,8 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         @FindBy(xpath = ".//*[@id='new-plannedrelease']")
 	protected WebElement newRelaeseBtn;
         
-        //разработка
-        //верхнее меню "Разработка"
-        @FindBy(xpath = ".//div[@id='main-sidebar']//li[@id='tab_dev']/a")
+        //меню "Разработка" на боковой панели
+        @FindBy (xpath = "//*[@id='main-sidebar']//*[@id='tab_reqs']")
 	protected WebElement developmentLink;
         
         //верхнее меню Контроль качества
@@ -109,20 +108,24 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         @FindBy(xpath = "//*[@uid='bugs']")
 	protected WebElement foundBugsItem;
         
-        //боковая панель тесты
+        //боковая панель Тестирование - Тестовые отчеты
         @FindBy(xpath = "//ul[@id='menu_qa']//*[@uid='testsofreleasereport']")
 	protected WebElement testsItem;
         
-        //боковая панель тест планы
-        @FindBy(xpath = "//*[@uid='testing-docs']")
-	protected WebElement testPlansItem;
+        //боковая панель Тестирование - Тест планы
+    @FindBy(xpath = "//*[@uid='testing-docs']")
+    protected WebElement testPlansItem;
+
+    //боковая панель Тестирование - Тестовые сценарии
+    @FindBy(xpath = "//ul[@id='menu_qa']//*[@uid='testingdocinprogress']")
+    protected WebElement testScenariosItem;
         
         //боковая панель документы требований
         @FindBy(xpath = "//li/a[@uid='requirements-docs']")
 	protected WebElement requirementsDoksItem;
         
         //боковая панель Реестр требований
-        @FindBy(xpath = "//li/a[@uid='requirements-list']")
+        @FindBy(xpath = "//li/a[@uid='requirementsnotimpl']")
 	protected WebElement requirementReestr;
         
         //боковая панель Сборки
@@ -137,9 +140,9 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         @FindBy(xpath = "(//a[@id='menu-group-tasks'])[2]")
 	protected WebElement tasksItem;
         
-        //подменю боковой панели "Задачи" - "Доска задач"
-         @FindBy(xpath = "(//li[@id='tasks-1']/a)[2]")
-	protected WebElement tasksBoardSubItem;
+        //подраздел "Доска задач анализа" отдела Разработка на боковой панели
+         @FindBy(xpath = "//*[@id='tasksboardfordesign']")
+	protected WebElement tasksBoardForDesignItem;
         
 	// --ИЗБРАННОЕ--
 	@FindBy(xpath = ".//div[@id='main-sidebar']//li[@id='tab_favs']/a")
@@ -156,6 +159,10 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 
 	@FindBy(xpath = ".//div[@id='sidebar']//a[@module='tasks-list']")
 	protected WebElement myTasks;
+
+	//Журнал изменений
+    @FindBy(xpath = "//*[@uid='project-log']")
+    protected WebElement log;
 
 	//ОТЧЕТЫ
 	
@@ -175,7 +182,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 	protected WebElement settingsLink;
 	
 	// Участники
-	@FindBy(xpath = ".//a[@uid='permissions-participants']")
+	@FindBy(xpath = "//div[contains(@class,'project-settings')]//a[@uid='permissions-participants']")
 	protected WebElement participantsListItem;
 	
 	@FindBy(xpath = ".//a[@uid='workflow-issuestate']")
@@ -186,7 +193,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 	protected WebElement methodologyItem;
 	
 	
-	public KanbanTasksPage gotoKanbanTasks() {
+	public KanbanTasksPage gotoBackLog() {
 		favLink.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(backlog));
 		backlog.click();
@@ -259,7 +266,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         String wishNumber = idWish.substring(2);
         WebElement menuItem = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+wishNumber+"')]//a[text()='"+menuItemString+"']"));
         WebElement submenuItem = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+wishNumber+"')]//a[text()='"+submenuItemString+"']"));
-        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +idWish+ "]')]/../.."));
+        WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[" +idWish+ "]')]/../../.."));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
         contextClick.contextClick(onElement).build().perform();
@@ -270,7 +277,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 
     public KanbanTaskViewPage openTask(String idTask) {
         try{
-           driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +idTask+ "]')]")).click();
+           driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[" +idTask+ "]')]")).click();
            Thread.sleep(3000);
            return new KanbanTaskViewPage(driver); 
         }
@@ -284,8 +291,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
     public KanbanTaskBoardPage gotoTaskBoard() {
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(developmentLink));
         developmentLink.click();
-        clickOnInvisibleElement(tasksItem);
-        clickOnInvisibleElement(tasksBoardSubItem);
+        clickOnInvisibleElement(tasksBoardForDesignItem);
         return new KanbanTaskBoardPage(driver);
     }
     
@@ -300,7 +306,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         try{
         Thread.sleep(3000);
         String wishNumber = idWish.substring(2);
-        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +idWish+ "]')]/../.."));
+        WebElement onElement = driver.findElement(By.xpath("//table[@id='requestboard1']//a[contains(.,'[" +idWish+ "]')]/../.."));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
         contextClick.contextClick(onElement).build().perform();
@@ -340,6 +346,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
             AnalyseLink.click();
             (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(requirementReestr));
             requirementReestr.click();
+            showAll();
             FILELOG.debug("Requirement Reeste Item clicked");
             return new RequirementsPage(driver);
         }
@@ -361,15 +368,16 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
     public void selectWish(String idWish) {
     	clickOnInvisibleElementWithCtrl(
 			driver.findElement(
-				By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +idWish+ "]')]/ancestor::div[contains(@class,'board_item')]")     
+				By.xpath("//table[@id='requestboard1']//a[contains(.,'[" +idWish+ "]')]/ancestor::div[contains(@class,'board_item')]")
 			)
     	);
     }
 
-    public RequirementsTracePage massRequirements() {
+    public RequirementsPage massRequirements() {
         clickOnInvisibleElement(moreBtn);
         clickOnInvisibleElement(massRequirementItem);
-        return new RequirementsTracePage(driver);
+        removeColumn("Content");
+        return new RequirementsPage(driver);
     }
     
      public TestScenariosPage  massTestDocs() {
@@ -403,12 +411,19 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         return new RequestsPage(driver);
     }
 
-    public KanbanTestsPage gotoTests() {
+    // переход на страницу просмотра Тестового отчета (Тестирование - Тестовые отчеты)
+    public KanbanTestPage gotoTests() {
         clickOnInvisibleElement(QCLink);
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(testsItem));
         clickOnInvisibleElement(testsItem);
-        return new KanbanTestsPage(driver);
-        
+        return new KanbanTestPage(driver);
+    }
+
+    //переход на страницу Тестирование - Тестовые сценарии
+    public TestScenariosPage gotoTestScenarios() {
+        clickOnInvisibleElement(QCLink);
+        clickOnInvisibleElement(testScenariosItem);
+        return new TestScenariosPage(driver);
     }
 
     public KanbanTasksPage gotoQATaskBoard() {
@@ -423,4 +438,17 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 		addSubTaskBtn.click();
 		return new KanbanAddSubtaskPage(driver);
 	}
+
+	//переход на страницу Настройки - Автоматические действия
+	public AutoActionSettingsPage gotoAutoActions() {
+		settingsLink.click();
+		autoactionsItem.click();
+		return new AutoActionSettingsPage(driver);
+		}
+
+	//переход в Журнал изменений
+    public LogPage gotoLogs() {
+        clickOnInvisibleElement(log);
+        return new LogPage(driver);
+    }
 }

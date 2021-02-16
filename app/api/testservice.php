@@ -309,9 +309,6 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
 			   		'Description' => $test_it->utf8towin($description)
 			)
 	);
-	
-	$test_it = $test_it->getRef('Test');
-	$test_it->updateResult();
  }
  
  //////////////////////////////////////////////////////////////////////////////////////

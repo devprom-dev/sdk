@@ -44,14 +44,11 @@ class AccessObjectIterator extends OrderedIterator
 
 	function getObjectIt()
 	{
-		global $model_factory;
-		 	
-		$class_name = $model_factory->getClass( $this->get('ObjectClass') );
+		$class_name = getFactory()->getClass( $this->get('ObjectClass') );
+		if ( !class_exists($class_name) ) $this->object->getEmptyIterator();
 		
-		if ( !class_exists($class_name) ) throw new Exception('Unknown class name: '.$this->get('ObjectClass'));
-		
-		$object = $model_factory->getObject($this->get('ObjectClass'));
-		
+		$object = getFactory()->getObject($this->get('ObjectClass'));
+        $object->setRegistry(new ObjectRegistrySQL($object));
 		return $object->getExact( $this->get('ObjectId') );
 	}
 	
@@ -79,8 +76,12 @@ class AccessObjectIterator extends OrderedIterator
  				break;
 
  			case 'modify':
- 				$caption .= ' ['.translate('Изменение').']';
+ 				$caption .= ' ['.text(2811).']';
  				break;
+
+            case 'cru':
+                $caption .= ' ['.text(2812).']';
+                break;
  		}
  		
  		return $caption;

@@ -2,7 +2,7 @@
 
 class CacheLock extends LockFileSystem
 {
-	function __construct( $timeout = 30 )
+	function __construct( $timeout = 5 )
 	{
 		parent::__construct('cache-global-lock');
 		$this->Wait($timeout);

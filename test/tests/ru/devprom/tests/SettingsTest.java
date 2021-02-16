@@ -39,18 +39,18 @@ public class SettingsTest extends ProjectTestBase {
   		FILELOG.debug("Created new project " + project.getName());
   		
   		RequestsPage mip = sdlc.gotoRequests();
-		mip.addColumn("Type");
-		mip.addFilter("author");
+		mip.showColumn("Type");
+		mip.setFilter("owner", "user-id");
 		
 		Assert.assertTrue(mip.isColumnPresent("type"), "Нет колонки Тип после добавления оригинальным пользователем");
-		Assert.assertTrue(mip.isFilterPresent("author"), "Нет фильтра Автор после добавления оригинальным пользователем");
+		Assert.assertTrue(mip.isFilterPresent("owner"), "Нет фильтра Автор после добавления оригинальным пользователем");
 		Assert.assertTrue(sdlc.isReportAccessible("favs", "", "Бэклог"), "Не виден отчет Баклог в Избранном для оригинального пользователя");
 	
 		mip.savePageSettins();
 		
 		MenuCustomizationPage mcp=  mip.gotoMenuFavsCustomization();
-	    mcp.searchMenuItem("Обсуждения");
-		mcp.addFilteredMenuItem("Обсуждения");
+	    mcp.searchMenuItem("Все обсуждения");
+		mcp.addFilteredMenuItem("Все обсуждения");
 		mcp.saveChanges();
 		sdlc = mcp.close();
 		
@@ -68,10 +68,10 @@ public class SettingsTest extends ProjectTestBase {
 	    LoginPage lp = pmp.logOut();
 	    FavoritesPage fp = lp.loginAs(member.getUsername(), member.getPass());
 	    sdlc = (SDLCPojectPageBase)  fp.gotoProject(project);
-	    Assert.assertTrue(sdlc.isReportAccessible("favs", "", "Обсуждения"), "Не виден отчет Обсуждения в Избранном для члена проекта");
+	    Assert.assertTrue(sdlc.isReportAccessible("favs", "", "Все обсуждения"), "Не виден отчет Обсуждения в Избранном для члена проекта");
 	    mip = sdlc.gotoRequests();
 	    Assert.assertTrue(mip.isColumnPresent("type"), "Нет колонки Тип в модуле Баклог члена проекта");
-		Assert.assertTrue(mip.isFilterPresent("author"), "Нет фильтра Автор в модуле Баклог члена проекта");
+		Assert.assertTrue(mip.isFilterPresent("owner"), "Нет фильтра Автор в модуле Баклог члена проекта");
 		
 		lp = pmp.logOut();
 		fp = lp.loginAs(username, password);
@@ -81,16 +81,16 @@ public class SettingsTest extends ProjectTestBase {
 		mip = msp.gotoRequests();
 		
 		Assert.assertFalse(mip.isColumnPresent("type"), "Осталась колонка Тип после сбрасывания настроек");
-		Assert.assertFalse(mip.isFilterPresent("author"), "Остался фильтр Автор после сбрасывания настроек");
-		Assert.assertFalse(sdlc.isReportAccessible("favs", "", "Обсуждения"), "Остался виден отчет Обсуждения в Избранном для оригинального пользователя");
+		Assert.assertFalse(mip.isFilterPresent("owner"), "Остался фильтр Автор после сбрасывания настроек");
+		Assert.assertFalse(sdlc.isReportAccessible("favs", "", "Все обсуждения"), "Остался виден отчет Обсуждения в Избранном для оригинального пользователя");
 	
 		lp = pmp.logOut();
 	    fp = lp.loginAs(member.getUsername(), member.getPass());
 	    sdlc = (SDLCPojectPageBase)  fp.gotoProject(project);
 	    mip = sdlc.gotoRequests();
 		Assert.assertFalse(mip.isColumnPresent("type"), "Осталась колонка Тип после сбрасывания настроек - для члена проекта");
-		Assert.assertFalse(mip.isFilterPresent("author"), "Остался фильтр Автор после сбрасывания настроек - для члена проекта");
-		Assert.assertFalse(sdlc.isReportAccessible("favs", "", "Обсуждения"), "Остался виден отчет Обсуждения в Избранном для члена проекта");
+		Assert.assertFalse(mip.isFilterPresent("owner"), "Остался фильтр Автор после сбрасывания настроек - для члена проекта");
+		Assert.assertFalse(sdlc.isReportAccessible("favs", "", "Все обсуждения"), "Остался виден отчет Обсуждения в Избранном для члена проекта");
 	
 	}
 

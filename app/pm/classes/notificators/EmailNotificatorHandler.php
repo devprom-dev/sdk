@@ -180,7 +180,6 @@ class EmailNotificatorHandler
 		switch ( $attr )
 		{
 			case 'State':
-                if ( $object_it->get('StateNameAlt') != '' ) return $object_it->get('StateNameAlt');
 				if ( method_exists($object_it, 'getStateIt') ) {
 					$state_it = $object_it->getStateIt();
 					return $state_it->getDisplayName();
@@ -189,35 +188,34 @@ class EmailNotificatorHandler
 		}
 		
 		$att_type = $object_it->object->getAttributeType($attr);
-		if ( $att_type == 'wysiwyg' )
-		{ 
-			$editor = WikiEditorBuilder::build();
+		switch( $att_type ) {
+            case 'wysiwyg':
+                $editor = WikiEditorBuilder::build();
 
-			$parser = $editor->getHtmlParser();
-			$parser->setObjectIt( $object_it );
-				
-			$value = $parser->parse( $object_it->getHtmlDecoded($attr) );
-            $value = TextUtils::breakLongWords($value);
+                $parser = $editor->getHtmlParser();
+                $parser->setObjectIt( $object_it );
 
-			return preg_replace('/\r|\n/', '', $value); 
-		}
-		
-		if ( $att_type == 'file' )
-		{
-			return $object_it->getFileName($attr);
-		}
-		else
-		{
-			$value = $object_it->getHtmlDecoded($attr);
-		}
-		
-		if ( $value == 'N' )
-		{
+                $value = $parser->parse( $object_it->getHtmlDecoded($attr) );
+                return preg_replace('/\r|\n/', '', $value);
+
+            case 'file':
+                return $object_it->getFileName($attr);
+
+            case 'date':
+                return $object_it->getDateFormattedShort($attr);
+
+            case 'datetime':
+                return $object_it->getDateTimeFormat($attr);
+
+            default:
+                $value = $object_it->getHtmlDecoded($attr);
+        }
+
+		if ( $value == 'N' ) {
 			$value = translate('Нет');
 		}
 		
-		if ( $value == 'Y' )
-		{
+		if ( $value == 'Y' ) {
 			$value = translate('Да');
 		}
 
@@ -275,8 +273,12 @@ class EmailNotificatorHandler
 
 		switch ( $attribute_name )
 		{
-			case 'Password': return false;
-            case 'State': return true;
+			case 'Password':
+            case 'OrderNum':
+                return false;
+
+            case 'State':
+                return true;
 			
 			default:
 				if ( $object_it->object->getAttributeType( $attribute_name ) == 'password' ) return false;

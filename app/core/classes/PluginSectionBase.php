@@ -110,6 +110,10 @@ class PluginSectionBase
     {
     }
 
+    function interceptMethodBulkFormExtendModel( $form )
+    {
+    }
+
  	function interceptMethodFormCreateFieldObject( & $form, $attr )
  	{
  	}
@@ -118,10 +122,6 @@ class PluginSectionBase
  	{
  	}
 
- 	function interceptMethodFormDrawScripts( & $form )
- 	{
- 	}
- 	
  	function interceptMethodListGetActions( & $table, & $actions )
  	{
  	}

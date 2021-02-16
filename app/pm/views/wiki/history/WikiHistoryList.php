@@ -1,11 +1,10 @@
 <?php
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
+include_once SERVER_ROOT_PATH.'pm/methods/RevertWikiWebMethod.php';
 include_once SERVER_ROOT_PATH . "pm/views/wiki/diff/WikiHtmlDiff.php";
 
 class WikiHistoryList extends ProjectLogList
 {
- 	var $prev_content;
- 	var $curr_content;
  	var $can_revert;
  	var $editor;
  	var $change_it;
@@ -33,27 +32,8 @@ class WikiHistoryList extends ProjectLogList
 				new SortAttributeClause('RecordCreated')
 			)
 		);
-
-		$object_it->moveFirst();
-		while( !$object_it->end() ) {
-			$this->curr_content[$object_it->getId()] = $object_it->getHtmlDecoded('Content');
-			$object_it->moveNext();
-		}
 	}
 
-	function getSorts()
-	{
-		$sorts = PageList::getSorts();
-		foreach( $sorts as $key => $sort )
-		{
-			if ( !$sort instanceof SortAttributeClause ) continue;
-			if ( $sort->getAttributeName() == 'ChangeDate' ) {
-				$sorts[$key] = new SortRecentClause();
-			}
-		}
-		return $sorts;
-	}
-	
 	function getColumnFields()
 	{
 		$fields = parent::getColumnFields();
@@ -74,57 +54,55 @@ class WikiHistoryList extends ProjectLogList
 		return $fields; 
 	}
 	
-	function getChangeIt( $object_it )
- 	{
-		$history_url = $object_it->getHtmlDecoded('ObjectUrl');
-		if ( $history_url == '' ) $history_url = $object_it->getHtmlDecoded('Content');
-		if ( preg_match('/\&version=([\d]+)/i', $history_url, $matches) )
-		{
-			$this->change_it->moveToId($matches[1]);
-			return $this->change_it->copy();
-		}
-		else
-		{
-			return $this->change_it->object->getEmptyIterator();
-		}
- 	}
- 	
-	function drawCell( $object_it, $attr ) 
+    function getChangeIds( $object_it )
+    {
+        $history_url = explode(',',$object_it->getHtmlDecoded('ObjectUrl'));
+        if ( count($history_url) < 1 ) $history_url = array($object_it->getHtmlDecoded('Content'));
+
+        $ids = array();
+        foreach( $history_url as $url ) {
+            if ( preg_match('/\&version=([\d]+)/i', $url, $matches) && is_object($this->change_it) ) {
+                $ids[] = $matches[1];
+            }
+        }
+        if ( count($ids) < 1 ) return array();
+        asort($ids);
+        return $ids;
+    }
+
+	function drawCell( $object_it, $attr )
 	{
 		switch ( $attr )
 		{
 			case 'Content':
-				if ( strpos($object_it->get('Content'), '[url=') === false || !is_object($this->change_it) ) {
-                    if ( $this->documentMode ) {
-                        parent::drawCell( $object_it, $attr );
-                    }
-                    else {
-                        PMPageList::drawCell( $object_it, $attr );
-                    }
-					break;
-				}
-				
-				$change_it = $this->getChangeIt( $object_it );
-				if ( $change_it->getId() > 0 )
-				{
-                    parent::drawCell( $object_it, 'Caption' );
-                    echo '<p/><br/>';
+			    $ids = $this->getChangeIds($object_it);
 
-					$page_id = $object_it->get('ObjectId');
-					$this->prev_content[$page_id] = $change_it->getHtmlDecoded('Content');
+                $this->change_it->moveToId(array_shift($ids));
+                $prevContent = $this->change_it->getHtmlDecoded('Content');
+                if ( count($ids) < 1 ) {
+                    $this->change_it->moveNext();
+                }
+                else {
+                    $this->change_it->moveToId(array_pop($ids));
+                    $this->change_it->moveNext();
+                }
+                $nowContent = $this->change_it->getHtmlDecoded('Content');
 
-					$diff = $this->getPagesDiff( $this->prev_content[$page_id], $this->curr_content[$page_id] );
-		            if ( $diff == '' ) {
-						echo translate('Нет изменений');
-		            }
-		            else {
-		            	echo $diff;
-		            }
-					$this->curr_content[$page_id] = $this->prev_content[$page_id];
-				}
-				else {
-                    parent::drawCell( $object_it, 'Caption' );
-				}
+                if ( $this->change_it->get('WikiPage') != $object_it->get('ObjectId') || $nowContent == '' ) {
+                    $pageIt = $this->getTable()->getObjectIt();
+                    $pageIt->moveToId($object_it->get('ObjectId'));
+                    $nowContent = $pageIt->getHtmlDecoded('Content');
+                }
+
+                if ( $prevContent != '' ) {
+                    $data = $object_it->getData();
+                    $data[$attr] = preg_replace(
+                        '/\[url=[^\]]+\]/i', $this->getPagesDiff( $prevContent, $nowContent ), $data[$attr]
+                    );
+                    $object_it = $object_it->object->createCachedIterator(array($data));
+                }
+
+                parent::drawCell( $object_it, $attr );
 				break;
 				
 			default:
@@ -139,25 +117,26 @@ class WikiHistoryList extends ProjectLogList
 		$actions = array();
 		if ( !is_object($this->change_it) ) return $actions;
 
-		$change_it = $this->getChangeIt( $object_it );
-		if ( $change_it->getId() < 1 ) return $actions;
+		$ids = $this->getChangeIds( $object_it );
+        $revisionBeforeChanges = array_shift($ids);
+		if ( $revisionBeforeChanges < 1 ) return $actions;
 		
 		$page_it = $object_it->getObjectIt();
 
 		$method = new ObjectModifyWebMethod($page_it);
-        $method->setObjectUrl($method->getObjectUrl() . '&revision=' . $change_it->getId());
+        $method->setObjectUrl($method->getObjectUrl() . '&revision=' . $revisionBeforeChanges);
 		$actions[] = array( 
 			'name' => text(1847),
 			'url' => $method->getJSCall()
 		);
 		
 		$method = new RevertWikiWebMethod();
-		if ( $change_it->get('RecentChangesCount') < 1 && getFactory()->getAccessPolicy()->can_modify($page_it) )
+		if ( getFactory()->getAccessPolicy()->can_modify($page_it) )
 		{
 			$actions[] = array();
 			$actions[] = array(
 				'name' => translate('Отменить'),
-				'url' => $method->url( $page_it, $object_it )
+				'url' => $method->url( $page_it, $object_it, $revisionBeforeChanges )
 			);
 		}
 		
@@ -166,7 +145,7 @@ class WikiHistoryList extends ProjectLogList
 	
 	function getPagesDiff( $prev_content, $curr_content )
 	{
-		$html = '<div class="reset wysiwyg">';
+		$html = '<div class="wysiwyg-body">';
 		$diffBuilder = new WikiHtmlDiff(
 			$this->parser->parse($prev_content),
 			$this->parser->parse($curr_content)

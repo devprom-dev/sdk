@@ -1,8 +1,5 @@
 <?php
-
-include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
 include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorEmbeddedForm.php";
-include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.php';
 include SERVER_ROOT_PATH.'cms/c_metaobject_view.php';
 include_once SERVER_ROOT_PATH.'cms/views/FieldDictionary.php';
 include_once SERVER_ROOT_PATH.'cms/views/FieldAutoCompleteObject.php';
@@ -11,14 +8,10 @@ include "FieldListOfReferences.php";
 class PageForm extends MetaObjectForm
 {
     var $page;
-
-    private $model_validator = null;
-	private $redirect_url = '';
 	private $system_attributes = array();
 	private $transitions_array = array();
 	private $target_states_array = array();
 	private $transition_it = null;
-	private $transition_rules_it = null;
 	private $transition_appliable = array();
 	private $transition_messages = array();
 	private $plugins = array();
@@ -46,6 +39,11 @@ class PageForm extends MetaObjectForm
 
     function buildForm()
     {
+        $this->extendModel();
+    }
+
+    protected function extendModel()
+    {
     }
 
     function setObjectIt( $object_it )
@@ -54,46 +52,45 @@ class PageForm extends MetaObjectForm
         parent::setObjectIt($object_it);
     }
 
- 	function buildModelValidator()
+ 	function getValidators()
  	{
- 		$validator = new ModelValidator();
- 		
+ 		$validators = array();
 		$type_validation_attrs = array();
 		
 		// build specific field validators
 		foreach( $this->getObject()->getAttributes() as $attribute => $data )
 		{
 		    if ( $attribute == 'TransitionComment' ) {
-                $validator->addValidator(new ModelValidatorObligatory(array('TransitionComment')));
+                $validators[] = new ModelValidatorObligatory(array('TransitionComment'));
                 continue;
             }
 
-			$field = $this->createFieldObject($attribute);
+			$field = $this->createField($attribute);
 			if ( is_null($field) ) {
-				if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
+				if ( !$this->getObject()->IsAttributePersisted($attribute) ) continue;
 				$type_validation_attrs[] = $attribute;
 				continue;
 			}
 
             $field->setName($attribute);
 			$field_validator = $field->getValidator();
-			
+
 			if ( $field_validator instanceof ModelValidatorType ) {
-				if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
+				if ( !$this->getObject()->IsAttributePersisted($attribute) ) continue;
 				$type_validation_attrs[] = $attribute;
 			}
 			else {
-				$validator->addValidator($field_validator);
+                $validators[] = $field_validator;
 			}
 		}
 
 		// basic (type based) validation used for hidden fields and simple types (int, string, etc.)
 		if ( count($type_validation_attrs) > 0 ) {
-            $validator->addValidator(new ModelValidatorObligatory($type_validation_attrs));
-			$validator->addValidator(new ModelValidatorTypes($type_validation_attrs));
+            $validators[] = new ModelValidatorObligatory($type_validation_attrs);
+            $validators[] = new ModelValidatorTypes($type_validation_attrs);
 		}
 
- 		return $validator;
+        return $validators;
  	}
  	
  	function buildSystemAttributes()
@@ -127,8 +124,6 @@ class PageForm extends MetaObjectForm
 		foreach( $this->transitions_array as $key => $data ) {
 			$this->transitions_array[$key] = $transition_it->object->createCachedIterator($data);
 		}
-
-		$this->transition_rules_it = WorkflowScheme::Instance()->getStatePredicateIt($this->getObject());
  	}
  	
  	function getTransitionIt()
@@ -154,31 +149,8 @@ class PageForm extends MetaObjectForm
 		$this->workflowParms = $parms;
 	}
  	
- 	function getFormPage()
- 	{
-		global $_SERVER;
-
-		$parts = preg_split('/\&/', $_SERVER['QUERY_STRING']);
-		
-		foreach ( array_keys($parts) as $key )
-		{ 
-			if ( strpos($parts[$key], 'project=') !== false )
-			{
-				unset($parts[$key]);
-			}
-
-			if ( strpos($parts[$key], 'namespace=') !== false )
-			{
-				unset($parts[$key]);
-			}
-
-			if ( strpos($parts[$key], 'module=') !== false )
-			{
-				unset($parts[$key]);
-			}
-		}
-		
-		return $this->getObject()->getPage().join($parts, '&');
+ 	function getFormPage() {
+		return $this->getObject()->getPage().trim(\SanitizeUrl::getSelfUrl(), '?');
  	}
 
  	public function setRedirectUrl( $url )
@@ -224,17 +196,7 @@ class PageForm extends MetaObjectForm
 		return SanitizeUrl::parseSystemUrl($url);
 	}
 	
-	function getModelValidator()
-	{
-		if ( !is_object($this->model_validator) )
-		{
-			$this->model_validator = $this->buildModelValidator();
-		}
-		
-		return $this->model_validator;
-	}
- 	
-	function IsNeedButtonNew() 
+	function IsNeedButtonNew()
 	{
 		return false;
 	}
@@ -262,39 +224,91 @@ class PageForm extends MetaObjectForm
 		return translate($this->object->getDisplayName());
 	}
 
-	function createFieldObject( $name ) 
+    function createField( $name )
+    {
+        $field = null;
+        foreach( $this->plugins as $plugin ) {
+            $field = $plugin->interceptMethodFormCreateFieldObject( $this, $name );
+            if ( is_object($field) ) break;
+        }
+        if ( !is_object($field) ) {
+            $field = $this->createFieldObject( $name );
+        }
+        if( !is_object($field) ) return null;
+
+        if ( $field instanceof FieldDateTime || $field instanceof FieldDate ) {
+            $field->setId($this->object->getEntityRefName().$name.$this->getId());
+        }
+        else {
+            $field->setId($this->object->getEntityRefName().$name);
+        }
+        $field->setReadOnly( !$this->IsAttributeEditable($name) );
+        $field->setEditMode( $this->getEditMode() );
+        $field->setName($name);
+
+        if ( $this->getEditMode() ) {
+            $field->setDefault($this->getDefaultValue($name));
+        }
+
+        if ( is_a($field, 'FieldFile') ) {
+            $field->setValue( $this->getFieldValue($name.'Ext') );
+        }
+        else {
+            $field->setValue($this->getFieldValue($name));
+        }
+
+        return $field;
+    }
+
+	function createFieldObject( $name )
 	{
-   	    foreach( $this->plugins as $plugin )
-        {
-        	$field = $plugin->interceptMethodFormCreateFieldObject( $this, $name );
-        	if ( is_object($field) ) return $field;
-		}
-    		    
+	    $attributeGroups = $this->getObject()->getAttributeGroups($name);
+
 		if( $this->object->IsReference( $name ) )
 		{
     		$object = $this->object->getAttributeObject($name);
-    		if ( is_object($this->getObjectIt()) && $object->getVpdValue() != '' )
-    		{
-    			$object->setVpdContext($this->getObjectIt());
-    		}
 
-    		return is_object($object->entity) && $object->entity->get('IsDictionary') == 'Y'
-    			? new FieldDictionary( $object ) : new FieldAutoCompleteObject( $object );
+    		if ( is_object($object->entity) && $object->IsDictionary() ) {
+                if ($this->getAction() == 'view') {
+                    return new FieldReferenceAttribute(
+                        $this->getObjectIt(),
+                        $name,
+                        $this->getObject()->getAttributeObject($name),
+                        array(),
+                        'btn-xs'
+                    );
+                } else {
+                    return new FieldDictionary( $object );
+                }
+            }
+
+    		if ( in_array('multiselect', $attributeGroups) ) {
+                $field = new FieldDictionary( $object, $name );
+                $field->setMultiple(true);
+                $field->setAttributes($attributeGroups);
+                return $field;
+            }
+
+            $field = new FieldAutoCompleteObject( $object );
+    		if ( count($object->getAttributesByGroup('alternative-key')) > 0 ) {
+                $field->setAppendable();
+            }
+    		return $field;
     	}
 
-        if ( in_array('positive-negative', $this->getObject()->getAttributeGroups($name)) ) {
+        if ( in_array('positive-negative', $attributeGroups) ) {
             return new FieldHoursPositiveNegative();
         }
 
-    	if ( in_array('hours', $this->getObject()->getAttributeGroups($name)) ) {
+    	if ( in_array('hours', $attributeGroups) ) {
             return new FieldHours();
         }
 
-        if ( in_array('astronomic-time', $this->getObject()->getAttributeGroups($name)) ) {
+        if ( in_array('astronomic-time', $attributeGroups) ) {
             return new FieldHours(FieldHours::HOURS_CALENDAR);
         }
 
-        if ( in_array('working-time', $this->getObject()->getAttributeGroups($name)) ) {
+        if ( in_array('working-time', $attributeGroups) ) {
             return new FieldHours(FieldHours::HOURS_WORKING);
         }
 		return parent::createFieldObject( $name );
@@ -312,38 +326,48 @@ class PageForm extends MetaObjectForm
 
 	function IsAttributeEditable($attr_name)
     {
-        if ( $this->getObject()->getAttributeType($attr_name) == 'wysiwyg' ) {
-            if ( !$this->getEditMode() && defined('WYSIWYG_EDITABLE') ) {
-                return WYSIWYG_EDITABLE && parent::IsAttributeEditable($attr_name);
-            }
+        if ( !$this->getEditMode() && defined('WYSIWYG_EDITABLE') ) {
+            return WYSIWYG_EDITABLE && parent::IsAttributeEditable($attr_name);
         }
         return parent::IsAttributeEditable($attr_name);
     }
 
+    function IsAttributeVisible($attr_name)
+    {
+        if ( !$this->getEditMode() ) {
+            if ( !$this->IsAttributeEditable($attr_name) ) {
+                return $this->getFieldValue($attr_name) != '' && parent::IsAttributeVisible($attr_name);
+            }
+        }
+        return parent::IsAttributeVisible($attr_name);
+    }
+
+    function getModifyActions( $objectIt )
+    {
+        $method = new ObjectModifyWebMethod($objectIt);
+        return array(
+            'modify' => array(
+                'name' => $method->getCaption(),
+                'url' => $this->IsFormDisplayed() ? $method->getJSCall() : '#',
+                'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall(),
+                'uid' => 'modify',
+                'view' => 'button',
+                'button-class' => 'btn-info',
+                'icon' => 'icon-pencil'
+            )
+        );
+    }
+
     function getActions()
 	{
-		$actions = array(
-            'modify' => array()
-        );
+		$actions = array();
 
 		$object_it = $this->getObjectIt();
 
-		$method = new ObjectModifyWebMethod($object_it);
-        if ( $this->IsFormDisplayed() ) {
-            $method->setRedirectUrl('function(){window.location.reload();}');
+		$modifyActions = $this->getModifyActions($object_it);
+		if ( count($modifyActions) > 0 ) {
+            $actions += $modifyActions;
         }
-        else {
-            $method->setRedirectUrl('donothing');
-        }
-        $actions['modify'] = array(
-            'name' => $method->getCaption(),
-            'url' => $this->IsFormDisplayed() ? $method->getJSCall() : '#',
-            'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall(),
-            'uid' => 'modify',
-            'view' => 'button',
-            'button-class' => 'btn-info',
-            'icon' => 'icon-pencil'
-        );
 
 		if( getFactory()->getAccessPolicy()->can_modify_attribute($object_it->object, 'State') )
 		{
@@ -381,9 +405,6 @@ class PageForm extends MetaObjectForm
 			$plugin_actions = array_merge($plugin_actions, $plugin->getObjectActions( $object_it ));
 		}
 		if ( count($plugin_actions) > 0 ) {
-            foreach( $plugin_actions as $key => $action ) {
-                $plugin_actions[$key]['url'] = str_replace('donothing', 'function(){window.location.reload();}', $action['url']);
-            }
 			$more_actions = array_merge( $more_actions, array(array()), $plugin_actions );
 		}
 
@@ -394,16 +415,14 @@ class PageForm extends MetaObjectForm
 			$actions = array_merge($actions, array(array()), $more_actions);
 		}
 
-		if ( $this->IsFormDisplayed() ) {
-            $export_actions = $this->getExportActions($object_it);
-            if ( count($export_actions) > 1 ) {
-                $actions[] = array();
-                $actions[] = array(
-                    'name' => translate('Экспорт'),
-                    'items' => $export_actions,
-                    'uid' => 'export'
-                );
-            }
+        $export_actions = $this->getExportActions($object_it);
+        if ( count($export_actions) > 1 ) {
+            $actions[] = array();
+            $actions[] = array(
+                'name' => translate('Экспорт'),
+                'items' => $export_actions,
+                'uid' => 'export'
+            );
         }
 
         return $actions;
@@ -435,11 +454,8 @@ class PageForm extends MetaObjectForm
 				continue;
 			}
 
-			$skip_transition = !$transition_it->doable(
-			    $object_it,
-                $this->transition_rules_it->object->createCachedIterator(
-                    $this->transition_rules_it->getSubset('Transition', $transition_it->getId())
-                )
+			$skip_transition = !$transition_it->doable( $object_it,
+                WorkflowScheme::Instance()->getTransitionPredicateIt($transition_it)
             );
 			if ( $skip_transition ) {
 			    $reason = $transition_it->getNonDoableReason();
@@ -453,11 +469,6 @@ class PageForm extends MetaObjectForm
 			$method = new TransitionStateMethod( $transition_it, $object_it );
 			$target_state = $this->target_states_array[$transition_it->getId()]->get('ReferenceName');
 			$method->setTargetStateRefName($target_state);
-			
-			if ( !$this->IsFormDisplayed() )
-			{
-				$method->setRedirectUrl('donothing');
-			}
 
 			$actions[] = array ( 
 					'name' => $method->getCaption(), 
@@ -484,19 +495,13 @@ class PageForm extends MetaObjectForm
 		return array();
 	}
 
-	function getDeleteActions()
+	function getDeleteActions( $objectIt )
 	{
 	    $actions = array();
 	    
-	    $object_it = $this->getObjectIt();
-	    
-		if ( is_object($object_it) && !$this->getEditMode() )
-		{
-			$method = new DeleteObjectWebMethod($object_it);
-			if ( $method->hasAccess() )
-			{
-				if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-				
+		if ( is_object($objectIt) && !$this->getEditMode() ) {
+			$method = new DeleteObjectWebMethod($objectIt);
+			if ( $method->hasAccess() ) {
 			    $actions[] = array(
 				    'name' => $method->getCaption(),
                     'url' => $method->getJSCall(),
@@ -521,10 +526,13 @@ class PageForm extends MetaObjectForm
 		$uid = new ObjectUid;
 
 		$attributes = array();
+		$system = $this->getObject()->getAttributesByGroup('system');
 		$scripts = '';
 
 		foreach( $this->object->getAttributes() as $key => $attribute )
 		{
+		    if ( in_array($key, $system) ) continue;
+
 		    $visible = $this->IsAttributeVisible($key);
 
 		    if ( !$this->object->IsAttributeStored($key) && $this->object->getAttributeOrigin($key) != ORIGIN_CUSTOM  ) {
@@ -533,15 +541,19 @@ class PageForm extends MetaObjectForm
 		    if ( $this->object->IsReference($key) ) {
 		        if ( !getFactory()->getAccessPolicy()->can_read($this->object->getAttributeObject($key)) ) continue;
             }
+		    if ( $this->object->getAttributeType($key) == 'password' && !$this->getEditMode() ) continue;
 
 			$attributes[$key] = array (
 				'visible' => $visible,
 				'required' => $this->IsAttributeRequired($key),
+                'editable' => $this->IsAttributeEditable($key),
 				'custom' => $this->object->getAttributeOrigin($key) == ORIGIN_CUSTOM,
-				'name' => $this->object->getAttributeUserName($key),
+				'name' => $this->getFieldName($key),
 				'description' => $this->getFieldDescription($key),
 				'type' => $this->object->getAttributeType($key),
-			    'value' => $this->getFieldValue($key)
+			    'value' => $this->getFieldValue($key),
+                'groups' => $this->object->getAttributeGroups($key),
+                'editmode' => $this->getEditMode()
 			);
 			
 			$field = $this->createField( $key );
@@ -559,13 +571,10 @@ class PageForm extends MetaObjectForm
 				}
 			}
 
-			if ( $field instanceof FieldWYSIWYG ) {
+			if ( $field instanceof FieldEditable ) {
 			}
-			else if ( $this->getObject()->IsReference($key) ) {
-                $attributes[$key]['text'] = $field->getText();
-            }
             else {
-				$attributes[$key]['text'] = IteratorBase::getHtmlValue($field->getValue());
+                $attributes[$key]['text'] = $field->getText();
 			}
 
 			if ( !$visible && $this->getEditMode() && $field instanceof FieldDictionary ) {
@@ -592,7 +601,13 @@ class PageForm extends MetaObjectForm
  			$attributes[$key]['class'] = strtolower(get_class($field));
 			$attributes[$key]['value'] = $field->getValue();
 			$attributes[$key]['id'] = $field->getId();
-			$attributes[$key]['field'] = $field;
+            $attributes[$key]['attribute'] = $key;
+            $attributes[$key]['field'] = $field;
+
+            if ( is_object($this->getObjectIt()) ) {
+                $method = new ModifyAttributeWebMethod($this->getObjectIt(), $key);
+                $attributes[$key]['url'] = $method->getUrl();
+            }
 		}
 
 		if ( $_REQUEST['formonly'] != '' )
@@ -603,7 +618,7 @@ class PageForm extends MetaObjectForm
 		{
 			$actions = is_object($this->getObjectIt()) ? $this->getActions() : array();
 			
-			$delete_actions = $this->getDeleteActions();
+			$delete_actions = $this->getDeleteActions($this->getObjectIt());
 			
 			if ( count($delete_actions) > 0 )
 			{
@@ -639,6 +654,15 @@ class PageForm extends MetaObjectForm
 		$scripts .= ob_get_contents();
 		ob_end_clean();
 
+		$form_groups = array();
+		foreach ($this->getPage()->getInfoSections() as $section) {
+		    if ( $section instanceof PageSectionAttributes ) {
+		        foreach( $section->getReferenceName() as $referenceName ) {
+                    $form_groups[$referenceName] = $section->getCaption();
+                }
+            }
+        }
+
 		return array(
 			'form' => $this,
 			'caption' => $this->getCaption(),
@@ -646,9 +670,9 @@ class PageForm extends MetaObjectForm
 			'form_processor_url' => $this->getFormPage(),
 			'form_id' => $this->getId(),
 			'action_mode' => $this->object->getEntityRefName().'action_mode',
-			'entity' => ($_REQUEST['entity'] != '' ? htmlentities($_REQUEST['entity']) : $this->object->getEntityRefName()),
-			'record_version' => $this->getFieldValue('RecordVersion'),
-			'class_name' => $this->object->getEntityRefName(),
+			'entity' => $this->object->getEntityRefName(),
+            'className' => get_class($this->object),
+			'record_version' => defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : $this->getFieldValue('RecordVersion'),
 			'object_id' => is_object($object_it) ? $object_it->getId() : '',
 		 	'redirect_url' => $this->getRedirectUrl(),
 			'attributes' => $attributes,
@@ -656,7 +680,6 @@ class PageForm extends MetaObjectForm
 			'actions' => $actions,
 			'uid_icon' => $object_uid_icon,
 		    'scripts' => $scripts,
-		    'draw_sections' => true,
 		    'form_body_template' => $this->getBodyTemplate(),
 		    'title' => $this->getPageTitle(),
 			'button_save_title' => translate('Сохранить'),
@@ -668,20 +691,22 @@ class PageForm extends MetaObjectForm
 			'alert' => join('<br/>',array_unique($this->transition_messages)),
 			'uid' => $uid_number,
 			'uid_url' => $uid_url,
-			'source_parms' => $this->getSourceParms(),
+			'source_parms' => $this->getSourceParms($attributes),
 			'form_class' => 'delete-confirm',
-            'showtabs' => true
+            'showtabs' => true,
+            'form_groups' => $form_groups
 		);
 	}
 	
-	function getTemplate()
-	{
-		return $_REQUEST['formonly'] ? "core/PageFormDialog.php" : "core/PageForm.php";
+	function getTemplate() {
+        if ( $_REQUEST['attributesonly'] != '' ) return "core/PageFormDetails.php";
+  	    if ( $_REQUEST['formonly'] != '' ) return "core/PageFormDialog.php";
+		return "core/PageForm.php";
 	}
 	
-	function getBodyTemplate()
-	{
-	    return $_REQUEST['formonly'] ? "core/PageFormBody.php" : "core/PageFormView.php";
+	function getBodyTemplate() {
+	    return $_REQUEST['formonly'] != ''
+            ? "core/PageFormBody.php" : "core/PageFormBodyView.php";
 	}
 	
 	function getPageTitle()
@@ -707,13 +732,15 @@ class PageForm extends MetaObjectForm
 		$render_parms = $this->getRenderParms();
 
 		if ( is_array($parms['sections']) )	{
+		    $wasAttributes = array();
 			foreach ( $parms['sections'] as $section ) {
 				if ( $section instanceof PageSectionAttributes ) {
 					$section->setObject($this->getObject());
-					$attributes = $section->getAttributes();
+					$attributes = $section->getAttributes($wasAttributes);
 					foreach( $attributes as $key => $attribute ) {
 						if ( !$this->IsAttributeVisible($attribute) ) unset($attributes[$key]);
 					}
+                    $wasAttributes = array_merge($wasAttributes, $attributes);
 					if ( count($attributes) < 1 ) {
 						unset($parms['sections'][$section->getId()]);
 					}
@@ -729,14 +756,15 @@ class PageForm extends MetaObjectForm
 		//skip values user can't modify
 		$parms = $_REQUEST;
         $object_it = $this->getObjectIt();
+        $object = $this->getObject();
 
-		foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
+		foreach( $object->getAttributes() as $attribute => $info ) {
 			if ( !$this->IsAttributeEditable($attribute) ) {
 			    if ( is_object($object_it) ) {
                     $parms[$attribute] = $object_it->getHtmlDecoded($attribute);
                 }
                 elseif ( $parms[$attribute] != '' ) {
-			        $default = $this->getObject()->getDefaultAttributeValue($attribute);
+			        $default = $object->getDefaultAttributeValue($attribute);
 			        if ( $default != '' ) {
                         $parms[$attribute] = $default;
                     }
@@ -745,16 +773,19 @@ class PageForm extends MetaObjectForm
                     }
                 }
 			}
-		}
-
-		$message = $this->getModelValidator()->validate( $this->getObject(), $parms );
-		if ( $message != '' ) return $message;
+            $groups = $object->getAttributeGroups($attribute);
+            if ( in_array('multiselect', $groups) ) {
+                if ( !array_key_exists($attribute, $parms) ) {
+                    $parms[$attribute] = array();
+                }
+            }
+        }
 
 		$_REQUEST = array_merge($_REQUEST, $parms);
 
 		return '';
 	}
-			
+
  	function getSite()
 	{
 		return 'co';
@@ -784,13 +815,9 @@ class PageForm extends MetaObjectForm
 
 	function drawScripts()
 	{
-	    foreach( $this->plugins as $plugin ) {
-	        $result = $plugin->interceptMethodFormDrawScripts( $this );
-	        if ( is_bool($result) ) return;
-	    }
 	}
 
-	protected function getSourceParms()
+	protected function getSourceParms($attributes)
 	{
 		$uid = new ObjectUid();
         $parms = array();

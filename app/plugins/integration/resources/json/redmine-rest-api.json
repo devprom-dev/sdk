@@ -69,5 +69,28 @@
     "Description": "time_entry.comments",
     "Capacity": "time_entry.hours",
     "ReportDate": "time_entry.spent_on"
+  },
+  "Task": {
+    "url": "/issues/{id}.json",
+    "url-append": "/issues.json",
+    "link": "/issues/{id}",
+    "Caption": "issue.subject",
+    "Description": "issue.description",
+    "ChangeRequest": "issue.parent.id",
+    "TaskType": {
+      "ReferenceName": "issue.tracker.name",
+      "mapping": [{"development":"Задача"}]
+    },
+    "Priority": {
+      "Caption": "issue.priority.name",
+      "mapping": [{"Обычный":"Normal"},{"Низкий":"Low"},{"Высокий":"Urgent"},{"Критичный":"Immediate"},{"":"*"}]
+    },
+    "Planned": "issue.estimated_hours",
+    "Author": {"Caption":"issue.author.name"},
+    "Assignee": {"Caption":"issue.assigned_to.name"},
+    "State": {
+      ".": "issue.status.name",
+      "mapping": [{"submitted":"New"},{"resolved":"Done"},{"submitted":"*"}]
+    }
   }
 }]

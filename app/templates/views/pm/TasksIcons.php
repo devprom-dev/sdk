@@ -18,7 +18,7 @@ foreach ( $states as $key => $state ) {
 ?>
 	<div class="btn-group board-tasks">
 		<?php if ( $state['url'] != '' ) { ?>
-		<a class="with-tooltip dropdown-toggle" data-toggle="dropdown" data-target="#tasksicons<?=$id?>" href="#" data-placement="right" data-original-title="" data-content="" info="<?=$state['url']?>">
+		<a class="with-tooltip dropdown-toggle" data-toggle="dropdown" data-target="#tasksicons<?=$id?>" href="" data-placement="right" data-original-title="" data-content="" info="<?=$state['url']?>">
 		<?php } ?>
 
 			<? if ( $state['photo_id'] != '' && $state['class'] != 'label-success' ) { ?>
@@ -36,10 +36,10 @@ foreach ( $states as $key => $state ) {
 		<?php if ( $state['url'] != '' ) { ?>
 		</a>
 		<?php } ?>
+        <?php if ( is_array($state['actions']) && count($state['actions']) > 0 ) { ?>
+            <div class="btn-group board-tasks dropdown-fixed" id="tasksicons<?=$id?>">
+                <? echo $this->render('core/PopupMenu.php', array ( 'items' => $state['actions'] ));?>
+            </div>
+        <? } ?>
 	</div>
-	<?php if ( is_array($state['actions']) && count($state['actions']) > 0 ) { ?>
-		<div class="btn-group board-tasks dropdown-fixed" id="tasksicons<?=$id?>">
-			<? echo $this->render('core/PopupMenu.php', array ( 'items' => $state['actions'] ));?>
-		</div>
-	<? } ?>
 <?php } ?>

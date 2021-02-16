@@ -26,7 +26,10 @@ public class LoadTemplatePage extends SDLCPojectPageBase {
 	
 	@FindBy(id = "Workflow")
 	protected WebElement statesBox;
-	
+
+	@FindBy(id = "Dictionaries")
+	protected WebElement dictionariesBox;
+
 	@FindBy(id = "Terminology")
 	protected WebElement terminologyBox; 
 	
@@ -102,7 +105,11 @@ public class LoadTemplatePage extends SDLCPojectPageBase {
     public void checkImportStateSettings(){
 		if (!isBoxChechedJQuery("Workflow")) statesBox.click();
 	}
-	
+
+	public void checkImportDictionariesSettings(){
+		if (!isBoxChechedJQuery("Dictionaries")) dictionariesBox.click();
+	}
+
     public void uncheckImportStateSettings(){
     	if (isBoxChechedJQuery("Workflow")) statesBox.click();
 	}

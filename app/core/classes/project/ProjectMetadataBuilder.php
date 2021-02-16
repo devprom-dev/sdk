@@ -15,9 +15,7 @@ class ProjectMetadataBuilder extends ObjectMetadataEntityBuilder
  		$metadata->setAttributeVisible( 'IsPollUsed', false );
  		$metadata->setAttributeVisible( 'StartDate', false );
  		$metadata->setAttributeVisible( 'FinishDate', false );
- 		
  		$metadata->setAttributeType( 'Description', 'TEXT' );
- 		
  		$metadata->setAttributeRequired( 'Budget', false );
  		$metadata->setAttributeRequired( 'Blog', false );
  		$metadata->setAttributeRequired( 'Version', false );
@@ -29,15 +27,20 @@ class ProjectMetadataBuilder extends ObjectMetadataEntityBuilder
         foreach ( array('Importance', 'IsClosed') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'bulk');
         }
+        foreach ( array('DaysInWeek') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'nonbulk');
+        }
+        foreach ( array('CodeName') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'alternative-key');
+        }
 
 		$system_attributes = array(
-		        'IsTender', 'Rating', 'IsPollUsed', 'Blog', 'IsBlogUsed', 
-		        'StartDate', 'FinishDate', 'HasMeetings', 'IsConfigurations',
-		        'Platform', 'DaysInWeek', 'WikiEditorClass', 'LinkedProject', 'Tools', 'Language'
+            'IsTender', 'Rating', 'IsPollUsed', 'Blog', 'IsBlogUsed',
+            'HasMeetings', 'IsConfigurations',
+            'Platform', 'LinkedProject', 'Tools',
+            'KnowledgeBaseServiceDesk', 'KnowledgeBaseAuthorizedAccess', 'KnowledgeBaseUseProducts'
 		);
-		
- 		foreach ( $system_attributes as $attribute )
-		{
+ 		foreach ( $system_attributes as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'system');
 		}
 		

@@ -13,7 +13,7 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 	function Query( $parms = array() )
 	{
 		$persisters = array();
-		
+
 		$query_filters = array();
 		$registry = $this->page_it->object->getRegistry();
 

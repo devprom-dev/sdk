@@ -1,5 +1,4 @@
 <?php
-
 include_once "TagFormEmbedded.php";
 
 class FieldTagTrace extends FieldForm
@@ -11,6 +10,7 @@ class FieldTagTrace extends FieldForm
  	{
  		$this->anchor = $anchor;
  		$this->field = $field;
+ 		parent::__construct();
  	}
 
  	function draw( $view = null )
@@ -35,9 +35,8 @@ class FieldTagTrace extends FieldForm
 		return null;
 	}
 	
-	function getForm()
-	{
-	    return new TagFormEmbedded( $this->getTagObject(), $this->getField() );
+	function getForm() {
+	    return new TagFormEmbedded($this->getTagObject(), $this->getField(), $this->getName());
 	}
 	
  	function render( $view )

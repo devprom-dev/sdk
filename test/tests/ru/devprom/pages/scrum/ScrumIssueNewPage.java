@@ -33,12 +33,14 @@ public class ScrumIssueNewPage extends ScrumPageBase{
     @FindBy(id = "pm_ChangeRequestSubmitBtn")
 	protected WebElement saveBtn;
 
+    @FindBy(id = "pm_ChangeRequestState")
+    protected WebElement stateSelector;
+
     public ScrumIssueNewPage(WebDriver driver) {
         super(driver);
     }
     
     public void createIssue(ScrumIssue issue) {
-    	waitForDialog();
 		addName(issue.getName());
 		if (!"".equals(issue.getDescription())) 
                     addDescription(issue.getDescription());
@@ -46,7 +48,9 @@ public class ScrumIssueNewPage extends ScrumPageBase{
                     selectPiority(issue.getPriority());
 		if (!"".equals(issue.getEpic())) 
                     setEpic(issue.getEpic());
-                save();
+        if (!"".equals(issue.getState()))
+            setState(issue.getState());
+		submitDialog(saveBtn);
     	FILELOG.debug("Created Issue: " + issue.getName());
 	}
 
@@ -77,8 +81,9 @@ public class ScrumIssueNewPage extends ScrumPageBase{
         epicSelector.sendKeys(Keys.TAB);
     }
 
-    private void save() {
-        submitDialog(saveBtn);
+    public void setState(String state){
+        Select selDr = new Select(driver.findElement(By.xpath("//*[@name='State']")));
+        selDr.selectByValue(state);
     }
 
     public void createIssueWithNewEpic(ScrumIssue issue) {
@@ -90,7 +95,7 @@ public class ScrumIssueNewPage extends ScrumPageBase{
                     selectPiority(issue.getPriority());
 		if (!"".equals(issue.getEpic())) 
                     addNewEpic(issue.getEpic());
-                save();
+        submitDialog(saveBtn);
     	FILELOG.debug("Created Issue: " + issue.getName());
     }
 }

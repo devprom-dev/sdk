@@ -88,12 +88,19 @@ class TooltipService
 		}
 		else {
 			$tooltip_attributes = array_merge(
-				array('Caption', 'Description'),
+				array('Caption', 'Description', 'State'),
 				$tooltip_attributes
 			);
 		}
-	    $system_attributes = $object->getAttributesByGroup('system');
- 		$groupIndexes = array(
+	    $system_attributes = array_merge(
+	        $object->getAttributesByGroup('system'),
+            $object->getAttributesByType('password'),
+            array(
+                'Password', 'RecentComment'
+            )
+        );
+
+        $groupIndexes = array(
  		    '' => 0,
             'deadlines' => 1,
  		    'additional' => TOOLTIP_GROUP_ADDITIONAL,
@@ -103,7 +110,6 @@ class TooltipService
 
  		foreach ( $object->getAttributes() as $attribute => $parms )
  	 	{
- 	 		if ( $attribute == 'State' ) continue;
 			if ( in_array($attribute, $system_attributes) ) continue;
 			if ( $object_it->get($attribute) == '' ) continue;
 
@@ -111,8 +117,14 @@ class TooltipService
  	 		if ( $type == '' ) continue;
  	 		if ( !in_array($attribute, $tooltip_attributes) ) continue;
 
+ 	 		$title = translate($object->getAttributeUserName($attribute));
             if ( $object->IsReference($attribute) ) {
                 if ( !getFactory()->getAccessPolicy()->can_read($object->getAttributeObject($attribute)) ) continue;
+                $refIt = $object_it->getRef($attribute);
+                $typeAttribute = array_shift($refIt->object->getAttributesByGroup('type'));
+                $title = $refIt->count() == 1 && $refIt->get($typeAttribute) != ''
+                    ? $refIt->getRef($typeAttribute)->getDisplayName()
+                    : $title;
             }
 
             $group = array_shift(
@@ -123,7 +135,7 @@ class TooltipService
 
             $data[] = array (
                 'name' => $attribute,
-                'title' => translate($object->getAttributeUserName($attribute)),
+                'title' => $title,
                 'type' => $type,
                 'text' => $this->getAttributeValue( $object_it, $attribute, $type ),
                 'group' => $groupIndexes[$group]
@@ -138,7 +150,10 @@ class TooltipService
  	    switch ( $attribute )
  	    {
  	        case 'State':
- 	        	return $object_it->get('StateName');
+ 	            if ( $object_it instanceof \StatableIterator )
+ 	        	    return $object_it->getStateIt()->get('Caption');
+ 	            else
+ 	                break;
  	    }
  	    
  		switch ( $type )
@@ -154,7 +169,7 @@ class TooltipService
 
  			case 'date':
             case 'datetime':
-			    return $object_it->getDateFormatShort($attribute);
+			    return $object_it->getDateFormattedShort($attribute);
 
             case 'float':
                 if ( in_array('hours', $object_it->object->getAttributeGroups($attribute)) ) {
@@ -197,6 +212,24 @@ class TooltipService
 		 		}
 		 		else
 		 		{
+		 		    if ( $attribute == 'Caption' ) {
+		 		        if ( count($object_it->object->getAttributesByGroup('hierarchy-parent')) > 0 ) {
+		 		            if ( $object_it->get('ParentPath') != '' ) {
+                                $parentTitles = array();
+                                $parentIt = $object_it->object->getRegistry()->Query(
+                                    array(
+                                        new \FilterInPredicate(\TextUtils::parseIds($object_it->get('ParentPath'))),
+                                        new \SortIndexClause()
+                                    )
+                                );
+                                while( !$parentIt->end() ) {
+                                    $parentTitles[] = $parentIt->getHtml($attribute);
+                                    $parentIt->moveNext();
+                                }
+                                return join(' / ', $parentTitles);
+                            }
+                        }
+                    }
  					return $object_it->getHtml($attribute);
 		 		}
  	 	}

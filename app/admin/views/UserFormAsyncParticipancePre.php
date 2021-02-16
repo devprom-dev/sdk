@@ -101,7 +101,7 @@ class UserParticipancePreForm extends AdminForm
 		return true;
 	}
 
-	function IsAttributeModifable( $attribute )
+	function IsAttributeModifiable( $attribute )
 	{
 		switch ( $attribute )
 		{

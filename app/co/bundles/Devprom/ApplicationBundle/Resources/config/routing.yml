@@ -69,6 +69,16 @@ profile:
     defaults: { _controller: ApplicationBundle:Profile:form }
     methods:  GET
 
+profile_notications:
+    path:  /notifications
+    defaults: { _controller: ApplicationBundle:Profile:notifications }
+    methods:  GET
+
+profile_keys:
+    path:  /keys
+    defaults: { _controller: ApplicationBundle:Profile:keys }
+    methods:  GET
+
 app_user_invitation_form:
     path:  /invite
     defaults: { _controller: ApplicationBundle:Invitation:form }

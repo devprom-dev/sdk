@@ -11,8 +11,7 @@ class ChangeLogEntityRegistry extends ObjectRegistrySQL
     
     function createSQLIterator( $sql )
  	{
- 	 	foreach( getSession()->getBuilders('ChangeLogEntitiesBuilder') as $builder )
- 	    {
+ 	 	foreach( getSession()->getBuilders('ChangeLogEntitiesBuilder') as $builder ) {
  	        $builder->build( $this );
  	    }
  	    

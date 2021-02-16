@@ -5,128 +5,150 @@ include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
 
 class ReintegrateWikiTraceWebMethod extends WebMethod
 {
-    private $traceIt = null;
+    private $fromIt = null;
+    private $toIt = null;
 
-	function __construct( $traceIt = null )
+	function __construct( $fromIt = null, $toIt = null )
 	{
 		parent::__construct();
-		$this->traceIt = $traceIt;
+		$this->fromIt = $fromIt;
+		$this->toIt = $toIt;
+		$this->setRedirectUrl('devpromOpts.UpdateUI');
 	}
 	
 	function getCaption()
 	{
-	    $pageIt = $this->traceIt->getRef('SourcePage');
-		return sprintf(text(2602), $pageIt->get('DocumentVersion') != '' ? $pageIt->get('DocumentVersion') : $pageIt->get('DocumentName') );
+		return sprintf(text(2602),
+            $this->fromIt->get('DocumentVersion') != '' ? $this->fromIt->get('DocumentVersion') : $this->fromIt->get('DocumentName'),
+            $this->toIt->get('DocumentVersion') != '' ? $this->toIt->get('DocumentVersion') : $this->toIt->get('DocumentName')
+            );
 	}
-	
-	function getJSCall( $parms = array() )
-	{
-		return parent::getJSCall(
-		    array_merge(
-		        array(
-			        'link' => $this->traceIt->getId()
-		        ),
-                $parms
-            )
-        );
-	}
-	
+
+    function getMethodName() {
+        return 'Method:'.get_class($this).':CopyAttributes';
+    }
+
+    function getJSCall( $parms = array() )
+    {
+        if ( is_object($this->toIt) ) {
+            $parms['toDocument'] = $this->toIt->get('DocumentId') == '' ? $this->toIt->getId() : $this->toIt->get('DocumentId');
+        }
+        $pageId = 0;
+        if ( is_object($this->fromIt) ) {
+            $pageId = $this->fromIt->getId();
+        }
+        $method = $this->getMethodName();
+        foreach( $parms as $parm => $value ) {
+            $method .= ":" . $parm . '=' . $value;
+        }
+        return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$method
+            ."&".http_build_query($parms)."', ".$pageId.", ".$this->getRedirectUrl().")";
+    }
+
+
 	function execute_request()
  	{
         $className = getFactory()->getClass($_REQUEST['className']);
         if ( !class_exists($className) ) throw new Exception('Invalid class');
+        $object = getFactory()->getObject($className);
 
-        $ids = TextUtils::parseIds($_REQUEST['link']);
- 	    if ( count($ids) < 1 ) throw new Exception('Object is undefined');
-
- 	    $this->traceIt = getFactory()->getObject('WikiPageTrace')->getExact($ids);
- 	    if ( $this->traceIt->getId() == '' ) throw new Exception('Object is required');
-
-        $targetIt = $this->traceIt->getRef('TargetPage');
-        $sourceIt = $this->traceIt->getRef('SourcePage');
-
-        if ( $targetIt->get('ParentPage') == '' ) {
-            $this->traceIt = getFactory()->getObject('WikiPageTrace')->getRegistry()->Query(
+        $registry = new WikiPageRegistryContent($object);
+        $targetIt = $registry->Query(
                 array(
-                    new WikiTraceTargetDocumentPredicate($targetIt->get('DocumentId')),
-                    new WikiTraceSourceDocumentPredicate($sourceIt->get('DocumentId'))
+                    new ParentTransitiveFilter($_REQUEST['ids']),
+                    new SortDocumentClause()
+                )
+            );
+        if ( $targetIt->getId() == '' ) throw new Exception('Target object is undefined');
+
+        if ( $_REQUEST['Branch'] != '' ) {
+            $documentIt = $object->getRegistry()->Query(
+                array(
+                    new WikiPageBranchFilter($_REQUEST['Branch']),
+                    new FilterTextExactPredicate('UID', $targetIt->getRef('DocumentId')->get('UID') )
                 )
             );
         }
+        else {
+            $documentIt = $object->getExact($_REQUEST['toDocument']);
+        }
+        if ( $documentIt->getId() == '' ) throw new Exception('Target document is undefined');
 
         $mergeService = new WikiMergeService(getFactory());
         $breakService = new WikiBreakTraceService(getFactory());
 
-        while( !$this->traceIt->end() )
+        while( !$targetIt->end() )
         {
-            $targetIt = $this->traceIt->getRef('TargetPage');
-            $sourceIt = $this->traceIt->getRef('SourcePage');
-
-            getFactory()->getObject($className)->modify_parms( $sourceIt->getId(),
+            $sourceIt = $object->getRegistry()->Query(
                 array(
-                    'Content' => $targetIt->getHtmlDecoded('Content'),
-                    'State' => $targetIt->get('State'),
-                    'ReintegratedTraceId' => $this->traceIt->getId()
+                    new WikiDocumentFilter($documentIt),
+                    new FilterTextExactPredicate('UID', $targetIt->get('UID'))
                 )
             );
 
-            $mergeService->mergeTraces($targetIt, $sourceIt);
-            $breakService->execute($sourceIt, $this->traceIt);
+            if ( $sourceIt->getId() == '' && $targetIt->get('ParentPage') != '' )
+            {
+                $sourceIt = $object->getRegistry()->Query(
+                    array(
+                        new WikiDocumentFilter($documentIt),
+                        new FilterTextExactPredicate('UID', $targetIt->getRef('ParentPage')->get('UID'))
+                    )
+                );
 
-            $this->traceIt->moveNext();
-        }
+                $newPageIt = $mergeService->mergePage($targetIt, $sourceIt, $_REQUEST['traceClass']);
+                $mergeService->copyAttributes($targetIt, $newPageIt, $_REQUEST['CopyAttributes']);
 
-        if ( $targetIt->get('ParentPage') != '' ) return; // structure items merge only for root
+                $targetIt->moveNext();
+                continue;
+            }
 
-        $registry = new WikiPageRegistryContent(getFactory()->getObject('WikiPage'));
+            $copyAttributes = $_REQUEST['CopyAttributes'];
+            foreach( $copyAttributes as $attribute ) {
+                $data[$attribute] = $targetIt->getHtmlDecoded($attribute);
+            }
+            $data['ReintegratedTargetPageId'] = $targetIt->getId();
 
-        // create new pages
-        $pageIt = $registry->Query(
-            array(
-                new FilterAttributePredicate('DocumentId', $targetIt->get('DocumentId')),
-                new PMWikiSourceFilter('none')
-            )
-        );
-        while( !$pageIt->end() )
-        {
-            $traceIt = getFactory()->getObject('WikiPageTrace')->getRegistry()->Query(
+            if ( $object->modify_parms($sourceIt->getId(), $data) > 0 ) {
+                $text = sprintf(text(2942),
+                    $targetIt->get('DocumentVersion') != '' ? $targetIt->get('DocumentVersion') : $targetIt->get('DocumentName'),
+                    $sourceIt->get('DocumentVersion') != '' ? $sourceIt->get('DocumentVersion') : $sourceIt->get('DocumentName')
+                );
+                $this->updateChangeLog($targetIt, $text);
+                $this->updateChangeLog($sourceIt, $text, 2);
+            }
+
+            $mergeService->copyAttributes($targetIt, $sourceIt, $_REQUEST['CopyAttributes']);
+            $breakService->execute($sourceIt, $targetIt);
+
+            $registry = getFactory()->getObject('WikiPageTrace')->getRegistry();
+            $traceIt = $registry->Query(
                 array(
-                    new FilterAttributePredicate('TargetPage', $pageIt->get('ParentPage')),
-                    new WikiTraceSourceDocumentPredicate($sourceIt->get('DocumentId'))
+                    new FilterAttributePredicate('SourcePage', $targetIt->getId()),
+                    new FilterAttributePredicate('TargetPage', $sourceIt->getId())
                 )
             );
             if ( $traceIt->getId() != '' ) {
-                $newPageIt = $mergeService->mergePage($pageIt, $traceIt->getRef('SourcePage'), $_REQUEST['traceClass']);
-                $mergeService->mergeTraces($pageIt, $newPageIt);
+                $registry->Store($traceIt, array(
+                    'IsActual' => 'Y'
+                ));
             }
-            $pageIt->moveNext();
-        }
 
-        // remove deleted pages
-        $sourceUids = $registry->Query(
-                array(
-                    new FilterAttributePredicate('DocumentId', $sourceIt->get('DocumentId'))
-                )
-            )->fieldToArray('UID');
-        $targetUids = $registry->Query(
-            array(
-                new FilterAttributePredicate('DocumentId', $targetIt->get('DocumentId'))
-            )
-        )->fieldToArray('UID');
-
-        $missedUids = array_diff($sourceUids, $targetUids);
-        if ( count($missedUids) > 0 )
-        {
-            $pageIt = $registry->Query(
-                array(
-                    new FilterAttributePredicate('DocumentId', $sourceIt->get('DocumentId')),
-                    new FilterAttributePredicate('UID', $missedUids)
-                )
-            );
-            while( !$pageIt->end() ) {
-                $registry->Delete($pageIt);
-                $pageIt->moveNext();
-            }
+            $targetIt->moveNext();
         }
 	}
+
+    function updateChangeLog( $objectIt, $text, $visibilityLevel = 1 )
+    {
+        $change_parms = array(
+            'Caption' => $objectIt->getDisplayName(),
+            'ObjectId' => $objectIt->getId(),
+            'EntityName' => $objectIt->object->getDisplayName(),
+            'ClassName' => strtolower(get_class($objectIt->object)),
+            'ChangeKind' => 'modified',
+            'Content' => $text,
+            'VisibilityLevel' => $visibilityLevel,
+            'SystemUser' => getSession()->getUserIt()->getId()
+        );
+        getFactory()->getObject('ObjectChangeLog')->add_parms( $change_parms );
+    }
 }

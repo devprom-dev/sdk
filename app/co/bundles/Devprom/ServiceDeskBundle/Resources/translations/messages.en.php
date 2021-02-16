@@ -8,7 +8,8 @@ return array(
     'index.notifications' => 'There are changes or comments you have not seen yet',
     'product.title' => 'Choose a category',
 	'index.company_title' => 'Company requests',
-    'index.no.issues' => 'You have no requests so far',
+    'index.no.issues' => 'You have no open requests so far',
+    'index.go.closed.issues' => 'Open closed issues',
     'new.title' => 'New request',
     'edit.title' => 'Edit request',
     'security.title' => 'Login',
@@ -32,7 +33,11 @@ return array(
     'issue_comments' => 'Comments',
 	'issue_version' => 'Version',
 	'issue_type_name' => 'Issue',
-		
+
+    'issue_state_all' => 'All',
+    'issue_state_open' => 'Open',
+    'issue_state_closed' => 'Closed',
+
     'issue.edit' => 'Edit request',
     'issue.add' => 'Add new request',
     'issue.add.attachment' => 'Attach file',

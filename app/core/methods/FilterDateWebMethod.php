@@ -1,5 +1,4 @@
 <?php
-
 include_once "SelectDateRefreshWebMethod.php";
 
 class FilterDateWebMethod extends SelectDateRefreshWebMethod
@@ -11,43 +10,30 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  		parent::__construct();
  	}
 
- 	function setDefault( $value )
- 	{
- 		$this->default_value = $value;
- 	}
- 	
- 	function getDefault()
- 	{
- 		return $this->default_value;
- 	}
-
- 	function getValue()
- 	{
- 		$value = parent::getValue();
-		if ( $value == 'all' ) return '';
- 		return $value != '' ? $value : $this->default_value;
- 	}
- 	
- 	function hasAccess()
- 	{
+ 	function hasAccess() {
  		return true;
  	}
 
- 	function getStyle()
- 	{
+ 	function getStyle() {
  		return 'width:120px;';
  	}
 
-  	function drawSelect( $parms_array = array() ) 
- 	{
+  	function drawSelect( $parms_array = array() ) {
  		return $this->draw( $parms_array );
  	}
  	
- 	function draw( $parms_array = array() ) 
+ 	function draw( $parms_array = array(), $default_value = '' )
  	{
  		parent::draw( 
  			array_merge($parms_array, array('setting' => $this->method_name )),
  			$this->getValue()
  		);
  	}
+
+ 	function parseFilterValue($value)
+    {
+        return parent::parseFilterValue(
+            SystemDateTime::parseRelativeDateTime($value, getSession()->getLanguage())
+        );
+    }
 }

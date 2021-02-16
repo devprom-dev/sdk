@@ -41,6 +41,10 @@ class CustomResourceRegistry extends ResourceRegistry
 	 	        $it->moveNext();
 	 	    }
  	    }
+
+ 	    usort($records, function($left, $right) {
+             return mb_strlen($left['Caption']) > mb_strlen($right['Caption']);
+        });
  	    
  	    return $this->createIterator( array_values($records) );
  	}	

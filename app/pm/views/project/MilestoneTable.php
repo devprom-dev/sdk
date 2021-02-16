@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
 include "MilestoneList.php";
 
 class MilestoneTable extends PMPageTable
@@ -14,28 +13,45 @@ class MilestoneTable extends PMPageTable
         return array_merge(
             parent::getFilters(),
             array (
+                $this->getCycleStateFilter(),
                 $this->buildStartFilter(),
                 new ViewFinishDateWebMethod()
             )
         );
     }
 
-    function getFilterPredicates()
+    function getFilterPredicates( $values )
 	{
-	    $values = $this->getFilterValues();
-	    
 	    return array_merge(
-	        parent::getFilterPredicates(),
+	        parent::getFilterPredicates( $values ),
             array(
 	            new FilterDateAfterPredicate('MilestoneDate', $values['start']),
-                new FilterDateBeforePredicate('MilestoneDate', $values['finish'])
+                new FilterDateBeforePredicate('MilestoneDate', $values['finish']),
+                new MilestoneTimelinePredicate($values['state'])
 	        )
         );
 	}
 
     function buildStartFilter() {
-        $filter = new ViewStartDateWebMethod();
-        $filter->setDefault(getSession()->getLanguage()->getPhpDate(strtotime('-3 weeks', strtotime(date('Y-m-j')))));
+        return new FilterDateWebMethod(translate('Начало'), 'start');
+    }
+
+    function getCycleStateFilter()
+    {
+        $filter = new FilterObjectMethod( new CycleState(), '', 'state' );
+        $filter->setHasNone(false);
+        $filter->setDefaultValue('not-passed');
+        $filter->setType( 'singlevalue' );
+        $filter->setIdFieldName( 'ReferenceName' );
         return $filter;
+    }
+
+    public function buildFilterValuesByDefault( & $filters )
+    {
+        $values = parent::buildFilterValuesByDefault( $filters );
+        if ( $values['start'] == '' ) {
+            $values['start'] = getSession()->getLanguage()->getPhpDate(strtotime('-3 weeks', strtotime(date('Y-m-j'))));
+        }
+        return $values;
     }
 }

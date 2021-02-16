@@ -1,9 +1,24 @@
-<div class="treeview sticks-top" heightStyle="window">
-	<div id="treeview-container" class="treeview-container sticks-top-body" style="position:relative;overflow:hidden;">
-		<div id="wikitree" data-type="json" style="display:none;">
-			<?=$data?>
+<?php
+    $submitUrl = '';
+    if ( is_array($actions['create']) ) {
+        $submitUrl =  str_replace('item-id-template', $document_id, $actions['create']['url']);
+        $submitTitle = $actions['create']['name'];
+    }
+?>
+
+<div class="treeview" heightStyle="window">
+	<div id="treeview-container" class="treeview-container">
+		<div id="wikitree" data-type="json" style="display: none;">
+			<?=\JsonWrapper::encode($data)?>
 		</div>
-	</div>
+        <div class="treeview-buttons">
+            <a class="btn btn-xs" onclick="toggleTreeNodes()" title="<?=text(2455)?>"><i class="icon-folder-open"></i></a>
+            <a class="btn btn-xs" onclick="toggleDocumentStructure()" title="<?=text(2204)?>"><i class="icon-chevron-left"></i></a>
+            <?php if ( $submitUrl != '' ) { ?>
+                <a class="btn btn-xs" onclick="<?=$submitUrl?>" title="<?=$submitTitle?>"><i class="icon-plus-sign"></i></a>
+            <?php } ?>
+        </div>
+    </div>
 </div>
 <div id="context-menu-tree" class="btn-group dropdown-fixed">
 	<?php echo $view->render('core/PopupMenu.php', array ( 'items' => $actions) ); ?>
@@ -20,7 +35,7 @@
 				if ( item.length > 0 ) {
 					item.find('a').each(function() {
 						var href = $(this).attr('href').toString();
-						href = href.replace(/\%id\%/gi, node.key);
+						href = href.replace(/item-id-template/gi, node.key);
 						if ( node.data.project && node.data.project != devpromOpts.project ) {
 							href = href.replace("/" + devpromOpts.project + "/", "/" + node.data.project + "/");
 							href = href.replace("\\/" + devpromOpts.project + "\\/", "\\/" + node.data.project + "\\/");
@@ -32,6 +47,12 @@
 							left: e.pageX,
 							top: e.pageY
 						});
+					if ( !item.find('ul>li:last').isInViewport() ) {
+                        item.find('ul').css({
+                           top: 'unset',
+                           bottom: 0
+                        });
+                    }
 					$('li[uid=open-new]>a').click(function() {
 						$(this).attr('target', '_blank');
 					});
@@ -59,31 +80,27 @@
 	});
 	var activeKey = '';
 	var ps;
+	var wikitree = null;
 
 	$(function() {
-		var tree = $('#wikitree');
-        tree.fancytree({
-			extensions: ["dnd","contextMenu"],
+        wikitree = $('#wikitree');
+        wikitree.fancytree({
+			extensions: ["dnd5","contextMenu"],
 			quicksearch: true,
 			debugLevel: 0,
 			activate: function(event, data){
+			    if ( data.node.extraClasses.indexOf('filtered') != -1 ) return;
 			    setTimeout(function() {
                     gotoRandomPage(data.node.key, 4, true);
+                    $(document).trigger("trackerItemSelected", [data.node.key]);
                 }, 100);
 			},
 			create: function() {
-				$('#wikitree').show();
-                ps = new PerfectScrollbar('#treeview-container', {wheelPropagation:true});
-                document.querySelector('#treeview-container').addEventListener('ps-scroll-y', function() {
-                    $('span.fancytree-node:hover span.fancytree-title').css({
-                        'top': '',
-                        'position': ''
-                    });
-                });
+                wikitree.show();
 			},
 			init: function() {
 				if ( activeKey != "" ) {
-					var nodeObj = $("#wikitree").fancytree("getTree").getNodeByKey(activeKey);
+					var nodeObj = $.ui.fancytree.getTree("#wikitree").getNodeByKey(activeKey);
                     if(nodeObj) {
                         nodeObj.setActive(true, {noEvents:true, noFocus:true});
                     }
@@ -109,41 +126,33 @@
                         }
                     );
             },
-			dnd: {
+            lazyLoad: function(event, data) {
+                var node = data.node;
+                data.result = {
+                    url: "<?=$url?>",
+                    data: { lazyroot: node.key },
+                    cache: false
+                };
+            },
+			dnd5: {
 				autoExpandMS: 400,
-				focusOnClick: true,
-				preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
-				preventRecursiveMoves: true, // Prevent dropping nodes on own descendants
+				focusOnClick: false,
+                preventRecursion: true,
+                preventSameParent: false,
+                preventVoidMoves: true,
+                preventLazyParents: false,
 				dragStart: function(node, data) {
-					/** This function MUST be defined to enable dragging for the tree.
-					 *  Return false to cancel dragging of node.
-					 */
-                    $('span.fancytree-title').css({
-                        'top': '',
-                        'position': ''
-                    });
+                    data.effectAllowed = "all";
 					return true;
 				},
 				dragEnter: function(node, data) {
-					/** data.otherNode may be null for non-fancytree droppables.
-					 *  Return false to disallow dropping on node. In this case
-					 *  dragOver and dragLeave are not called.
-					 *  Return 'over', 'before, or 'after' to force a hitMode.
-					 *  Return ['before', 'after'] to restrict available hitModes.
-					 *  Any other return value will calc the hitMode from the cursor position.
-					 */
-					// Prevent dropping a parent below another parent (only sort
-					// nodes under the same parent)
-					/*           if(node.parent !== data.otherNode.parent){
-					 return false;
-					 }
-					 // Don't allow dropping *over* a node (would create a child)
-					 return ["before", "after"];
-					 */
 					return true;
 				},
+                dragOver: function(node, data) {
+                    data.dropEffect = data.dropEffectSuggested;
+                },
 				dragDrop: function(node, data) {
-					data.otherNode.moveTo(node, data.hitMode);
+                    data.otherNode.moveTo(node, data.hitMode);
 
 					var item = parentNode = prev = '';
 					switch(data.hitMode) {
@@ -166,19 +175,28 @@
 					var url = '/pm/'+devpromOpts.project+"/command.php?class=wikipagemove" +
 						"&object_id=" + item + "&ParentPage=" + parentNode + "&"+data.hitMode+"=" + prev + "&action=2";
 
-					$.ajax({ url: url, dataType: 'json', type: 'POST'})
-						.success(function (data) {
-							$.each(data, function(index, value) {
-								var row = $('tr[object-id='+value.id+'][sort-value]');
-								row.attr('sort-value', value.si);
-								row.find('.sec-num').html(value.sn);
-							});
-							setTimeout(function() {
+					$.ajax({
+                        url: url,
+                        dataType: 'json',
+                        type: 'POST',
+                        success: function (data, status) {
+                            if (data.state && data.state == 'error') {
+                                reportError(data.message);
+                                return;
+                            }
+                            $.each(data, function (index, value) {
+                                var row = $('tr[object-id=' + value.id + '][sort-value]');
+                                row.attr('sort-value', value.si);
+                                row.find('.sec-num').html(value.sn);
+                            });
+                            setTimeout(function () {
                                 gotoRandomPage(item, 0, false);
                             }, 100);
-						})
-						.error(function() {
-						});
+                        },
+                        error: function (xhr, status, error) {
+                            reportError(ajaxErrorExplain(xhr, error));
+                        }
+                    });
 				}
 			},
             strings: {
@@ -194,10 +212,17 @@
                 'position': ''
             });
         });
+
+        $('.wiki-page-tree').resizable({
+            handles: 'e',
+            alsoResize: '#treeview-container',
+            minWidth: 130
+        });
 	});
 	function loadContentTree( callback )
 	{
-		$("#wikitree").fancytree("getTree")
+	    if ( !wikitree ) return;
+        $.ui.fancytree.getTree("#wikitree")
 			.reload({
 				url: "<?=$url?>"
 			})
@@ -207,7 +232,8 @@
 	}
 	function activateTreeNode( id ) {
 		activeKey = id;
-		var tree = $("#wikitree").fancytree("getTree");
+        if ( !wikitree ) return;
+		var tree = $.ui.fancytree.getTree("#wikitree");
 
 		if ( typeof tree.getActiveNode == "undefined" ) return;
 		var node = tree.getActiveNode();
@@ -221,7 +247,8 @@
 		});
 	}
 	function renameTreeNode( id, title ) {
-		var tree = $("#wikitree").fancytree("getTree");
+        if ( !wikitree ) return;
+		var tree = $.ui.fancytree.getTree("#wikitree");
 		if ( typeof tree.getNodeByKey == "undefined" ) return;
 
 		var node = tree.getNodeByKey(id);
@@ -229,37 +256,22 @@
 		node.setTitle(title);
 	}
 	function deleteTreeNode( id ) {
-		var tree = $("#wikitree").fancytree("getTree");
+        if ( !wikitree ) return;
+		var tree = $.ui.fancytree.getTree("#wikitree");
 		if ( typeof tree.getNodeByKey == "undefined" ) return;
 
 		var node = tree.getNodeByKey(id);
 		if ( !node ) return;
 		node.remove();
 	}
-	function toggleTreeNodes( id ) {
-	    var tree = $("#wikitree");
-        tree.fancytree("getTree").visit(function(node){
+	function toggleTreeNodes() {
+        if ( !wikitree ) return;
+	    var tree = $.ui.fancytree.getTree("#wikitree");
+        tree.visit(function(node){
             if ( node.parent.key == 'root_1' ) return;
-            node.setExpanded( !tree.hasClass('custom-extended') );
+            node.setExpanded( !wikitree.hasClass('custom-extended') );
         });
         setTimeout(function(){$('#rightTab li:eq(0)').addClass('active');},100);
-        tree.hasClass('custom-extended') ? tree.removeClass('custom-extended') : tree.addClass('custom-extended');
-    }
-    function extendTreeArea( id ) {
-        var tree = $(".wiki-page-tree");
-        if ( tree.hasClass('custom-width') ) {
-            tree.css({
-                'width': ''
-            });
-            tree.removeClass('custom-width');
-        }
-        else {
-            tree.css({
-                'width': '50%'
-            });
-            $('#documentToolbar').width('auto');
-            tree.addClass('custom-width');
-        }
-        setTimeout(function(){$('#rightTab li:eq(0)').addClass('active');},100);
+        wikitree.toggleClass('custom-extended');
     }
 </script>

@@ -3,7 +3,7 @@ $project_navigation_parms['projectSortData'] = $projectSortData;
 ?>
 <div class="btn-toolbar title-toolbar">
 	<div class="btn-group navbar-company">
-    	<a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
+    	<a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="">
     	    <i class="icon-th-list icon-white"></i>&nbsp;
     		<?=$company_name?>
     		<span class="caret"></span>
@@ -18,7 +18,7 @@ $project_navigation_parms['projectSortData'] = $projectSortData;
         if ( is_array($quickMenu) && count($quickMenu['items']) > 0 ) {
             ?>
             <div class="btn-group quick-btn">
-                <a id="<?=$quickMenu['id']?>" class="btn dropdown-toggle btn-sm <?=$quickMenu['button_class']?>" data-toggle="dropdown" href="#" title="<?=$quickMenu['description']?>">
+                <a id="<?=$quickMenu['id']?>" class="btn dropdown-toggle btn-sm <?=$quickMenu['button_class']?>" data-toggle="dropdown" href="" title="<?=$quickMenu['description']?>">
                     <i class="<?=$quickMenu['icon']?>"></i>
                 </a>
                 <?php

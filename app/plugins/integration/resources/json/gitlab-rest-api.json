@@ -1,0 +1,76 @@
+[{
+  "Iteration": {
+    "url": "/api/v4/projects/{project}/milestones/{iid}",
+    "url-append": "/api/v4/projects/{project}/milestones",
+    "ReleaseNumber": "title",
+    "Description": "description",
+    "StartDate": "start_date",
+    "FinishDate": "due_date"
+  },
+  "Release": {
+    "url": "/api/v4/projects/{project}/milestones/{iid}",
+    "url-append": "/api/v4/projects/{project}/milestones",
+    "Caption": "title",
+    "Description": "description",
+    "StartDate": "start_date",
+    "FinishDate": "due_date"
+  },
+  "Request": {
+    "url": "/api/v4/projects/{project}/issues/{iid}",
+    "url-append": "/api/v4/projects/{project}/issues",
+    "Caption": "title",
+    "Description": "description",
+    "Author": {"Caption":"author.name"},
+    "Owner": {"Caption":"assignee.name"},
+    "Estimation": "time_stats.time_estimate",
+    "Iteration": {
+      "Caption": "milestone.title"
+    },
+    "PlannedRelease": {
+      "Caption": "milestone.title"
+    },
+    "State": {
+      ".": "state",
+      "mapping": [{"submitted":"opened"},{"resolved":"closed"},{"submitted":"*"}]
+    }
+  },
+  "RequestComment": {
+    "url": "/api/v4/projects/{project}/issues/{parent}/notes/{iid}",
+    "url-append": "/api/v4/projects/{project}/issues/{parent}/notes",
+    "AuthorId": {"Caption":"author.name"},
+    "ObjectId": "{parentId}",
+    "Caption": "body"
+  },
+  "Environment": {
+    "url": "/api/v4/projects/{project}/environments/{iid}",
+    "url-append": "/api/v4/projects/{project}/environments",
+    "Caption": "name"
+  },
+  "Build": {
+    "url": "/api/v4/projects/{project}/releases/{iid}",
+    "url-append": "/api/v4/projects/{project}/releases",
+    "Caption": "tag_name",
+    "Description": "description_html",
+    "Application": "name",
+    "State": {
+      ".": "status",
+      "mapping": [{"failed":"failed"},{"ready":"success"},{"inprogress":"running"},{"ready":"*"}]
+    },
+    "BuildRevision": {
+      "CommitId" : "commit.id"
+    }
+  },
+  "ReviewRequest": {
+    "url": "/api/v4/projects/{project}/merge_requests/{iid}",
+    "url-append": "/api/v4/projects/{project}/merge_requests",
+    "Caption": "title",
+    "Description": "description",
+    "State": {
+      ".": "state",
+      "mapping": [{"pending":"opened"},{"discarded":"closed"},{"submitted":"merged"},{"pending":"*"}]
+    },
+    "Commit": {
+      "CommitId" : "sha"
+    }
+  }
+}]

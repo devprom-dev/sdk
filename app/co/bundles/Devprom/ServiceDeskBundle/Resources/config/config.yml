@@ -7,52 +7,47 @@ framework:
     #esi:             ~
     translator:
         fallback: en
-    secret:          %secret%
+    secret: "%secret%"
     router:
         resource: "%kernel.root_dir%/Resources/config/routing.yml"
-        strict_requirements: %kernel.debug%
+        strict_requirements: "%kernel.debug%"
     form:            ~
-    csrf_protection: ~
+    #csrf_protection: ~
     validation:      { enable_annotations: true }
     templating:
         engines: ['twig']
         #assets_version: SomeVersionScheme
-    default_locale: %systemLanguage%
+    default_locale: "%systemLanguage%"
     trusted_proxies: ~
     session:
         cookie_lifetime: 604800
         gc_maxlifetime: 604800
         save_path: ~
 
-assetic:
-    bundles:        [ DevpromServiceDeskBundle, FOSUserBundle ]
-    use_controller: true
-
 # Doctrine Configuration
 doctrine:
     dbal:
         server_version: 9.4
-        driver:   %database_driver%
-        host:     %DB_HOST%
-        port:     %database_port%
-        dbname:   %DB_NAME%
-        user:     %DB_USER%
-        password: %DB_PASS%
-        charset:  %APP_CHARSET%
+        driver:   "%database_driver%"
+        host:     "%DB_HOST%"
+        port:     "%database_port%"
+        dbname:   "%DB_NAME%"
+        user:     "%DB_USER%"
+        password: "%DB_PASS%"
+        charset:  "%APP_CHARSET%"
         driver_class: Devprom\CommonBundle\Doctrine\DBAL\Driver\PDOMySql\Driver
-        wrapper_class: Devprom\CommonBundle\Doctrine\DBAL\Connection
         types:
             datetime: Devprom\CommonBundle\Doctrine\DBAL\Type\UTCDateTimeType
         options:
             x_reconnect_attempts: 10
     orm:
-        auto_generate_proxy_classes: %kernel.debug%
+        auto_generate_proxy_classes: "%kernel.debug%"
         auto_mapping: true
 
 twig:
     globals:
         registration_enabled: '%registration_enabled%'
-        use_knowledgebase: '%use_knowledgebase%'
+        resetting_enabled: '%resetting_enabled%'
     form_themes:
         - DevpromServiceDeskBundle:Form:fields.html.twig
 

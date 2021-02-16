@@ -33,7 +33,7 @@ public class SupportAddressesPage extends AdminPageBase
 	}
 	
 	public void CheckAddress(String boxname){
-		driver.findElement(By.xpath("//td[@id='caption' and text()='"+boxname+"']/preceding-sibling::td/input[@class='checkbox']")).click();
+		driver.findElement(By.xpath("//td[@id='caption' and text()='"+boxname+"']/preceding-sibling::td/input[contains(@class,'checkbox')]")).click();
 	}
 	
 	public SupportAddressesPage deleteAddress(String boxname)

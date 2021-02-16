@@ -13,7 +13,7 @@
                         <div class="section-subtitle">{{ 'login.details'|trans }}</div>
                     </header>
                     <div class="icon">
-                        <img src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/images/icon-login.png') }}" alt="">
+                        <img src="//{{ app.request.getHttpHost() ~ '/co/bundles/Devprom/ServiceDeskBundle/public/images/icon-login.png' }}" alt="">
                     </div>
                     <div class="body">
                         <form role="form" action="{{ path("fos_user_security_check") }}" method="post" id="login-form">
@@ -37,10 +37,12 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <input type="submit" class="btn btn-success btn-block" value="{{ 'security.login.submit'|trans({}, 'FOSUserBundle') }}">
-                                        <p class="forget-pass">
-                                            <a class="forgot" href="{{  path("fos_user_resetting_request") }}">{{ 'security.login.password.recover'|trans({}, 'FOSUserBundle') }}</a>
-                                        </p>
                                         {% if registration_enabled %}
+                                            {% if resetting_enabled %}
+                                                <p class="forget-pass">
+                                                    <a class="forgot" href="{{  path("fos_user_resetting_request") }}">{{ 'security.login.password.recover'|trans({}, 'FOSUserBundle') }}</a>
+                                                </p>
+                                            {% endif %}
                                             <p class="forget-pass">
                                                 <a class="forgot" id="_register" name="_register" href="{{ path('fos_user_registration_register') }}">
                                                     {{ 'layout.register'|trans({}, 'FOSUserBundle') }}

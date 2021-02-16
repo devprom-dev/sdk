@@ -160,23 +160,6 @@ class WebMethod
 		return !is_null($persisted) ? $persisted : '';
  	}
 
- 	function getValue2()
- 	{
- 		if ( $this->getValueParm() != '' && !in_array($_REQUEST[$this->getValueParm()], array('')) )
- 		{
- 			return $_REQUEST[$this->getValueParm()];
- 		}
- 		else
- 		{
- 			$default = $this->getFreezeMethod();
- 			
- 			if ( is_object($default) && $this->filter_name != '' )
- 			{
-	 			return $default->getValue( $this->getValueParm() );
- 			}
- 		}
- 	}
- 	
 	function getUrl( $parms_array )
 	{
  		$module_name = $this->getModule();
@@ -306,4 +289,8 @@ class WebMethod
  		
  		return $object_it;
  	}
+
+ 	function parseFilterValue( $value ) {
+ 	    return $value;
+    }
 }

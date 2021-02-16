@@ -30,11 +30,12 @@ class RequestFeaturePersister extends ObjectSQLPersister
 		}
 	}
 
- 	function getSelectColumns( $alias )
- 	{
- 		return array(
- 			" t.Function Features "
- 		);
+ 	function getSelectColumns( $alias ) {
+ 		return array();
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }
 

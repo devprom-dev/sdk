@@ -1,5 +1,4 @@
 <?php
-include SERVER_ROOT_PATH . "pm/classes/plan/PlanChartData.php";
 include "DocumentVersionChartWidget.php";
 
 class DocumentVersionChart extends PMPageChart

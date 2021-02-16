@@ -2,6 +2,11 @@
 
 class FeatureHierarchyPersister extends ObjectSQLPersister
 {
+    function getAttributes()
+    {
+        return array('ChildrenFeatures');
+    }
+
     function IsPersisterImportant() {
         return true;
     }
@@ -9,10 +14,11 @@ class FeatureHierarchyPersister extends ObjectSQLPersister
     function getSelectColumns( $alias )
  	{
  		return array( 
- 			" (SELECT COUNT(1) FROM pm_Function t2 WHERE t2.ParentFeature = ".$this->getPK($alias).") ChildrenCount ",
-            " (SELECT GROUP_CONCAT(CAST(t2.pm_FunctionId AS CHAR)) FROM pm_Function t2 WHERE t2.ParentFeature = ".$this->getPK($alias)." ORDER BY t2.SortIndex) Children ",
+ 			" IFNULL((SELECT t2.pm_FunctionId FROM pm_Function t2 WHERE t2.ParentFeature = ".$this->getPK($alias)." LIMIT 1), 0) ChildrenCount ",
+            " (SELECT GROUP_CONCAT(CAST(t2.pm_FunctionId AS CHAR)) FROM pm_Function t2 WHERE t2.ParentFeature = ".$this->getPK($alias)." ORDER BY t2.SortIndex) ChildrenFeatures ",
             " SUBSTRING_INDEX(SUBSTR(t.ParentPath, 2), ',', 1) RootId ",
- 			" (SELECT tp.ChildrenLevels FROM pm_FeatureType tp WHERE tp.pm_FeatureTypeId = t.Type) ChildrenLevels "
+ 			" (SELECT tp.ChildrenLevels FROM pm_FeatureType tp WHERE tp.pm_FeatureTypeId = t.Type) ChildrenLevels ",
+ 			" t.Type FeatureLevel "
  		);
  	}
 

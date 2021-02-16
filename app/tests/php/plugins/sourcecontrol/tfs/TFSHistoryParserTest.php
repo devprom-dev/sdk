@@ -2,7 +2,7 @@
 
 include_once SERVER_ROOT_PATH . "/plugins/sourcecontrol/classes/tfs/TFSHistoryParser.php";
 
-class TFSHistoryParserTest extends PHPUnit_Framework_TestCase
+class TFSHistoryParserTest extends \PHPUnit\Framework\TestCase
 {
 
     var $validHistoryXML = '<?xml version="1.0" encoding="utf-8"?><history>

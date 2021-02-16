@@ -12,7 +12,6 @@ class WikiTraceToBreakPredicate extends FilterPredicate
 		             (SELECT MAX(c.RecordCreated) FROM WikiPageChange c 
 		               WHERE c.WikiPage = t.SourcePage)
 		         AND t.IsActual = 'Y'
-		         AND t.Baseline IS NULL 
-		         AND t.SourceBaseline IS NULL ";
+		         AND t.Baseline IS NULL ";
  	}
 } 

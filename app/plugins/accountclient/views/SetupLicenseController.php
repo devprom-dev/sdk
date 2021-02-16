@@ -10,6 +10,7 @@ class SetupLicenseController extends Page
 
     function authorizationRequired()
     {
+        if ( $_REQUEST['InstallationUID'] == INSTALLATION_UID ) return false;
         if ( getFactory()->getObject('User')->getRegistry()->Count() < 1 ) return false;
         if ( $_REQUEST['token1'] != '' && $_REQUEST['token2'] != '' )
         {

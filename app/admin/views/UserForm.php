@@ -1,52 +1,60 @@
 <?php
 include_once SERVER_ROOT_PATH."core/classes/user/validators/ModelValidatorPasswordLength.php";
-include (dirname(__FILE__).'/../methods/c_user_methods.php');
+include_once SERVER_ROOT_PATH."core/classes/user/validators/ModelValidatorLDAPUser.php";
 include "ui/FieldUserLicensesAttribute.php";
 
 class UserForm extends AdminPageForm
 {
 	var $warning_message;
 
-	function __construct( $object )
-	{
-		parent::__construct( $object );
-		
-		$object_it = $this->getObjectIt();
+	function extendModel()
+    {
+        parent::extendModel();
 
-		$has_password = true;
-		if ( is_object($object_it) && $object_it->getId() > 0 )
-		{
-		    $factory_set = new AuthenticationFactorySet(getSession());
-		    foreach( $factory_set->getFactories() as $factory ) {
-    		    if ( $factory->validateUser( $object_it ) ) {
-    		        $has_password = $has_password & $factory->credentialsRequired();
-    		    }
-		    }
-		}
-		
-		$object->addAttribute( 'RepeatPassword', 'PASSWORD', translate('Повтор пароля'), false, false, '', 61 );
+        $object_it = $this->getObjectIt();
+
+        $has_password = true;
+        if ( is_object($object_it) && $object_it->getId() > 0 )
+        {
+            $factory_set = new AuthenticationFactorySet(getSession());
+            foreach( $factory_set->getFactories() as $factory ) {
+                if ( $factory->validateUser( $object_it ) ) {
+                    $has_password = $has_password & $factory->credentialsRequired();
+                }
+            }
+        }
+
+        $object = $this->getObject();
+        $object->addAttribute( 'RepeatPassword', 'PASSWORD', translate('Повтор пароля'), false, false, '', 61 );
 
         foreach( array('Password','RepeatPassword','AskChangePassword') as $attribute ) {
             $object->setAttributeRequired($attribute, $has_password);
             $object->setAttributeVisible($attribute, $this->getEditMode() && $has_password);
         }
         $object->setAttributeVisible( 'IsReadonly', true );
-	}
 
-	function buildModelValidator()
-	{
-		$validators = parent::buildModelValidator();
-		$validators->addValidator( new ModelValidatorPasswordLength() );
-		return $validators;
-	}
+        foreach( $object->getAttributesByGroup('notifications-tab') as $attribute ) {
+            $object->setAttributeVisible($attribute, true);
+        }
+    }
 
-	function validateInputValues( $id, $action )
+	function getValidators()
+    {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new ModelValidatorPasswordLength(),
+                new ModelValidatorLDAPUser()
+            )
+        );
+    }
+
+    function validateInputValues( $id, $action )
 	{
 		$result = parent::validateInputValues( $id, $action );
 		if ( $result != '' ) return $result;
 
-		if( $_REQUEST['Password'] != SHADOW_PASS && array_key_exists('RepeatPassword', $_REQUEST) )
-		{
+		if( $_REQUEST['Password'] != SHADOW_PASS && array_key_exists('RepeatPassword', $_REQUEST) ) {
 			if($_REQUEST['Password'] != $_REQUEST['RepeatPassword']) {
 				return text(235);
 			}

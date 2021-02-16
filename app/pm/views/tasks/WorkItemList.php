@@ -35,12 +35,15 @@ class WorkItemList extends PMPageList
 		$this->getTable()->cacheTraces('IssueTraces');
 	}
 
+    function getItemClass($it) {
+        return get_class($this->getIt($it)->object);
+    }
+
     function getIt( $object_it )
     {
         $data = $object_it->getData();
         switch( $object_it->get('ObjectClass') ) {
             case 'Request':
-            case 'Increment':
                 $data[$this->request->getIdAttribute()] = $object_it->getId();
                 return $this->request->createCachedIterator(array($data));
             case 'Issue':
@@ -65,13 +68,6 @@ class WorkItemList extends PMPageList
             return parent::getForm($object_it);
         }
     }
-
-	function getColumnFields()
-	{
-		$cols = parent::getColumnFields();
-		$cols[] = 'OrderNum';
-		return $cols;
-	}
 
     function getGroupFields()
     {
@@ -152,15 +148,13 @@ class WorkItemList extends PMPageList
  	
 	function drawGroup($group_field, $object_it)
 	{
-        $it = $this->getIt($object_it);
-
 		switch ( $group_field )
 		{
 			default:
 				parent::drawGroup($group_field, $object_it);
 		}
 
-		$this->getTable()->drawGroup($group_field, $it);
+		$this->getTable()->drawGroup($group_field, $object_it);
 	}
 
     function getActions( $object_it )

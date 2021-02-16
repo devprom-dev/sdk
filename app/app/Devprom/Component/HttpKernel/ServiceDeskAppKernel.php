@@ -13,11 +13,10 @@ class ServiceDeskAppKernel extends Kernel
 {
     public function registerBundles()
     {
-        $bundles = array(
+        return array(
             new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
             new \Symfony\Bundle\SecurityBundle\SecurityBundle(),
             new \Symfony\Bundle\MonologBundle\MonologBundle(),
-            new \Symfony\Bundle\AsseticBundle\AsseticBundle(),
             new \Symfony\Bundle\TwigBundle\TwigBundle(),
             new \Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle(),
             new \Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
@@ -26,14 +25,9 @@ class ServiceDeskAppKernel extends Kernel
             new \FOS\UserBundle\FOSUserBundle(),
             new \Devprom\CommonBundle\CommonBundle(),
             new \Devprom\ServiceDeskBundle\DevpromServiceDeskBundle(),
+            new \Shapecode\Bundle\HiddenEntityTypeBundle\ShapecodeHiddenEntityTypeBundle(),
+            new \FR3D\LdapBundle\FR3DLdapBundle()
         );
-
-        /*
-        if (in_array($this->getEnvironment(), array('dev', 'test'))) {
-            $bundles[] = new Sensio\Bundle\GeneratorBundle\SensioGeneratorBundle();
-        }  */
-
-        return $bundles;
     }
 
     public function registerContainerConfiguration(LoaderInterface $loader)

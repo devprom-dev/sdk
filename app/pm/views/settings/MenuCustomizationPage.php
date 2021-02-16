@@ -7,13 +7,11 @@ include 'MenuCustomizationTable.php';
 
 class MenuCustomizationPage extends PMPage
 {
-    public function getTable()
-    {
+    public function getTable() {
 		return new MenuCustomizationTable(getFactory()->getObject('pm_Workspace'));
     }
 
- 	function getModule()
- 	{
+ 	function getReportBase() {
  		return 'navigation-settings';
  	}
     
@@ -24,7 +22,7 @@ class MenuCustomizationPage extends PMPage
  		$parms['inside'] = true;
  		$parms['has_horizontal_menu'] = false;
  		$parms['reports_edit_url'] = getFactory()->getObject('Module')->getExact('project-reports')->get('Url');
- 		$parms['close_url'] = strpos($_SERVER['HTTP_REFERER'], '/menu/') === false ? $_SERVER['HTTP_REFERER'] : getSession()->getApplicationUrl();
+ 		$parms['close_url'] = strpos($_SERVER['HTTP_REFERER'], '/menu/') === false ? \SanitizeUrl::parseUrl($_SERVER['HTTP_REFERER']) : getSession()->getApplicationUrl();
  		$parms['hint_top'] = $parms['hint'];
  		$parms['hint'] = '';
 

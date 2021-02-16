@@ -35,7 +35,6 @@ class PmApplicationKernel extends Kernel
 	    	new \JMS\SerializerBundle\JMSSerializerBundle(),
 	    	new \Devprom\CommonBundle\CommonBundle(),
         	new \Devprom\ProjectBundle\ProjectBundle(),
-	    	new \Symfony\Bundle\AsseticBundle\AsseticBundle(),
             new \Nelmio\CorsBundle\NelmioCorsBundle()
         );
 

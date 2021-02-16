@@ -4,7 +4,7 @@ class CustomAttributeTypeClassNameField extends FieldDictionary
 {
  	function getOptions()
 	{
-		$objects = array('user' => '', 'priority' => '', 'importance' => '', 'usergroup' => '');
+		$objects = array('user' => '', 'priority' => '', 'importance' => '', 'issueauthor' => '');
 		foreach( $objects as $className => $name ) {
 		    $className = getFactory()->getClass($className);
 		    if ( class_exists($className) ) {

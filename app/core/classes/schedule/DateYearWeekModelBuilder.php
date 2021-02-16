@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once "persisters/ObjectWeekDatesPersister.php";
 

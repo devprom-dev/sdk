@@ -14,6 +14,7 @@ class FormStateAttributeEmbedded extends PMFormEmbedded
             case 'IsReadonly':
             case 'IsMainTab':
             case 'IsAskForValue':
+            case 'IsVisibleOnEdit':
  				return true;
 
  			default:

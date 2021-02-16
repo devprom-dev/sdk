@@ -24,8 +24,9 @@ class TaskBusinessActionResolveIssue extends BusinessActionWorkflow
 		getSession()->addBuilder( new RequestModelExtendedBuilder() );
 
 		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
-        if ( $request_it->object->getAttributeType('OpenTasks') == '' ) return true;
 
+        if ( $request_it->object->getAttributeType('OpenTasks') == '' ) return true;
+        if ( getSession()->IsRDD() && $request_it->object instanceof Issue ) return true;
 		if ( !$request_it->getRef('OpenTasks')->end() ) return true; // if there are no open tasks then resolve an issue
 
 		$service = new WorkflowService($request_it->object);

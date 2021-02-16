@@ -44,7 +44,7 @@ public class Configuration {
 				props.setProperty("upgradetimeout", "300");
 				props.setProperty("loginattempts", "3");
 				props.setProperty("delays", "0");
-				props.setProperty("stresstimeout", "5.0");
+				props.setProperty("stresstimeout", "10.0");
 				props.setProperty("downloadpath", System.getenv("USERPROFILE")
 						+ "\\Downloads\\");
 				props.setProperty("delays", "0");
@@ -219,7 +219,11 @@ public class Configuration {
 	}
 
 	public static double getStressTimeout() {
-		return Double.parseDouble((props.getProperty("stresstimeout","5.0")));
+		return Double.parseDouble((props.getProperty("stresstimeout","10.0")));
+	}
+
+	public static int getPersistTimeout() {
+		return 5;
 	}
 
 	public static boolean isNeedScreenshotsForEachStep() {
@@ -229,18 +233,15 @@ public class Configuration {
 	public static String getCachePath() {
 		return (props.getProperty("cachepath","c:\\Devprom\\apache\\htdocs\\cache"));
 	}
-        
         public static String getPathToRequestKanbanImage() {
 		return (props.getProperty("pathToRequestKanbanImage","resources//RequestKanban.jpg"));
 	}
         
-         public static String getPathToBugImage() {
+	 public static String getPathToBugImage() {
 		return (props.getProperty("pathToBugImage","resources//bugImage.jpg"));
 	}
         
-        public static String getPathToTestReport() {
+	public static String getPathToTestReport() {
 		return (props.getProperty("pathToTestReport","resources//TestResult.xml"));
 	}
-
-	
 }

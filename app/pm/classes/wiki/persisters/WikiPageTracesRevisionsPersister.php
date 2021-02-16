@@ -13,7 +13,6 @@ class WikiPageTracesRevisionsPersister extends ObjectSQLPersister
 			     FROM WikiPageTrace tr
 			    WHERE tr.TargetPage = ".$this->getPK($alias)."
 			      AND tr.Baseline IS NULL
-			      AND tr.SourceBaseline IS NULL
 			      AND tr.IsActual = 'N') TracesRevisions "
 		);
  	}

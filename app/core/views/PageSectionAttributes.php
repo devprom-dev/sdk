@@ -14,6 +14,10 @@ class PageSectionAttributes extends InfoSection
         parent::__construct();
     }
 
+    function getReferenceName() {
+        return $this->referenceName;
+    }
+
     function getCaption() {
         return $this->title;
     }
@@ -26,13 +30,14 @@ class PageSectionAttributes extends InfoSection
         return join('-',$this->referenceName);
     }
 
-    function getAttributes() {
+    function getAttributes( $skipAttributes )
+    {
         $attributes = array();
         foreach( $this->referenceName as $referenceName ) {
             foreach( $this->object->getAttributesByGroup($referenceName) as $attribute ) {
-                if ( $this->object->IsAttributeRequired($attribute) && !in_array($attribute, array('OrderNum','ReferenceName')) ) continue;
+                if ( in_array($attribute, $skipAttributes) ) continue;
                 $attributes[] = $attribute;
-            };
+            }
         }
         return $attributes;
     }

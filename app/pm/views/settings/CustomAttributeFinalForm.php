@@ -41,55 +41,57 @@ class CustomAttributeFinalForm extends PMPageForm
 			$object->setAttributeCaption('DefaultValue', text(2133));
 			$object->setAttributeDescription('DefaultValue', text(2134));
 		}
+
+		if ( $_REQUEST['formonly'] == '' ) {
+            $object->setAttributeVisible('EntityReferenceName', false);
+            $object->setAttributeVisible('AttributeType', false);
+        }
 	}
 
 	function validateInputValues( $id, $action )
 	{
-		global $_REQUEST, $model_factory;
-		
 		$object = $this->getObject();
 
 		// check for conflicts with metadata attributes
 		$reserved = array();
-		
-		$entity = getFactory()->getObject($_REQUEST['EntityReferenceName']);
-		
-		foreach( $entity->getAttributes() as $key => $attribute )
-		{
-			if ( !$entity->IsAttributeStored( $key ) ) continue;
-			if ( $key == 'UID' ) continue;
-			
-			$reserved[] = strtolower($key);
-		}
-		
-		if ( in_array( strtolower(trim($_REQUEST['ReferenceName'])), $reserved ) )
-		{
-			return text(1086);
-		}
 
-		// check for db-column correctness
-		if ( !\TextUtils::checkDatabaseColumnName($_REQUEST['ReferenceName']) ) {
-			return text(1126);
-		}
-		
-		// check for duplicates across custom attributes
-		$dup_it = $object->getByRefArray(
-			array( 'LCASE(ReferenceName)' => strtolower($_REQUEST['ReferenceName']),
-				   'EntityReferenceName' => $_REQUEST['EntityReferenceName'] )
-			);
-			
-		if ( $dup_it->count() > 0 && $dup_it->getId() != $id )
-		{
-			return text(1086);
-		}
-		
+		$className = getFactory()->getClass($_REQUEST['EntityReferenceName']);
+		if ( class_exists($className) ) {
+            $entity = getFactory()->getObject($className);
+
+            foreach( $entity->getAttributes() as $key => $attribute ) {
+                if ( !$entity->IsAttributeStored( $key ) ) continue;
+                if ( $key == 'UID' ) continue;
+                $reserved[] = strtolower($key);
+            }
+
+            if ( in_array( strtolower(trim($_REQUEST['ReferenceName'])), $reserved ) ) {
+                return text(1086);
+            }
+
+            // check for db-column correctness
+            if ( !\TextUtils::checkDatabaseColumnName($_REQUEST['ReferenceName']) ) {
+                return text(1126);
+            }
+
+            // check for duplicates across custom attributes
+            $dup_it = $object->getByRefArray(
+                array( 'LCASE(ReferenceName)' => strtolower($_REQUEST['ReferenceName']),
+                    'EntityReferenceName' => $_REQUEST['EntityReferenceName'] )
+            );
+            if ( $dup_it->count() > 0 && $dup_it->getId() != $id ) {
+                return text(1086);
+            }
+        }
+		else {
+		    unset($_REQUEST['ReferenceName']);
+        }
+
 		$attr_type = $_REQUEST['AttributeType'];
-		
 		if ( $attr_type == '' )
 		{
 			$object_it = $object->getExact( $id );
-			
-			$attr_type = $object_it->get('AttributeType'); 
+			$attr_type = $object_it->get('AttributeType');
 		}
 		
 		if ( $attr_type == 'dictionary' )
@@ -146,6 +148,8 @@ class CustomAttributeFinalForm extends PMPageForm
 				return !in_array($this->getAttributeType(), array('date','password'));
 			case 'IsRequired':
 				return !in_array($this->getAttributeType(), array('computed'));
+            case 'IsMultiple':
+                return in_array($this->getAttributeType(), array('dictionary','reference'));
 			case 'IsUnique':
 				return !in_array($this->getAttributeType(), array('computed'));
 			default:
@@ -174,7 +178,14 @@ class CustomAttributeFinalForm extends PMPageForm
 				{
 					case 'integer':
 						return new FieldNumber();
-						
+                    case 'reference':
+                        $className = getFactory()->getClass($this->getFieldValue('AttributeTypeClassName'));
+                        if ( class_exists($className) ) {
+                            return new FieldAutoCompleteObject(getFactory()->getObject($className));
+                        }
+                        else {
+                            return parent::createFieldObject( $attr_name );
+                        }
 					default:
 						return parent::createFieldObject( $attr_name );
 				}
@@ -274,5 +285,9 @@ class CustomAttributeFinalForm extends PMPageForm
     {
         $redirect_url = $this->getObject()->getPage();
         parent::redirectOnAdded($object_it, $redirect_url);
+    }
+
+    function getBodyTemplate() {
+        return "core/PageFormBody.php";
     }
 }

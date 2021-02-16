@@ -4,7 +4,6 @@
 
 use Devprom\ProjectBundle\Service\Model\ModelService;
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectSQLPasswordPersister.php";
-include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.php";
 
 class CustomAttributesPersister extends ObjectSQLPersister
 {
@@ -16,6 +15,10 @@ class CustomAttributesPersister extends ObjectSQLPersister
 		parent::setObject($object);
 		$this->getAttributesInfo();
 	}
+
+    function IsPersisterImportant() {
+        return true;
+    }
 
     protected function getAttributeIt() {
         return getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
@@ -35,7 +38,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 				'default' => $attr_it->getHtmlDecoded('DefaultValue'),
                 'VPD' => $attr_it->get('VPD'),
  			);
-            $this->references[$attr_it->get('ReferenceName')][] = $attr_it->getId();
+            $this->references[strtolower($attr_it->get('ReferenceName'))][] = $attr_it->getId();
  			$attr_it->moveNext();
  		}
 
@@ -54,7 +57,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
  	function add( $object_id, $parms )
  	{
-		$this->set($object_id, $parms);
+		$this->set($object_id, $parms, true);
  	}
 
  	function modify( $object_id, $parms )
@@ -62,7 +65,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 		$this->set($object_id, $parms);
  	}
  	
- 	protected function set( $object_id, $parms )
+ 	protected function set( $object_id, $parms, $useDefaults = false )
  	{
  	 	$attributes = $this->getAttributesInfo();
 
@@ -75,37 +78,21 @@ class CustomAttributesPersister extends ObjectSQLPersister
                 )
             )->getData();
 
- 		foreach( $attributes as $attr_id => $attr ) {
-            if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' )
-            {
-                $idAttribute = $this->getObject()->getIdAttribute();
-                $value = $this->computeFormula($objectAttributes, $attr['default']);
-
-                if ( $attr['name'] == 'UID' )
-                {
-                    if ( $this->getObject()->IsAttributeStored('UID') && in_array($parms[$attr['name']], array('',$attr['default'])) && $objectAttributes['TraceSourceRequirementBaselines'] == '' )
-                    {
-                        $value = DAL::Instance()->Escape($value);
-                        $objectAttributes['UID'] = DAL::Instance()->Escape($objectAttributes['UID']);
-
-                        DAL::Instance()->Query(
-                            "UPDATE ".$this->getObject()->getEntityRefName()." w SET w.UID = '".$value."' WHERE w.".$idAttribute." IN (".join(",", array($object_id)).")"
-                        );
-
-                        if ( $objectAttributes['UID'] != '' ) {
-                            DAL::Instance()->Query(
-                                "UPDATE ".$this->getObject()->getEntityRefName()." w SET w.UID = '".$value."' WHERE w.UID = '".$objectAttributes['UID']."'"
-                            );
-                        }
-                    }
+ 		foreach( $attributes as $attr_id => $attr )
+ 		{
+            if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
+                if ( $attr['name'] == 'UID' ) {
                     continue;
                 }
                 else {
-                    $parms[$attr['name']] = $value;
+                    $parms[$attr['name']] = $this->computeFormula($objectAttributes, $attr['default']);
                 }
             }
 
-            if ( !array_key_exists($attr['name'], $parms) && !array_key_exists($attr['name'].'OnForm', $parms) ) continue;
+            if ( !array_key_exists($attr['name'], $parms) && !array_key_exists($attr['name'].'OnForm', $parms) ) {
+                if ( $attr['default'] == '' || !$useDefaults ) continue;
+                $parms[$attr['name']] = $attr['default'];
+            }
 
             $value_parms = array(
                 'CustomAttribute' => $attr['id'],
@@ -144,34 +131,25 @@ class CustomAttributesPersister extends ObjectSQLPersister
  	
  	function setValueParms( $attribute, $parms, & $value_parms )
  	{
-		$value_column = $this->getTypeIt($attribute)->getValueColumn();
+ 	    $attributeTypeIt = $this->getTypeIt($attribute);
+		$value_column = $attributeTypeIt->getValueColumn();
  		
- 		$object = $this->getObject();
-
  		if ( !array_key_exists( $attribute['name'], $parms ) )
  		{
  		    if ( $parms[$attribute['name'].'OnForm'] == 'Y' ) {
                 $parms[$attribute['name']] = 'N';
             }
- 		    else {
+ 		    else if ( $value_parms[$value_column] != '' ) {
                 $parms[$attribute['name']] = $value_parms[$value_column];
             }
  		}
- 		else
+ 		elseif ( $attributeTypeIt->get('ReferenceName') != 'wysiwyg' )
  		{
- 			$parms[$attribute['name']] = html_entity_decode($parms[$attribute['name']], ENT_QUOTES | ENT_HTML401, APP_ENCODING);
+ 			$parms[$attribute['name']] = html_entity_decode(
+ 			    $parms[$attribute['name']], ENT_QUOTES | ENT_HTML401, APP_ENCODING);
  		}
  		
- 		$use_default = $object->IsAttributeRequired($attribute['name'])
- 			&& $parms[$attribute['name']] == '' && $value_parms[$value_column] == '' 
- 			&& $attribute['default'] != '';
- 		 
- 		$value_parms[$value_column] = $use_default ? $attribute['default'] : $parms[$attribute['name']];
- 		
- 	 	if ( $value_column == 'IntegerValue' && !is_numeric($parms[$attribute['name']]) )
- 		{
- 			$value_parms[$value_column] = '';
- 		}
+ 		$value_parms[$value_column] = $parms[$attribute['name']];
  	}
  	
  	function getSelectColumns( $alias )
@@ -183,7 +161,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 		$attribute_data = array();
 
 		foreach( $attributes as $attr_id => $attr ) {
- 		    $attribute_data[$attr['name']] = $attr;
+ 		    $attribute_data[strtolower($attr['name'])] = $attr;
  		}
 
  		foreach( $attribute_data as $ref_name => $attr )

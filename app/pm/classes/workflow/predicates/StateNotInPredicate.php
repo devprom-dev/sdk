@@ -4,7 +4,7 @@ class StateNotInPredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
-        $states = array_filter(preg_split('/[,-]/', $filter), function($state) {
+        $states = array_filter(\TextUtils::parseFilterItems($filter, ',-'), function($state) {
             return preg_match('/[A-Za-z0-9_]/', $state);
         });
         if ( count($states) > 0 ) {

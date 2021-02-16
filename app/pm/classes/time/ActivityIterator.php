@@ -4,7 +4,7 @@ class ActivityIterator extends OrderedIterator
 {
  	function getDisplayName()
  	{
- 		$result = $this->getDateFormat('ReportDate');
+ 		$result = $this->getDateFormatted('ReportDate');
  		
 		$result .= ' ['.getSession()->getLanguage()->getHoursWording($this->get('Capacity')).']';
 		
@@ -21,7 +21,7 @@ class ActivityIterator extends OrderedIterator
 
   	function getDisplayNameShort()
  	{
- 		$result = $this->getDateFormat('ReportDate');
+ 		$result = $this->getDateFormatted('ReportDate');
  		
 		$result .= ' ['.getSession()->getLanguage()->getHoursWording($this->get('Capacity')).']';
 		

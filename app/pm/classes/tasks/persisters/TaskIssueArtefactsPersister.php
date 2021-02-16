@@ -3,7 +3,7 @@
 class TaskIssueArtefactsPersister extends ObjectSQLPersister
 {
     function getAttributes() {
-        return array('IssueFeature', 'IssueTraces', 'IssueDescription', 'IssueVersion', 'IssueState', 'IssueStateColor', 'IssueStateName', 'IssueAttachment');
+        return array('IssueFeature', 'IssueTraces', 'IssueDescription', 'IssueVersion', 'IssueState', 'IssueAttachment');
     }
 
     function getSelectColumns( $alias )
@@ -18,13 +18,9 @@ class TaskIssueArtefactsPersister extends ObjectSQLPersister
 
             " ( SELECT r.ClosedInVersion FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueVersion ",
 
-            "( SELECT s.RelatedColor FROM pm_State s, pm_ChangeRequest r ".
-            "   WHERE r.pm_ChangeRequestId = t.ChangeRequest AND s.ReferenceName = r.State AND s.VPD = r.VPD AND s.ObjectClass = 'request') IssueStateColor ",
-
-            "( SELECT s.Caption FROM pm_State s, pm_ChangeRequest r ".
-            "   WHERE r.pm_ChangeRequestId = t.ChangeRequest AND s.ReferenceName = r.State AND s.VPD = r.VPD AND s.ObjectClass = 'request') IssueStateName ",
-
             " ( SELECT r.Function FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueFeature ",
+
+            " ( SELECT r.Type FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueType ",
 
             " (SELECT GROUP_CONCAT(CAST(a.pm_AttachmentId AS CHAR)) ".
 			"    FROM pm_Attachment a ".

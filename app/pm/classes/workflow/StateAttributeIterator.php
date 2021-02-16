@@ -1,6 +1,6 @@
 <?php
 
-class StateAttributeIterator extends OrderedIterator
+class StateAttributeIterator extends CacheableIterator
 {
  	function getDisplayName() 
  	{
@@ -20,6 +20,7 @@ class StateAttributeIterator extends OrderedIterator
         $props[] = in_array($this->get('IsReadonly'), array('Y','on')) ? text(2239) : '';
         $props[] = in_array($this->get('IsMainTab'), array('Y','on')) ? text(2269) : '';
         $props[] = in_array($this->get('IsAskForValue'), array('Y','on')) ? text(2541) : '';
+        $props[] = in_array($this->get('IsVisibleOnEdit'), array('Y','on')) ? text(2940) : '';
 
  		$props = array_filter($props, function($value) {
  			return $value != '';

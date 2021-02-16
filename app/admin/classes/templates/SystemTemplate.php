@@ -16,8 +16,9 @@ class SystemTemplate extends MetaobjectCacheable
         $this->addAttribute('Status', 'VARCHAR', text(2038), true, false);
         $this->addAttribute('Content', 'LARGETEXT', translate('Содержание'), false, false);
         $this->addAttribute('Format', 'VARCHAR', translate('Формат'), false, true);
+        $this->setAttributeRequired('OrderNum', false);
 
-        foreach( array('Content','Format') as $attribute ) {
+        foreach( array('Format') as $attribute ) {
             $this->addAttributeGroup($attribute, 'system');
         }
     }
@@ -55,7 +56,7 @@ class SystemTemplate extends MetaobjectCacheable
         $command->install();
 
         $event = new ChangesWaitLockReleaseTrigger();
-        $event->process($it);
+        $event->process($it, TRIGGER_ACTION_MODIFY);
 
         return 1;
     }
@@ -72,7 +73,7 @@ class SystemTemplate extends MetaobjectCacheable
         $command->install();
 
         $event = new ChangesWaitLockReleaseTrigger();
-        $event->process($it);
+        $event->process($it, TRIGGER_ACTION_DELETE);
 
         return 1;
     }

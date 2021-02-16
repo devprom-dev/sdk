@@ -84,7 +84,7 @@ public class GroupsPage extends AdminPageBase {
 	public int getGroupsCount() {
 		try {
 			return driver.findElements(
-					By.xpath("//tr[contains(@id, 'usergrouplist1_row_')]"))
+					By.xpath("//tr[starts-with(@id,'usergrouplist1_row_')]"))
 					.size();
 		} catch (NoSuchElementException e) {
 			return 0;

@@ -21,11 +21,7 @@ class FeatureUpdateMetricsEventHandler extends SystemTriggersBase
 	    	);
 	    if ( count($ids) < 1 ) return;
 
-        getSession()->addCallbackDelayed(
-            array(
-                'FeatureMetrics' => $object_it->getId()
-            ),
-            function() use ( $ids ) {
+        register_shutdown_function(function() use ( $ids ) {
                 $service = new StoreMetricsService();
                 $service->storeFeatureMetrics(
                     getFactory()->getObject('Feature')->getRegistry(),

@@ -4,23 +4,34 @@ include_once SERVER_ROOT_PATH . "pm/classes/workflow/StatableIterator.php";
 class RequestIterator extends StatableIterator
 {
 	function getDisplayName() {
+	    if ( $this->getId() == '' ) return parent::getDisplayName();
 	    return $this->getObjectDisplayName() . ': ' . parent::getDisplayName();
 	}
 
 	function getDisplayNameExt( $prefix = '' )
     {
-        if ( $this->get('Deadlines') != '' && $this->get('DueWeeks') < 4 ) {
+        $priorityColor = parent::get('PriorityColor');
+        if ( $priorityColor != '' ) {
+            $prefix .= '<span class="pri-cir" style="color:'.$priorityColor.'">&#x25cf;</span>';
+        }
+
+        if ( $this->get('Deadlines') != '' && $this->get('DueWeeks') > -3 && $this->get('DueWeeks') < 4 ) {
             $prefix .= '<span class="label '.($this->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'" title="'.$this->object->getAttributeUserName('DeliveryDate').'">';
-            $prefix .= $this->getDateFormatShort('DeliveryDate');
+            $prefix .= $this->getDateFormattedShort('DeliveryDate');
             $prefix .= '</span> ';
         }
 
         $displayAttributes = array();
         foreach( $this->object->getAttributesByGroup('display-name') as $attribute ) {
             if ( $this->get($attribute) == '' ) continue;
-            if ( in_array($attribute, array('Estimation', 'TasksPlanned')) ) {
+            if ( in_array($attribute, array('Estimation')) ) {
                 $displayAttributes[] = '<span class="label label-success">'.
                     $this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getDimensionText($this->get($attribute)).
+                    '</span>';
+            }
+            elseif ( in_array($attribute, array('TasksPlanned')) ) {
+                $displayAttributes[] = '<span class="label label-success">'.
+                    $this->getRef('Project')->getMethodologyIt()->getIterationEstimationStrategy()->getDimensionText($this->get($attribute)).
                     '</span>';
             }
             else {
@@ -34,7 +45,7 @@ class RequestIterator extends StatableIterator
         $title = parent::getDisplayNameExt($prefix);
 
         if ( $this->get('ClosedInVersion') != '' ) {
-            $title = ' <span class="badge badge-uid badge-inverse">'.$this->get('ClosedInVersion').'</span> ' . $title;
+            $title = ' <span class="badge badge-uid badge-inverse">'.$this->get('ClosedInVersionText').'</span> ' . $title;
         }
 
         if ( $this->get('TagNames') != '' ) {
@@ -56,7 +67,7 @@ class RequestIterator extends StatableIterator
     }
 
  	function IsFinished() {
- 		return $this->get('StateTerminal') == 'Y';
+ 		return $this->get('FinishDate') != '';
  	}
 
 	function IsTransitable()
@@ -94,33 +105,6 @@ class RequestIterator extends StatableIterator
  		return $duration;
  	} 	
 
- 	 function getPlannedWorkload()
- 	 {	
- 	 	$ids = array();
-		$this->moveFirst();
-		
-		for( $i = 0; $i < $this->count(); $i++ )
-		{
-			array_push($ids, $this->getId());
-			$this->moveNext();
-		}
-		
-		return $this->object->getPlannedWorkload( $ids );
- 	 }
-
- 	 function getBuild()
- 	 {
- 	 	if ( $this->get('Build') > 0 )
- 	 	{
- 	 		$build_it = $this->getRef( 'Build' );
- 	 		return $build_it->getFullNumber();
- 	 	}
- 	 	else
- 	 	{
- 	 		return '';
- 	 	}
- 	}
-
  	function getProgress()
  	{
  		$ids = array();
@@ -150,7 +134,13 @@ class RequestIterator extends StatableIterator
         );
  	}
 
- 	function getSpecifiedIt() {
-        return $this->object->getSpecific($this);
+ 	function getSpecifiedIt()
+    {
+        if ( $this->count() > 0 && $this->get('Type') == '' && !$this->object instanceof Issue && getSession()->IsRDD() ) {
+            return getFactory()->getObject('Issue')->createCachedIterator(
+                array($this->getData())
+            );
+        }
+        return $this;
     }
 }

@@ -1,5 +1,7 @@
 package ru.devprom.pages.kanban;
 
+import java.util.List;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
@@ -16,6 +18,7 @@ import ru.devprom.pages.project.requirements.RequirementNewPage;
 import ru.devprom.pages.project.requirements.RequirementViewPage;
 import ru.devprom.pages.project.tasks.TaskCompletePage;
 import ru.devprom.pages.project.tasks.TaskViewPage;
+import ru.devprom.pages.project.tasks.TasksPage;
 import ru.devprom.pages.project.testscenarios.TestScenarioNewPage;
 import ru.devprom.pages.project.testscenarios.TestScenarioTestingPage;
 
@@ -23,9 +26,17 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 
 	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
+
+	//кнопка действия
+	@FindBy(xpath = "//a[contains(.,'Действия')]")
+	protected WebElement actionBtn;
         
 	@FindBy(id = "pm_ChangeRequestSubmitBtn")
 	protected WebElement submitBtn;
+
+	// пункт Удалить в меню Действия
+	@FindBy(id = "row-delete")
+	protected WebElement deleteBtn;
 
 	//добавить затраченное время на форма перехода к статусу Анализ:готово
     @FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
@@ -48,11 +59,7 @@ public class KanbanTaskViewPage extends KanbanPageBase {
         //разработка
         @FindBy(xpath = "//a[@id='workflow-development']")
 	protected WebElement developmentBtn;
-        
-        //кнопа действия
-        @FindBy(xpath = "//a[contains(.,'Действия')]")
-	protected WebElement actionBtn;
-        
+
         //пункт начать тестировани меню действия
         @FindBy(xpath = ".//*[@id='run-test']")
 	protected WebElement startTestingItem;
@@ -63,7 +70,8 @@ public class KanbanTaskViewPage extends KanbanPageBase {
         
         @FindBy(id = "pm_ChangeRequestSubmitBtn")
 	protected WebElement changeRequestSubmitBtn;
-	
+
+        // кнопка Изменить
 	@FindBy(xpath = "//a[@id='modify']")
 	protected WebElement editBtn;
 	
@@ -94,19 +102,19 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 	@FindBy(xpath = "//div[@class='accordion-heading']/a[contains(.,'Описание')]")
 	protected WebElement descriptionField;
 	
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Приоритет:')]/following-sibling::td")
+	@FindBy(xpath = "//table[@class='properties-table']//tr/th[contains(.,'Приоритет:')]/following-sibling::td")
 	protected WebElement priorityLabel;
 	
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Автор:')]/following-sibling::td")
+	@FindBy(xpath = "//table[@class='properties-table']//tr/th[contains(.,'Автор:')]/following-sibling::td")
 	protected WebElement authorLabel;
 
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Номер:')]/following-sibling::td")
+	@FindBy(xpath = "//table[@class='properties-table']//tr/th[contains(.,'Номер:')]/following-sibling::td")
 	protected WebElement numberLabel;
 	
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Состояние:')]/following-sibling::td/span")
+	@FindBy(xpath = "//table[@class='properties-table']//tr/th[contains(.,'Состояние:')]/following-sibling::td/span")
 	protected WebElement stateLabel;
 	
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Исполнитель:')]/following-sibling::td")
+	@FindBy(xpath = "//table[@class='properties-table']//tr/th[contains(.,'Исполнитель:')]/following-sibling::td")
 	protected WebElement ownerLabel;
 	
 	
@@ -130,7 +138,10 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(actionsBtn));
 		actionsBtn.click();
 		clickOnInvisibleElement(saveTemplateBtn);
-		driver.findElement(By.id("cms_SnapshotCaption")).sendKeys(templateName);
+		waitForDialog();
+		WebElement caption = driver.findElement(By.xpath("//div[@id='modal-form']//input[@id='pm_ChangeRequestCaption']"));
+		caption.clear();
+		caption.sendKeys(templateName);
 		submitDialog(driver.findElement(By.id("cms_SnapshotSubmitBtn")));	
 		return new KanbanTaskViewPage(driver);
 	}
@@ -180,23 +191,49 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 	public String readDescription()
 	{
 		((JavascriptExecutor) driver).executeScript("document.evaluate(\"//div[@id='collapseTwo']\", document, null, 9, null).singleNodeValue.removeAttribute('class')");
-		return driver.findElement(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription')]")).getText().trim();
+		return driver.findElement(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription') and contains(@class,'wysiwyg-text')]")).getText().trim();
 	}
 
-	protected WebElement findSubTask( String name ) {
-		return driver.findElement(
-				By.xpath("//input[@value='task']/following-sibling::div[contains(@id,'embeddedItems')]//*[contains(@class,'title') and contains(.,'"+name+"')]"));
+	protected WebElement findSubTask( String name ) 
+	{
+		List<WebElement> items = driver.findElements(
+			By.xpath("//input[@value='task']/following-sibling::div[contains(@id,'embeddedItems')]//*[contains(@class,'title') and contains(.,'"+name+"')]"));
+		return items.get(items.size() - 1);
 	}
 	
-	public String getSubTaskState( String name ) {
-		WebElement subtaskElement = findSubTask(name);
-		return subtaskElement.findElement(By.xpath("./span[contains(@class,'label')]")).getText();
-	}
-	
-	public KanbanTaskExecutePage executeSubtask(String name) {
+	public KanbanTaskExecutePage executeSubtask(String name)
+	{
+		openTasksSection();
 		WebElement executeBtn = findSubTask(name).findElement(By.xpath("./following-sibling::ul//a[text()='Выполнить']"));
 		clickOnInvisibleElement(executeBtn);
 		return new KanbanTaskExecutePage(driver);
+	}
+
+	public TasksPage openRelatedTasksList()
+	{
+		WebElement link = driver.findElement(By.xpath("//a[contains(@class,'embedded-add-button') and contains(@class,'items-list')]"));
+		clickOnInvisibleElement(link);
+		return new TasksPage(driver);
+	}
+
+	public void openTasksSection()
+	{
+		WebElement section = driver.findElement(By.xpath("//a[contains(@href,'collapseThree')]"));
+		if ( section.isDisplayed() ) {
+			section.click();
+			(new WebDriverWait(driver, 5)).until(ExpectedConditions
+					.visibilityOf(driver.findElement(By.id("collapseThree"))));
+		}
+	}
+
+	public void openTracesSection()
+	{
+		WebElement section = driver.findElement(By.xpath("//a[contains(@href,'collapseFive')]"));
+		if ( section.isDisplayed() ) {
+			section.click();
+			(new WebDriverWait(driver, 5)).until(ExpectedConditions
+					.visibilityOf(driver.findElement(By.id("collapseFive"))));
+		}
 	}
 	
 	public String duplicateInProject(String projectName){
@@ -227,11 +264,19 @@ public class KanbanTaskViewPage extends KanbanPageBase {
         }
     }
 
-    public RequirementViewPage openRequirement(String name) {
-        driver.findElement(By.xpath("//div[contains(@id,'embeddedItems')]//*[contains(@class,'title') and contains(.,'"+name+"')]")).click();
-        WebElement menuItem = driver.findElement(By.id("show-in-document"));
-        (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(menuItem));
-        menuItem.click();
+    public RequirementViewPage openRequirement(String name) 
+    {
+    	openTracesSection();
+        List<WebElement> list = driver.findElements(
+        		By.xpath("//div[contains(@id,'embeddedItems')]//*[contains(@class,'title') and contains(.,'"+name+"')]")
+        	);
+		for (int i = 0; i < list.size(); i++) {
+			if ( list.get(i).isDisplayed() ) {
+				list.get(i).click();
+				break;
+			}
+		}
+		clickOnInvisibleElement(driver.findElement(By.id("open-form")));
         return new RequirementViewPage(driver);
     }
 
@@ -292,5 +337,14 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 		actionsBtn.click();
 		clickOnInvisibleElement(addSubtaskBtn);
 		return new KanbanAddSubtaskPage(driver);
+	}
+
+	public void deleteIssue(){
+		actionBtn.click();
+		try {
+			Thread.sleep(3000);
+		}
+		catch (InterruptedException e){}
+	    clickOnInvisibleElement(deleteBtn);
 	}
 }

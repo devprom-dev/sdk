@@ -7,7 +7,7 @@ class SearchTextTemplatePage extends PMPage
         return getFactory()->getObject('Request');
     }
 
-    function getForm() {
+    function getEntityForm() {
         return new SearchTextTemplateForm($this->getObject());
     }
 

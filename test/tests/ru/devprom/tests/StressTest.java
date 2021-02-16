@@ -79,27 +79,29 @@ public class StressTest extends ProjectTestBase {
 		 
 		 
 		// Проверяем время загрузки страницы после наполнения базы
+		long time = System.currentTimeMillis();
 		RequirementDocumentsPage rdp = rvp.gotoRequirementDocuments();
-		double docListLoadTime = rdp.getScriptExecutionTime();
+		long docListLoadTime = (System.currentTimeMillis() - time) / 1000;
 		System.out.println("Documents List load time: " + docListLoadTime + " sec.");
-		Assert.assertTrue(docListLoadTime<maxLoadTime, "Время загрузки списка Документов превышает "+ maxLoadTime + " секунд");
+		Assert.assertTrue(docListLoadTime<maxLoadTime, "Время загрузки списка Документов " + docListLoadTime + " превышает "+ maxLoadTime + " секунд");
 		
+		time = System.currentTimeMillis();
 		rp = rdp.gotoRequirements();
-		rp.removeColumn("RecentComment");
-		rp = rp.showAll("500");
-		double listLoadTime = rp.getScriptExecutionTime();
+		long listLoadTime = (System.currentTimeMillis() - time) / 1000;
 		System.out.println("RequirementList load time: " + listLoadTime + " sec.");
-		Assert.assertTrue(listLoadTime<maxLoadTime, "Время загрузки списка Требований превышает " + maxLoadTime + " секунд");
+		Assert.assertTrue(listLoadTime<maxLoadTime, "Время загрузки списка Требований " + listLoadTime + " превышает " + maxLoadTime + " секунд");
 
+		time = System.currentTimeMillis();
 		rvp = rp.clickToRequirement("R-"+(Integer.parseInt(template.getNumericId())+3));
-		double requirementLoadTime = rvp.getScriptExecutionTime();
+		long requirementLoadTime = (System.currentTimeMillis() - time) / 1000;
 		System.out.println("Single Requirement load time: " + requirementLoadTime + " sec.");
-		Assert.assertTrue(requirementLoadTime<maxLoadTime, "Время загрузки страницы Требования превышает " + maxLoadTime + " секунд");
-		
+		Assert.assertTrue(requirementLoadTime<maxLoadTime, "Время загрузки страницы Требования " + requirementLoadTime + " превышает " + maxLoadTime + " секунд");
+
+		time = System.currentTimeMillis();
 		TraceMatrixPage tmp = rp.gotoTraceMatrix();	
-		double traceMatrixLoadTime = tmp.getScriptExecutionTime();
+		long traceMatrixLoadTime = (System.currentTimeMillis() - time) / 1000;
 		System.out.println("Trace Matrix load time: " + traceMatrixLoadTime + " sec.");		
-		Assert.assertTrue(traceMatrixLoadTime<maxLoadTime, "Время загрузки матрицы трассировки превышает " + maxLoadTime + " секунд");
+		Assert.assertTrue(traceMatrixLoadTime<maxLoadTime, "Время загрузки матрицы трассировки " + traceMatrixLoadTime + " превышает " + maxLoadTime + " секунд");
 	}
 	
 	@Test
@@ -164,17 +166,19 @@ public class StressTest extends ProjectTestBase {
 		Connect.close();
 		
 		MyReportsPageBase mrpb = firstPage.gotoMyReports();
+		long time = System.currentTimeMillis();
 		ProjectPageBase ppb = mrpb.openReport("allissues");
-		double allTasksLoadTime = ppb.getScriptExecutionTime();
+		double allTasksLoadTime = (System.currentTimeMillis() - time) / 1000;
 		System.out.println("Все задачи в проекте: " + allTasksLoadTime + " sec.");
 
 		mrpb = ppb.gotoMyReports();
+		time = System.currentTimeMillis();
 		ppb = mrpb.openReport("kanbanboard");
-		double kanbanBoardLoadTime = ppb.getScriptExecutionTime();
+		double kanbanBoardLoadTime = (System.currentTimeMillis() - time) / 1000;
 		System.out.println("Kanban доска: " + kanbanBoardLoadTime + " sec.");
 		
-		Assert.assertTrue(allTasksLoadTime<maxLoadTime, "Время загрузки отчета 'Все задачи в проекте' превышает "+ maxLoadTime + " секунд");
-		Assert.assertTrue(kanbanBoardLoadTime<maxLoadTime, "Время загрузки отчета 'Kanban доска' превышает " + maxLoadTime + " секунд");
+		Assert.assertTrue(allTasksLoadTime<maxLoadTime, "Время загрузки отчета 'Все задачи в проекте' " + allTasksLoadTime + " превышает "+ maxLoadTime + " секунд");
+		Assert.assertTrue(kanbanBoardLoadTime<maxLoadTime, "Время загрузки отчета 'Kanban доска' " + kanbanBoardLoadTime + " превышает " + maxLoadTime + " секунд");
 	}
 	
 	

@@ -17,10 +17,6 @@ class LockFileSystem extends Lock
         $this->file_name = rtrim(self::$cache_dir, '\\/').'/'.md5($name.INSTALLATION_UID).'.lock';
     }
 
-    function __destruct() {
-        $this->Release();
-    }
-
     public function Lock() {
         @file_put_contents( $this->file_name, time() );
     }

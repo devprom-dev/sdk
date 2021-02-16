@@ -1,9 +1,8 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Model\ModelService;
-include_once SERVER_ROOT_PATH."pm/methods/c_state_methods.php";
+use Devprom\ProjectBundle\Service\Widget\WidgetService;
+include_once SERVER_ROOT_PATH . "pm/methods/TransitionStateMethod.php";
 include "FieldPriority.php";
-include "FieldReferenceAttribute.php";
 
 class PMPageList extends PageList
 {
@@ -20,17 +19,13 @@ class PMPageList extends PageList
     {
         parent::extendModel();
 
-        $object = $this->getObject();
-        foreach( array_keys($object->getAttributes()) as $attr ) {
-            if ( !$object->IsReference($attr) ) continue;
-            if ( !getFactory()->getAccessPolicy()->can_read($this->getObject()->getAttributeObject($attr)) ) {
-                $object->removeAttribute($attr);
-            }
-        }
-
         if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Priority') ) {
             $this->priorityField = new FieldPriority($this->getObject()->getEmptyIterator());
         }
+    }
+
+    function combineCaptionWithDescription() {
+        return true;
     }
 
     function buildMethods()
@@ -43,7 +38,7 @@ class PMPageList extends PageList
     }
 
     function getColumnVisibility($attr) {
-        if ( $attr == 'Description' && array_key_exists($attr, $this->visibleColumnsCache) ) {
+        if ( $this->combineCaptionWithDescription() && $attr == 'Description' && array_key_exists($attr, $this->visibleColumnsCache) ) {
             return false;
         }
         return parent::getColumnVisibility($attr);
@@ -54,7 +49,7 @@ class PMPageList extends PageList
         switch( $attribute ) {
             case 'Caption':
                 $parms = parent::getHeaderAttributes($attribute);
-                if ( $this->visibleColumnsCache['Description'] ) {
+                if ( $this->combineCaptionWithDescription() && $this->visibleColumnsCache['Description'] ) {
                     $parms['name'] = str_replace('%1', $parms['name'], text(2305));
                 }
                 return $parms;
@@ -73,30 +68,28 @@ class PMPageList extends PageList
                     echo ' ';
                     $this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
                 }
-                echo '<div style="margin-top: 4px">';
-                    $this->drawCell($object_it, 'DescriptionWithInCaption');
-                echo '</div>';
+                $this->drawCell($object_it, 'DescriptionWithInCaption');
                 break;
 
             case 'DescriptionWithInCaption':
                 if ( $this->visibleColumnsCache['Description'] && trim($object_it->get('Description')," \r\n") != '' ) {
-                    if ( $object_it->object->getAttributeType('Description') == 'wysiwyg' ) {
-                        $field = new FieldWYSIWYG();
-                        $field->setValue($object_it->get('Description'));
-                        $field->setObjectIt($object_it);
-                        $field->drawReadonly();
-                    }
-                    else {
-                        parent::drawCell($object_it, 'Description');
-                    }
+                    echo '<div style="margin-top: 4px">';
+                        if ( $object_it->object->getAttributeType('Description') == 'wysiwyg' ) {
+                            $field = new FieldWYSIWYG();
+                            $field->setValue($object_it->get('Description'));
+                            $field->setObjectIt($object_it);
+                            $field->drawReadonly();
+                        }
+                        else {
+                            parent::drawCell($object_it, 'Description');
+                        }
+                    echo '</div>';
                 }
                 break;
 
             case 'State':
             	echo $this->getRenderView()->render('pm/StateColumn.php', array (
-                    'color' => $object_it->get('StateColor'),
-                    'name' => $object_it->get('StateName'),
-                    'terminal' => $object_it->get('StateTerminal') == 'Y'
+                    'stateIt' => $object_it->getStateIt()
                 ));
                 break;
     
@@ -107,7 +100,8 @@ class PMPageList extends PageList
 						echo $this->getRenderView()->render('core/UserPictureMini.php', array (
 							'id' => $object_it->get('RecentCommentAuthor'),
 							'image' => 'userpics-mini',
-							'class' => 'user-mini'
+							'class' => 'user-mini',
+                            'date' => $object_it->getDateFormattedShort('RecentCommentDate')
 						));
 					}
 					echo '<span class="reset wysiwyg" style="margin-top: 4px;">';
@@ -130,10 +124,10 @@ class PMPageList extends PageList
 				break;
 
             default:
-                if ( $attr != 'UID' && in_array('computed', $this->object->getAttributeGroups($attr)) ) {
+                if ( $attr != 'UID' && in_array('computed', $object_it->object->getAttributeGroups($attr)) ) {
                     $lines = array();
                     $times = 0;
-                    $result = ModelService::computeFormula($object_it, $this->object->getDefaultAttributeValue($attr));
+                    $result = ModelService::computeFormula($object_it, $object_it->object->getDefaultAttributeValue($attr));
                     foreach( $result as $computedItem ) {
                         if ( is_object($computedItem) ) {
                             if ( $times > 0 ) {
@@ -152,10 +146,7 @@ class PMPageList extends PageList
                     break;
                 }
 
-                switch ( $this->object->getAttributeType($attr) ) {
-                    case 'text':
-                        echo $object_it->getHtml($attr);
-                        break;
+                switch ( $object_it->object->getAttributeType($attr) ) {
                     case 'wysiwyg':
                         if ( $object_it->get($attr) != '' ) {
                             $field = new FieldWYSIWYG();
@@ -198,27 +189,26 @@ class PMPageList extends PageList
                 {
                     case 'WikiPage':
                         $ids = $entity_it->idsToArray();
+
                         $widget_it = $this->getTable()->getReferencesListWidget($entity_it, $attr);
                         if ( $widget_it->getId() != '' && count($ids) > 1 )
                         {
-                            $url = $widget_it->getUrl('filter=skip&'.strtolower(get_class($entity_it->object)).'='.\TextUtils::buildIds($ids));
+                            $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIt($entity_it, 'ids', $widget_it);
                             $text = count($ids) > 10
                                         ? str_replace('%1', count($ids) - 10, text(2028))
                                         : text(2034);
+
                             $entity_it = $entity_it->object->createCachedIterator(
                                 array_slice($entity_it->getRowset(),0,10)
                             );
                         }
+
                         $items = $this->getRefNames($entity_it, $object_it, $attr);
                         foreach( $items as $objectId => $value ) {
                             $entity_it->moveToId($objectId);
-                            if ( $entity_it->get('BrokenTraces') != "" ) {
-                                $items[$objectId] = $this->getRenderView()->render('pm/WikiPageBrokenIcon.php',
-                                        array (
-                                            'id' => $entity_it->getId(),
-                                            'url' => getSession()->getApplicationUrl($entity_it)
-                                        )
-                                    ).$value;
+                            if ( $entity_it->get('Suspected') > 0 ) {
+                                $items[$objectId] = WidgetService::getHtmlBrokenIcon(
+                                    $entity_it->getId(), getSession()->getApplicationUrl($entity_it)) . $value;
                             }
                         }
 
@@ -253,17 +243,40 @@ class PMPageList extends PageList
 		}
 	}
 
-	function getColumnFields()
-	{
-		return array_merge(parent::getColumnFields(), $this->getObject()->getAttributesByGroup('workflow'));
-	}
+    function getGroupEntityName( $groupField, $object_it, $referenceIt )
+    {
+        if ( $referenceIt->object instanceof Request ) return "";
+        if ( $referenceIt->object instanceof User ) return "";
+        if ( $referenceIt->object instanceof Build ) {
+            return $object_it->object->getAttributeUserName($groupField);
+        }
+        return parent::getGroupEntityName($groupField, $object_it, $referenceIt);
+    }
 
-	function getGroupFields()
+	function getColumnWidth($attr)
+    {
+        switch( $attr ) {
+            case 'RecentComment':
+                return '25%';
+            default:
+                return parent::getColumnWidth($attr);
+        }
+    }
+
+    function getGroupFields()
 	{
-		$skip = array_filter($this->getObject()->getAttributesByGroup('workflow'), function($value) {
+	    $object = $this->getObject();
+
+		$skip = array_filter($object->getAttributesByGroup('workflow'), function($value) {
 			return $value != 'State';
 		});
-		$skip = array_merge($skip, $this->getObject()->getAttributesByGroup('trace'));
+
+		$skip = array_merge($skip,
+            array_filter($object->getAttributesByGroup('trace'), function($value) use ($object) {
+                return $object->getAttributeOrigin($value) != ORIGIN_CUSTOM;
+            })
+        );
+
 		return array_diff(parent::getGroupFields(), $skip );
 	}
 
@@ -300,21 +313,16 @@ class PMPageList extends PageList
 		return parent::getRenderParms();
 	}
 
-	function buildFilterActions( & $base_actions )
-	{
-		parent::buildFilterActions( $base_actions );
-		$this->buildFilterColumnsGroup( $base_actions, 'workflow' );
-		$this->buildFilterColumnsGroup( $base_actions, 'trace' );
-		$this->buildFilterColumnsGroup( $base_actions, 'workload' );
-		$this->buildFilterColumnsGroup( $base_actions, 'dates' );
-        $this->buildFilterColumnsGroup( $base_actions, 'sla' );
-	}
-
-    protected function getRefNames($entity_it, $object_it, $attr )
+    public function getRefNames($entity_it, $object_it, $attr )
     {
         if ( $entity_it instanceof VersionIterator ) {
             return parent::getRefNames($entity_it->getObjectIt(), $object_it, $attr );
         }
         return parent::getRefNames($entity_it, $object_it, $attr );
     }
+
+    function IsNeedToDisplayOperations() {
+        return $_REQUEST['dashboard'] == '';
+    }
+
 }

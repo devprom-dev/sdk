@@ -1,5 +1,7 @@
 package ru.devprom.pages.requirement;
 
+import java.util.List;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
@@ -37,9 +39,6 @@ public class IssueViewPage extends ProjectPageBase {
 	@FindBy(xpath = "//a[@id='modify']")
 	protected WebElement editBtn;
 	
-	@FindBy(xpath = "//a[contains(@id,'requirement')]")
-	protected WebElement createRequirementBtn;
-	
 	public IssueViewPage(WebDriver driver) {
 		super(driver);
 	}
@@ -63,7 +62,7 @@ public class IssueViewPage extends ProjectPageBase {
 	public String readDescription()
 	{
 		((JavascriptExecutor) driver).executeScript("document.evaluate(\"//div[@id='collapseTwo']\", document, null, 9, null).singleNodeValue.removeAttribute('class')");
-		return driver.findElement(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription')]")).getText().trim();
+		return driver.findElement(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription') and contains(@class,'wysiwyg-text')]")).getText().trim();
 	}
 
 	protected WebElement findSubTask( String name ) {
@@ -71,37 +70,28 @@ public class IssueViewPage extends ProjectPageBase {
 				By.xpath("//input[@value='task']/following-sibling::div[contains(@id,'embeddedItems')]//*[contains(@class,'title') and contains(.,'"+name+"')]"));
 	}
 	
-	public String getSubTaskState( String name ) {
-		WebElement subtaskElement = findSubTask(name);
-		return subtaskElement.findElement(By.xpath("./span[contains(@class,'label')]")).getText();
-	}
-	
-    public void doAnalyse(String time) {
-        try
-        {
-	        (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(analyseBtn));
-	        analyseBtn.click();        
-	        Thread.sleep(2000);
-        }
-        catch(InterruptedException e)
-        {
-        }
-    }
-
-    public RequirementViewPage openRequirement(String name) {
+	public RequirementViewPage openRequirement(String name) {
         driver.findElement(By.xpath("//div[contains(@id,'embeddedItems')]//*[contains(@class,'title') and contains(.,'"+name+"')]")).click();
-        WebElement menuItem = driver.findElement(By.id("show-in-document"));
+        WebElement menuItem = driver.findElement(By.id("open-form"));
         (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(menuItem));
         menuItem.click();
         return new RequirementViewPage(driver);
     }
 
-     public String getIdRequirement (String name){
-         String id = driver.findElement(By.xpath(".//*[@name='Requirement']//*[contains(@class,'title') and contains(.,"
-                 + "'Студенты и преподаватели')]/a")).getText();
-         String clearID = id.substring(1, id.length()-1);
-         FILELOG.debug("Requirement ID = " + clearID);
-         return clearID;
+     public String getIdRequirement (String name)
+     {
+    	 openTracesSection();
+         List<WebElement> list = driver.findElements(By.xpath(".//*[@name='Requirement']//*[contains(@class,'title') and contains(.,"
+                 + "'Студенты и преподаватели')]/a"));
+         for( int i = 0; i < list.size(); i++ ) {
+        	 String id = list.get(i).getText();
+        	 if ( !id.equals("") ) {
+                 String clearID = id.substring(1, id.length()-1);
+                 FILELOG.debug("Requirement ID = " + clearID);
+                 return clearID;
+        	 }
+         }
+         return "";
      }
 
     public void completeTask() {
@@ -110,11 +100,13 @@ public class IssueViewPage extends ProjectPageBase {
     	submitDialog(submitBtn);
     }
     
-    public RequirementNewPage clickActionCreateRequirement() 
-    {
-    	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(createRequirementBtn));
-    	createRequirementBtn.click();
-    	waitForDialog();
-    	return new RequirementNewPage(driver);
-    }
+	public void openTracesSection()
+	{
+		WebElement section = driver.findElement(By.xpath("//a[contains(@href,'collapseFive')]"));
+		if ( section.isDisplayed() ) {
+			section.click();
+			(new WebDriverWait(driver, 5)).until(ExpectedConditions
+					.visibilityOf(driver.findElement(By.id("collapseFive"))));
+		}
+	}
 }

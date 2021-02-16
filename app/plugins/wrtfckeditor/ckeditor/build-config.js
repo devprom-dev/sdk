@@ -52,7 +52,6 @@ var CKBUILDER_CONFIG = {
 	plugins : {
 		'a11yhelp' : 1,
 		'about' : 1,
-		'autoembed' : 1,
 		'autogrow' : 1,
 		'basicstyles' : 1,
 		'blockquote' : 1,
@@ -65,7 +64,7 @@ var CKBUILDER_CONFIG = {
 		'dialog' : 1,
 		'dialogadvtab' : 1,
 		'dialogui' : 1,
-		'elementspath' : 1,
+		'elementspath' : 0,
 		'embed' : 1,
 		'enterkey' : 1,
 		'entities' : 1,
@@ -109,8 +108,12 @@ var CKBUILDER_CONFIG = {
         'notification' : 1,
         'clipboard' : 1,
 		'uicolor' : 1,
-		'undo' : 1,
-		'wysiwygarea' : 1
+		'wysiwygarea' : 1,
+		'embedhtml': 1,
+		'sharedspace': 1,
+		'iframedialog': 1,
+		'widget': 1,
+		'undo': 1
 	},
 	languages : {
 		'en' : 1,

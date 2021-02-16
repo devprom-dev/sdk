@@ -1,15 +1,18 @@
 <?php
 
-class ObjectsListWidgetIterator extends OrderedIterator
+class ObjectsListWidgetIterator extends CacheableIterator
 {
     function getWidgetIt()
     {
-        switch( $this->get('ReferenceName') ) {
-            case 'PMReport':
-                return getFactory()->getObject('PMReport')->getExact($this->getId());
-            case 'Module':
-                return getFactory()->getObject('Module')->getExact($this->getId());
+        if ( is_array($this->get('data')) && count($this->get('data')) > 0 ) {
+            return $this->object->getWidgetObject($this->get('ReferenceName'))->createCachedIterator(
+                array(
+                    $this->get('data')
+                )
+            );
         }
-        return getFactory()->getObject('Module')->getEmptyIterator();
+        else {
+            return $this->object->getWidgetObject('Module')->getEmptyIterator();
+        }
     }
 }

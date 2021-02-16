@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/views/tags/FieldTagTrace.php";
 include_once SERVER_ROOT_PATH."pm/views/tags/CustomTagFormEmbedded.php";
 
@@ -23,7 +22,7 @@ class FieldTaskTagTrace extends FieldTagTrace
 	
     function getForm()
     {
-        $form = new CustomTagFormEmbedded( $this->getTagObject(), $this->getField() );
+        $form = new CustomTagFormEmbedded($this->getTagObject(), $this->getField(), $this->getName());
         $form->setAnchorIt( $this->getAnchorIt() );
         return $form;
     }

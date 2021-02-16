@@ -32,7 +32,7 @@ public class RequirementChangesHistoryPage extends SDLCPojectPageBase {
 		change.isExist=true;
 		}
 		catch (NoSuchElementException e) {
-			driver.findElement(By.xpath("//table[@id='wikihistorylist1']/tbody/tr/td[text()='Нет элементов']"));
+			driver.findElement(By.xpath("//table[@id='wikihistorylist1']//tr/td[text()='Нет элементов']"));
 		}
 		
 		return change;
@@ -49,7 +49,7 @@ public class RequirementChangesHistoryPage extends SDLCPojectPageBase {
 
 	public RequirementViewPage openRequirement() {
 		driver.findElement(By.xpath("//ul[contains(@class,'breadcrumb')]/li/a[contains(.,'[')]")).click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@id,'WikiPageContent') and contains(@class,'wysiwyg')]")));
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[starts-with(@id,'WikiPageContent') and contains(@class,'wysiwyg')]")));
 		return new RequirementViewPage(driver);
 	}
 	

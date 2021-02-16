@@ -18,11 +18,11 @@ class VelocityTable extends PMPageTable
         return array();
     }
 
-    function getFilterPredicates()
+    function getFilterPredicates( $values )
     {
         if ( $this->getObject() instanceof Iteration ) {
             return array_merge(
-                parent::getFilterPredicates(),
+                parent::getFilterPredicates( $values ),
                 array (
                     new IterationTimelinePredicate(IterationTimelinePredicate::PAST)
                 )
@@ -30,7 +30,7 @@ class VelocityTable extends PMPageTable
         }
         else {
             return array_merge(
-                parent::getFilterPredicates(),
+                parent::getFilterPredicates( $values ),
                 array (
                     new ReleaseTimelinePredicate('past')
                 )

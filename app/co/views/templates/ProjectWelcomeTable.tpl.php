@@ -27,42 +27,39 @@ $design_tiles = array_filter($tiles, function($value) {
 		$('.template-list.first .template').css('height', maxHeight);
 	}
         
-            $(document).ready(function(){
-            
-                $('.accordion-title span').on('click', function(){               
-                    var curEl = $(this).closest('.accordion-item'),
-                        curElHeight = curEl.find('.accordion-dscr').outerHeight();	
-                     
-                    $('.accordion-item').not(curEl).find('.accordion-cont').css('height', 0); 
-                    curEl.find('.accordion-cont').css('height', curElHeight);
-                    
-                    $('.accordion-item').not(curEl).removeClass('active');		
-                    curEl.addClass('active');
-                    
-                    return false;
-                });  
+    $(document).ready(function(){
+        $('.accordion-title span').on('click', function(){
+            var curEl = $(this).closest('.accordion-item'),
+                curElHeight = curEl.find('.accordion-dscr').outerHeight();
 
-                $('.checkbox input').change( function() {
-                	runMethod(
-                        	'?method=SettingsWebMethod', 
-                        	{
-                            	'setting' : 'projects-welcome-page',
-                            	'value' : $(this).is(':checked') ? 'off' : 'on'
-                            }, 
-                        	function() {}, 
-                        	''
-                        );
-                });
-                
-                heightTemplateBlock();
-                
-            });
-            
-            $(window).resize(function(){
-                heightTemplateBlock();
-            });
-        
-        </script>
+            $('.accordion-item').not(curEl).find('.accordion-cont').css('height', 0);
+            curEl.find('.accordion-cont').css('height', curElHeight);
+
+            $('.accordion-item').not(curEl).removeClass('active');
+            curEl.addClass('active');
+
+            return false;
+        });
+
+        $('.checkbox input').change( function() {
+            runMethod(
+                '?method=SettingsWebMethod',
+                {
+                    'setting' : 'projects-welcome-page',
+                    'value' : $(this).is(':checked') ? 'off' : 'on'
+                },
+                function() {},
+                ''
+            );
+        });
+        heightTemplateBlock();
+    });
+
+    $(window).resize(function(){
+        heightTemplateBlock();
+    });
+</script>
+<div class="form-container">
 
         <div class="create-project-header">
             <div class="pull-left">
@@ -197,3 +194,4 @@ $design_tiles = array_filter($tiles, function($value) {
 
 			</ul>
 		<?php } ?>
+</div>

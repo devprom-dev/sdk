@@ -1,4 +1,3 @@
-<br/>
 <div class="span11">
 	<?php foreach( $attributes as $key => $attribute ) { ?>
 	

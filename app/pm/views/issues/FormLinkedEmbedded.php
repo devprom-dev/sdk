@@ -1,13 +1,11 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDurationPersister.php";
 
 class FormLinkedEmbedded extends PMFormEmbedded
 {
 	private $anchor_it = null;
 	
-	public function setAnchorIt( $anchor_it )
-	{
+	public function setAnchorIt( $anchor_it ) {
 		$this->anchor_it = $anchor_it;
 	}
 	
@@ -24,7 +22,6 @@ class FormLinkedEmbedded extends PMFormEmbedded
  			case 'TargetRequest':
  			case 'LinkType':
  				return true;
-
  			default:
  				return false;
  		}
@@ -78,10 +75,22 @@ class FormLinkedEmbedded extends PMFormEmbedded
 	{
 	    $target_it = $this->getTargetIt( $object_it );
 
-	    $actions = array ( array (
-	            'name' => translate('Перейти'),
+	    $actions = array (
+	        array (
+	            'name' => translate('Открыть'),
 	            'url' => $target_it->getViewUrl()     
-	    ));
+	        ),
+        );
+
+	    $method = new MergeIssuesWebMethod();
+	    if ( $method->hasAccess() ) {
+            $actions[] = array();
+            $actions[] = array (
+                'name' => translate('Объединить'),
+                'url' => "javascript:processBulk('".
+                    translate('Объединить')."','?formonly=true&operation=".$method->getMethodName()."','".($this->anchor_it->getId().'-'.$target_it->getId())."', devpromOpts.updateUI);"
+            );
+        }
 	
 	    $actions[] = array();
 	

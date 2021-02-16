@@ -6,7 +6,7 @@ class ScrumIterator extends OrderedIterator
  	{
  		$part_it = $this->getRef('Participant');
  		
- 		return $this->getDateFormat('RecordCreated').
+ 		return $this->getDateFormatted('RecordCreated').
 			' - '.$part_it->getDisplayName();
  	}
 }

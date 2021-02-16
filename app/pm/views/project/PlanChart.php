@@ -12,7 +12,7 @@ class PlanChart extends PMPageChart
 	{
 		return $this->getObject()->getRegistry()->Query(
             array_merge(
-                $this->getTable()->getFilterPredicates(),
+                $this->getTable()->getFilterPredicates($this->getTable()->getPredicateFilterValues()),
                 array (
                     new SortAttributeClause('Project'),
                     new SortAttributeClause('FinishDate'),

@@ -7,7 +7,8 @@ class WikiImporterListBuilder extends WikiImporterContentBuilder
     {
         $parms =  array (
             'Caption' => $documentTitle,
-            'Content' => $documentContent
+            'Content' => $documentContent,
+            'IsDocument' => 1
         );
         if ( $options['State'] != '' ) {
             $parms['State'] = $options['State'];
@@ -18,7 +19,7 @@ class WikiImporterListBuilder extends WikiImporterContentBuilder
         return $this->getObject()->getEmptyIterator();
     }
 
-    public function buildPage($title, $content, $options, $parentId)
+    public function buildPage($title, $content, $options, $parentId, $documentIt, $sectionNumber = '', $uid = '')
     {
         return $this->getObject()->getExact($this->getObject()->add_parms(
             array_merge(

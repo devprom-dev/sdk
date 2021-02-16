@@ -16,7 +16,7 @@ if ( preg_match('/^[a-zA-Z0-9]+$/im', $class) < 1 )
 
 if ( !isset($class) )
 {
-	exit(header('Location: /admin'));
+	exit(header('Location: /admin/activity.php'));
 }
 
 if ( file_exists(dirname(__FILE__).'/commands/c_'.$class.'.php') )

@@ -32,19 +32,43 @@ try {
         \SessionBuilder::Instance()->close();
         EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /logoff?redirect='.urlencode($_SERVER['REQUEST_URI'])));
     }
+    if ( $_REQUEST['uid'] != '' ) {
+        $object_uid = new ObjectUid;
+        $object_it = $object_uid->getObjectIt($_REQUEST['uid']);
+        $info = $object_uid->getUIDInfo($object_it);
+        if ( $info['project'] != '' && $info['project'] != $_REQUEST['project'] ) {
+            $session = SessionBuilderProject::Instance()->openSession(
+                array (
+                    'project' => $info['project']
+                )
+            );
+            if ( $session->getProjectIt()->getId() > 0 ) {
+                exit(header('Location: ' . $info['url']));
+            }
+        }
+    }
+    if ( $session->getProjectIt()->getId() < 1 )
+    {
+        $projectsCount = getFactory()->getObject('Project')->getRegistry()->Count(
+            array(
+                new ProjectParticipatePredicate(),
+                new ProjectStatePredicate('active')
+            )
+        );
+        if ( $projectsCount < 1 ) {
+            exit(header('Location: /projects/welcome'));
+        }
+        else {
+            exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+        }
+    }
 }
 catch( \Exception $e)
 {
     if ( EnvironmentSettings::ajaxRequest() ) {
         exit();
     }
-    $projectIt = SessionBuilderProject::Instance()->getUserProjectIt();
-    if ( $projectIt->getId() != '' ) {
-        exit(header('Location: /pm/'.$projectIt->get('CodeName')));
-    }
-    else {
-        exit(header('Location: /projects/welcome'));
-    }
+    exit(header('Location: /logoff?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
 
 $redirect = '';

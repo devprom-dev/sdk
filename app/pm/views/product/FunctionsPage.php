@@ -4,7 +4,6 @@ include "FunctionForm.php";
 include "FunctionSearchIssueForm.php";
 include "FunctionTable.php";
 include "PageSettingFeatureBuilder.php";
-include "ImportProductExcelForm.php";
 
 class FunctionsPage extends PMPage
 {
@@ -19,6 +18,7 @@ class FunctionsPage extends PMPage
  		{
  		    if ( $this->getFormRef() instanceof FunctionForm ) {
                 $this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'hierarchy', translate('Декомпозиция')));
+                $this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'additional', translate('Дополнительно')));
                 $this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'trace', translate('Трассировки')));
 
                 $object_it = $this->getObjectIt();
@@ -29,9 +29,6 @@ class FunctionsPage extends PMPage
                 }
             }
  		}
- 		else {
-            $this->addInfoSection(new DetailsInfoSection());
-        }
  	}
  	
  	function getObject() {
@@ -42,18 +39,13 @@ class FunctionsPage extends PMPage
 		return new FunctionTable( $this->getObject() );
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  	    if ( $_REQUEST['BindIssue'] != '' ) {
             return new FunctionSearchIssueForm( $this->getObject() );
         }
         else {
-            switch( $_REQUEST['view'] ) {
-                case 'import':
-                    return new ImportProductExcelForm($this->getObject());
-                default:
-                    return new FunctionForm( $this->getObject() );
-            }
+            return new FunctionForm( $this->getObject() );
         }
  	}
 
@@ -61,8 +53,21 @@ class FunctionsPage extends PMPage
         return in_array($_REQUEST['view'], array('import')) ? true : parent::needDisplayForm();
     }
 
-    function getPageWidgets()
-    {
+    function getPageWidgets() {
         return array('features-list');
+    }
+
+    function buildExportIterator( $object, $ids, $iteratorClassName, $queryParms )
+    {
+        $registry = $object->getRegistry();
+        return $registry->Query(
+            array_merge(
+                array(
+                    new ParentTransitiveFilter($ids),
+                    new SortFeatureHierarchyClause()
+                ),
+                $queryParms
+            )
+        );
     }
 }

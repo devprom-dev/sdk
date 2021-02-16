@@ -16,13 +16,10 @@ class AttachmentObjectPredicate extends FilterPredicate
              strtolower(get_class($filter->object))
          );
 
-         if ( $filter->object instanceof Request ) {
+         if ( $filter->object->getEntityRefName() == 'pm_ChangeRequest' ) {
              $classes[] = 'issue';
-         }
-         if ( $filter->object instanceof Issue ) {
              $classes[] = 'request';
          }
-
          return " AND t.ObjectId IN (".join(',',$filter->idsToArray()).") ".
                 " AND LCASE(t.ObjectClass) IN ('".join("','", $classes)."')";
      }

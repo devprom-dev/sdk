@@ -5,7 +5,7 @@ include "PMCustomDictionaryRegistry.php";
 
 class PMCustomDictionary extends CacheableSet
 {
- 	function __construct( $object, $attribute ) 
+ 	function __construct( $object = null, $attribute = null )
  	{
  		$this->object = $object;
  		$this->attribute = $attribute;
@@ -18,7 +18,7 @@ class PMCustomDictionary extends CacheableSet
 	    return getSession()->getCacheKey().get_class($this->object).$this->attribute;
 	}
 	
-	function getAttributeObject( $attribute )
+	function getObjectForAttribute()
 	{
 		return $this->object;
 	}

@@ -36,6 +36,13 @@ class Product {
     private $vpd;
 
     /**
+     * @ORM\OneToOne(targetEntity="ProductType")
+     * @ORM\JoinColumn(name="Type", referencedColumnName="pm_FeatureTypeId")
+     * @var ProductType
+     */
+    private $type;
+
+    /**
      * @param string $description
      */
     public function setDescription($description)
@@ -104,5 +111,19 @@ class Product {
         return $this->getName();
     }
 
+    /**
+     * @param ProductType $value
+     */
+    public function setType($value)
+    {
+        $this->type = $value;
+    }
 
+    /**
+     * @return ProductType
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
 }

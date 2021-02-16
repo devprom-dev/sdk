@@ -1,4 +1,5 @@
-<ul class="modules nav sticks-top-body">
+<ul class="modules nav">
+    <li></li>
 
 <?php foreach( $pages as $key => $page ) { ?>
     <?php
@@ -25,6 +26,9 @@
                 break;
             case 'qa':
                 $page['icon'] = 'icon-testing';
+                break;
+            case 'mgmt':
+                $page['icon'] = 'icon-management';
                 break;
         }
     }

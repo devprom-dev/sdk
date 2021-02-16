@@ -35,16 +35,4 @@ public class TasksBoardPage extends SDLCPojectPageBase {
 				By.xpath("//div[contains(@class,'bi-cap') and contains(.,'"+name+"')]/preceding-sibling::div//a")).click();
 		return new TaskViewPage(driver);
 	}
-
-	public TasksBoardPage showAll() {
-		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and @uid='state']")).click();
-		((JavascriptExecutor) driver).executeScript("filterLocation.turnOn('state', 'all', 0)");
-		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and contains(.,'Исполнитель')]")).click();
-	    try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		return new TasksBoardPage(driver);
-	}
 }

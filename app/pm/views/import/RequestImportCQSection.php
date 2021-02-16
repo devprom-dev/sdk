@@ -8,8 +8,6 @@ class RequestImportCQSection extends InfoSection
  	
  	function drawBody()
  	{
- 		global $project_it;
-
  		echo '<div class="line">';
  		echo '1. '.text(428);
  		echo '</div>';

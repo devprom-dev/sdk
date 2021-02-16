@@ -17,9 +17,4 @@ class TaskChart extends PMPageChart
 	    
 		return $predicates;
 	}
-	
-	function getReport()
-	{
-	    return $_REQUEST['report'];
-	}
 }

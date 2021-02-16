@@ -20,7 +20,7 @@ public class PagingTest extends AdminTestBase {
 		boolean isLastLess = false;
 		
 		UsersListPage ulp = (new AdminPageBase(driver)).gotoUsers();
-		ulp.showNRows("all");
+		ulp.showAll();
 	    ulp = new UsersListPage(driver); 
 		int allRowsCount = ulp.getDataRowsCount();
 		int pagesShouldBe = allRowsCount/5;
@@ -35,7 +35,7 @@ public class PagingTest extends AdminTestBase {
 		 Assert.assertEquals(allUsers.size(), allRowsCount, "Ошибка теста - число пользователей не соответствует числу строк");
 		 int iterator = 0;
 		
-		 ulp.showNRows(String.valueOf(rows));
+		 ulp.showRows(String.valueOf(rows));
 		 ulp = new UsersListPage(driver); 
 		Assert.assertEquals(ulp.getPagesCount(), pagesShouldBe, "Неверное количество страниц");
 		

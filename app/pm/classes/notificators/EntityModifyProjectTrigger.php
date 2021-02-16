@@ -1,12 +1,10 @@
 <?php
-
-
 include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
 abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 {
 	abstract protected function checkEntity( $object_it );
-	abstract protected function & getObjectReferences( & $object_it );
+	abstract static function getObjectReferences( $object_it );
 
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
@@ -15,6 +13,8 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 
 	    $references = $this->getObjectReferences($object_it);
 	    if ( !is_array($references) ) return;
+
+        $references = array_merge($references, $this->getSnapshotReferences($object_it));
 
 	    if ( !array_key_exists('Project', $content) )
 	    {
@@ -32,6 +32,32 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 
 	    $this->moveEntity( $object_it, $project_it, $references, $this->getRecordData() );
 	}
+
+	protected function getSnapshotReferences( $objectIt )
+    {
+        $references = array();
+
+        $snapshot = getFactory()->getObject('cms_Snapshot');
+        $snapshot->addFilter(new FilterAttributePredicate('ObjectClass', get_class($objectIt->object)));
+        $snapshot->addFilter(new FilterAttributePredicate('ObjectId', $objectIt->getId()));
+        $references[] = $snapshot;
+
+        $ids = $snapshot->getAll()->idsToArray();
+        if ( count($ids) > 0 ) {
+            $snapshotItem = getFactory()->getObject('cms_SnapshotItem');
+            $snapshotItem->addFilter(new FilterAttributePredicate('Snapshot', $ids));
+            $references[] = $snapshotItem;
+
+            $ids = $snapshotItem->getAll()->idsToArray();
+            if ( count($ids) > 0 ) {
+                $snapshotItemValue = getFactory()->getObject('cms_SnapshotItemValue');
+                $snapshotItemValue->addFilter(new FilterAttributePredicate('SnapshotItem', $ids));
+                $references[] = $snapshotItemValue;
+            }
+        }
+
+        return $references;
+    }
 	
 	protected function moveEntity( & $object_it, & $target_it, & $references, $content )
 	{
@@ -56,7 +82,9 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	protected function setProject( $object_it, $target_it, $content )
 	{
 		$state = new StateBase();
+
 		$storedObject = getFactory()->getObject(get_class($object_it->object));
+        $storedObject->removeNotificator('AbstractServicedeskEmailNotificator');
 
 		$methodology = getFactory()->getObject('Methodology');
 		$targetEstimationValue = $methodology->getByRef('VPD', $target_it->get('VPD'))->get('RequestEstimationRequired');
@@ -68,8 +96,12 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 			);
 			foreach( array_keys($object_it->object->getAttributes()) as $attribute )
 			{
-                if ( $object_it->get($attribute) == '' ) continue;
-			    if ( in_array($attribute, array('ParentPage','DocumentId')) && $object_it->get($attribute) != '' ) {
+                if ( $object_it->get($attribute) == '' ) {
+                    $parms[$attribute] = '';
+                    continue;
+                }
+
+			    if ( in_array($attribute, array('ParentPage','DocumentId')) ) {
 			        $ref_it = $object_it->object->getRegistry()->Query(
 			            array (
 			                new FilterInPredicate($object_it->get($attribute)),
@@ -136,6 +168,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 			}
 
 			if ( $object_it->object instanceof MetaobjectStatable) {
+                $object_it->object->setVpdContext($target_it->get('VPD'));
 				$state_it = $state->getRegistry()->Query(
 					array(
 						new StateClassPredicate($object_it->object->getStatableClassName()),
@@ -144,16 +177,18 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 					)
 				);
                 // reset state if there is no such state in the target project
-				if ( $state_it->getId() == '' || !array_key_exists('State', $content) ) $parms['State'] = '';
+				if ( $state_it->getId() == '' ) {
+				    $parms['State'] = array_shift(\WorkflowScheme::Instance()->getStates($object_it->object));
+                }
 			}
 
-            $object_it->object->modify_parms( $object_it->getId(), $parms );
-
-            $storedObject->removeNotificator('AbstractServicedeskEmailNotificator');
-            $storedIt = $storedObject->getExact($object_it->getId());
+            $storedIt = getFactory()->modifyEntity(
+                $storedObject->createCachedIterator(
+                    array($object_it->getData())
+                ),
+                $parms
+            );
             getFactory()->getEventsManager()->notify_object_add($storedIt, $parms);
-            getFactory()->getEventsManager()
-                ->executeEventsAfterBusinessTransaction($storedIt, 'WorklfowMovementEventHandler', $parms);
 
 			$object_it->moveNext();
 		}

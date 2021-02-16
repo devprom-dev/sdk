@@ -3,14 +3,17 @@ use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 use Devprom\ProjectBundle\Service\Model\ModelService;
 use Devprom\ProjectBundle\Service\Tooltip\TooltipProjectService;
 
-include SERVER_ROOT_PATH.'core/methods/ExcelExportWebMethod.php';
-include SERVER_ROOT_PATH.'core/methods/BoardExportWebMethod.php';
-include SERVER_ROOT_PATH.'core/methods/HtmlExportWebMethod.php';
-include SERVER_ROOT_PATH.'core/methods/XmlExportWebMethod.php';
+include SERVER_ROOT_PATH . 'core/methods/ExcelExportWebMethod.php';
+include SERVER_ROOT_PATH . 'core/methods/BoardExportWebMethod.php';
+include SERVER_ROOT_PATH . 'core/methods/HtmlExportWebMethod.php';
+include SERVER_ROOT_PATH . 'core/methods/PrintPDFExportWebMethod.php';
+include SERVER_ROOT_PATH . 'core/methods/XmlExportWebMethod.php';
+include SERVER_ROOT_PATH . "pm/methods/WatchWebMethod.php";
+include SERVER_ROOT_PATH . 'pm/methods/ReportModifyWebMethod.php';
 include_once SERVER_ROOT_PATH."pm/methods/UndoWebMethod.php";
-include_once SERVER_ROOT_PATH.'pm/methods/c_report_methods.php';
 include_once SERVER_ROOT_PATH.'pm/methods/WikiExportBaseWebMethod.php';
 include_once SERVER_ROOT_PATH."pm/methods/OpenWorkItemWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/views/import/ImportXmlForm.php";
 
 include 'PMFormEmbedded.php';
 include 'PMPageForm.php';
@@ -18,37 +21,36 @@ include 'PMPageTable.php';
 include 'PageSectionLifecycle.php';
 include "FieldHierarchySelectorAppendable.php";
 include 'FieldCustomDictionary.php';
-include 'FieldWYSIWYG.php';
+include "FieldReferenceCustomAttribute.php";
+include_once 'FieldWYSIWYG.php';
+include 'FieldTextEditable.php';
+include 'FieldEstimation.php';
 include 'NetworkSection.php';
 include 'PMPageNavigation.php';
 include_once 'PMLastChangesSection.php';
-include_once "DetailsInfoSection.php";
 include_once 'BulkForm.php';
 include 'converters/WikiIteratorExportHtml.php';
 include 'converters/WikiIteratorExportPdf.php';
-include "SettingsFormBase.php";
+include_once "SettingsFormBase.php";
 include "SettingsTableBase.php";
 
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/comments/PageSectionComments.php';
-include SERVER_ROOT_PATH.'pm/views/versioning/IteratorExportSnapshot.php';
 
 class PMPage extends Page
 {
     var $tabs, $areas;
     
     protected $settings;
-    
     protected $report_uid;
-    
     protected $report_base;
-	protected $defaultListWidget = null;
+    protected $report_chart = false;
     protected $nearestInfo = array();
     
     function PMPage()
  	{
 	    getSession()->addBuilder( new WorkflowModelBuilder() );
- 		parent::Page();
+ 		parent::__construct();
  	}
  	
  	function getSettingsBuilder()
@@ -76,7 +78,56 @@ class PMPage extends Page
  	    
  	    return $context;
  	}
- 	
+
+ 	function identifyReport()
+    {
+        parent::identifyReport();
+
+        if ( $_REQUEST['report'] != '' )
+        {
+            $this->setReport(\TextUtils::getAlphaNumericPunctuationString($_REQUEST['report']));
+
+            $report = getFactory()->getObject('PMReport');
+            $report_it = $report->getExact($_REQUEST['report']);
+
+            $this->setReportBase($report_it->get('Report') != '' ? $report_it->get('Report') : $this->getReport());
+            $this->setModule( $report_it->get('Module') );
+            $this->setReportChart($report_it->get('Type') == 'chart');
+
+            if ( is_numeric($_REQUEST['report']) )
+            {
+                $custom_it = getFactory()->getObject('pm_CustomReport')->getExact($_REQUEST['report']);
+                if ( $custom_it->getId() > 0 ) {
+                    $_REQUEST['basereport'] = $custom_it->get('ReportBase');
+                    if ( $custom_it->get('ReportBase') != '' ) {
+                        $this->setReportBase($custom_it->get('ReportBase'));
+                        $this->setReportChart($custom_it->get('Type') == 'chart');
+                    }
+                }
+
+                if ( !getFactory()->getAccessPolicy()->can_read($report_it) ) {
+                    $base_it = $_REQUEST['basereport'] != ''
+                        ? $report->getExact($_REQUEST['basereport'])
+                        : ($_REQUEST['basemodule'] != ''
+                            ? getFactory()->getObject('Module')->getExact($_REQUEST['basemodule'])
+                            : $report->getEmptyIterator());
+
+                    if ( $base_it->getId() != '' ) {
+                        $item = $base_it->buildMenuItem(preg_replace('/report=[^&]*|project=[^&]*|view=[^&]*/', '', $_SERVER['QUERY_STRING']));
+                        exit(header('Location: '._getServerUrl().$item['url'].'&'.$custom_it->getHtmlDecoded('Url')));
+                    }
+                }
+            }
+
+            if ( $this->getReport() == '' ) {
+                $report_it = $report->getByModule( $this->getModule() );
+                $this->setReport($report_it->getId());
+                $this->setReportBase($report_it->getId());
+                $this->setReportChart($report_it->get('Type') == 'chart');
+            }
+        }
+    }
+
  	function getRenderParms()
  	{
  	    $parms = parent::getRenderParms();
@@ -85,62 +136,11 @@ class PMPage extends Page
             $builder->build( $this->getSettingsBuilder() );
         }
 
-		if ( $_REQUEST['report'] != '' )
-        {
-            $report = getFactory()->getObject('PMReport');
-            $report_it = $report->getExact($_REQUEST['report']);
-
-            if ( is_numeric($_REQUEST['report']) && !getFactory()->getAccessPolicy()->can_read($report_it) )
-            {
-                $custom_it = getFactory()->getObject('pm_CustomReport')->getExact($_REQUEST['report']);
-                
-                if ( $custom_it->getId() > 0 )
-                {
-                	$_REQUEST['basereport'] = $custom_it->get('ReportBase');
-                }
-            	
-            	$base_it = $_REQUEST['basereport'] != ''
-                    ? $report->getExact($_REQUEST['basereport'])
-                    : ($_REQUEST['basemodule'] != ''
-                           ? getFactory()->getObject('Module')->getExact($_REQUEST['basemodule'])
-                            : $report->getEmptyIterator());
-
-                if ( $base_it->getId() != '' )
-                {
-                    $item = $base_it->buildMenuItem(preg_replace('/report=[^&]*|project=[^&]*|view=[^&]*/', '', $_SERVER['QUERY_STRING']));
-
-                    exit(header('Location: '._getServerUrl().$item['url'].'&'.$custom_it->getHtmlDecoded('Url')));
-                }
-            }
-            else
-            {
-	            $this->setReport($_REQUEST['report']);
-	            $this->setReportBase(
-	            	$report_it->get('Report') != '' ? $report_it->get('Report') : $this->getReport()
-	 	        );
-	            $this->setModule( $report_it->get('Module') );
-            }
-
-            if ( $this->getReport() == '' ) {
-                $report_it = $report->getByModule( $this->getModule() );
-                $this->setReport($report_it->getId());
-                $this->setReportBase($report_it->getId());
-            }
-        }
-
-        $infos = $this->getInfoSections();
-		if ( is_array($infos) )	{
-			foreach ( $infos as $section ) {
-				if ( $section instanceof DetailsInfoSection ) {
-					$section->setActive($this->isDetailsActive());
-				}
-			}
-		}
 
 		return array_merge(
 		    $parms,
             array(
-                'context_template' => 'pm/PageContext.php',
+                'context_template' => $_REQUEST['dashboard'] == '' ? 'pm/PageContext.php' : '',
                 'context' => $this->getContext(),
             )
         );
@@ -154,8 +154,7 @@ class PMPage extends Page
 	{
 		$parms = parent::getFullPageRenderParms();
                 
-		$bodyExpanded = $_COOKIE['menu-state'] == '' && defined('MENU_STATE_DEFAULT')
-							? MENU_STATE_DEFAULT == 'minimized' : ($_COOKIE['menu-state'] == 'minimized');
+		$bodyExpanded = $_COOKIE['menu-state'] == 'minimized';
 
 		if ( $bodyExpanded ) {
 			$isPortfolio = getSession()->getProjectIt()->IsPortfolio();
@@ -216,12 +215,21 @@ class PMPage extends Page
 		);
 	}
 
-    function isDetailsActive() {
-        return true;
-    }
-
 	function render( $view = null )
 	{
+        if ( !$this->hasAccess() ) {
+            $info = $this->getPageWidgetNearestUrl();
+            if ( $info['url'] != '' ) {
+                exit(header('Location: '.$info['url']));
+            }
+
+            $widgetIt = getFactory()->getObject('ObjectsListWidget')
+                            ->getByRef('Caption', get_class($this->getObject()))->getWidgetIt();
+            if ( $widgetIt->getUrl() != '' ) {
+                exit(header('Location: '.$widgetIt->getUrl()));
+            }
+        }
+
 		if ( $_REQUEST['attributeonly'] != '' )
 		{
 			$service = new ModelService(null, null, null);
@@ -233,7 +241,6 @@ class PMPage extends Page
 			header('Content-type: application/json; charset=utf-8');
 			
 			echo JsonWrapper::encode($service->get($_REQUEST['entity'], $_REQUEST['object'], 'html'));
-			
 			die();
 		}
 		
@@ -366,15 +373,23 @@ class PMPage extends Page
 				if ( $object_it->getId() == '' ) return;
 
 				$reference = $this->getObject()->getAttributeObject($_REQUEST['attribute']);
-				$ids = \TextUtils::buildIds($object_it->fieldToArray($_REQUEST['attribute']));
-				if ( $ids == '' ) $ids = '0';
+				$referenceIds = $object_it->fieldToArray($_REQUEST['attribute']);
 
 				$it = getFactory()->getObject('ObjectsListWidget')->getAll();
 				while( !$it->end() )
 				{
 					if ( is_a($reference, $it->get('Caption')) ) {
-						$widget_it = getFactory()->getObject($it->get('ReferenceName'))->getExact($it->getId());
-						exit(header('Location: '.$widget_it->getUrl(strtolower(get_class($reference)).'='.$ids)));
+						$widget_it = $it->getWidgetIt();
+                        $referenceIt = $reference->getRegistryBase()->Query(
+                            array(
+                                new FilterInPredicate($referenceIds)
+                            )
+                        );
+
+                        $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIt($referenceIt, 'ids', $widget_it);
+                        if ( $url != '' ) {
+                            exit(header('Location: '.$url));
+                        }
 					}
 					$it->moveNext();
 				}
@@ -396,19 +411,18 @@ class PMPage extends Page
  		}
  	}
  	
- 	function getBulkForm()
- 	{
+ 	function getBulkForm() {
  	    return new BulkForm($this->getObject());
- 	}
- 	
- 	function getFormBase()
- 	{
- 	    return null;
  	}
  	
  	function getForm()
  	{
- 		return $this->getFormBase();
+        if ($_REQUEST['view'] == 'import') {
+            return new ImportXmlForm($this->getObject());
+        }
+        else {
+            return parent::getForm();
+        }
  	}
  	
     function getReport()
@@ -430,6 +444,14 @@ class PMPage extends Page
     {
     	$this->report_base = $uid;
     }
+
+    function getReportChart() {
+        return $this->report_chart;
+    }
+
+    function setReportChart( $value ) {
+        $this->report_chart = $value;
+    }
  	
     function getPageUid()
     {
@@ -446,10 +468,9 @@ class PMPage extends Page
 
  	    if ( $this->needDisplayForm() ) {
             $object_it = $this->getObjectIt();
-            if ( is_object($object_it) && $object_it->get('Project') != '' ) {
-                return $object_it->get('Project') == getSession()->getProjectIt()->getId();
+            if ( is_object($object_it) ) {
+                return getFactory()->getAccessPolicy()->can_read($object_it);
             }
-            return true;
         }
 
  	    // report based permissions to display the page
@@ -462,7 +483,8 @@ class PMPage extends Page
         if ( $module_uid != '' ) {
         	return getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Module')->getExact($module_uid));
         }
- 		return true;
+
+ 		return getSession()->getUserIt()->getId() != '';
  	}
     
  	function exportCommentsThread()
@@ -505,15 +527,23 @@ class PMPage extends Page
         $form = new CommentForm(
             $comment_it->getId() > 0 ? $comment_it : $comment_it->object
         );
+
         $form->setControlUID( $control_uid );
+
+        if ( $_REQUEST['objectclass'] != '' ) {
+            $anchor = getFactory()->getObject($_REQUEST['objectclass']);
+            $form->setAnchorIt($anchor->getExact($_REQUEST['object']));
+        }
+
         if ( $_REQUEST['dorefresh'] == 1 ) {
             $form->setRedirectUrl( "javascript: refreshCommentsThread(\"".$control_uid."\");" );
         }
+
         return $form;
     }
 
     function buildCommentList( $object_it ) {
-        return new CommentList( $object_it );
+        return new CommentsThread( $object_it );
     }
 
  	function getHint()
@@ -559,6 +589,12 @@ class PMPage extends Page
 		$text = preg_replace('/\%project\%/i', getSession()->getProjectIt()->get('CodeName'), $text);
         $text = preg_replace('/&lt;auth-key&gt;/i', \AuthenticationAPIKeyFactory::getAuthKey(getSession()->getUserIt()), $text);
         $text = preg_replace('/%project-key%/i', getSession()->getProjectIt()->getPublicKey(), $text);
+
+        $docsUrl = \EnvironmentSettings::getHelpDocsUrl();
+        if ( $docsUrl != '' ) {
+            $text .= str_replace('%1', $docsUrl, text(2700));
+        }
+
 		return $text;
 	}
 
@@ -741,6 +777,7 @@ class PMPage extends Page
     {
         $actions = array();
         $title = text(2472);
+        $uid = new ObjectUID;
 
         $registry = getFactory()->getObject('WorkItem')->getRegistry();
         $registry->setDescriptionIncluded(false);
@@ -751,14 +788,14 @@ class PMPage extends Page
         $openIt = $registry->Query(
             array(
                 new FilterAttributePredicate('Assignee', getSession()->getUserIt()->getId()),
-                new FilterAttributeNotNullPredicate('StateObject'),
                 new FilterAttributeNullPredicate('FinishDate'),
                 new StateObjectSortClause()
             )
         );
 
-        if ( $openIt->getId() != '' ) {
-            $title = $openIt->getDisplayNameExt();
+        if ( $openIt->getId() != '' && class_exists($openIt->get('ObjectClass')) ) {
+            $info = $uid->getUIDInfo($openIt);
+            $title = $info['uid'] . ' ' . $openIt->getDisplayNameExt();
             $actions[] = array(
                 'name' => translate('Открыть'),
                 'url' => getFactory()->getObject($openIt->get('ObjectClass'))->getRegistryBase()->Query(
@@ -786,22 +823,28 @@ class PMPage extends Page
 
         while( !$taskIt->end() ) {
             if ( $taskIt->get('Caption') != '' && $taskIt->get('UID') != $openIt->get('UID') ) {
-                $method = new OpenWorkItemWebMethod($taskIt);
-                $taskName = $taskIt->getDisplayNameExt();
+                $objectIt = $taskIt->getObjectIt();
+                $info = $uid->getUIDInfo($objectIt);
+                $taskName = $info['uid'] . ' ' . $taskIt->getDisplayNameExt();
                 $actions[] = array (
                     'name' => $taskName,
-                    'url' => $method->getJSCall(array( 'object' => $taskIt->getId(), 'class' => $taskIt->get('ObjectClass') ))
+                    'url' => $uid->getGotoUrl($objectIt)
                 );
             }
             $taskIt->moveNext();
         }
 
+        $portfolios = getFactory()->getObject('Portfolio')->getAll()->fieldToArray('CodeName');
+
         $actions[] = array();
         $actions[] = array(
             'name' => text(2473),
-            'url' => defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED
-                ? '/pm/my/tasks/list/mytasks'
-                : '/pm/all/tasks/list/mytasks'
+            'url' =>
+                in_array('my', $portfolios)
+                    ? '/pm/my/tasks/list/mytasks'
+                    : (in_array('all', $portfolios)
+                            ? '/pm/all/tasks/list/mytasks'
+                            : '/pm/'.getSession()->getProjectIt()->get('CodeName').'/tasks/list/mytasks' )
         );
         return array(
             'title' => $title,

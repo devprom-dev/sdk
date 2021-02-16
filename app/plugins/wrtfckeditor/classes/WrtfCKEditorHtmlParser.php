@@ -11,19 +11,21 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
  	function parse( $content = null )
 	{
 	    $content = parent::parse($content);
-	    $content = preg_replace('/<p>(\xA0|\s|\&nbsp;)*<\/p>/i', '', $content);
+	    $content = preg_replace('/<p>(\xA0|\s)*<\/p>/i', '', $content);
         $content = preg_replace('/<figure/i', '<center><figure', $content);
         $content = preg_replace('/<\/figure>/i', '</figure></center>', $content);
         $this->resetCodeBlocks();
 
         $callbacks = array (
             CODE_ISOLATE => array($this, 'codeIsolate'),
+            '/<img\s([^>]+)>/i' => array($this, 'parseUMLImage'),
+            IMAGE_ISOLATE => array($this, 'imageIsolate'),
             REGEX_INCLUDE_REVISION => array($this, 'parseIncludeRevisionCallback'),
             REGEX_INCLUDE_PAGE => array($this, 'parseIncludePageCallback'),
             REGEX_MATH_TEX => array($this, 'parseMathTex'),
             REGEX_IMAGE_NUMBERING => array($this, 'imageNumbering'),
             REGEX_TABLE_NUMBERING => array($this, 'tableNumbering'),
-            TextUtils::REGEX_SHRINK => array(TextUtils::class, 'shrinkLongUrl'),
+            IMAGE_RESTORE => array($this, 'imageRestore'),
             CODE_RESTORE => array($this, 'codeRestore')
         );
         if ( function_exists('preg_replace_callback_array') ) {
@@ -73,13 +75,14 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
                     $freshContent = $object_it->getHtmlDecoded('Content');
                 }
                 $parser = new WrtfCKEditorComparerParser($this->getObjectIt());
+                $wasContent = $parser->parse($changeIt->getHtmlDecoded('Content'));
+                $freshContent = $parser->parse($freshContent);
+
                 $content .= '<div class="reset wysiwyg">';
-                $diffBuilder = new WikiHtmlDiff(
-                    $parser->parse($changeIt->getHtmlDecoded('Content')),
-                    $parser->parse($freshContent)
-                );
-                $content .= $diffBuilder->build();
-                $content .= '</div>';
+                $diffBuilder = new WikiHtmlDiff($wasContent, $freshContent);
+                $diffContent = $diffBuilder->build();
+                if ( $diffContent == '' ) $diffContent = $freshContent;
+                $content .= $diffContent . '</div>';
             }
             else {
                 $content = $changeIt->getHtmlDecoded('Content');
@@ -89,7 +92,11 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
             $content = $object_it->getHtmlDecoded('Content');
         }
 
-        $content .= '<div class="wiki-page-help">'.sprintf(text(2332), '<a target="_blank" href="'.$info['url'].'">'.$info['uid'].'</a>').'</div>';
-        return $content;
+        $content = '<div class="wiki-page-help">'.sprintf(text(2332), '<a target="_blank" href="'.$info['url'].'">'.$info['uid'].'</a>').'</div>' . $content;
+        return '<div class="inline-page">' . $content . '</div>';
+    }
+
+    function parseUMLImage( $match ) {
+        return $match[0];
     }
 }

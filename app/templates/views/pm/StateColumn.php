@@ -1,4 +1,9 @@
-<?php 
+<?php
+$color = $stateIt->get('RelatedColor');
+$terminal = $stateIt->get('IsTerminal') == 'Y';
+$name = $stateIt->get('Caption');
+$referenceName = $stateIt->get('ReferenceName');
+
 $text_rgb = array(255,255,255);
 if ( $color == 'false' || $color == '' ) {
 	$color_class = $terminal ? 'label-success' : 'label-warning';

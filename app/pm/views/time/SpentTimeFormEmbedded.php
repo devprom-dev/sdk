@@ -25,11 +25,9 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  		switch ( $attribute )
  		{
  			case 'LeftWork':
- 			    return getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed();
-
+ 			    return getSession()->getProjectIt()->getMethodologyIt()->IsLeftWorkVisible();
             case 'Participant':
                 return getFactory()->getAccessPolicy()->can_modify_attribute(new Activity(), 'Participant');
-
  			default:
  				return parent::IsAttributeVisible( $attribute );
  		}
@@ -84,10 +82,6 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
         }
     }
 
-    function getSaveCallback() {
-		return 'updateLeftWorkAttribute';
-	}
-	
  	function drawField( $attr, $type, $value, $tabindex )
  	{
  		$field_name = $this->getFieldName( $attr );
@@ -108,12 +102,11 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
 					echo '<div>';
 						echo translate($this->object->getAttributeUserName('Capacity')).text(2191);
 					echo '</div>';
-					$script = "javascript: updateLeftWork($('#".$field_name."'), $('#".$this->getFieldName('LeftWork')."'));";
-					echo '<input type="text" class="input-medium" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" onkeydown="'.$script.'" title="'.htmlentities($this->object->getAttributeDescription('Capacity')).'">';
+					echo '<input type="text" class="input-medium" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" title="'.htmlentities($this->object->getAttributeDescription('Capacity')).'">';
 
                     echo '<span class="auto-time-field">';
                         echo '<span class="auto-time"> &nbsp; </span>';
-					    $this->drawAutoTimes();
+					    $this->drawAutoTimes(false);
                     echo '</span>';
 				echo '</div>';
 				break;
@@ -142,22 +135,33 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
         );
     }
 
-    function drawAutoTimes()
+    function drawAutoTimes( $submit )
     {
-        $intervals = array(
-            strval(5/60) => '', strval(10/60) => '', strval(20/60) => '', '1' => ''
-        );
+        if ( defined('SPENT_TIME_SHORTCUTS') ) {
+            $intervals = array();
+            foreach( SPENT_TIME_SHORTCUTS as $item ) {
+                $intervals[strval($item)] = '';
+            }
+        }
+        else {
+            $intervals = array(
+                strval(5/60) => '', strval(10/60) => '', strval(20/60) => '', '1' => ''
+            );
+        }
+
         $objectIt = $this->getAnchorIt();
         if ( $objectIt->get('StateDurationRecent') > 0 ) {
             $workHours = strval($objectIt->get('StateDurationRecent') - (24 - 8) * $objectIt->get('StateDaysRecent'));
             $intervals[$workHours] = $objectIt->object->getAttributeUserName('StateDuration');
         }
 
+        $methodName = $submit ? 'submitAutoTime' : 'useAutoTime';
+
         foreach( $intervals as $interval => $description ) {
             $timePassed = getSession()->getLanguage()->getHoursWording($interval);
             $class = $description != '' ? 'label-success' : 'label-warning';
             echo '<span class="auto-time">';
-                echo '<a class="'.$class.' label" href="javascript: useAutoTime('.$this->getFormId().', \''.$timePassed.'\');" title="'.$description.'">';
+                echo '<a class="'.$class.' label" href="javascript:'.$methodName.'('.$this->getFormId().', \''.$timePassed.'\');" title="'.$description.'">';
                     echo $timePassed;
                 echo '</a>';
             echo '</span>';

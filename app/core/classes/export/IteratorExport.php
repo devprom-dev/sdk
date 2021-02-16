@@ -6,7 +6,7 @@ class IteratorExport extends IteratorBase
  	var $iterator, $caption, $fields;
  	private $uidService = null;
  	private $table;
-    private $options = array();
+    private $options = array('uid');
 
  	function IteratorExport ( $iterator )
  	{
@@ -122,8 +122,9 @@ class IteratorExport extends IteratorBase
 					$entity_it = $this->iterator->getRef($fieldName);
 					$names = array();
 					while( !$entity_it->end() ) {
-                        $info = $this->uidService->getUidInfo($entity_it, true);
+                        $info = $this->uidService->getUidInfo($entity_it);
                         $title = ($info['uid'] != '' ? '['.$info['uid'].'] ' : '') . $entity_it->getHtmlDecoded('Caption');
+                        if ( $title == '' ) $title = $entity_it->getDisplayNameSearch();
                         if ( $info['state_name'] != '' ) $title .= ' ('.$info['state_name'].')';
                         $names[] = $title;
 						$entity_it->moveNext();
@@ -137,7 +138,7 @@ class IteratorExport extends IteratorBase
 					switch ( strtolower($attribute_type) )
 					{
 						case 'date':
-							return $this->iterator->getDateFormat($fieldName);
+							return $this->iterator->getDateFormatted($fieldName);
 							
 						case 'datetime':
 							return $this->iterator->getDateTimeFormat($fieldName);
@@ -146,7 +147,13 @@ class IteratorExport extends IteratorBase
                             return html_entity_decode(
                                 TextUtils::stripAnyTags($this->iterator->getHtmlDecoded( $fieldName ))
                             );
-						
+
+                        case 'float':
+                            return str_replace(',', '.', round($this->iterator->get($fieldName), 2));
+
+                        case 'integer':
+                            return str_replace(',', '.', round($this->iterator->get($fieldName), 0));
+
 						default:
                             if ( in_array('computed', $this->iterator->object->getAttributeGroups($fieldName)) ) {
                                 $result = ModelService::computeFormula(
@@ -157,7 +164,7 @@ class IteratorExport extends IteratorBase
                                 $lines = array();
                                 foreach ($result as $computedItem) {
                                     if (!is_object($computedItem)) {
-                                        $lines[] = $computedItem;
+                                        $lines[] = TextUtils::stripAnyTags($computedItem);
                                     } else {
                                         $lines[] = TextUtils::stripAnyTags($this->uidService->getUidWithCaption(
                                             $computedItem, 15, '',

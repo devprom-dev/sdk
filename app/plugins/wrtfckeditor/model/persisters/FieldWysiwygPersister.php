@@ -17,7 +17,11 @@ class FieldWysiwygPersister extends ObjectSQLPersister
             if ( $parms[$field] == '' ) continue;
 
             $parms[$field] = TextUtils::getValidHtml(
-                TextUtils::getCleansedHtml($this->parseField($parms[$field]))
+                TextUtils::getCleansedHtml(
+                    TextUtils::skipHtmlTag(
+                        'mark', $this->parseField($parms[$field])
+                    )
+                )
             );
 
             $this->codeBlocks = array();

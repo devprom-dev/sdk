@@ -37,8 +37,7 @@ class GroupAttributeClause extends SortClauseBase
 	 			if ( $object->IsReference($attr) )
 	 			{ 
 	 				$ref = $object->getAttributeObject($attr);
-					if ( $ref->entity->get('IsDictionary') == 'Y' )
-					{
+					if ( $ref->IsDictionary() ) {
 						 return " (SELECT s.OrderNum FROM ".$ref->getClassName()." s WHERE s.".$ref->getClassName()."Id = ".$sql_attr.") ";
 					}
 	 			}

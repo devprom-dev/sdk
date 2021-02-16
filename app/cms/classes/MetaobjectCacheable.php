@@ -1,6 +1,7 @@
 <?php
  
 include_once "Metaobject.php";
+include "CacheableIterator.php";
 
 class MetaobjectCacheable extends Metaobject
 {
@@ -12,7 +13,11 @@ class MetaobjectCacheable extends Metaobject
 	    parent::__construct( $ref_name, $registry );
 	    $this->cache_category = getFactory()->getEntityOriginationService()->getCacheCategory($this);
 	}
-	
+
+    function createIterator() {
+        return new CacheableIterator( $this );
+    }
+
     function getCacheCategory()
 	{
 		return $this->cache_category;

@@ -11,6 +11,8 @@ class WikiImporterEnginePdf extends WikiImporterEngine
             $finfo = new \finfo(FILEINFO_MIME_TYPE);
             if ( strpos($finfo->file($filePath), 'pdf') === false ) return $content;
 
+            if ( !class_exists('Imagick') ) throw new Exception('Imagick module is not installed');
+
             // detects type of the file
             $image = new Imagick();
             if ( !$image->pingImage($filePath) ) {
@@ -41,6 +43,7 @@ class WikiImporterEnginePdf extends WikiImporterEngine
         }
         catch( Exception $e ) {
             \Logger::getLogger('System')->error($e->getMessage().$e->getTraceAsString());
+            throw $e;
         }
 
         return $content;

@@ -65,7 +65,7 @@ class ObjectMetadata
 		return $this->object;
 	}
 	
- 	function addAttribute( $ref_name, $type, $caption, $b_visible, $b_stored = false, $description = '', $ordernum = 999 )
+ 	function addAttribute( $ref_name, $type, $caption, $b_visible = true, $b_stored = false, $description = '', $ordernum = 999 )
  	{
 		if ( $ordernum == 999 ) $ordernum = $this->getLatestOrderNum() + 10;
  		

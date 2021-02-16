@@ -1,10 +1,17 @@
 <?php
-include_once "CommentsFormMinimal.php";
+include "CommentsFormMinimal.php";
+include "CommentsTable.php";
+include "CommentsPageSettingBuilder.php";
 
 class CommentsPage extends PMPage
 {
-	function getObject() 
-	{
+    function __construct()
+    {
+        getSession()->addBuilder(new CommentsPageSettingBuilder());
+        parent::__construct();
+    }
+
+    function getObject() {
 		return getFactory()->getObject('Comment');
 	}
 
@@ -20,4 +27,18 @@ class CommentsPage extends PMPage
 
  		return $form;
  	}
+
+ 	function getTable() {
+        return new CommentsTable($this->getObject());
+    }
+
+    function getRenderParms()
+    {
+        return array_merge(
+            parent::getRenderParms(),
+            array(
+                'context_template' => ''
+            )
+        );
+    }
 }

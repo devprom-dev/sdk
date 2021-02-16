@@ -14,7 +14,12 @@ class QuestionPage extends PMPage
 			if ( is_object($object_it) && $object_it->count() > 0 ) {
  				$this->addInfoSection( new PageSectionComments($object_it) );
 			    $this->addInfoSection( new StatableLifecycleSection($object_it) );
+
 			}
+            $form = $this->getFormRef();
+			if ( is_object($form) ) {
+                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
+            }
 		}
  	}
  	
@@ -29,25 +34,21 @@ class QuestionPage extends PMPage
  		return new QuestionTable( $this->getObject() );
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		return new QuestionForm( $this->getObject() );
  	}
 
  	function needDisplayForm() 
  	{
- 		global $_REQUEST;
- 		
- 		if ( $_REQUEST['kind'] == 'ask' )
- 		{
+ 		if ( $_REQUEST['kind'] == 'ask' ) {
  			return true;
  		}
- 		
  		return parent::needDisplayForm();
  	}
 
     function getPageWidgets()
     {
-        return array('discussions');
+        return array('project-question');
     }
 }

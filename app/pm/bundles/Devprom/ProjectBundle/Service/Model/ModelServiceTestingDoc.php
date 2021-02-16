@@ -10,10 +10,6 @@ class ModelServiceTestingDoc extends ModelService
 		$object = parent::getObject($entity_name);
 
 		if ( $object instanceof \TestScenario ) {
-            $registry = new \ObjectRegistrySQL();
-            $registry->setPersisters($object->getPersisters());
-            $object->setRegistry($registry);
-
             $object->setAttributeDefault('PageType', $object->getScenarioTypeIt()->getId());
             $object->setAttributeRequired('PageType', true);
 

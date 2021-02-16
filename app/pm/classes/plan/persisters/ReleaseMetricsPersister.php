@@ -20,16 +20,16 @@ class ReleaseMetricsPersister extends ObjectSQLPersister
   		$objectPK = $alias.$object->getClassName().'Id';
  		
  		array_push( $columns, 
- 			"(SELECT m.MetricValueDate " .
+ 			"(SELECT DATE(MAX(m.MetricValueDate)) " .
 			"   FROM pm_VersionMetric m" .
 			"  WHERE m.Version = " .$objectPK.
-			"	 AND m.Metric = 'EstimatedStart' LIMIT 1) EstimatedStartDate " );
+			"	 AND m.Metric = 'EstimatedStart') EstimatedStartDate " );
 
  		array_push( $columns, 
- 			"(SELECT m.MetricValueDate " .
+ 			"(SELECT DATE(MAX(m.MetricValueDate)) " .
 			"   FROM pm_VersionMetric m" .
 			"  WHERE m.Version = " .$objectPK.
-			"	 AND m.Metric = 'EstimatedFinish' LIMIT 1) EstimatedFinishDate " );
+			"	 AND m.Metric = 'EstimatedFinish') EstimatedFinishDate " );
 
  		array_push( $columns, 
  			"(SELECT m.MetricValue " .

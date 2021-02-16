@@ -20,7 +20,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         $item['cms_PluginModuleId'] = 'project-log';
         $item['Caption'] = text(2624);
-        $item['AccessEntityReferenceName'] = 'ObjectChangeLog';
+        $item['AccessEntityReferenceName'] = 'pm_Question';
         $item['Url'] = 'project/log';
         $item['Icon'] = 'icon-eye-open';
         $modules[] = $item;
@@ -46,15 +46,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
         }
 
         $item = array();
-        $item['cms_PluginModuleId'] = 'metrics';
-        $item['Caption'] = translate('Метрики');
-        $item['AccessEntityReferenceName'] = 'pm_ProjectMetric';
-        $item['Url'] = 'metrics';
-        $item['Icon'] = 'icon-signal';
-
-        $modules[] = $item;
-
-        $item = array();
         $item['cms_PluginModuleId'] = 'project-spenttime';
         $item['Caption'] = translate('Затраченное время');
         $item['Description'] = text(2662);
@@ -72,11 +63,11 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $modules[] = $item;
 
         $item = array();
-        $item['cms_PluginModuleId'] = 'project-blog';
-        $item['Caption'] = translate('Блог');
-        $item['AccessEntityReferenceName'] = 'BlogPost';
-        $item['Url'] = 'project/blog';
-        $item['Icon'] = 'icon-pencil';
+        $item['cms_PluginModuleId'] = 'project-question';
+        $item['Caption'] = text(2805);
+        $item['AccessEntityReferenceName'] = 'pm_Question';
+        $item['Url'] = 'project/question';
+        $item['Icon'] = 'icon-question-sign';
         $modules[] = $item;
 
         if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' ) {
@@ -114,6 +105,22 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $modules[] = $item;
 
         $item = array();
+        $item['cms_PluginModuleId'] = 'releases';
+        $item['Caption'] = translate('Релизы');
+        $item['AccessEntityReferenceName'] = 'pm_Version';
+        $item['Url'] = 'releases';
+        $item['Icon'] = 'icon-calendar';
+        $modules[] = $item;
+
+        $item = array();
+        $item['cms_PluginModuleId'] = 'iterations';
+        $item['Caption'] = translate('Итерации');
+        $item['AccessEntityReferenceName'] = 'pm_Release';
+        $item['Url'] = 'iterations';
+        $item['Icon'] = 'icon-calendar';
+        $modules[] = $item;
+
+        $item = array();
         $item['cms_PluginModuleId'] = 'issues-backlog';
         $item['Caption'] = translate('Бэклог');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
@@ -128,7 +135,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/board';
         $item['Icon'] = 'icon-th-large';
-
         $modules[] = $item;
 
         $item = array();
@@ -138,7 +144,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/trace';
         $item['Icon'] = 'icon-random';
-
         $modules[] = $item;
 
         $item = array();
@@ -148,7 +153,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/chart';
         $item['Icon'] = 'icon-signal';
-        
         $modules[] = $item;
 
         $item = array();
@@ -157,7 +161,14 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['AccessEntityReferenceName'] = 'pm_Task';
         $item['Url'] = 'tasks/list';
         $item['Icon'] = 'icon-list';
+        $modules[] = $item;
 
+        $item = array();
+        $item['cms_PluginModuleId'] = 'search';
+        $item['Caption'] = translate('Поиск');
+        $item['AccessEntityReferenceName'] = 'pm_Project';
+        $item['Url'] = 'search.php';
+        $item['Icon'] = 'icon-search';
         $modules[] = $item;
 
         if ( $methodology_it->HasTasks() )
@@ -193,17 +204,15 @@ class ModuleProjectsBuilder extends ModuleBuilder
             $item['Icon'] = 'icon-signal';
 	        
 	        $modules[] = $item;
-
-            $item = array();
-
-            $item['cms_PluginModuleId'] = 'tasks-import';
-            $item['Caption'] = translate('Импорт');
-            $item['AccessEntityReferenceName'] = 'pm_Task';
-            $item['AccessType'] = ACCESS_CREATE;
-            $item['Url'] = 'tasks/board';
-
-            $modules[] = $item;
         }
+
+        $item = array();
+        $item['cms_PluginModuleId'] = 'dashboard';
+        $item['Caption'] = text(2925);
+        $item['AccessEntityReferenceName'] = 'DashboardItem';
+        $item['Url'] = 'dashboard';
+        $item['Icon'] = 'icon-qrcode';
+        $modules[] = $item;
 
         foreach( $modules as $module ) {
         	$module['Area'] = FUNC_AREA_MANAGEMENT;
@@ -211,20 +220,20 @@ class ModuleProjectsBuilder extends ModuleBuilder
         }
         
         $item = array();
-        $item['cms_PluginModuleId'] = 'issues-import';
-        $item['Caption'] = translate('Импорт');
-        $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
-        $item['AccessType'] = ACCESS_CREATE;
-        $item['Url'] = 'issues/board';
-        $object->addModule( $item );
-
-        $item = array();
         $item['cms_PluginModuleId'] = 'attachments';
         $item['Caption'] = text(2097);
         $item['Description'] = text(2661);
         $item['AccessEntityReferenceName'] = 'Attachment';
         $item['Url'] = 'attachments';
         $item['Icon'] = 'icon-file';
+        $object->addModule( $item );
+
+        $item = array();
+        $item['cms_PluginModuleId'] = 'delivery';
+        $item['Caption'] = text(2932);
+        $item['AccessEntityReferenceName'] = 'pm_Function';
+        $item['Url'] = 'roadmap';
+        $item['Icon'] = 'icon-road';
         $object->addModule( $item );
     }
     
@@ -325,20 +334,9 @@ class ModuleProjectsBuilder extends ModuleBuilder
         
         $modules[] = $item;
 
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'snapshots';
-        $item['Caption'] = translate('Версионирование');
-        $item['Description'] = text(1822);
-        $item['AccessEntityReferenceName'] = 'Snapshot';
-        $item['Url'] = 'versioning/revisions';
-        
-        $modules[] = $item;
-
         foreach( $modules as $module )
         {
         	$module['Area'] = FunctionalAreaMenuSettingsBuilder::AREA_UID;
-        	
             $object->addModule( $module );
         }
     }

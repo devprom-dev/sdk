@@ -7,11 +7,6 @@ class ProjectTemplateList extends PageList
 		return array();
 	}
 	
-	function getColumnFields()
-	{
-		return array();
-	}
-	
 	function drawCell( $object_it, $attr )
 	{
 		switch ( $attr )

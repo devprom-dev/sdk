@@ -2,9 +2,8 @@
 
 class TaskTypeNonBugFixPredicate extends FilterPredicate
 {
- 	function TaskTypeNonBugFixPredicate()
- 	{
- 		parent::FilterPredicate('default');
+ 	function TaskTypeNonBugFixPredicate() {
+ 		parent::__construct('default');
  	}
  	
  	function _predicate( $filter )

@@ -2,7 +2,7 @@
 
 include_once SERVER_ROOT_PATH.'core/classes/system/SanitizeUrl.php';
 
-class SanitizeUrlTest extends PHPUnit_Framework_TestCase
+class SanitizeUrlTest extends \PHPUnit\Framework\TestCase
 {
 	private $url_with_tags = '/pm/tyjtjty/module/helpdocs/list/wj3aeqd9.asp?<script>document.cookie=%22testqrgv=4463;%22</script>';
 	 

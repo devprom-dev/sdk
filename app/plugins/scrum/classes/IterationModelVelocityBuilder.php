@@ -7,7 +7,7 @@ class IterationModelVelocityBuilder extends ObjectModelBuilder
     {
     	if ( !$object instanceof Iteration ) return;
     
-        $strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
+        $strategy = getSession()->getProjectIt()->getMethodologyIt()->getIterationEstimationStrategy();
         $object->addAttribute( 'Velocity', 'INTEGER', preg_replace('/:|\%1/', '', $strategy->getVelocityText($object)), false );
     }
 }

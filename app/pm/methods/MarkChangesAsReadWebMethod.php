@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelChangeNotification;
 include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
 
 class MarkChangesAsReadWebMethod extends WebMethod
@@ -17,11 +18,10 @@ class MarkChangesAsReadWebMethod extends WebMethod
         );
  	    while( !$logIt->end() ) {
  	        if ( $logIt->get('ObjectId') != "" && $logIt->get('ClassName') != "" ) {
-                DAL::Instance()->Query(
-                    " DELETE FROM ObjectChangeNotification 
-                   WHERE ObjectId = ".$logIt->get('ObjectId')." 
-                     AND LCASE(ObjectClass) = '".$logIt->get('ClassName')."' 
-                     AND SystemUser = ".getSession()->getUserIt()->getId()
+                $service = new ModelChangeNotification();
+                $service->clearUser(
+                    getFactory()->getObject($logIt->get('ClassName'))->getExact($logIt->get('ObjectId')),
+                    getSession()->getUserIt()
                 );
             }
             $logIt->moveNext();

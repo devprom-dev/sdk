@@ -1,5 +1,5 @@
 <?php
-include SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';
+include_once SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';
 
 class ImportProductExcelForm extends ImportXmlForm
 {

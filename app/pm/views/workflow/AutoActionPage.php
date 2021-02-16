@@ -25,7 +25,7 @@ class AutoActionPage extends PMPage
         return new AutoActionTable($this->getObject());
     }
 
-    function getForm() {
+    function getEntityForm() {
         return new AutoActionForm($this->getObject());
     }
 }

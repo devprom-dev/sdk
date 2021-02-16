@@ -7,7 +7,7 @@ class TaskPlanFactChart extends PMPageChart
 	function getChartWidget()
 	{
 		$widget = new TaskPlanFactChartWidget();
-		$widget->setIterator( PageList::getIterator() );
+        $widget->setIterator($this->getIterator());
 		return $widget;
 	}
 	
@@ -37,15 +37,15 @@ class TaskPlanFactChart extends PMPageChart
     }
 
     function getGroup() {
-	    return 'FinishDate';
+	    return 'PlanFactTick';
     }
 
     function getAggregateBy() {
 	    return 'PlanFact';
     }
 
-    function getGroupFunction() {
-	    return 'AVG';
+    function getAggregator() {
+	    return 'SUM';
     }
 
     function getLegendVisible() {

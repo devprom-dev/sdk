@@ -16,19 +16,18 @@ include SERVER_ROOT_PATH."pm/views/workflow/TransitionForm.php";
 include SERVER_ROOT_PATH."pm/views/workflow/StateForm.php";
 include SERVER_ROOT_PATH."pm/views/workflow/StateTable.php";
 include SERVER_ROOT_PATH."pm/views/templates/ObjectTemplateTable.php";
+include SERVER_ROOT_PATH."pm/views/templates/RequestTemplateForm.php";
 include SERVER_ROOT_PATH."pm/views/wiki/RequirementTypeForm.php";
 include SERVER_ROOT_PATH."pm/classes/settings/DictionaryItemModelBuilder.php";
 
 class DictionaryPage extends PMPage
 {
-    private $object = null;
+    private $dictObject = null;
 
  	function __construct()
  	{
- 		if ( $_REQUEST['entity'] != '' ) {
-			$_REQUEST['dict'] = $_REQUEST['entity'];
- 		}
- 		
+        getSession()->addBuilder( new \RequestModelExtendedBuilder() );
+
  		parent::__construct();
  		
  		if ( $this->needDisplayForm() ) {
@@ -43,25 +42,30 @@ class DictionaryPage extends PMPage
  	{
  	    getSession()->addBuilder( new DictionaryItemModelBuilder() );
 
-        if ( is_object($this->object) ) return $this->object;
- 		return $this->object = $this->getDictionary();
+        if ( is_object($this->dictObject) ) return $this->dictObject;
+ 		return $this->dictObject = $this->getDictionary();
  	}
  	
  	function getDictionary()
  	{
 		getSession()->addBuilder( new StateBaseModelBuilder() );
- 		
- 		switch ( $_REQUEST['dict'] )
+
+ 		switch ( $_REQUEST['entity'] )
  		{
  			case 'pm_ProjectRole':
  				return getFactory()->getObject('ProjectRoleInherited');
 
  			default:
- 				if ( $_REQUEST['dict'] == '' ) {
- 					return getFactory()->getObject('pm_TaskType');
+ 				if ( $_REQUEST['entity'] == '' ) {
+ 				    if ( $_REQUEST['dict'] == '' ) {
+                        return getFactory()->getObject('pm_TaskType');
+                    }
+ 				    else {
+                        return getFactory()->getObject($_REQUEST['dict']);
+                    }
  				}
  				else {
- 					return getFactory()->getObject($_REQUEST['dict']);
+ 					return getFactory()->getObject($_REQUEST['entity']);
  				}
  		}
  	}
@@ -71,7 +75,7 @@ class DictionaryPage extends PMPage
  	    if ( $_REQUEST['dict'] == '' ) {
             return new DictionaryTable(getFactory()->getObject('Dictionary'));
  	    }
- 	    
+
  		$object = $this->getObject();
 		if ( is_object($object) )
 		{
@@ -84,11 +88,9 @@ class DictionaryPage extends PMPage
                     return new TextTemplateTable( $object );
 
 				default:
-					if ( is_a($object, 'ObjectTemplate') )
-					{
+					if ( is_a($object, 'ObjectTemplate') ) {
 						return new ObjectTemplateTable( $object );
 					}
-					
 					return new DictionaryItemsTable( $object );
 			}
 		}
@@ -96,10 +98,14 @@ class DictionaryPage extends PMPage
 		return null;			
  	}
  	
- 	function getForm()
+ 	function getEntityForm()
  	{
+ 	    if ( $_REQUEST['dict'] == 'RequestTemplate' ) {
+            return new RequestTemplateForm(getFactory()->getObject('RequestTemplate'));
+        }
+
 		$object = $this->getObject();
-		
+
 		if ( !is_object($object) ) return null;
 		
 		switch ( $object->getClassName() )
@@ -150,8 +156,7 @@ class DictionaryPage extends PMPage
  	
  	function render( $view = null )
  	{
- 		if ( $_REQUEST['wait'] != '' && $this->getObject() instanceof CustomResource )
- 		{
+ 		if ( $_REQUEST['wait'] != '' && $this->getObject() instanceof CustomResource ) {
  			die();
  		}
  		
@@ -166,6 +171,7 @@ class DictionaryPage extends PMPage
             )
 		);
  		if ( !is_object($object_it) ) return;
+ 		if ( $_REQUEST['dict'] == 'RequestTemplate' ) return;
 
  		if ( $object_it->object->getAttributeType('RecentComment') != '' ) {
  			$this->addInfoSection( new PageSectionComments($object_it) );
@@ -186,5 +192,11 @@ class DictionaryPage extends PMPage
         }
 
         return $hint;
+    }
+
+    function getUrl()
+    {
+        $session = getSession();
+        return $session->getApplicationUrl().'project/workflow?dict='.SanitizeUrl::parseUrl($_REQUEST['dict']);
     }
 }

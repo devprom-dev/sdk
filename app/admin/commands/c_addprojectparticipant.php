@@ -19,6 +19,7 @@ class AddProjectParticipant extends CommandForm
 		}
 
         $session = new PMSession($project_it);
+        getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
 
 		$baserole_it = getFactory()->getObject('ProjectRole')->getRegistry()->Query(
 		    array (
@@ -57,16 +58,14 @@ class AddProjectParticipant extends CommandForm
 		));
 		if ( $role_it->count() < 1 )
 		{
-			$mapper = new ModelDataTypeMapper();
-			$mapper->map( $participant_role, $_REQUEST );
+		    $objectIt = getFactory()->createEntity($participant_role, array (
+                'Project' => $_REQUEST['Project'],
+                'Participant' => $part_it->getId(),
+                'ProjectRole' => $baserole_it->getId(),
+                'Capacity' => $_REQUEST['Capacity'] == '' ? 0 : $_REQUEST['Capacity']
+            ));
 
-			$id = $participant_role->add_parms( array (
-				'Project' => $_REQUEST['Project'],
-				'Participant' => $part_it->getId(),
-				'ProjectRole' => $baserole_it->getId(),
-				'Capacity' => $_REQUEST['Capacity'] == '' ? 0 : $_REQUEST['Capacity']
-			));
-			if ( $id < 1 ) $this->replyError( text(706) );
+			if ( $objectIt->getId() < 1 ) $this->replyError( text(706) );
 		}
 		else {
 			$this->replyError( text(627) );

@@ -1,14 +1,15 @@
 <?php
 
 namespace Devprom\ServiceDeskBundle\Twig;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class LocaleDateTwigExtention extends \Twig_Extension
 {
-    private $container;
+    private $stack;
 
-    function __construct($container)
+    function __construct(RequestStack $stack)
     {
-        $this->container = $container;
+        $this->stack = $stack;
     }
 
     public function getFunctions()
@@ -17,7 +18,7 @@ class LocaleDateTwigExtention extends \Twig_Extension
             new \Twig_SimpleFunction('localeDate', function($dateValue)
             {
                 if ( !is_object($dateValue) ) return '';
-                switch ($this->container->get('request')->getLocale()) {
+                switch ($this->stack->getCurrentRequest()->getLocale()) {
                     case 'ru':
                         return $dateValue->format("d.m.Y H:i");
                     default:

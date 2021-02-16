@@ -16,25 +16,31 @@ class UserTable extends PageTable
 
 	function getFilters()
 	{
-		return array (
-    		new FilterAutoCompleteWebMethod(
-        			getFactory()->getObject('cms_User'), translate('Имя пользователя')
-			),
-    		new UserFilterRoleWebMethod(),
-    		new UserFilterStateWebMethod()
-		);
+		return array_merge(
+		    parent::getFilters(),
+		    array (
+                new UserFilterRoleWebMethod(),
+                new UserFilterStateWebMethod()
+		    )
+        );
 	}
 
-	function IsNeedToDelete()
+	function getFilterPredicates($values)
+    {
+        return array_merge(
+            parent::getFilterPredicates($values),
+            array(
+                new UserAccessPredicate( $values['state'] ),
+                new UserSystemRolePredicate( $values['role'] )
+            )
+        );
+    }
+
+    function IsNeedToDelete()
 	{
 	    return false;
 	}
 
-	function getFiltersDefault()
-	{
-		return array('any');
-	}
-	
  	function getDefaultRowsOnPage()
 	{
 		return 60;
@@ -47,8 +53,6 @@ class UserTable extends PageTable
 		if( !$this->IsNeedToAdd() ) return $actions;
 
 		$method = new ObjectCreateNewWebMethod($this->getObject());
-		if ( $this->getObject()->getRecordCount() > 0 ) $method->setRedirectUrl('donothing');
-		
 		$uid = strtolower('new-'.get_class($this->getObject()));
 		
 		$actions[$uid] = array ( 
@@ -62,10 +66,8 @@ class UserTable extends PageTable
 		);
 
 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
-		if ( $method->hasAccess() )
-		{
-			if ( $this->getObject()->getRecordCount() > 0 ) $method->setRedirectUrl('donothing');
-			$actions['invite-by-email'] = array ( 
+		if ( $method->hasAccess() ) {
+			$actions['invite-by-email'] = array (
 			        'name' => text(1861),
 					'url' => $method->getJSCall(array(), text(2001)),
 					'uid' => 'invite-email'

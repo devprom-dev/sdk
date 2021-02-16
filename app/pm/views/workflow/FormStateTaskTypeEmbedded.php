@@ -12,10 +12,6 @@ class FormStateTaskTypeEmbedded extends PMFormEmbedded
  		}
  	}
 
- 	function getItemDisplayName($object_it) {
-        return $object_it->getBackwardDisplayName();
-    }
-
     function getAttributeObject( $attr )
     {
         $object = parent::getAttributeObject( $attr );

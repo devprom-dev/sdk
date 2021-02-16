@@ -47,15 +47,4 @@ class FieldAttributeDictionarySDLCTest extends DevpromSDLCTestCase
         $this->assertContains( 'Fact', $values );
         $this->assertContains( 'Tasks', $values );
     }
-
-    function testImportantFieldsOnTaskEntity()
-    {   
-        $field = new FieldAttributeDictionary( new Task() );
-
-        $values = array();
-        
-        foreach( $field->getOptions() as $option ) $values[] = $option['value'];
-        
-        $this->assertContains( 'Release', $values );
-    }
 }

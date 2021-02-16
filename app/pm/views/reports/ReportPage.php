@@ -15,7 +15,7 @@ class ReportPage extends PMPage
  		return new ReportTable( $this->getObject() );
  	}
 
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		return new PMCustomReportForm();
  	}

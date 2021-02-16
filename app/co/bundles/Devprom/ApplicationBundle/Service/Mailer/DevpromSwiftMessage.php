@@ -22,7 +22,8 @@ class DevpromSwiftMessage extends Swift_Message
         if ( $this->message == '' ) return parent::toByteStream($is);
 
         $headers = $this->getHeaders();
-        $headers->addTextHeader('X-Auto-Response-Suppress', 'OOF');
+        $headers->addTextHeader('Auto-Submitted', 'auto-generated');
+        $headers->addTextHeader('X-Auto-Response-Suppress', 'All');
 
         $is->write($headers->toString());
         $is->commit();

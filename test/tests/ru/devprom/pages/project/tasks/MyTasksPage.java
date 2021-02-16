@@ -15,12 +15,18 @@ public class MyTasksPage extends TasksPage
 
 	public TaskViewPage clickToTask(String id) {
 		try {
-		driver.findElement(
-				By.xpath("//tr[contains(@id,'workitemlist1_row_')]/td[@id='uid']/a[contains(.,'["+ id + "]')]")).click();
+			clickOnInvisibleElement(
+				driver.findElement(
+					By.xpath("//tr[contains(@id,'workitemlist1_row_')]/td[@id='uid']/a[contains(.,'["+ id + "]')]")
+				)
+			);
 		}
 		catch (NoSuchElementException e) {
-			driver.findElement(
-					By.xpath("//tr[contains(@id,'workitemlist1_row_')]/td[@id='uid']//strike[contains(.,'" + id + "')]")).click();
+			clickOnInvisibleElement(
+				driver.findElement(
+					By.xpath("//tr[contains(@id,'workitemlist1_row_')]/td[@id='uid']//strike[contains(.,'" + id + "')]")
+					)
+				);
 		}
 		return new TaskViewPage(driver);
 	}

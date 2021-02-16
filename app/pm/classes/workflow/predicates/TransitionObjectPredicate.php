@@ -7,8 +7,7 @@ class TransitionObjectPredicate extends FilterPredicate
  	function TransitionObjectPredicate( $object, $filter )
  	{
  		$this->object = $object;
- 		
- 		parent::FilterPredicate( $filter );
+ 		parent::__construct( $filter );
  	}
  	
  	function _predicate( $filter )

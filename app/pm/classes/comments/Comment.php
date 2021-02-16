@@ -1,5 +1,4 @@
 <?php
-
 include_once "CommentBase.php";
 include "CommentIterator.php";
 

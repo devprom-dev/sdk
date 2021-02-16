@@ -10,9 +10,10 @@ public class KanbanTask {
 	private String description="";
 	private String type;
 	private String priority;
-	private String athor="";
+	private String author ="";
 	private String owner="";
 	private String number="";
+	private String state = "";
 	private List<String> attachments = new ArrayList<String>();
 	private List<String> linkedTasks = new ArrayList<String>();
 	private List<String> tags = new ArrayList<String>();
@@ -27,8 +28,8 @@ public class KanbanTask {
 	public String toString() {
 		return "KanbanTask [id=" + id + ", name=" + name + ", description="
 				+ description + ", type=" + type + ", priority=" + priority
-				+ ", athor=" + athor + ", owner=" + owner + ", number="
-				+ number + "]";
+				+ ", author=" + author + ", owner=" + owner + ", number="
+				+ number + ", state=" + state + "]";
 	}
 
 	public static String getRandomPriority() {
@@ -70,14 +71,21 @@ public class KanbanTask {
 	public String getPriority() {
 		return priority;
 	}
+    public void setState(String state) {
+        this.state = state;
+	}
+	public String getState() {
+		return state;
+	}
+
 	public void setPriority(String priority) {
 		this.priority = priority;
 	}
 	public String getAuthor() {
-		return athor;
+		return author;
 	}
-	public void setAthor(String athor) {
-		this.athor = athor;
+	public void setAuthor(String author) {
+		this.author = author;
 	}
 	public String getOwner() {
 		return owner;

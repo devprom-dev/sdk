@@ -5,14 +5,17 @@ include_once SERVER_ROOT_PATH."ext/locale/LinguaStemRu.php";
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
+use FOS\UserBundle\Model\UserInterface;
 
 class KnowledgeService
 {
     /** @var  EntityManager */
     private $em;
+    private $tokenStorage;
 
-    function __construct($em) {
+    function __construct($em, $tokenStorage) {
         $this->em = $em;
+        $this->tokenStorage = $tokenStorage;
     }
 
     function getThemes( $vpds )
@@ -43,14 +46,19 @@ class KnowledgeService
 
     function getRoots( $vpds )
     {
+        $user = $this->tokenStorage->getToken()->getUser();
+
         $restricted = $this->restrictedArticles($vpds);
         $repository = $this->em->getRepository('DevpromServiceDeskBundle:KnowledgeBase');
+
         return $repository->createQueryBuilder('t')
             ->where('
                 t.vpd IN (:vpdarray) AND t.parent IS NULL AND t.referenceName = 1 
                 AND EXISTS (SELECT 1 FROM \Devprom\ServiceDeskBundle\Entity\KnowledgeBase c 
                              WHERE c.parent = t.id AND c.id NOT IN (:restricted)) 
-            ')
+                AND EXISTS (SELECT 1 FROM \Devprom\ServiceDeskBundle\Entity\Project p 
+                             WHERE p.vpd = t.vpd AND COALESCE(p.knowledgeBaseServiceDesk,\'N\') = \'Y\') '
+            )
             ->setParameter('vpdarray', $vpds)
             ->setParameter('restricted', $restricted)
             ->getQuery()
@@ -125,5 +133,13 @@ class KnowledgeService
             ->getResult();
         if ( count($result) < 1 ) return array(0);
         return $result;
+    }
+
+    /**
+     * @param $attachmentId
+     * @return KnowledgeBaseAttachment
+     */
+    public function getAttachmentById($attachmentId) {
+        return $this->em->getRepository("DevpromServiceDeskBundle:KnowledgeBaseAttachment")->find($attachmentId);
     }
 }

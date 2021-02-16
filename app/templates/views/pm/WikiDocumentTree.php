@@ -1,5 +1,5 @@
-<div class="wiki-page-tree <?=$placement_class?>">
-    <div class="tabs-block">
+<div class="wiki-page-tree hidden-print <?=$placement_class?>" style="<?=($structureVisible ? '' : 'display:none;')?>">
+    <div class="tabs-block" style="display: inline">
         <ul class="nav nav-tabs" id="rightTab">
             <?php foreach ( $sections as $key => $section ) { ?>
                 <li class="<?=($key == array_shift(array_keys($sections)) ? 'active' : '')?>">
@@ -7,33 +7,22 @@
                 </li>
             <?php } ?>
 
-            <div class="btn-group pull-right">
-                <a id="filter-settings" class="btn dropdown-toggle btn-sm btn-light" data-toggle="dropdown" href="#">
-                    <i class="icon-cog icon-gray"></i>
-                    <?php if ($filter_actions[0]['name'] != '') { ?>
-                        <span class="caret"></span>
-                    <?php } ?>
-                </a>
+            <a class="reg-url" onclick="window.location='<?=$registry_url?>';"><?=$registry_title?></a>
+            <?php if ( $docs_url != '' ) { ?>
+            <a class="docs-url" onclick="window.location='<?=$docs_url?>';"><?=$docs_title?></a>
+            <?php } ?>
+        </ul>
+        <?php foreach ( $sections as $key => $section ) { ?>
+            <div class="tab-pane <?=($key == array_shift(array_keys($sections)) ? 'active' : '')?> <?=$section->getId()?>" id="<?=$section->getId().$object_id?>">
                 <?php
-                echo $view->render('core/PopupMenu.php', array(
-                    'items' => $filter_actions
-                ));
+                    $section->render( $this, array(
+                        'page_uid' => $page_uid,
+                        'document_hint' => $document_hint,
+                        'document_id' => $documentId,
+                        'object_id' => $object_id
+                    ));
                 ?>
             </div>
-
-            <a class="docs-url" onclick="window.location='<?=$docs_url?>';"><?=$docs_title?></a>
-            <a class="tree-placement" onclick="toggleDocumentStructure('<?=$documentId?>')" title="<?=text(2204)?>"><i class="icon-remove"></i></a>
-            <a class="tree-placement" onclick="<?=$placement_script?>" title="<?=$placement_text?>"><i class="<?=$placement_icon?>"></i></a>
-            <a class="tree-placement" onclick="extendTreeArea('<?=$object_id?>')" title="<?=text(2456)?>"><i class="icon-indent-left"></i></a>
-            <a class="tree-placement" onclick="toggleTreeNodes('<?=$object_id?>')" title="<?=text(2455)?>"><i class="icon-plus-sign"></i></a>
-
-        </ul>
-        <div class="tab-content right-side-tab">
-            <?php foreach ( $sections as $key => $section ) { ?>
-                <div class="tab-pane <?=($key == array_shift(array_keys($sections)) ? 'active' : '')?> <?=$section->getId()?>" id="<?=$section->getId().$object_id?>">
-                    <?php $section->render( $this, array('page_uid' => $page_uid, 'document_hint' => $document_hint) ); ?>
-                </div>
-            <?php } ?>
-        </div>
+        <?php } ?>
     </div>
 </div>

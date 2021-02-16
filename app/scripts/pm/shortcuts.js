@@ -75,6 +75,12 @@ var shortcutContexts = [
                 },
                 path: ['g k','п л']
             }, {
+                title: text('sc-key-gt-wn'),
+                handler: function(e) {
+                    window.location = '/pm/'+devpromOpts.project+'/whatsnew';
+                },
+                path: ['g n','п т']
+            }, {
                 title: text('sc-key-gt-prgm'),
                 handler: 'a#navbar-portfolio',
                 path: ['g p','п з']
@@ -85,8 +91,10 @@ var shortcutContexts = [
         keys: [
             {
                 title: text('sc-key-view-rightpane'),
-                path: ']',
-                handler: 'a#toggle-detailspanel'
+                path: [']','ъ'],
+                handler: function(e) {
+                    toggleMasterDetails(true);
+                }
             }, {
                 title: text('sc-key-view-new'),
                 path: ['+'],
@@ -185,6 +193,13 @@ var shortcutContexts = [
     }, {
         title: text('sc-context-editor'),
         keys: [
+            {
+                title: text('sc-key-edt-leftpane'),
+                path: ['[', 'х'],
+                handler: function(e) {
+                    toggleDocumentStructure();
+                }
+            },
             {
                 title: text('sc-key-help'),
                 path: ['ctrl+shift+/'],

@@ -4,6 +4,9 @@ class StatePredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
+        $object = $this->getObject();
+        if ( ! $object instanceof MetaobjectStatable ) return " AND 1 = 1 ";
+
         $metaStates = array('N','I','Y');
         $states = array_intersect(preg_split('/[-,]/', $filter), $metaStates);
         if ( count($states) > 0 )
@@ -19,9 +22,6 @@ class StatePredicate extends FilterPredicate
                         WHERE s.IsTerminal IN ('".join($states,"','")."') 
                           AND s.ObjectClass IN ('".join("','", $stateableClassNames)."') ) ";
         }
-
- 		$object = $this->getObject();
-        if ( ! $object instanceof MetaobjectStatable ) return " AND 1 = 1 ";
 
  		$states = \WorkflowScheme::Instance()->getNonTerminalStates($object);
 		switch ( $filter )

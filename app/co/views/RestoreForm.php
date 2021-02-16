@@ -44,7 +44,7 @@ class ForgetPasswordForm extends AjaxForm
 		return true;
 	}
  	
-	function IsAttributeModifable( $attribute )
+	function IsAttributeModifiable( $attribute )
 	{
 		return true;
 	}

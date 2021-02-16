@@ -14,7 +14,8 @@ class WidgetController extends Controller
                 'version' => $_SERVER['APP_VERSION'],
                 'language' => in_array($request->get('language'), array('en','ru'))
                                 ? $request->get('language')
-                                : strtolower(getSession()->getLanguageUid())
+                                : strtolower(getSession()->getLanguageUid()),
+                'title' => text(2277)
     		)
         );
     }
@@ -41,7 +42,9 @@ class WidgetController extends Controller
                 'support_url' => $support_url,
                 'license_name' => $_SERVER['LICENSE'],
                 'current_version' => $_SERVER['APP_VERSION'],
-                'metrics_text' => $metrics_text
+                'metrics_text' => $metrics_text,
+                'server_url' => \EnvironmentSettings::getServerUrl(),
+                'title' => text('guide.support')
             )
         );
     }

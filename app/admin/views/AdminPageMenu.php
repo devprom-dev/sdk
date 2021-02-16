@@ -35,7 +35,8 @@ class AdminPageMenu extends PageMenu
 			'items' => array(
 				array( 'url' => '/admin/users.php', 'name' => translate('Список'), 'uid' => 'users', 'title' => translate('Список пользователей') ),
 				array(),
-				array( 'url' => '/admin/blacklist.php', 'name' => translate('Блокировки'), 'uid' => 'blacklist' )
+				array( 'url' => '/admin/blacklist.php', 'name' => translate('Блокировки'), 'uid' => 'blacklist' ),
+                array( 'url' => '/admin/ldap/', 'name' => text(2759), 'uid' => 'ldap' )
 			)
 		));
 		array_push($pages, array(

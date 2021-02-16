@@ -10,10 +10,18 @@ public class SystemTasksPage extends AdminPageBase {
 		super(driver);
 	}
 
-	public SystemTasksPage runSystemTask(String systemTaskName){
+	public SystemTasksPage runSystemTask(String systemTaskName)
+	{
 		WebElement runTaskBtn = driver.findElement(By.xpath("//table[@id='joblist1']//td[@id='caption' and text()='"
 	                   +systemTaskName+"']/following-sibling::td//ul[@role='menu']/li/a[text()='Запустить']"));
 		clickOnInvisibleElement(runTaskBtn);
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		goToAdminTools();
+		gotoSystemTasks();
 	 	return new SystemTasksPage(driver);
 	}
 	

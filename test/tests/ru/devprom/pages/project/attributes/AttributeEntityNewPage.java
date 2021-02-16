@@ -31,6 +31,7 @@ public class AttributeEntityNewPage extends SDLCPojectPageBase {
 	}
 
 	public AttributeNewPage selectEntity(String entityName, String type) {
+		(new Select(entityNameSelector)).selectByValue("projectpage");
 		(new Select(entityNameSelector)).selectByValue(entityName);
 		typeselector.sendKeys(type);
 		autocompleteSelect(type);
@@ -41,6 +42,7 @@ public class AttributeEntityNewPage extends SDLCPojectPageBase {
 
 	
 	public AttributeNewPage selectEntity(String entityName, String type, String dataType) {
+		(new Select(entityNameSelector)).selectByValue("projectpage");
 		(new Select(entityNameSelector)).selectByValue(entityName);
 		typeselector.sendKeys(type);
 		autocompleteSelect(type);

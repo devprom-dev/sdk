@@ -8,7 +8,7 @@ class RequestDueDatesPersister extends ObjectSQLPersister
 		 $columns[] =
 			 "  t.DeliveryDate DueDate ";
          $columns[] =
-         	 "  IFNULL(LEAST(5, GREATEST(-1, YEARWEEK(t.DeliveryDate) - YEARWEEK(IFNULL(t.FinishDate, NOW())))) + 2, 7) DueWeeks ";
+         	 "  IFNULL(LEAST(5, YEARWEEK(t.DeliveryDate) - YEARWEEK(IFNULL(t.FinishDate, NOW()))) + 2, 7) DueWeeks ";
          
          return $columns;
      }

@@ -44,7 +44,6 @@ public class TemplatesTest extends ProjectTestBase
 		
 		stp.createNewProject();
 		Project inheritProject = new Project("InheritSettingsProject" + p, "isproject" + DataProviders.getUniqueStringAlphaNum(), SDLC);
-		//npp.createNewSDLCFromUserTemplate(inheritProject);
 		npp.createNew(inheritProject);
 		FILELOG.debug("Created new project " + inheritProject.getName());
 		
@@ -59,6 +58,7 @@ public class TemplatesTest extends ProjectTestBase
 		
 		LoadTemplatePage ltp = tep.gotoLoadTemplatePage();
 		ltp.uncheckAll();
+		ltp.checkImportDictionariesSettings();
 		ltp.checkImportStateSettings();
 		ltp.importTemplate(template.getFullName());
 		

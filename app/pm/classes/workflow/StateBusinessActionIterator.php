@@ -1,6 +1,6 @@
 <?php
 
-class StateBusinessActionIterator extends OrderedIterator
+class StateBusinessActionIterator extends CacheableIterator
 {
 	function apply( $object_it, $data ) {
 		$rule = $this->getRule();

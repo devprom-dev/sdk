@@ -12,9 +12,9 @@ $restoreAction = array_shift($actions);
 	});
 </script>
 
-<form id="<?=$form_id?>" class="form-horizontal" action="<?=$view['router']->generate('login_process_auth')?>" method="post" enctype="application/x-www-form-urlencoded">
-	<input type="hidden" id="action<?=$form_id?>" name="action" value="<?=$form_action?>">
-	<input type="hidden" name="redirect" value="<?=$redirect_url?>">
+<form id="<?=$form_id?>" class="form-horizontal" action="<?=htmlentities($login_url)?>" method="post" enctype="application/x-www-form-urlencoded">
+	<input type="hidden" id="action<?=$form_id?>" name="action" value="<?=htmlentities($form_action)?>">
+	<input type="hidden" name="redirect" value="<?=htmlentities($redirect_url)?>">
 
     <fieldset>
         <legend><?=text(1307)?></legend>

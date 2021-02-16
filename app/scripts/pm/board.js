@@ -9,68 +9,51 @@ var draggableOptions = {
 		cursor: "move",
 		redrawBoardItemCustom: function ( item, result )
 		{
+			var jResult = $(result);
             item.each(function() {
-				var objectid = $(this).attr('object');
-				var newCard = $(result).find('.board_item[object="'+objectid+'"]');
+            	var self = $(this);
+				var objectid = self.attr('object');
+				var newCard = jResult.find('.board_item[object="'+objectid+'"]');
 				var oldCard = $('.board_item[object="'+objectid+'"]');
 
 				new_more = newCard.attr('more');
 				new_group = newCard.parent().attr('group');
 				old_more = oldCard.attr('more');
 				old_group = oldCard.parent('.list_cell').attr('group');
+				var jNewColumnGroup = $('.list_cell[more="'+new_more+'"][group="'+new_group+'"]');
 
-				if( $('.list_cell[more="'+new_more+'"][group="'+new_group+'"]').length < 1 ) {
+				if( jNewColumnGroup.length < 1 ) {
 					setTimeout(function() { window.location.reload(); }, 200);
 					return;
 				}
 
 				var itemFound = false;
-				$('.list_cell[more="'+new_more+'"][group="'+new_group+'"][sort="OrderNum"] > .board_item')
-					.each(function() {
-						if ( parseInt($(this).attr('order')) >= parseInt(newCard.attr('order')) )
-						{
-							newCard.insertBefore($(this));
+				jNewColumnGroup.find('[sort="OrderNum"] > .board_item').each(function() {
+						if ( parseInt(self.attr('order')) >= parseInt(newCard.attr('order')) ) {
+							newCard.insertBefore(self);
 							oldCard.remove();
-							
-							itemFound = true; 
-							
+							itemFound = true;
 							return false;
 						}
 					});
-				
-				if ( !itemFound )
-				{
-					var cell = $('.list_cell[more="'+new_more+'"][group="'+new_group+'"]');
-					
-					if ( cell.length < 1 ) return;
-					
-					if ( cell.attr('sort') == 'OrderNum' )
-					{
-						oldCard.remove();
 
-                        var appendCard = cell.find('.append-card');
-                        if ( appendCard.length > 0 ) {
-                            newCard.insertBefore(appendCard);
-                        }
-                        else {
-                            newCard.appendTo(cell);
-                        }
+				if ( !itemFound ) {
+					if ( jNewColumnGroup.length < 1 ) return;
+
+					if ( jNewColumnGroup.attr('sort') == 'OrderNum' ) {
+						oldCard.remove();
+						newCard.appendTo(jNewColumnGroup);
 					}
-					else
-					{
-						if ( oldCard.length > 0 && new_more == old_more && new_group == old_group )
-						{
+					else {
+						if ( oldCard.length > 0 && new_more == old_more && new_group == old_group ) {
 							oldCard.replaceWith(newCard);
 						}
-						else
-						{
+						else {
 							oldCard.remove();
-                            newCard.prependTo(cell);
+							newCard.prependTo(jNewColumnGroup);
 						}
 					}
 				}
-
-				newCard.show().fadeTo('fast', 10);
 			});
 		},
 		initializeBoardItemCustom: function ( item, options ) {},
@@ -191,6 +174,7 @@ var draggableOptions = {
 			}
 		},
 		className: '',
+		entityRefName: '',
 		classUserName: '',
 		groupAttribute: '',
 		boardAttribute: 'State',
@@ -202,13 +186,20 @@ var draggableOptions = {
 		{
 			var width = this.getItemWidth();
 			$('.board-table:not(.board-size-xl) .list_cell '+this.itemCSSPath).each(function() {
-				$(this).width(width);
-				$(this).find('div.bi-cap, div.ca-field').width(width - 10);
+				if ( width != $(this).width() ) {
+					$(this).width(width);
+					$(this).find('div.bi-cap, div.ca-field').width(width);
+				}
+			});
+			$('.board-table .list_cell '+this.itemCSSPath).each(function() {
+				$(this).find('.label-tag .label').width(width - 36);
 			});
 			var width = $('.board-column').width() - 8;
 			$('.board-size-xl .list_cell '+this.itemCSSPath).each(function() {
-				$(this).width(width);
-				$(this).find('div.bi-cap, div.ca-field').width(width - 10);
+				if ( width != $(this).width() ) {
+					$(this).width(width);
+					$(this).find('div.bi-cap, div.ca-field').width(width);
+				}
 			});
 			$('.list_cell.board-size-mic '+this.itemCSSPath).css('width', '20px');
 			$('.board-size-mic .list_cell '+this.itemCSSPath).css('width', '20px');
@@ -284,24 +275,6 @@ function board( options )
 				$('.list_header:not(.board-size-mic)').attr('width',(100 / regCells.length) + '%');
 				$('.list_header.board-size-mic').attr('width','');
 			}
-			var items = $(e.target).closest('a.group-collapse-cards');
-			if ( items.length ) {
-				var item = items.first();
-				var cell = $('.list_cell[group="'+item.attr('group')+'"]');
-				if ( cell.length > 0 ) {
-					var cookieId = item.parents('.board-table').attr('id') + "[size/row/"
-						+ item.attr('group').trim() + "]";
-					if ( cell.hasClass('board-size-mic') ) {
-						cell.removeClass('board-size-mic');
-						cookies.set(cookieId, null);
-					}
-					else {
-						cell.addClass('board-size-mic');
-						cookies.set(cookieId, "board-size-mic");
-					}
-					options.resizeCards();
-				}
-			}
 			if ( $(e.target).is(options.cellCSSPath) ) {
 				$('.board_item_body input[type=checkbox]').removeAttr('checked');
 				toggleBulkActions(e);
@@ -332,31 +305,16 @@ function boardMake( options )
 			var cell = $(this).is('.board-column') ? $(this).children('.list_cell') : $(this);
 			var methods = options.getMethodAttributes( item, cell );
 			
-			if ( item.attr("object") == "" )
-			{
-				$.each(methods, function(index,method) {
-					createBoardItem( item.attr("createItemURIParms"), options, method.data, function( objectid, options ) {
-						item.attr('object', objectid);
-						item.attr('lifecycle', 'created');
-						redrawBoardItem( objectid, options );
-						item.attr('object', "");
-					});
-				});
+			if ( $(event.target).is('.board_item') && !$(event.target).is($(item)) ) {
+				$(item).insertBefore($(event.target)).fadeTo('fast', 0.9);
 			}
-			else
-			{
-				if ( $(event.target).is('.board_item') && !$(event.target).is($(item)) ) {
-                    $(item).insertBefore($(event.target)).fadeTo('fast', 0.9);
-				}
-				else {
-                    $(item).prependTo($(event.target)).fadeTo('fast', 0.9);
-				}
-				processBoardActions(methods,item,options);
+			else {
+				$(item).prependTo($(event.target)).fadeTo('fast', 0.9);
 			}
+			processBoardActions(methods,item,options);
 		}
 	});
-	
-	$(".board_item").droppable( "option", "tolerance", "touch" );
+	$(".board_item").not('.board-item-actions-armed').droppable( "option", "tolerance", "touch" );
 
 	$(options.itemCSSPath).not('.board-item-actions-armed').each( function() {
 			$(this).dblclick( function(event) {
@@ -416,7 +374,6 @@ function processBoardActions( methods, item, options )
 
 function processActionResult( result, item, options ) 
 {
-	filterLocation.showActivity();
 	var resultObject = {};
 	try {
         resultObject = jQuery.parseJSON(result);
@@ -449,22 +406,6 @@ function processActionResult( result, item, options )
 			break;
 			
 		case 'denied':
-			$('#modal-form').parent().detach();
-			$('body').append( '<div id="modal-form" title="'+options.classUserName+'">'+
-					resultObject.description+'</div>' );
-
-			$('#modal-form').dialog({
-				width: 450,
-				modal: true,
-                closeText: "",
-				buttons: [
-					{
-						id: "buttonOk",
-						text: "Ok",
-						click: function() { $(this).dialog("close"); } }
-					]
-			});
-			
 			redrawBoardItem( item, options );
 			break;
 
@@ -498,7 +439,6 @@ function processActionResult( result, item, options )
 							create: function() 
 							{
 								workflowBuildDialog($(this),options);
-						        $(this).css("maxHeight", $(window).height() - 200);        
 						    },
 							beforeClose: function(event, ui) 
 							{
@@ -511,15 +451,15 @@ function processActionResult( result, item, options )
 							buttons: [
 								{
 									text: text('form-submit'),
-									id: options.className+'SubmitBtn',
+									id: options.entityRefName+'SubmitBtn',
 								 	click: function() {
 										var dialogVar = $(this);
 										
 										if ( !validateForm($('#modal-form form[id]')) ) return false;
 										
 										// submit the form
-										$('#'+options.className+'action').val('modify');
-										$('#'+options.className+'redirect').val(resultObject.url+'&Transition=');
+										$('#'+options.entityRefName+'action').val('modify');
+										$('#'+options.entityRefName+'redirect').val(resultObject.url+'&Transition=');
 
 										$('#modal-form').parent()
 											.find('.ui-button')
@@ -560,7 +500,7 @@ function processActionResult( result, item, options )
 								},
 								{
 									text: text('form-close'),
-									id: options.className+'CancelBtn',
+									id: options.entityRefName+'CancelBtn',
 									click: function() 
 									{
 										$(this).dialog('close');
@@ -575,11 +515,9 @@ function processActionResult( result, item, options )
 
 function initializeBoardItem( items, options )
 {
-	boardMake( options );
-
-	completeUIExt(items);
-	
+	completeUIControls(items);
 	options.initializeBoardItemCustom( items, options );
+	boardMake( options );
 }
 
 function modifyBoardItem( item, options, callback ) 
@@ -591,130 +529,10 @@ function modifyBoardItem( item, options, callback )
 	workflowModify({
 		form_url: item.attr("project") ? '/pm/'+item.attr("project") + options.itemFormUrl : options.itemFormUrl,
 		class_name: options.className,
-		entity_ref: options.className,
+		entity_ref: options.entityRefName,
 		object_id: objectid,
 		form_title: options.classUserName
 	}, "donothing");
-}
-
-function createBoardItem( query_string, options, data, callback ) 
-{
-	var base_url = options.itemFormUrl == '' ? filterLocation.location.toString() : options.itemFormUrl;
-	
-	var url = base_url;
-	var url_items = url.split('#');
-	
-	url = url_items[0]; 
-	
-	if ( url.indexOf('?') < 0 ) {
-		url += '?formonly=true';
-	}
-	else {
-		url += '&formonly=true';
-	}
-
-	url += '&'+options.className+'action=show&'+query_string+
-		'&form-mode=quick&entity='+options.className+'&'+options.className+'Id=';
-	url += '&screenWidth='+$(window).width();
-	 
-	filterLocation.showActivity();
-	
-	$.ajax({
-		type: "GET",
-		url: url,
-		dataType: "html",
-		async: true,
-		cache: false,
-		success: 
-			function(result) {
-				$('#modal-form').parent().detach();
-				$('body').append( '<div id="modal-form" style="display:none;" title="'+options.classUserName+'">'+
-					result+'</div>' );
-
-				$('form[id]').attr('action', url);
-
-				$('#'+options.className+'action').val('add');
-				$('#'+options.className+'redirect').val(url);
-				
-				$.each(data, function( key, value ) {
-					$('form[id]').append(
-						'<input type="hidden" name="'+key+'" value="'+value+'">');
-				});
-				
-				window.onbeforeunload = null;
-				
-				$('#modal-form').dialog({
-					width: Math.min(950, $(window).width()*2/3),
-					modal: true,
-					height: 'auto',
-					resizable: false,
-                    closeText: "",
-					open: function()
-					{
-						workflowMakeupDialog();
-					},
-					create: function() 
-					{
-				        $(this).css("maxHeight", $(window).height() - 200);      
-				    },
-					beforeClose: function(event, ui) {
-						return workflowHandleBeforeClose(event, ui);
-					},
-                    dragStart: function(event, ui) {
-                        workflowDragDialog(event, ui);
-                    },
-					buttons: [
-						{
-							text: text('form-submit'),
-							id: options.className+'SubmitBtn',
-						 	click: function() {
-								var dialogVar = $(this);
-								
-								if ( !validateForm($('#modal-form form[id]')) ) return false;
-								
-								$('#modal-form').parent()
-									.find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
-								
-								$('form[id]').ajaxSubmit({
-									dataType: 'html',
-									success: function( data ) 
-									{
-										try {
-											var object = jQuery.parseJSON(data);
-											workflowCloseDialog(dialogVar);
-											if ( typeof callback == 'function' ) {
-												callback( object.Id, options );
-											}
-										}
-										catch(e) {
-											var warning = $(data).find('.form_warning');
-											if (warning.length > 0) {
-												$('#modal-form').parent()
-													.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-
-												$('.form_warning').remove();
-												$('<div class="alert alert-error form_warning">' + warning.html() + '</div>').insertBefore($('form[id][class_name]'));
-											}
-										}
-									},
-									error: function( xhr )
-									{
-										$('#modal-form').parent()
-											.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-									}
-								});
-							}
-						},
-						{
-							text: text('form-close'),
-							click: function() {
-								$(this).dialog('close');
-							}
-						}
-					]
-				});
-			}
-	});
 }
 
 function redrawBoardItem( item, options )
@@ -769,8 +587,6 @@ function redrawBoardItem( item, options )
 				}
 
 				options.initializeBoardItem( $(itemSelectors.join(',')), options );
-				
-				filterLocation.hideActivity();
 			}
 	});
 }
@@ -811,7 +627,7 @@ function redrawBoardChanges( options )
 					var item = $(itemSelector);
 					if ( item.length < 1 ) return true;
 					if ( item.is("[modified]") ) {
-						if ( $(this).attr('modified') <= $(itemSelector).attr('modified') ) return true;
+						if ( $(this).attr('modified') <= item.attr('modified') ) return true;
 						itemSelectors.push(itemSelector);
 						items.push($(this));
 					}
@@ -819,12 +635,13 @@ function redrawBoardChanges( options )
 
                 jResult.find(".object-changed[object-id]").each( function(index, value) {
 					itemSelector = options.itemCSSPath+'[object="'+$(this).attr('object-id')+'"]';
-					if ( jResult.find(itemSelector).length < 1 ) {
+					var item = jResult.find(itemSelector);
+					if ( item.length < 1 ) {
 						$(itemSelector).remove();
 					}
 					else {
 						if ( $(itemSelector).length < 1 ) {
-							items.push(jResult.find(itemSelector));
+							items.push(item);
 							itemSelectors.push(itemSelector);
 						}
 					}
@@ -835,8 +652,6 @@ function redrawBoardChanges( options )
 				}
 
 				options.initializeBoardItem( $(itemSelectors.join(',')), options );
-				
-				filterLocation.hideActivity();
 			},
 		    complete: function(xhr, textStatus)
 		    {
@@ -844,6 +659,7 @@ function redrawBoardChanges( options )
                 if ( nativeResponse && xhr.responseText.indexOf('div') > -1 ) {
                     setTimeout( function() {
                         redrawBoardChanges(options);
+                        toggleBulkActions(null,1);
                     }, 300);
 				}
 		    }
@@ -866,7 +682,9 @@ function updateBoardHeaders( result, options )
         $('.board-table th .brd-head-details:eq('+index+')').html($(this).html());
     });
 	result.find('.board-table tr.info[group-id]').each( function(index, value) {
-		$('.board-table tr.info[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
+		var items = $('.board-table tr.info[group-id="'+$(this).attr('group-id')+'"]');
+		items.html($(this).html());
+		completeUIControls(items);
 	});
 	result.find('.board-table tr.row-basement[group-id]').each( function(index, value) {
 		$('.board-table tr.row-basement[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
@@ -878,6 +696,27 @@ function selectCards( column )
 	$('.list_cell .checkbox').attr('checked',false);
 	$('.list_cell[more=" '+column+'"] .checkbox').attr('checked',true);
 	toggleBulkActions();
+}
+
+function resizeCardsInGroup( group )
+{
+	var cell = $('.list_cell[group="'+group+'"]');
+	if ( cell.length < 1 ) return;
+
+	var cookieId = cell.parents('.board-table').attr('id') + "[size/row/" + group + "]";
+	if ( cell.hasClass('board-size-mic') ) {
+		cell.removeClass('board-size-mic');
+		cookies.set(cookieId, null);
+		$('[group-id="'+group+'"] .plus-minus-toggle').removeClass('collapsed');
+	}
+	else {
+		cell.addClass('board-size-mic');
+		cookies.set(cookieId, "board-size-mic");
+		setTimeout(function() {
+			$('[group-id="'+group+'"] .plus-minus-toggle').addClass('collapsed');
+		});
+	}
+	draggableOptions.resizeCards();
 }
 
 function setBoardSize( options, value )
@@ -894,7 +733,6 @@ function setBoardSize( options, value )
 //
 // Allows user to click and drag to scroll horizontally
 // Common usage:
-//     $("table").attachDragger();
 // --------------------------------------------------------------------------
 $.fn.attachDragger = function(){
     var attachment = false, lastPosition, position, difference;

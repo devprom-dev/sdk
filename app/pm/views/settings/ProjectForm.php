@@ -25,16 +25,6 @@ class ProjectForm extends SettingsFormBase
         $object->setAttributeEditable('ProjectKey', false);
     }
 
-    function buildModelValidator()
- 	{
- 		$validator = parent::buildModelValidator();
- 		
- 		$validator->addValidator( new ModelValidatorProjectCodeName() );
- 		$validator->addValidator( new ModelValidatorUnique(array('CodeName')) );
- 		
- 		return $validator;
- 	}
- 	
     function IsNeedButtonDelete()
     {
         return false;
@@ -96,20 +86,21 @@ class ProjectForm extends SettingsFormBase
         return array();
     }
 
-    function getRedirectUrl()
-	{
+    function getBodyTemplate() {
+        return "core/PageFormBody.php";
+    }
+
+    function getRedirectUrl() {
 		return '/pm/'.$this->getObjectIt()->get('CodeName').'/project/settings';
 	}
     
-    function getShortAttributes()
-    {
+    function getShortAttributes() {
         return array(
             'CodeName', 'StartDate', 'FinishDate', 'Importance', 'Language'
         );
     }
 
-    function getPageTitle()
-    {
+    function getPageTitle() {
         return text(2618);
     }
 }

@@ -2,16 +2,15 @@
 
 class LogsList extends StaticPageList
 {
-	function setupColumns()
-	{
-		$this->getObject()->addAttribute('Size', '', translate('Размер'), true);
-		
-		parent::setupColumns();
-		
-		$this->getObject()->setAttributeVisible('BackupFileName', true);
-		$this->getObject()->setAttributeVisible('Caption', false);
-	}
-	
+    function extendModel()
+    {
+        $this->getObject()->addAttribute('Size', '', translate('Размер'), true);
+        $this->getObject()->setAttributeVisible('BackupFileName', true);
+        $this->getObject()->setAttributeVisible('Caption', false);
+
+        parent::extendModel();
+    }
+
 	function drawCell( $object_it, $attr )
 	{
 		switch ( $attr )

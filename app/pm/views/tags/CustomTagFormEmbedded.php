@@ -1,5 +1,4 @@
 <?php
-
 include_once "TagFormEmbedded.php";
 
 class CustomTagFormEmbedded extends TagFormEmbedded

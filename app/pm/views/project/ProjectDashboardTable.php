@@ -17,11 +17,10 @@ class ProjectDashboardTable extends PMPageTable
         );
     }
 
-    function getFilterPredicates()
+    function getFilterPredicates( $values )
 	{
-	    $values = $this->getFilterValues();
 	    return array_merge(
-	        parent::getFilterPredicates(),
+	        parent::getFilterPredicates( $values ),
             array(
                 new ProjectStatePredicate($values['state'])
 	        )
@@ -48,5 +47,21 @@ class ProjectDashboardTable extends PMPageTable
         $filter->setType('singlevalue');
         $filter->setDefaultValue('active');
         return $filter;
+    }
+
+    function getImportActions() {
+        return array();
+    }
+
+    function getDetails()
+    {
+        $settings = parent::getDetails();
+        unset($settings['props']);
+        unset($settings['form']);
+        return $settings;
+    }
+
+    function getFilterIds() {
+	    return '';
     }
 }

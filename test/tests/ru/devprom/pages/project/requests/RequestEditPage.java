@@ -139,7 +139,7 @@ public class RequestEditPage extends RequestNewPage {
 	public void editEstimation(double estimation)
 	{
 		clickMainTab();
-		estimationEdit.clear();
+		//estimationEdit.clear();
 		estimationEdit.sendKeys(String.valueOf(estimation));
 	}
 
@@ -253,12 +253,11 @@ public class RequestEditPage extends RequestNewPage {
 		
 		estimationEdit.clear();
 		estimationEdit.sendKeys(String.valueOf(request.getEstimation()));
-		
-		if (!"".equals(request.getType())) setType(request.getType());
-		
+
 		if (!"".equals(request.getPriority())) (new Select(priorityList)).selectByVisibleText(request.getPriority());
 		editDescription(request.getDescription());
-	
+
+		if (!"".equals(request.getType())) setType(request.getType());
 	}
 
 	public void setType(String type)
@@ -395,6 +394,14 @@ public class RequestEditPage extends RequestNewPage {
 		driver.findElement(
 				By.xpath("//form//input[@value='requesttracemilestone']/following-sibling::div//input[contains(@id,'saveEmbedded')]")).click();
 	}
+
+    public void setSprint(String sprint){
+        clickDeadlinesTab();
+        driver.findElement(By.xpath("//*[@id='IterationText']")).sendKeys(sprint);
+		autocompleteSelect(sprint);
+
+
+    }
 
 	public void addRequirements(String requirements)
 	{

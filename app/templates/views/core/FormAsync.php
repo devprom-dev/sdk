@@ -1,7 +1,7 @@
 <?php if ( !$formonly ) $view->extend('core/PageBody.php'); else echo $scripts; ?>
 
 <?php if ( !$formonly ) { ?>
-<div class="pull-left <?=(count($sections) > 0 ? 'span8' : 'span12')?>">
+<div class="form-container pull-left <?=(count($sections) > 0 ? 'span8' : 'span12')?>">
 <?php } else { ?>
 <div style="margin: 10px 10px 0 10px;">
 <div id="result" class=""></div>
@@ -17,7 +17,8 @@
 		echo $view->render('core/PageSections.php', array(
 			'sections' => $sections,
 			'object_class' => $object_class,
-			'object_id' => $object_id 
+			'object_id' => $object_id,
+			'style_class' => 'right-side-tab'
 		));
 	?>
 </div>

@@ -39,7 +39,7 @@ class Form
 	
 	function Form( & $object, $dynamic_mode = false )
 	{
-		$this->object = $object;
+		$this->object = clone $object;
 		$this->readonly = false;
 		$this->dynamic_mode = $dynamic_mode;
 		$this->form_id = md5(get_class($this).microtime());
@@ -230,7 +230,11 @@ class Form
 				$this->redirect_url = $this->getRedirectUrl();
 		}	    
 	}
-	
+
+ 	function getValidators() {
+ 	    return array();
+ 	}
+
 	protected function persist()
 	{
         getFactory()->getEventsManager()->delayNotifications();
@@ -238,46 +242,25 @@ class Form
 		switch( $this->getAction() )
 		{
 		    case 'add':
-		    	
 			    unset($_REQUEST['RecordCreated']);
 			    unset($_REQUEST['RecordModified']);
 		    	
-				$mapper = new ModelDataTypeMapper();
-			    
-				$mapper->map($this->getObject(), $_REQUEST);
-				
-				$this->object_it = $this->object->getExact( 
-						$this->object->add_parms($_REQUEST)
-				);
-
+				$this->object_it = getFactory()->createEntity(
+				        $this->getObject(), $_REQUEST, $this->getValidators()
+                    );
 				$this->processEmbeddedForms( $this->object_it );
-		    	
 		    	break;
 		    	
 		    case 'modify':
-		    	
    			    unset($_REQUEST['RecordCreated']);
    			    unset($_REQUEST['RecordModified']);
-		    	
-				$mapper = new ModelDataTypeMapper();
-				
-				$mapper->map($this->getObject(), $_REQUEST);
-				
-				if ( $this->getObject()->modify_parms($this->object_it->getId(), $_REQUEST) < 1 )
-				{
-					return false;
-				}
 
-				$this->object_it = $this->object->getExact($this->object_it->getId());
-					
-				$this->processEmbeddedForms( $this->object_it );
-
+                getFactory()->modifyEntity($this->object_it, $_REQUEST, $this->getValidators());
+                $this->processEmbeddedForms( $this->object_it );
 				break;
 				
 		    case 'delete':
-
 		    	if ( $this->object->delete( $this->object_it->getId(), $_REQUEST['RecordVersion'] ) < 1 ) return false;
-		    	
 		    	break;
 		}
 
@@ -302,7 +285,7 @@ class Form
             if ( $embededClass == '' ) continue;
             if ( !class_exists($embededClass) ) continue;
 
-            $embedded = $this->getEmbeddedForm(getFactory()->getObject($embededClass));
+            $embedded = $this->getEmbeddedForm(getFactory()->getObject($embededClass)->getEmptyIterator());
             $embedded->extendModel();
             $embedded->process( $object_it, $e, $callback );
         }
@@ -462,7 +445,7 @@ class Form
                 echo json_encode(
                     array(
                         'Id' => $object_it->getId(),
-                        'Url' => $object_it->getViewUrl()
+                        'Url' => $object_it->getUidUrl()
                     )
                 );
                 exit();
@@ -472,7 +455,7 @@ class Form
 			exit(header('Location: '.$redirect_url));
 		}
 		else {
-			exit(header('Location: '.$object_it->getViewUrl() ));
+			exit(header('Location: '.$object_it->getUidUrl() ));
 		}
 	}
 	
@@ -525,17 +508,15 @@ class Form
 	
 	function show( $objectid )
 	{
-		if ( is_a($objectid, 'OrderedIterator') )
-		{
-			$this->setObjectIt( $objectid->copy() );
-		}
-		else
-		{
-			$this->setObjectIt( $objectid > 0 ? $this->object->getExact( $objectid ) : null );
-		}
-
 		$this->action = 'view';
 		$this->readonly = true;
+
+		if ( is_a($objectid, 'OrderedIterator') ) {
+			$this->setObjectIt( $objectid->copy() );
+		}
+		else {
+			$this->setObjectIt( $objectid > 0 ? $this->object->getExact( $objectid ) : null );
+		}
 	}
 
 	function getEditQueryString( $object_id )
@@ -668,9 +649,14 @@ class Form
 			
 		}
 	}
-	
+
+	function getFieldName( $field_name ) {
+	    return $this->object->getAttributeUserName($field_name);
+	}
+
 	function getFieldDescription( $field_name )
 	{
+	    if ( $this->getAction() == 'view' ) return '';
 		return $this->object->getAttributeDescription( $field_name );
 	}
 	
@@ -683,7 +669,7 @@ class Form
 		$value = is_object($object_it) && $object_it->count() > 0 
 			? ( array_key_exists($field, $_REQUEST)
 				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
-				: ($object_it->get_native( $field ) == '' && $this->getEditMode()  
+				: ($object_it->get_native( $field ) == '' && $this->getMode() == 'new'
 		  			? $this->getDefaultValue( $field ) 
 		  			: $object_it->get_native( $field ) 
 		  		   ) 
@@ -793,7 +779,7 @@ class Form
 
     			if ( $this->redirect_url != '' )
     			{
-					echo '<input id="'.$this->object->getEntityRefName().'redirect" type="hidden" name="redirect" value="'.$this->redirect_url.'">';
+					echo '<input id="'.$this->object->getEntityRefName().'redirect" type="hidden" name="redirect" value="'.htmlentities($this->redirect_url).'">';
 				}
 				
           		echo '</form>';
@@ -818,8 +804,6 @@ class Form
 	
 	function drawButtons()
 	{
-		global $model_factory;
-		
 		$buttons = array();
 		
 		if ( $this->checkAccess() && $this->has_buttons && !$this->readonly )
@@ -1013,6 +997,7 @@ class Form
         switch( $this->object->getAttributeType($name) )
         {
         	case 'text' :
+        	case 'wysiwyg' :
         		switch( strtolower($this->object->getAttributeDbType($name)) )
         		{
         		    case 'richtext':
@@ -1042,6 +1027,9 @@ class Form
         		break;
         	case 'char' :
         		$field = new FieldCheck($this->object->getAttributeUserName($name));
+    			if(isset($this->object_it)) {
+    			    $field->setObjectIt($this->object_it);
+    			}
         		break;
         	case 'color':
         		$field = new FieldColorPicker();
@@ -1068,9 +1056,8 @@ class Form
 	
     function createField( $name )
     {
-    	$field = $this->createFieldObject( $name );
-
-    	if( !is_object($field) ) return null;
+   	    $field = $this->createFieldObject( $name );
+       	if( !is_object($field) ) return null;
 
         if ( $field instanceof FieldDateTime || $field instanceof FieldDate ) {
         	$field->setId($this->object->getEntityRefName().$name.$this->getId());

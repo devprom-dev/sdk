@@ -2,11 +2,13 @@
 
 class WorkItemIterator extends StatableIterator
 {
+    private $objects = array();
+
     function getDisplayNameExt( $prefix = '' )
     {
-        if ( $this->get('DueDate') != '' && $this->get('DueWeeks') < 4 ) {
+        if ( $this->get('DueDate') != '' && $this->get('DueWeeks') > -3 && $this->get('DueWeeks') < 4 ) {
             $prefix .= '<span class="label '.($this->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'">';
-            $prefix .= $this->getDateFormatShort('DueDate');
+            $prefix .= $this->getDateFormattedShort('DueDate');
             $prefix .= '</span> ';
         }
 
@@ -14,7 +16,7 @@ class WorkItemIterator extends StatableIterator
 
         $priorityColor = parent::get('PriorityColor');
         if ( $priorityColor == '' ) $priorityColor = 'white';
-        $title = '<span class="pri-cir" style="color:'.$priorityColor.'">&#x26AB;</span>' . $title;
+        $title = '<span class="pri-cir" style="color:'.$priorityColor.'">&#x25cf;</span>' . $title;
 
         if ( $this->get('TagNames') != '' ) {
             $tags = array_map(function($value) {
@@ -29,7 +31,10 @@ class WorkItemIterator extends StatableIterator
     function getObjectIt()
     {
         $data = $this->getData();
-        $object = getFactory()->getObject($this->get('ObjectClass'));
+        if ( !is_object($this->objects[$this->get('ObjectClass')]) ) {
+            $this->objects[$this->get('ObjectClass')] = getFactory()->getObject($this->get('ObjectClass'));
+        }
+        $object = $this->objects[$this->get('ObjectClass')];
         $data[$object->getIdAttribute()] = $this->getId();
         return $object->createCachedIterator(array($data));
     }

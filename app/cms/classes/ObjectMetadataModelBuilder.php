@@ -61,7 +61,7 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 		{
 			$attributes['OrderNum'] = array (
 				'dbtype' => 'INTEGER',
-				'caption' => 'Номер',
+				'caption' => translate('Номер'),
 				'visible' => $entity_it->get('IsDictionary') == 'Y',
 				'stored' => true,
 				'type' => 'INTEGER',
@@ -75,34 +75,34 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 		// creation and modification dates
 		$attributes['RecordCreated'] = array (
 			'dbtype' => 'DATETIME',
-			'caption' => 'Дата создания',
+			'caption' => translate('Дата создания'),
 			'visible' => false,
 			'stored' => true,
 			'type' => 'DATETIME',
 			'description' => '',
 			'ordernum' => $latest += 10,
-			'origin' => ORIGIN_METADATA
+			'origin' => ORIGIN_METADATA,
+            'editable' => false
 		);
 
 		$attributes['RecordModified'] = array (
 			'dbtype' => 'DATETIME',
-			'caption' => 'Дата изменения',
+			'caption' => translate('Дата изменения'),
 			'visible' => false,
 			'stored' => true,
 			'type' => 'DATETIME',
 			'description' => '',
 			'ordernum' => $latest += 10,
-			'origin' => ORIGIN_METADATA
+			'origin' => ORIGIN_METADATA,
+            'editable' => false
 		);
 
 		foreach( $attributes as $key => $attribute ) {
 			$metadata->setAttribute( $key, $attribute );
 		}
 		foreach( array('RecordCreated', 'RecordModified') as $attribute ) {
-			$metadata->addAttributeGroup($attribute, 'non-form');
-		}
-		if ( $entity_it->get('IsDictionary') == 'Y' && array_key_exists('ReferenceName', $attributes) ) {
-			$metadata->addAttributeGroup('ReferenceName', 'alternative-key');
+			$metadata->addAttributeGroup($attribute, 'form-column-skipped');
+            $metadata->addAttributeGroup($attribute, 'additional');
 		}
     }
 }

@@ -15,27 +15,19 @@ class DictionaryItemForm extends PMPageForm
  		parent::extendModel();
  	}
  	
-	function buildModelValidator()
- 	{
- 		$validator = parent::buildModelValidator();
-
- 		if ( $this->getObject() instanceof RequestType )
- 		{
- 			$validator->addValidator( new ModelValidatorUnique(array('ReferenceName')) );
- 		}
- 		
- 		return $validator;
- 	}
- 	
  	function getFieldValue( $attr )
  	{
- 		switch($attr)
- 		{
+        $value = parent::getFieldValue( $attr );
+ 		switch($attr) {
  		    case 'HasIssues':
- 		    	$value = parent::getFieldValue( $attr );
  		    	return $value == '' ? 'Y' : $value;
+            case 'ReferenceName':
+                if ( $value == '' ) {
+                    return strtolower(get_class($this->getObject())) . $this->getObject()->getRecordCount();
+                }
+                return $value;
  		    default:
- 		    	return parent::getFieldValue( $attr );
+ 		    	return $value;
  		}
  	}
 }

@@ -88,7 +88,7 @@ if ( $searchMode ) {
                                 <?php if ( count($programs) > 0 ) {  ?>
                                     <?php foreach( $programs as $program_id => $program ) { ?>
                                         <div class="p-link p-node">
-                                            <i class="icon-briefcase"></i>
+                                            <i class="icon-folder-close"></i>
                                             <a href="<?=$program['url']?>"><?=$program['name']?></a>
                                         </div>
 
@@ -129,7 +129,7 @@ if ( $searchMode ) {
 
                                 if ( $searchMode ) {
                                     echo '<div style="padding:9px 0 9px 0;">';
-                                        echo '<a id="project-list-all" class="dashed embedded-add-button" href="#">'.text(2307).'</a>';
+                                        echo '<a id="project-list-all" class="dashed embedded-add-button">'.text(2307).'</a>';
                                     echo '</div>';
                                 }
 

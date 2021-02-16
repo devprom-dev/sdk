@@ -2,24 +2,21 @@
  
 class Error404Table extends CoPageTable
 {
- 	function getCaption()
- 	{
+ 	function getCaption() {
 		return getFactory()->getObject('SystemSettings')->getAll()->getDisplayName();
  	}
-	
-	function getRenderParms( $parms )
+
+    function getRenderParms( $parms )
     {
          global $plugins;
          
          $reasons = array();
 
-         if ( getSession()->getUserIt()->getId() == '' )
-         {
+         if ( getSession()->getUserIt()->getId() == '' ) {
              $reasons[] = str_replace('%url', '/login', text(1333));
          }
          
-         if ( $plugins->hasIncluded('eecoplugin') )
-         {
+         if ( $plugins->hasIncluded('eecoplugin') ) {
              $reasons[] = text(1333);
          }
          
@@ -31,14 +28,11 @@ class Error404Table extends CoPageTable
          ));
     }
      
-	function getTemplate()
-    {
-		if ( getSession()->getUserIt()->getId() > 0 )
-		{
+	function getTemplate() {
+		if ( getSession()->getUserIt()->getId() > 0 ) {
 			return 'co/Error404Table.php';	     
 		}
-		else
-		{
+		else {
 			return 'co/Error404TablePublic.php';	     
 		}
     }

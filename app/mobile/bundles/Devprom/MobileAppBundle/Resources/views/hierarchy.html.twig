@@ -1,0 +1,23 @@
+{% extends 'MobileAppBundle::base.html.twig' %}
+{% import "MobileAppBundle:Widgets:macros.html.twig" as macros %}
+
+{% block body -%}
+    <div class="app-page" mbsc-enhance style="display:none;">
+        <div class="app-tab app-tab-active app-tab-home">
+            <div class="app-header">
+                <h1>{{ header | raw }}</h1>
+            </div>
+
+            {% include "MobileAppBundle:Widgets:hamburger.html.twig" with {'tabs':tabs} %}
+
+            <div mbsc-form>
+                <ul class="hie-lv mbsc-cloak">
+                    {{ macros.hie_pages(pages) }}
+                    <li>
+                        <div class="reset wysiwyg">{{ content | raw }}</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

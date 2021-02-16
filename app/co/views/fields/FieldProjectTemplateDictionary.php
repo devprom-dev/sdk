@@ -2,7 +2,11 @@
 
 class FieldProjectTemplateDictionary extends FieldDictionary
 {
-	function getGroups()
+    function __construct() {
+        parent::__construct(getFactory()->getObject('pm_ProjectTemplate'));
+    }
+
+    function getGroups()
 	{
 		$groups = array();
 		
@@ -25,7 +29,7 @@ class FieldProjectTemplateDictionary extends FieldDictionary
 	{
 		$groups = array();
 
-		$template_it = getFactory()->getObject('pm_ProjectTemplate')->getRegistry()->Query(
+		$template_it = $this->getObject()->getRegistry()->Query(
 			array (
 				new SortAttributeClause('Kind.D'),
 				new SortAttributeClause('OrderNum')

@@ -16,15 +16,12 @@ class ChangeLogAggregatedRegistry extends ChangeLogRegistry
 	{
 		return array (
 			new GroupAttributeClause('FROM_UNIXTIME(ROUND(UNIX_TIMESTAMP(RecordModified) / 86400)*86400)'),
-			new GroupAttributeClause('Author'),
 			new GroupAttributeClause('SystemUser'),
-            new GroupAttributeClause('UserName'),
-			new GroupAttributeClause('Caption'),
+            new GroupAttributeClause('ChangeKind'),
+            new GroupAttributeClause('Author'),
 			new GroupAttributeClause('ObjectId'),
 			new GroupAttributeClause('ClassName'),
-			new GroupAttributeClause('EntityRefName'),
-			new GroupAttributeClause('VPD'),
-			new GroupAttributeClause('Transaction')
+			new GroupAttributeClause('VPD')
 		);
 	}
 

@@ -38,6 +38,7 @@ class SettingsController extends PageController
                 break;
 
 			case 'resettodefault':
+                $service->resetForAll();
 				$service->resetToDefault();
 				break;
 

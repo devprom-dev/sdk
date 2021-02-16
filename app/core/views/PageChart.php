@@ -1,21 +1,24 @@
 <?php
-
 include SERVER_ROOT_PATH."core/classes/FlotChartDataSource.php";
 include SERVER_ROOT_PATH."core/classes/schedule/DateYearWeekModelBuilder.php";
+include SERVER_ROOT_PATH."core/classes/schedule/DateYearQuarterModelBuilder.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartBarWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartLineWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartMultiLineWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartPieWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartBurndownWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartBurnupWidget.php";
+include_once SERVER_ROOT_PATH."core/views/charts/FlotChartDigits.php";
 
 class PageChart extends StaticPageList
 {
 	private $demo = false;
 
- 	function PageChart( $object ) 
+ 	function __construct( $object )
 	{
 		$builder = new DateYearWeekModelBuilder();
+        $builder->build($object);
+        $builder = new DateYearQuarterModelBuilder();
         $builder->build($object);
 
 		parent::__construct( $object );
@@ -29,32 +32,56 @@ class PageChart extends StaticPageList
 		return $this->demo;
 	}
 
-	function buildIterator()
+	function extendModel()
+    {
+        parent::extendModel();
+
+        $aggs = $this->getAggregates();
+        $aggregateAlias = '';
+        foreach ( $aggs as $agg ) {
+            $aggregateAlias = $agg->getAggregateAlias();
+        }
+        if ( count($aggs) > 1 ) {
+            $this->getObject()->addAttribute($aggregateAlias, 'VARCHAR', translate('Количество'), true);
+        }
+    }
+
+    function buildIterator()
 	{
 		$minSizeValuable = 1;
 
 		$object = $this->getObject();
 
-        $predicates = $this->getPredicates( $this->getFilterValues() );
-        $ids = $this->getIds();
+		$values = $this->getTable()->getPredicateFilterValues();
+        $predicates = $this->getPredicates($values);
+        $ids = $this->getIds($values);
+
         if ( count($ids) > 0 ) {
             $predicates[] = new FilterInPredicate($ids);
         }
         $predicates[] = new FilterVpdPredicate();
+
+        $plugins = getFactory()->getPluginsManager();
+        $plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getTable()->getSection()) : array();
+        foreach( $plugins_interceptors as $plugin ) {
+            $plugin->interceptMethodListGetPredicates( $this, $predicates, $values );
+        }
 
         foreach( $predicates as $predicate ) {
             $object->addFilter($predicate);
         }
 
 		$aggs = $this->getAggregates();
+        $aggregateAlias = '';
 		foreach ( $aggs as $agg ) {
 			$object->addAggregate( $agg );
+            $aggregateAlias = $agg->getAggregateAlias();
 		}
 
 	    if ( $this->getGroup() == 'history' )
 		{
 			$values = $this->getFilterValues();
-		    $object->addFilter(new FilterClusterPredicate($values['modifiedafter']));
+		    $object->addFilter(new FilterModifiedAfterPredicate($values['modifiedafter']));
 		    $it = $object->getAggregatedHistory( $object->getFilters() );
 		}
 		elseif ( count($aggs) > 0 )
@@ -67,6 +94,12 @@ class PageChart extends StaticPageList
 
         $aggby = $this->getAggregateBy();
 		$data = $it->getRowset();
+
+		if ( count($aggs) < 2 ) {
+            foreach( $data as $rowIndex => $row ) {
+                $data[$rowIndex][$aggby] = $row[$aggregateAlias];
+            }
+        }
 
 		if ( $this->getGroup() == 'history' )
 		{
@@ -286,30 +319,45 @@ class PageChart extends StaticPageList
 	function getLegendVisible()
 	{
 		$values = $this->getFilterValues();
-		
-		if ( $values['chartlegend'] != '' )
-		{
+		if ( $values['chartlegend'] != '' ) {
 			return $values['chartlegend'] != 'hide';
 		}
-		else
-		{
+		else {
 			return 'show';
 		}
 	}
 
 	function getTableVisible()
 	{
-		$values = $this->getFilterValues();
+	    if ( $_REQUEST['tableonly'] != '' ) return false;
 
-		if ( $values['chartdata'] != '' )
-		{
+		$values = $this->getFilterValues();
+		if ( $values['chartdata'] != '' ) {
 			return $values['chartdata'] != 'hide';
 		}
-		else
-		{
+		else {
 			return $this->getGroup() != 'history';
 		}
 	}
+
+	function getColumnsRef()
+    {
+        $columns = array();
+
+        $aggs = $this->getAggregates();
+        $alias = '';
+        foreach ( $aggs as $agg ) {
+            $columns[] = $agg->getAttribute();
+            $alias = $agg->getAggregateAlias();
+        }
+        $columns[] = $this->getAggregateBy();
+
+        if ( count($aggs) > 1 ) {
+            $this->getObject()->addAttribute($alias, 'VARCHAR', translate('Количество'), true);
+            $columns[] = $alias;
+        }
+        return $columns;
+    }
 	
 	function getColumnFields()
 	{
@@ -379,7 +427,7 @@ class PageChart extends StaticPageList
                 $name = $object->getAttributeUserName($field);
                 if ( $name != '' )
                 {
-                    $script = "javascript: filterLocation.setup( 'group=".$field."', 0 ); ";
+                    $script = "javascript: filterLocation.setup( 'group=".$field."', 1 ); ";
                     $groups[translate($name)] = array ( 'click' => $script, 'checked' => $used_group == $field );
                 }
             }
@@ -398,7 +446,7 @@ class PageChart extends StaticPageList
 
             if ( count($group_actions) > 0 )
             {
-                $script = "javascript: filterLocation.setup( 'group=history', 0 ); ";
+                $script = "javascript: filterLocation.setup( 'group=history', 1 ); ";
 
                 array_push( $group_actions,
                     array (),
@@ -424,7 +472,7 @@ class PageChart extends StaticPageList
         {
             $name = $object->getAttributeUserName( $field );
 
-            $script = "javascript: filterLocation.setup( 'aggby=".$field."', 0 ); ";
+            $script = "javascript: filterLocation.setup( 'aggby=".$field."', 1 ); ";
 
             $columns[translate($name)] = array(
                 'click' => $script, 'checked' => $filter_values['aggby'] == $field );
@@ -455,7 +503,7 @@ class PageChart extends StaticPageList
 
         foreach ( $fields as $key => $field )
         {
-            $script = "javascript: filterLocation.setup( 'aggregator=".$key."', 0 ); ";
+            $script = "javascript: filterLocation.setup( 'aggregator=".$key."', 1 ); ";
 
             $columns[translate($field)] = array(
                 'click' => $script, 'checked' => $filter_values['aggregator'] == $key );
@@ -474,7 +522,7 @@ class PageChart extends StaticPageList
 
         if ( count($column_actions) > 0 )
         {
-            $script = "javascript: filterLocation.setup( 'aggregator=none', 0 ); ";
+            $script = "javascript: filterLocation.setup( 'aggregator=none', 1 ); ";
 
             array_push( $column_actions,
                 array (),
@@ -499,21 +547,17 @@ class PageChart extends StaticPageList
         return $actions;
     }
 
-	function buildFilterActions( & $base_actions )
-	{
-	}
-
 	function getOptions( $filter_values )
     {
         $column_actions = array();
 
-        $script = "javascript: filterLocation.setup( 'chartlegend=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 0 ); ";
+        $script = "javascript: filterLocation.setup( 'chartlegend=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 1 ); ";
         array_push( $column_actions,
             array ( 'url' => $script, 'name' => translate('Отображать легенду'),
                 'checked' => $filter_values['chartlegend'] != 'hide', 'multiselect' => true )
         );
 
-        $script = "javascript: filterLocation.setup( 'chartdata=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 0 ); ";
+        $script = "javascript: filterLocation.setup( 'chartdata=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 1 ); ";
         array_push( $column_actions,
             array ( 'url' => $script, 'name' => translate('Отображать таблицу'),
                 'checked' => $filter_values['chartdata'] != 'hide', 'multiselect' => true )
@@ -525,29 +569,23 @@ class PageChart extends StaticPageList
 	{
 		$aggs = $this->getAggregates();
 	    
-	    if ( count($aggs) < 2 )
-		{
+	    if ( count($aggs) < 2 ) {
             $color_attribute = $aggs[0]->getAttribute();
-			switch ( strtolower($aggs[0]->getAggregate()) )
-			{
+			switch ( strtolower($aggs[0]->getAggregate()) ) {
 				case 'count':
                 case 'sum':
 				    $widget = new FlotChartPieWidget();
 					break;
-					
 				default:
 				    $widget = new FlotChartBarWidget();
 			}
 		}
-		else
-		{
+		else {
             $color_attribute = $aggs[1]->getAttribute();
-			if ( $this->getGroup() == 'history' )
-			{
+			if ( $this->getGroup() == 'history' ) {
 				$widget = new FlotChartLineWidget();
 			}
-			else
-			{
+			else {
 				$widget = new FlotChartBarWidget();
 			}
 		}
@@ -585,14 +623,15 @@ class PageChart extends StaticPageList
                 $colors[$state_it->getDisplayName()] = $state_it->get('RelatedColor');
                 $state_it->moveNext();
             }
-            $widget->setColors($colors);
+            $widget->setColors(array_reverse($colors));
         }
 		return $widget;
 	}
 	
 	function getStyle()
 	{
-		return 'height:420px;';
+		return ($_REQUEST['height'] > 0 ? 'height:' . ($_REQUEST['height']) . 'px;' : 'height:420px;')
+            . ($_REQUEST['width'] > 0 ? 'width:' . ($_REQUEST['width']) . 'px;' : 'width:100%;');
 	}
 
 	function buildData( $aggs ) {
@@ -681,7 +720,13 @@ class PageChart extends StaticPageList
             );
         }
 
-    	$chart_id = "chart".uniqid();
+        $chart_id = "chart".uniqid();
+
+        if ( $widget instanceof FlotChartDigits ) {
+            $widget->draw($chart_id);
+            return;
+        }
+
         $chartClass = $widget instanceof FlotChartPieWidget ? "" : "plot-wide";
         $chartStyle = $widget->getStyle() != "" ? $widget->getStyle() : $this->getStyle();
 	    

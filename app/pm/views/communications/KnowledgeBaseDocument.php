@@ -8,22 +8,20 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	{
 	    $document_it = $this->getObject()->getRootIt();
 	    
-	    if ( $document_it->getId() < 1 )
-	    {
+	    if ( $document_it->getId() < 1 ) {
 	    	$document_it = $this->getObject()->createCachedIterator( array (
-	    			array (
-	    					'WikiPageId' => 0
-	    			)
+                array (
+                    'WikiPageId' => 0
+                )
 	    	));
 		}
 	     
 	    return $document_it;
 	}
 	
-	function getPreviewPagesNumber()
-	{
-		return $_REQUEST['search'] != '' ? 0 : 1;
-	}
+    function getDefaultPagesNumber() {
+        return 1;
+    }
 
 	function getSectionName() {
 		return translate('Страница');
@@ -35,18 +33,17 @@ class KnowledgeBaseDocument extends PMWikiDocument
 		return parent::getNewActions();
 	}
 
-	function getList( $type = '', $iterator = null )
-	{
-	    $list = new KnowledgeBaseDocumentList( $this->getObject(), $iterator );
-	    
-	    $list->setInfiniteMode();
-	    
-	    return $list;
+	function getCompareToActions() {
+        return array();
+    }
+
+	function getList( $type = '', $iterator = null ) {
+	    return new KnowledgeBaseDocumentList( $this->getObject(), $iterator );
 	}
 	
 	function getFilters()
 	{
-		$filters = array();
+		$filters = PMPageTable::getFilters();
 
         $filters[] = new ViewSubmmitedAfterDateWebMethod();
         $filters[] = new ViewSubmmitedBeforeDateWebMethod();
@@ -54,37 +51,28 @@ class KnowledgeBaseDocument extends PMWikiDocument
         $filters[] = new ViewModifiedBeforeDateWebMethod();
 
 		$filters[] = $this->buildTagsFilter();
-		$filters[] = $this->buildViewModeFilter();
 		$filters[] = new FilterObjectMethod(
 				$this->getObject()->getAttributeObject('Author'), 
 				translate($this->getObject()->getAttributeUserName( 'Author' )) 
 			);
-		$filters[] = new FilterTextWebMethod( text(2087), 'search');
 
 		return $filters;
 	}
 
-	function getFiltersDefault()
-	{
-		return array('tag', 'search');
-	}
-	
 	function getActions()
 	{
         $actions = array();
-
         $actions[] = array(
             'name' => text(1373),
             'url' => getFactory()->getObject('Module')->getExact('attachments')->getUrl('class=ProjectPage')
         );
-        $actions[] = array();
 
+        $actions[] = array();
 		$actions = array_merge($actions, parent::getActions());
 
         $method = new ObjectCreateNewWebMethod($this->getObject());
-        if ( $method->hasAccess() )
+        if ( !getSession()->getProjectIt()->IsPortfolio() && $method->hasAccess() )
         {
-            $method->setRedirectUrl("''");
             $actions['import'] = array(
                 'name' => translate('Импортировать'),
                 'url' => $method->getJSCall(array('view' => 'importdoc'), translate('Импорт'))
@@ -96,10 +84,20 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	}
 
     function getDocumentsModuleIt() {
-        return $this->getListViewWidgetIt();
+        return getFactory()->getObject('Module')->getEmptyIterator();
     }
 
     function getListViewWidgetIt() {
         return getFactory()->getObject('PMReport')->getExact('knowledgebaselist');
+    }
+
+    function getRenderParms($parms)
+    {
+        return array_merge(
+            parent::getRenderParms($parms),
+            array(
+                'registry_title' => translate('Новости')
+            )
+        );
     }
 }

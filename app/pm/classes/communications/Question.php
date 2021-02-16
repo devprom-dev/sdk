@@ -13,7 +13,7 @@ class Question extends MetaobjectStatable
 	}
 
 	function getPage() {
-		return getSession()->getApplicationUrl().'project/question?';
+		return getSession()->getApplicationUrl($this).'project/question?';
 	}
 	
 	function getDefaultAttributeValue( $attribute )

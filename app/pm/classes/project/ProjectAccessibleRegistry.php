@@ -5,11 +5,13 @@ class ProjectAccessibleRegistry extends ObjectRegistrySQL
 {
 	public function getFilters()
 	{
-		return array_merge(
-				parent::getFilters(),
-				array (
-						new ProjectAccessibleVpdPredicate()
-				)
+	    $filters = array_filter(parent::getFilters(), function($item) {
+            return !$item instanceof FilterVpdPredicate && !$item instanceof FilterBaseVpdPredicate;
+        });
+		return array_merge( $filters,
+            array (
+                new ProjectAccessibleVpdPredicate()
+            )
 		);
 	}
 }

@@ -50,7 +50,7 @@ class JobPage extends AdminPage
 		}
 	}
 
-	function getForm()
+	function getEntityForm()
 	{
 		if ( is_object($this->job_it) && $this->job_it->count() > 0 )
 		{

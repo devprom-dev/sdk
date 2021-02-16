@@ -6,16 +6,16 @@
 <?php $view['slots']->stop(); ?>
     
 		    <div class="span12">
-			<div class="row-fluid" style="min-height: 45px;">
+			<div class="row-fluid" style="min-height: 39px;">
 			    <div class="span8">
 					<section id="functional-group-selector">
 					</section><!-- end #functional-group-selector -->
 				</div>
 				<div class="span4">
-					<a id="close-btn" class="pull-right btn btn-secondary" href="<?=$close_url?>"><?=translate('Закрыть')?></a>
+					<a id="close-btn" class="pull-right btn btn-secondary" href="<?=$close_url?>" style="margin-right:15px;"><?=translate('Закрыть')?></a>
 					<?php if ( $share_url != '' ) { ?>
 						<span class="pull-right span1"></span>
-						<a id="close-btn" class="pull-right btn btn-danger" href="<?=$share_url?>"><?=text(1909)?></a>
+						<a id="menu-save-all-btn" class="pull-right btn btn-danger" href="<?=$share_url?>"><?=text(1909)?></a>
 					<?php } ?>
 				</div>
 			</div>
@@ -25,7 +25,7 @@
 				</div>
 			<?php } ?>
 			<div class="row-fluid">
-			    <section id="menu-configurator">
+			    <section id="menu-configurator" class="form-container" style="padding-right: 15px;">
 					<table class="table table-bordered">
 						<tr>
 							<th width="30%">

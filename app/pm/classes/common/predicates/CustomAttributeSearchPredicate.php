@@ -2,14 +2,6 @@
 
 class CustomAttributeSearchPredicate extends FilterPredicate
 {
-	private $attributes = array();
-	
-	function __construct( $phrase, $attributes )
-	{
-		$this->attributes = $attributes;
-		parent::__construct($phrase);
-	}
-	
  	function _predicate( $filter )
  	{
 		$clauses = array();

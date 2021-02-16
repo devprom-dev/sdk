@@ -95,8 +95,7 @@ class WorkflowService
             array_merge( $parms,
                 array(
                     'Transition' => $transition_it->getId(),
-                    'TransitionComment' => $comment,
-                    'WasRecordVersion' => $object_it->get('RecordVersion')
+                    'TransitionComment' => $comment
                 )
             )
         );
@@ -119,13 +118,14 @@ class WorkflowService
 
 	static function getImage( $stateObject )
     {
-        $uml = "@startuml".PHP_EOL."scale max 2048 width".PHP_EOL;
-
+        $uml = "";
         $state_it = $stateObject->getRegistry()->Query(
             array(
                 new \FilterBaseVpdPredicate()
             )
         );
+        if ( $state_it->count() < 1 ) return '';
+
         while( !$state_it->end() ) {
             $uml .= "state " . '"' . $state_it->getDisplayName() . '" as ' . $state_it->get('ReferenceName') . PHP_EOL;
             $state_it->moveNext();
@@ -147,12 +147,8 @@ class WorkflowService
             }
             $state_it->moveNext();
         }
-        $uml .= "@enduml";
 
-        $url = trim(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : 'http://plantuml.com', "/ ");
-        $url .= '/plantuml/img/'.encode64(gzdeflate($uml, 9));
-
-        return '<img class="workflow-image" src="'.$url.'">';
+        return '<img class="workflow-image" src="'.\TextUtils::getPlantUMLUrl($uml).'">';
     }
 	
 	private $object = null;

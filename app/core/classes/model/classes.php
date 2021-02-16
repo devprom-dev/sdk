@@ -1,12 +1,13 @@
 <?php
-
 include SERVER_ROOT_PATH.'core/classes/analytics/FeatureTouch.php';
+include SERVER_ROOT_PATH."core/classes/system/ZipSystem.php";
 include SERVER_ROOT_PATH.'core/classes/licenses/License.php';
 include SERVER_ROOT_PATH.'core/classes/licenses/LicenseState.php';
 include SERVER_ROOT_PATH.'core/classes/licenses/LicensePermission.php';
 include SERVER_ROOT_PATH.'core/classes/maintenance/Update.php';
 include SERVER_ROOT_PATH.'core/classes/mail/MailerSettings.php';
 include SERVER_ROOT_PATH.'core/classes/mail/SmtpEncryptionMode.php';
+include SERVER_ROOT_PATH.'core/classes/mail/EmailQueue.php';
 include SERVER_ROOT_PATH.'core/classes/user/User.php';
 include SERVER_ROOT_PATH.'core/classes/user/UserActive.php';
 include SERVER_ROOT_PATH.'cms/c_check_question.php'; 
@@ -14,7 +15,8 @@ include SERVER_ROOT_PATH.'core/classes/schedule/DateYear.php';
 include SERVER_ROOT_PATH.'core/classes/schedule/DateMonth.php'; 
 include SERVER_ROOT_PATH.'core/classes/schedule/DateWeekday.php';
 include SERVER_ROOT_PATH.'core/classes/schedule/DateYearWeek.php';
-include SERVER_ROOT_PATH.'core/classes/versioning/Snapshot.php'; 
+include SERVER_ROOT_PATH.'core/classes/schedule/DateYearQuarter.php';
+include SERVER_ROOT_PATH.'core/classes/versioning/Snapshot.php';
 include SERVER_ROOT_PATH.'core/classes/versioning/SnapshotFilter.php'; 
 include SERVER_ROOT_PATH.'core/classes/versioning/SnapshotItem.php'; 
 include SERVER_ROOT_PATH.'core/classes/versioning/SnapshotItemValue.php'; 
@@ -26,14 +28,14 @@ include SERVER_ROOT_PATH.'core/classes/system/SystemSettings.php';
 include SERVER_ROOT_PATH.'core/classes/UserSettings.php'; 
 include SERVER_ROOT_PATH.'core/classes/schedule/Calendar.php'; 
 include SERVER_ROOT_PATH.'core/classes/history/ChangeLogEntitySet.php'; 
-include SERVER_ROOT_PATH.'co/classes/c_scheduled_job.php'; 
+include SERVER_ROOT_PATH.'co/classes/CoScheduledJob.php';
 include SERVER_ROOT_PATH.'core/classes/Priority.php';
 include SERVER_ROOT_PATH.'core/classes/widgets/Script.php'; 
 include SERVER_ROOT_PATH.'core/classes/widgets/StyleSheet.php'; 
 include SERVER_ROOT_PATH.'core/classes/widgets/Module.php'; 
 include SERVER_ROOT_PATH.'core/classes/widgets/ModuleCategory.php';
-include SERVER_ROOT_PATH.'core/classes/widgets/BulkAction.php'; 
-include SERVER_ROOT_PATH.'core/classes/Resource.php'; 
+include SERVER_ROOT_PATH.'core/classes/widgets/BulkAction.php';
+include SERVER_ROOT_PATH.'core/classes/Resource.php';
 include SERVER_ROOT_PATH.'core/classes/project/Project.php';
 include SERVER_ROOT_PATH.'core/classes/project/ProjectActive.php';
 include SERVER_ROOT_PATH.'core/classes/project/Program.php';
@@ -54,4 +56,5 @@ include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttribute.php';
 include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttributeValue.php';
 include_once SERVER_ROOT_PATH.'core/classes/user/Notification.php';
 include_once SERVER_ROOT_PATH.'core/classes/user/NotificationTrackingType.php';
+include_once SERVER_ROOT_PATH."core/methods/AutocompleteWebMethod.php";
 

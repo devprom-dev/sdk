@@ -57,12 +57,10 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 	
 	function getContent( $prev_object_it, $object_it )
 	{
-		$content = '';
 		$modified_attributes = array();
+		$modified_content = array();
 		
-		$attributes = $object_it->object->getAttributes();
-
-		foreach( $attributes as $att_name => $attribute ) 
+		foreach( $object_it->object->getAttributes() as $att_name => $attribute )
 		{
 		    if ( !$object_it->defined($att_name) || !$prev_object_it->defined($att_name) ) continue;
             if ( !$this->isAttributeVisible($att_name, $object_it, 'modify') ) continue;
@@ -75,15 +73,16 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 
             $content = translate($object_it->object->getAttributeUserName($att_name)).': ';
             $content .= $this->getAttributeContent($object_it, $att_name, $was_value, $now_value);
+            $modified_content[] = $content;
         }
 
-        return array($content, $modified_attributes);
+        return array(join($modified_content, '<br/>'), $modified_attributes);
 	}
 
 	protected function getValue( $objectIt, $attribute )
     {
         if ( $objectIt->object->getAttributeType($attribute) == 'date' ) {
-            return getSession()->getLanguage()->getDateFormattedShort($objectIt->get($attribute));
+            return $objectIt->getDateFormattedShort($attribute);
         }
         elseif ( $objectIt->object->getAttributeType($attribute) == 'datetime' ) {
             return getSession()->getLanguage()->getDateTimeFormatted($objectIt->get($attribute));
@@ -91,8 +90,11 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
         elseif ( $objectIt->object->IsReference($attribute) ) {
             return html_entity_decode($objectIt->getRef($attribute)->getDisplayName());
         }
+        elseif ( $objectIt->object->getAttributeType($attribute) == 'wysiwyg' ) {
+            return $objectIt->getHtmlDecoded($attribute);
+        }
         else {
-            $value = $objectIt->getHtmlDecoded($attribute);
+            $value = $objectIt->get($attribute);
 
             if ( $value == 'Y' ) $value = translate('Да');
             if ( $value == 'N' ) $value = translate('Нет');
@@ -135,6 +137,7 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		$parms['VisibilityLevel'] = $visibility;
 		$parms['SystemUser'] = $userId;
         $parms['UserName'] = $userIt->getHtmlDecoded('Caption');
+        if ( $object_it->get('VPD') != '' ) $parms['VPD'] = $object_it->get('VPD');
 		if ( $parms['AccessClassName'] == '' ) $parms['AccessClassName'] = $parms['ClassName'];
 
 		$id = $change_log->add_parms($parms);
@@ -179,10 +182,9 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 				if ( $object_it->object->getAttributeType( $attribute_name ) == 'password' ) return false;
 
 				$attributes = $this->getSystemAttributes($object_it);
-
 				if ( in_array($attribute_name, $attributes) ) return false;
-				
-				return $object_it->object->IsAttributeVisible( $attribute_name ) && $object_it->object->IsAttributeStored($attribute_name);
+
+				return $object_it->object->IsAttributeStored($attribute_name);
 		}
 	}
 }

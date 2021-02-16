@@ -21,5 +21,9 @@ class ObjectTemplateList extends PMPageList
 	{
 		parent::drawCell( $object_it, $attr );			
 	}
+
+	function getForm($object_it) {
+         return new DictionaryItemForm($this->getObject());
+    }
 }
  

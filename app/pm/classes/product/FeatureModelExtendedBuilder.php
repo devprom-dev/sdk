@@ -1,6 +1,7 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include "persisters/FeatureRequestPersister.php";
+include "persisters/FeatureProgressPersister.php";
 
 class FeatureModelExtendedBuilder extends ObjectModelBuilder 
 {
@@ -8,7 +9,6 @@ class FeatureModelExtendedBuilder extends ObjectModelBuilder
     {
     	if ( $object->getEntityRefName() != 'pm_Function' ) return;
 
-		$object->addAttribute('CaptionShort', 'VARCHAR', text(2105), false, false, '', 10);
 		$object->addAttribute('Progress', '', translate('Прогресс'), false, false, '', 135);
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
@@ -16,7 +16,10 @@ class FeatureModelExtendedBuilder extends ObjectModelBuilder
 			$object->addAttribute('Fact', 'FLOAT', translate('Затрачено'), false, false, '', 137);
             $object->addAttributeGroup('Fact', 'hours');
 		}
-		$object->addPersister( new FeatureRequestPersister() );
+		if ( !getSession()->IsRDD() ) {
+            $object->addPersister( new FeatureRequestPersister() );
+            $object->addPersister( new FeatureProgressPersister() );
+        }
 
     	$module_it = getFactory()->getObject('Module')->getExact('dicts-featuretype');
 	    $object->setAttributeDescription('Type', 

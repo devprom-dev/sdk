@@ -11,7 +11,7 @@ class ProjectLogDetailsPage extends PMPage
  		return new ProjectLogDetailsTable( $this->getObject() );
  	}
  	
- 	function getForm() {
+ 	function getEntityForm() {
  		return null;
  	}
 

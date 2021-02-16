@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/views/ui/ObjectTraceFormEmbedded.php";
 
 class FieldTaskTrace extends FieldForm
@@ -8,8 +7,6 @@ class FieldTaskTrace extends FieldForm
  	
  	function FieldTaskTrace( $task_it, $trace, $writable = true )
  	{
- 		global $model_factory;
- 		
  		$this->object_it = $task_it;
  		$this->trace = $trace;
  		$this->writable = $writable;
@@ -43,17 +40,19 @@ class FieldTaskTrace extends FieldForm
  	
  	function getForm( & $trace )
 	{
-		return new ObjectTraceFormEmbedded( $trace, 'Task', $this->getName() );
+		$form = new ObjectTraceFormEmbedded( $trace, 'Task', $this->getName() );
+        $form->setTraceObject( getFactory()->getObject($this->trace->getObjectClass()) );
+        return $form;
 	}
 	
 	function drawBody( $view = null )
 	{
 		$this->setFilters( $this->trace );
+        $this->trace->disableVPD();
 		
  		$form = $this->getForm($this->trace);
  		$form->setTraceFieldName( $this->getName() );
- 		$form->setTraceObject( getFactory()->getObject($this->trace->getObjectClass()) );
- 			
+
 		$object_it = $this->getObjectIt();
  		if ( is_object($object_it) ) {
  			if ( !$this->getEditMode() ) {

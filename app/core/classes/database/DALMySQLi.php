@@ -81,7 +81,6 @@ class DALMySQLi extends DAL
                 );
             }
         }
-
         return $resultSet;
     }
 

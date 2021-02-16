@@ -1,5 +1,4 @@
 <?php
-
 namespace Devprom\ProjectBundle\Service\Navigation;
 
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaCommonBuilder.php";
@@ -25,8 +24,6 @@ class WorkspaceService
 		{
 			$nodes = array();
 
-			if ( !is_array($area['menus']) ) continue;
-			
 			foreach( $area['menus'] as $group )
 			{
 				$items = array();
@@ -49,7 +46,15 @@ class WorkspaceService
 						'nodes' => $items
 				);
 			}
-			
+
+            if ( !is_array($area['menus']) ) {
+                $nodes[] = array (
+                    'id' => '0',
+                    'title' => '',
+                    'nodes' => array()
+                );
+            }
+
 			$data[] = array(
 					'id' => $area['uid'],
 					'title' => \IteratorBase::wintoutf8($area['name']),
@@ -68,57 +73,30 @@ class WorkspaceService
 		$item = getFactory()->getObject('WorkspaceMenuItem');
 
 		// merge workspace
-		$workspace_it = $workspace->getRegistry()->Query( 
-					array (
-							new \FilterTextExactPredicate('UID', $data['id']),
-							new \FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
-							new \FilterBaseVpdPredicate()
-					)
+		$workspace_it = $workspace->getRegistry()->Merge(
+                array (
+                    'UID' => $data['id'],
+                    'SystemUser' => getSession()->getUserIt()->getId(),
+                    'Caption' => \IteratorBase::utf8towin($data['title']),
+                    'Icon' => $data['icon']
+                ),
+                array('UID', 'SystemUser')
 			);
-		
-		$parms = array (
-				'UID' => $data['id'],
-				'SystemUser' => getSession()->getUserIt()->getId(),
-				'Caption' => \IteratorBase::utf8towin($data['title']),
-				'Icon' => $data['icon']
-		);
 
-		if ( $workspace_it->getId() > 0 )
-		{
-			$workspace->modify_parms($workspace_it->getId(), $parms); 
-		}
-		else
-		{
-			$workspace_it = $workspace->getExact($workspace->add_parms($parms));
-		}
-		
 		// merge nodes
 		foreach( $data['menuNodes'] as $key => $node )
 		{
-			if ( $node['id'] == '' ) $data['menuNodes'][$key]['id'] = $node['id'] = $key;
+			if ( $node['id'] == '' ) $data['menuNodes'][$key]['id'] = $node['id'] = md5($key . microtime());
 			 
-			$menu_it = $menu->getRegistry()->Query(
-						array (
-								new \FilterAttributePredicate('Workspace', $workspace_it->getId()),
-								new \FilterTextExactPredicate('UID', $node['id'])
-						)
+			$menu_it = $menu->getRegistry()->Merge(
+                    array (
+                        'UID' => $node['id'],
+                        'Workspace' => $workspace_it->getId(),
+                        'Caption' => \IteratorBase::utf8towin($node['title'])
+                    ),
+                    array('UID', 'Workspace')
 				);
-			
-			$parms = array (
-					'UID' => $node['id'],
-					'Workspace' => $workspace_it->getId(),
-					'Caption' => \IteratorBase::utf8towin($node['title'])
-			);
 
-			if ( $menu_it->getId() > 0 )
-			{
-				$menu->modify_parms($menu_it->getId(), $parms); 
-			}
-			else
-			{
-				$menu_it = $menu->getExact($menu->add_parms($parms));
-			}
-			
 			// merge node items
 			if ( is_array($node['nodes']) )
 			{
@@ -127,29 +105,16 @@ class WorkspaceService
 					$uid = $node_item['report']['id'];
 					if ( $uid == '' ) continue;
 					
-					$item_it = $item->getRegistry()->Query(
-								array (
-										new \FilterAttributePredicate('WorkspaceMenu', $menu_it->getId()),
-										new \FilterTextExactPredicate('UID', $uid)
-								)
+					$item_it = $item->getRegistry()->Merge(
+                            array (
+                                'UID' => $uid,
+                                'ReportUID' => $node_item['report']['type'] == 'report' ? $uid : '',
+                                'ModuleUID' => $node_item['report']['type'] == 'module' ? $uid : '',
+                                'WorkspaceMenu' => $menu_it->getId(),
+                                'OrderNum' => $key + 1
+                            ),
+                            array('UID', 'WorkspaceMenu')
 						);
-					
-					$parms = array (
-							'UID' => $uid,
-							'ReportUID' => $node_item['report']['type'] == 'report' ? $uid : '',
-							'ModuleUID' => $node_item['report']['type'] == 'module' ? $uid : '',
-							'WorkspaceMenu' => $menu_it->getId(),
-							'OrderNum' => $key + 1 
-					);
-
-					if ( $item_it->getId() > 0 )
-					{
-						$item->modify_parms($item_it->getId(), $parms); 
-					}
-					else
-					{
-						$item_it = $item->getExact($item->add_parms($parms));
-					}
 				}
 			}
 		}
@@ -189,14 +154,14 @@ class WorkspaceService
 	public function storeReportToWorkspace( $report, $workspace_uid = FUNC_AREA_FAVORITES )
 	{
 		$workspaces = $this->getWorkspaces();
-		
+
 		foreach( $workspaces as $workspace_key => $workspace )
 		{
 			if ( $workspace['id'] != $workspace_uid ) continue;
 			
 			foreach( $workspace['menuNodes'] as $node_key => $node )
 			{
-				if ( $node['id'] != 'quick' ) continue;
+				if ( $node['id'] != 'quick' && $node['id'] != '0' ) continue;
 				
 				$item_found = false;
 				
@@ -280,15 +245,19 @@ class WorkspaceService
  	    	}
  	    	
  	        $area_menu_it->moveTo('Workspace', $area_it->getId());
- 	        if ( count($area_menu_it->get('items')) < 1 ) {
- 	            $area_it->moveNext();
- 	            continue;
+ 	    	$items = $area_menu_it->get('items');
+ 	        if ( count($items) < 1 ) {
+                $items[] = array(
+                    'uid' => 'quick',
+                    'name' => '',
+                    'nodes' => array()
+                );
  	        }
- 	        
- 	        $areas[$area_it->getId()] = array( 
+
+ 	        $areas[$area_it->getId()] = array(
  	            'name' => $area_it->getDisplayName(),
  	            'uid' => $area_it->getId(),
- 	            'menus' => $area_menu_it->get('items'),
+ 	            'menus' => $items,
  	            'icon' => $area_it->get('icon')
  	        );
  	        

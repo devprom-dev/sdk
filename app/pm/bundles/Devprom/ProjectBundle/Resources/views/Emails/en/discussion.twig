@@ -1,166 +1,21 @@
-<html>
-	<head>
-		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<title></title> 
-		<style>
-            html,
-            body{
-                margin: 0;
-                padding: 0;
-                background-color: white;
-                min-width: 600px;
-            }
-			div, p, span, strong, b, em, i, a, li, td { -webkit-text-size-adjust: none; }
-            a{
-                color: #0782c1;
-                text-decoration: none;
-            }
-            span{
-            	color: #0782c1;
-            }
-		</style>
-	</head>
-	<body>
-	<table cellpadding="0" cellspacing="0" border="0" width="100%" align="center" style="border-collapse: collapse; background: white;">
-		<tr>
-			<td>
-				<table cellpadding="0" cellspacing="0" border="0" width="600" align="center" style="border-collapse: collapse; background: white;">
-                    <tr>
-                        <td align="left" valign="top" height="20" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-                    </tr>
-                    <tr>
-                    	<td>
-        	            	<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #fff; border-radius: 4px 4px 0 0;">
-        	            		<tr>
-        							<td align="left" valign="top" width="600">
-        								<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; background: #fff;">
-        									<tr>
-                                                <td align="left" valign="top" >
-                                                    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
-                                                        <tr>
-                                                            <td align="left" valign="top" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, 'Nimbus Sans L', sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
-                                                                    {{ title | raw }}
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>        									
-        									<tr>
-        						            	<td align="left" valign="top"  style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, 'Nimbus Sans L', sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
-        						            		<a href="{{ url }}">{{ url }}</a>
-        						            	</td>
-        						            </tr>
-        						            <tr>
-        										<td align="left" valign="top" height="22"  style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        									</tr>
-        									{% for comment in comments %}
-        									<tr>
-        										<td align="left" valign="top" >
-        											<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; background-color: #c2c2c2; border-radius: 4px; overflow: hidden; width: 100%">
-        												<tr>
-        													<td align="left" valign="top" height="16" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        												</tr>
-        												<tr>
-        													<td align="left" valign="top" >
-        														<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;">
-        															<tr>
-        																<td align="left" valign="top" width="23" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        																<td align="left" valign="top" style="font-size: 16px; color: #fff; font-family: Helvetica, Arial, 'Nimbus Sans L', sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
-        																	{{ comment.author | raw }}
-        																</td>
-        																<td align="left" valign="top" width="170" style="text-align: right; font-size: 16px; color: #fff; font-family: Helvetica, Arial, 'Nimbus Sans L', sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: top;">
-        																	{{ comment.date }}
-        																</td>
-        																<td align="left" valign="top" width="23" style="font-size: 0px; line-height: 0;">[O-{{ comment.id }}]</td>
-        															</tr>
-        														</table>
-        													</td>
-        												</tr>
-        												<tr>
-        													<td align="left" valign="top" height="16" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        												</tr>
-        												<tr>
-        													<td align="left" valign="top" >
-        														<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;">
-        															<tr>
-        																<td align="left" valign="top" width="6" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        																<td align="left" valign="top">
-        																	<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; background-color: #f5f5f5;">
-        																		<tr>
-        																			<td align="left" valign="top" width="23" height="15" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        																		</tr>
-        																		<tr>
-        																			<td align="left" valign="top">
-        																				<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;">
-        																					<tr>
-																								<td align="left" valign="top" width="23">&nbsp;</td>
-        																						<td align="left" valign="top" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, 'Nimbus Sans L', sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
-        																	                        {{ comment.text | raw }}
-																									<p><a href="{{ comment.url }}">Reply</a></p>
-        																						</td>
-																								<td align="left" valign="top" width="23">&nbsp;</td>
-        																					</tr>
-        																				</table>
-        																			</td>
-        																		</tr>
-        																		<tr>
-        																			<td align="left" valign="top" width="23" height="15" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        																		</tr>
-        																	</table>
-        																</td>
-        																<td align="left" valign="top" width="2" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        															</tr>
-        														</table>
-        													</td>
-        												</tr>
-                    									<tr>
-                                                            <td align="left" valign="top" height="2" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-                                                        </tr>
-        											</table>
-        										</td>
-        									</tr>
-        									<tr>
-        										<td align="left" valign="top" height="10" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        									</tr>
-        									{% endfor %}
-        								</table>
-        							</td>
-        	            		</tr>
-								<tr>
-									<td align="left" valign="top" height="10" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-								</tr>
-        	            	</table>
-							{% if reason is not empty %}
-        			        <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #f5f5f5; border-radius: 4px 4px 4px 4px;">
-        			        	<tr>
-                                    <td align="left" valign="top" height="28" width="600" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td align="left" valign="top" width="600">
-        	                            <table cellpadding="0" cellspacing="0" width="100%" border="0">
-        	                            	<tr>
-        	                            	<td align="left" valign="top" width="33" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        		                            <td align="left" valign="top" style="font-size: 12px; color: #9c9c9c; font-family: Helvetica, Arial, 'Nimbus Sans L', sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none;">
-        		                            	{{ reason | raw }}
-        		                            </td>
-        		                            <td align="left" valign="top" width="50" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        	                            	</tr>
-        	                            </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="left" valign="top" height="28" width="600" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-                                </tr>
-                            </table>
-							{% endif %}
-                    	</td>
-                    </tr>
-                    <tr>
-                        <td align="left" valign="top" height="40" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-                    </tr>
-		        </table>
+{% extends 'email.base.twig' %}
+
+{% block title %}
+	{{ title | raw }}
+{% endblock %}
+
+{% block content %}
+	{% for comment in comments %}
+		<tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+			<td class="content-block" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+				{{ comment.text | raw }}
+				<p>&mdash; {{ comment.author | raw }}, {{ comment.date }}</p>
+				<p><a href="{{ comment.url }}">Reply</a></p>
 			</td>
 		</tr>
-	</table>
-    </body>
-</html>
+	{% endfor %}
+{% endblock %}
+
+{% block footer %}
+	{{ reason | raw }}
+{% endblock %}

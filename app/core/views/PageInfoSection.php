@@ -2,12 +2,12 @@
 
  class InfoSection
  {
- 	var $closable, $page, $async_load;
+ 	 private $page;
+ 	 private $async_load;
 	 private $placement = 'right';
  	
  	function InfoSection() 
  	{
- 		$this->closable = false;
  		$this->async_load = true;
  	}
 
@@ -24,11 +24,6 @@
  	function getAsyncLoad()
  	{
  	    return $this->async_load;
- 	}
- 	
- 	function setClosable( $closable = true )
- 	{
- 		$this->closable = $closable;
  	}
  	
  	function setPage( $page )
@@ -57,28 +52,15 @@
 	function drawBody() {
 	}
 
-	function Closeable()
-	{
-		return $this->closable;
-	}
-	
-	function draw() 
+	function draw()
 	{
 		$caption = $this->getCaption();
 		if ( $caption != '' )
 		{
-			$script = "closeInfoSection('".$this->getId()."');";
-			
 			echo '<div class=page_sub style="float:left;width:99%;">';
 				echo '<div style="float:left;">';
 					echo $this->getCaption().': ';
 				echo '</div>';
-				if ( $this->closable )
-				{
-					echo '<div style="float:right;">';
-						echo '<a style="text-decoration:none;" href="javascript: '.$script.'"><img style="margin:2px 2px 0 0;" src="/images/cross-mini.png"></a>';
-					echo '</div>';
-				}
 			echo '</div>';
 			echo '<div style="clear:both;"></div>';
 		}

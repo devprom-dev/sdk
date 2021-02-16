@@ -2,19 +2,18 @@
 
 class WatchingsList extends PMPageList
 {
- 	function getIterator() 
+    function extendModel()
+    {
+        parent::extendModel();
+        $this->getObject()->addAttribute('Object', '', translate('Объект'), true);
+    }
+
+    function getIterator()
  	{
 		return $this->object->getAllWatched( getSession()->getUserIt() );
 	}
 	
-	function getColumns()
-	{
-		$this->object->addAttribute('Object', '', translate('Объект'), true);
-		
-		return parent::getColumns();
-	}
-
-	function IsNeedToDisplay( $attr ) 
+	function IsNeedToDisplay( $attr )
 	{
 		return $attr == 'Object';
 	}

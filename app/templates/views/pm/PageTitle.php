@@ -9,7 +9,7 @@ $project_it = $session->getProjectIt();
 
 <div class="btn-toolbar title-toolbar">
     <div class="btn-group navbar-company">
-        <a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
+        <a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="">
             <i class="icon-white icon-align-justify"></i>&nbsp;
             <?php
                 if ( $project_navigation_parms['current_portfolio'] != $project_navigation_parms['current_project'] ) {
@@ -32,7 +32,7 @@ $project_it = $session->getProjectIt();
     if ( is_array($quickMenu) && count($quickMenu['items']) > 0 ) {
     ?>
     <div class="btn-group quick-btn">
-        <a id="<?=$quickMenu['id']?>" class="btn dropdown-toggle btn-sm <?=$quickMenu['button_class']?>" data-toggle="dropdown" href="#" title="<?=$quickMenu['description']?>">
+        <a id="<?=$quickMenu['id']?>" class="btn dropdown-toggle btn-sm <?=$quickMenu['button_class']?>" data-toggle="dropdown" href="" title="<?=$quickMenu['description']?>">
             <i class="<?=$quickMenu['icon']?>"></i>
         </a>
         <?php

@@ -8,9 +8,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.junit.Ignore;
-import org.openqa.selenium.By;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
@@ -18,26 +15,15 @@ import org.xml.sax.SAXException;
 import ru.devprom.helpers.Configuration;
 import ru.devprom.helpers.DataProviders;
 import ru.devprom.helpers.FileOperations;
-import ru.devprom.items.KnowledgeBase;
-import ru.devprom.items.ProductFunction;
 import ru.devprom.items.Project;
 import ru.devprom.items.Request;
 import ru.devprom.items.Requirement;
 import ru.devprom.items.Template;
-import ru.devprom.items.User;
 import ru.devprom.pages.CKEditor;
-import ru.devprom.pages.FavoritesPage;
-import ru.devprom.pages.LoginPage;
 import ru.devprom.pages.PageBase;
 import ru.devprom.pages.ProjectNewPage;
-import ru.devprom.pages.admin.ActivitiesPage;
-import ru.devprom.pages.admin.UsersListPage;
 import ru.devprom.pages.project.ProjectCommonSettingsPage;
 import ru.devprom.pages.project.SDLCPojectPageBase;
-import ru.devprom.pages.project.functions.FunctionNewPage;
-import ru.devprom.pages.project.functions.FunctionsPage;
-import ru.devprom.pages.project.kb.KBNewPage;
-import ru.devprom.pages.project.kb.KnowledgeBasePage;
 import ru.devprom.pages.project.requests.RequestEditPage;
 import ru.devprom.pages.project.requests.RequestNewPage;
 import ru.devprom.pages.project.requests.RequestViewPage;
@@ -46,7 +32,6 @@ import ru.devprom.pages.project.requirements.RequirementAddToBaselinePage;
 import ru.devprom.pages.project.requirements.RequirementChangesPage;
 import ru.devprom.pages.project.requirements.RequirementEditPage;
 import ru.devprom.pages.project.requirements.RequirementNewPage;
-import ru.devprom.pages.project.requirements.RequirementSaveVersionPage;
 import ru.devprom.pages.project.requirements.RequirementViewPage;
 import ru.devprom.pages.project.requirements.RequirementsImportPage;
 import ru.devprom.pages.project.requirements.RequirementsNewTypePage;
@@ -54,7 +39,6 @@ import ru.devprom.pages.project.requirements.RequirementsPage;
 import ru.devprom.pages.project.requirements.RequirementsTypesPage;
 import ru.devprom.pages.project.requirements.TraceMatrixPage;
 import ru.devprom.pages.project.settings.NewTextTemplatePage;
-import ru.devprom.pages.project.settings.ProjectMembersPage;
 import ru.devprom.pages.project.settings.TextTemplatesPage;
 import ru.devprom.pages.requirement.RequirementBasePage;
 
@@ -168,8 +152,8 @@ public class RequirementsTest extends ProjectTestBase {
 		rvp = nrp.createChild(childR);
 		FILELOG.info("Requirement created: "+childR.getId()+" : " + childR.getName());
 		rp = rvp.gotoRequirements();
-		rp.addColumn("ParentPage");
 		rp.showAll();
+		rp.showColumn("ParentPage");
 		rp.checkRequirement(parentR.getId());
 		rp.checkRequirement(childR.getId());
 		Requirement[] exportedRequirements = rp.exportToExcel(new String[]{"Родительская страница"});
@@ -178,7 +162,7 @@ public class RequirementsTest extends ProjectTestBase {
 		}
 		rp = rp.deleteSelected();
 		RequirementsImportPage irp = rp.clickImport();
-		irp.importRequirements(new File(Configuration.getDownloadPath()+"\\Реестр требований.xls"));
+		irp.importRequirements(new File(Configuration.getDownloadPath()+"\\Нереализованные требования.xls"));
 		rp = irp.gotoRequirements();
 		rp.showAll();
 		Requirement parentImported = rp.findRequirementByName(parentR.getName());
@@ -236,10 +220,13 @@ public class RequirementsTest extends ProjectTestBase {
 		FILELOG.info("Requirement created: "+testR.getId()+" : " + testR.getName());
 		Assert.assertEquals(rvp.readRequirementStatus(), "В работе");
 		rvp = rvp.completeRequirement();
+		driver.navigate().refresh();
 		Assert.assertEquals(rvp.readRequirementStatus(), "Готово");
 		rvp = rvp.signRequirement();
+		driver.navigate().refresh();
 		Assert.assertEquals(rvp.readRequirementStatus(), "Реализовано");
 		rvp = rvp.getBackRequirement(reason);
+		driver.navigate().refresh();
 		Assert.assertEquals(rvp.readRequirementStatus(), "В работе");
 	}
 	
@@ -458,107 +445,7 @@ public class RequirementsTest extends ProjectTestBase {
 		long bytes = rvp.getAttachmentSize(testR.getNumericId(), image.getName());
 		Assert.assertEquals(bytes, sourceImageSize, "Неверный размер файла приложения");
 	}
-	
-	/**This method will check saved version of the requirement */
-	@Test
-	public void saveVersionTest() {
-		
-		String content = "Изначальное содержание Требования";
-		String newContent = "Текст требования изменен на этот";
-		String version = "Версия 1";
-		
-		PageBase page = new PageBase(driver);
-		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
-				new Template(this.waterfallTemplateName));
-		SDLCPojectPageBase favspage = (SDLCPojectPageBase) page.gotoProject(webTest);
-		
-		//Create new Requirement
-		RequirementsPage rp = favspage.gotoRequirements();
-		RequirementNewPage nrp = rp.createNewRequirement();
-		Requirement testRequirement = new Requirement("TestR"+DataProviders.getUniqueString(), content);
-		RequirementViewPage rvp = nrp.create(testRequirement);
-		
-		//Save version
-		RequirementSaveVersionPage rsvp = rvp.saveVersion();
-		rvp = rsvp.saveVersion(version, "Первичная версия требования");
-		
-		//Edit current version
-		rvp.showBaseline(testRequirement.getName());
-		rvp.editContent(testRequirement.getClearId(), newContent);
-		
-		//Open saved version and read content
-		rvp.showVersion(version);
-		Assert.assertEquals(rvp.readSavedVersionContent(), content, "Не найдено исходное содержание Требования");
-		
-		
-	}
-		
 
-	/**This method creates Requirement, saves it's version, 
-	 * then creates Analyst user, that make changes in current version of the Requirement and saves the new version.
-	 * Then default user opens first version of the Requirement and compares it with the saved by Analyst */
-	@Test
-			public void checkChangesInVersionTest() {
-				
-		      //Test constants 
-		        String p = DataProviders.getUniqueString();
-				String content = "Изначальное содержание Требования";
-				String newContent = "Изначальное содержание плюс новый текст";
-				String version1 = "Итерация 1";
-				String version2 = "Итерация 2";
-				User analyst = new User("Analyst"+p, "1", "Analyst"+p, "analyst"+p+"@mail.com", false, true);
-				Requirement testRequirement = new Requirement("TestR"+p, content);
-				
-				//Creating Analyst and making him the member of the project
-				PageBase page = new PageBase(driver);
-				ActivitiesPage ap = page.goToAdminTools();
-				UsersListPage ulp = ap.gotoUsers();
-				ulp = ulp.addNewUser(analyst, false);
-				
-				Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
-						new Template(this.waterfallTemplateName));
-				SDLCPojectPageBase favspage = (SDLCPojectPageBase) ulp.gotoProject(webTest);
-				ProjectMembersPage pmp = favspage.gotoMembers();
-				
-				pmp = pmp.gotoAddMember().addUserToProject(analyst, "Аналитик", 10, "");
-				
-				//Create a Requirement
-				RequirementsPage rp = pmp.gotoRequirements();
-				RequirementNewPage nrp = rp.createNewRequirement();
-				RequirementViewPage rvp = nrp.create(testRequirement);
-				FILELOG.debug("Created Requirement " + testRequirement.getId());
-				//Save version
-				RequirementSaveVersionPage rsvp = rvp.saveVersion();
-				rvp = rsvp.saveVersion(version1, "Первичная версия требования");
-				
-				//Login as Analyst
-				LoginPage lp = rvp.logOut();
-				FavoritesPage fp = lp.loginAs(analyst.getUsername(), analyst.getPass());
-				favspage = (SDLCPojectPageBase) fp.gotoProject(webTest);
-				
-				//Change the Requirement's content and save the new version
-				rp = favspage.gotoRequirements();
-				rvp = rp.clickToRequirement(testRequirement.getId());
-				rvp = rvp.editContent(testRequirement.getClearId(), newContent);
-				rsvp = rvp.saveVersion();
-				rvp = rsvp.saveVersion(version2, "Версия Аналитика");
-				
-				//Login as a default user
-				lp = rvp.logOut();
-				fp = lp.loginAs(Configuration.getUsername(), Configuration.getPassword());
-				favspage = (SDLCPojectPageBase) fp.gotoProject(webTest);
-				
-				//Compare the Requirement's versions
-				rp = favspage.gotoRequirements();
-				rvp = rp.clickToRequirement(testRequirement.getId());
-				rvp = rvp.showVersion(version1);
-				rvp = rvp.compareWithVersion(version2);
-				Assert.assertEquals(rvp.getAddedText(), "плюс новый текст", "Удаленный текст не соответствует ожиданиям");
-				Assert.assertEquals(rvp.getRemovedText(), "Требования", "Добавленный текст не соответствует ожиданиям");
-	}
-		
-	
-				
 	/**This method creates Requirement,add it's to Baseline without making a copy. 
 	 * Then checks that the Requirement is shown in Baseline
 	 *  */
@@ -578,7 +465,7 @@ public class RequirementsTest extends ProjectTestBase {
 		
 		//Add To Baseline
 		RequirementAddToBaselinePage ratb = rvp.addToBaseline();
-		rvp = ratb.addToBaseline(testRequirement, "Бейзлайн один", "Тестовое добавление в бейзлайн без создания копии", false, "", "");
+		rvp = ratb.Submit(testRequirement, "Бейзлайн один", "Тестовое добавление в бейзлайн без создания копии");
 		Assert.assertEquals(rvp.readCurrentBaseline(), "Бейзлайн один","Нет пометки о принадлежности к бейзлайну");
 	}
 	
@@ -607,10 +494,13 @@ public class RequirementsTest extends ProjectTestBase {
 		//Add To Baselines 
 		RequirementAddToBaselinePage ratb = rvp.addToBaseline();
 		Requirement testRequirementBaseline1 = testRequirement.clone();
-		rvp = ratb.addToBaseline(testRequirementBaseline1, baseline1);
-		ratb = rvp.addToBaseline();
+		rvp = ratb.Submit(testRequirementBaseline1, baseline1);
+		driver.navigate().refresh();
+
+		ratb = rvp.makeBranch();
 		Requirement testRequirementBaseline2 = testRequirement.clone();
-		rvp = ratb.addToBaseline(testRequirementBaseline2, baseline2);
+		rvp = ratb.Submit(testRequirementBaseline2, baseline2);
+		driver.navigate().refresh();
 		
 		//Do changes in Baseline 1
 		rvp = rvp.showBaseline(baseline1);
@@ -673,9 +563,9 @@ public class RequirementsTest extends ProjectTestBase {
 		rep.saveChanges();
 		
 		//Add Requirement to Baseline
-		RequirementAddToBaselinePage ratb = rvp.addToBaseline();
+		RequirementAddToBaselinePage ratb = rvp.makeBranch();
 		Requirement testRequirementBaseline1 = testRequirement.clone();
-		rvp = ratb.addToBaseline(testRequirementBaseline1, baseline1);
+		rvp = ratb.Submit(testRequirementBaseline1, baseline1);
 		
 		//Read Properties
 		RequirementEditPage rpp = rvp.editRequirement();
@@ -720,22 +610,21 @@ public class RequirementsTest extends ProjectTestBase {
 		rvp = rp.clickToRequirement(parentR.getId());
 		
 		//Save version
-		RequirementSaveVersionPage rsvp = rvp.saveVersion();
-		rvp = rsvp.saveVersion("Версия 1");
-		
+		RequirementAddToBaselinePage rsvp = rvp.addToBaseline();
+		rsvp.Submit(parentR, "Версия 1");
+
 		//Remove child Requirement
 		rp = rvp.gotoRequirements();
+		rp.showAll();
 		rp.checkRequirement(childR.getId());
 		rp = rp.deleteSelected();
 		
 		//Open parent Requirement
 		rvp = rp.clickToRequirement(parentR.getId());
-		rvp = rvp.compareWithVersion("Версия 1");
+		rvp = rvp.compareWithVersion("Начальный");
 		Assert.assertTrue(rvp.isTextPresent(childR.getName()), "Не найдено имя удаленного раздела");
 		Assert.assertTrue(rvp.isTextPresent(childR.getContent()), "Не найдено содержание удаленного раздела");
 	}
-	
-	
 
 	/**  S-1796
 	 *  */
@@ -779,27 +668,21 @@ public class RequirementsTest extends ProjectTestBase {
 		
 		//Add Requirement to Baseline
 		RequirementAddToBaselinePage ratb = rvp.addToBaseline();
-		rvp = ratb.addToBaseline(document, baseline1, "", false, "", "");
-		
-		//Save version
-		RequirementSaveVersionPage rsvp = rvp.saveVersion();
-		rvp = rsvp.saveVersion(version);
+		rvp = ratb.Submit(document, baseline1, "");
 
 		//Remove one of the child requirements
 		rp = rvp.gotoRequirements();
-		rp = rp.showAll();
+		rp.showAll();
 		rp.checkRequirement(childA.getId());
 		rp = rp.deleteSelected();
 		
 		//Add Document to another baseline
 		rvp = rp.clickToRequirement(document.getId());
-		ratb = rvp.addToBaseline();
-		List<String> versions = ratb.getVersionsList();
-		rvp = ratb.addToBaseline(document, baseline2, "", true, version, "");
+		rvp.selectInitialBaseline();
+		ratb = rvp.makeBranch();
+		rvp = ratb.Submit(document, baseline2, "");
 		
-		Assert.assertEquals(versions.size(), 2, "В списке должно быть две версии");
-	    Assert.assertTrue(rvp.isTextPresent(content), "Удаленный раздел не виден в новом бейзлайне");
-		
+		Assert.assertTrue(rvp.isTextPresent(content), "Удаленный раздел не виден в новом бейзлайне");
 	}
 		
 

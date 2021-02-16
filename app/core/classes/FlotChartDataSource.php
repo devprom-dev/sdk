@@ -12,7 +12,7 @@ class FlotChartDataSource
 			$agg_attr = $aggs[1]->getAttribute();
 			if ( $object->IsReference($agg_attr) ) {
 				$ref = $object->getAttributeObject( $agg_attr );
-				if ( $ref->entity->get('IsDictionary') == 'Y' ) {
+				if ( $ref->IsDictionary() ) {
 					$ref_it = $ref->getAll();
 				}
 				else {

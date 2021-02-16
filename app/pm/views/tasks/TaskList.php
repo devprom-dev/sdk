@@ -13,7 +13,7 @@ class TaskList extends PMPageList
  	var $has_grouping, $free_states;
 	private $planned_field = null;
     private $assigneeField = null;
- 	
+
 	function buildRelatedDataCache()
 	{
 		$it = $this->getIteratorRef();
@@ -37,9 +37,24 @@ class TaskList extends PMPageList
 		$this->getTable()->buildRelatedDataCache();
 
         if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Assignee') ) {
-            $this->assigneeField = new FieldReferenceAttribute($this->getObject()->getEmptyIterator(), 'Assignee');
+            $this->assigneeField = new FieldReferenceAttribute(
+                $this->getObject()->getEmptyIterator(),
+                'Assignee',
+                getFactory()->getObject('ProjectUser')
+            );
         }
 	}
+
+	function extendModel()
+    {
+        $attrs = $this->getObject()->getAttributes();
+        if ( array_key_exists( 'Planned', $attrs ) ) {
+            $this->getObject()->addAttribute( 'Progress', '', translate('Прогресс'), true );
+            $this->getObject()->addAttributeGroup('Progress', 'workload');
+        }
+
+        parent::extendModel();
+    }
 
     function getGroupObject() {
         $object = parent::getGroupObject();
@@ -47,36 +62,25 @@ class TaskList extends PMPageList
         return $object;
     }
 
-    function getColumns()
-	{
-		$attrs = $this->object->getAttributes();
-		
-		if ( array_key_exists( 'Planned', $attrs ) )
-		{
-			$this->object->addAttribute( 'Progress', '', translate('Прогресс'), false );
-			$this->object->addAttributeGroup('Progress', 'workload');
-		}
-		
-		return parent::getColumns();
-	}
-	
-	function getColumnFields()
-	{
-		$cols = parent::getColumnFields();
-
-		$cols[] = 'OrderNum';
-
-		return $cols;
-	}
-	
 	function getGroup()
 	{
 		$group = parent::getGroup();
-		if ( $group == 'AssigneeUser' ) return 'Assignee'; 
+		if ( $group == 'AssigneeUser' ) return 'Assignee';
+        if ( $group == 'TaskType' ) return 'TaskTypeBase';
 		return $group;
 	}
-	
-  	function IsNeedToSelect()
+
+    function getGroupFields()
+    {
+        $fields = parent::getGroupFields();
+
+        if ( $this->getObject()->hasAttribute('Requirement') ) {
+            $fields[] = 'Requirement';
+        }
+        return $fields;
+    }
+
+    function IsNeedToSelect()
 	{
 		return true;
 	}
@@ -178,17 +182,6 @@ class TaskList extends PMPageList
 	{
 		switch ( $group_field )
 		{
-			case 'Assignee':
-				$workload = $this->getTable()->getAssigneeUserWorkloadData();
-				if ( count($workload) > 0 )
-				{
-                    echo $this->getRenderView()->render('pm/UserWorkload.php', array (
-                        'user' => $object_it->getRef('Assignee')->getDisplayName(),
-                        'data' => $workload[$object_it->get($group_field)]
-                    ));
-				}				
-				break;
-				
 			default:
 				parent::drawGroup($group_field, $object_it);
 		}

@@ -22,17 +22,17 @@ class KnowledgeBaseTable extends PMWikiTable
 		return $filters;
 	}
 
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
     {
         return array_merge(
-            parent::getFilterPredicates(),
+            parent::getFilterPredicates( $values ),
             array(
                 new FilterAttributeNotNullPredicate('ParentPage')
             )
         );
     }
 
-    function getList( $mode = '' )
+    function getList( $mode = '', $iterator = null )
 	{
 		switch ( $mode )
 		{

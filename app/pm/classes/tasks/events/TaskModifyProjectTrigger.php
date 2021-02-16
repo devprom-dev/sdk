@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/classes/notificators/EntityModifyProjectTrigger.php';
 
 class TaskModifyProjectTrigger extends EntityModifyProjectTrigger
@@ -8,8 +7,8 @@ class TaskModifyProjectTrigger extends EntityModifyProjectTrigger
 	{
 		return $object_it->object->getEntityRefName() == 'pm_Task';
 	}
-	
-	protected function & getObjectReferences( & $object_it )
+
+    static function getObjectReferences( $object_it )
 	{
  	    // prepare list of objects to be serilalized
  	    $references = array();

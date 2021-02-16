@@ -3,14 +3,14 @@ include_once SERVER_ROOT_PATH . "pm/views/ui/PMDetailsList.php";
 
 class ProjectLogDetailsList extends PMDetailsList
 {
-	function setupColumns()
-	{
-		foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
-			if ( $attribute == 'Content' ) continue;
-			$this->getObject()->setAttributeVisible($attribute, false);
-		}
-		parent::setupColumns();
-	}
+    function extendModel()
+    {
+        foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
+            if ( $attribute == 'Content' ) continue;
+            $this->getObject()->setAttributeVisible($attribute, false);
+        }
+        parent::extendModel();
+    }
 
 	function drawCell( $object_it, $attr )
 	{
@@ -28,7 +28,7 @@ class ProjectLogDetailsList extends PMDetailsList
 					if ( $_REQUEST['action'] != 'commented' ) {
 						echo '<i class="'.$object_it->getIcon().' hidden-print" style="margin-right: 10px;"></i>';
 					}
-					echo $object_it->getDateFormatShort('RecordCreated').', '.$object_it->getTimeFormat('RecordCreated');
+					echo $object_it->getDateFormattedShort('RecordCreated').', '.$object_it->getTimeFormat('RecordCreated');
 
                     $method = new UndoWebMethod($object_it->get('Transaction'), $object_it->get('ProjectCodeName'));
                     if ( $method->hasAccess() && $this->last_transaction != $object_it->get('Transaction') ) {
@@ -36,6 +36,10 @@ class ProjectLogDetailsList extends PMDetailsList
                         $this->last_transaction = $object_it->get('Transaction');
                     }
                 echo '</div>';
+
+                $field = new FieldWYSIWYG();
+                $field->setObjectIt( $object_it );
+                $field->setValue( $object_it->get('Content') );
 				echo '<div>';
 					$anchor_it = $object_it->getObjectIt();
 					if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
@@ -44,15 +48,20 @@ class ProjectLogDetailsList extends PMDetailsList
                             $this->getUidService()->drawUidIcon($anchor_it);
                         }
 
-                        $field = new FieldWYSIWYG();
-                        $field->setObjectIt( $object_it );
-                        $field->setValue( $object_it->get('Content') );
                         $field->drawReadonly();
 
-                        echo $this->getRenderView()->render('core/CommentsIcon.php', array (
-                            'object_it' => $anchor_it,
-                            'redirect' => 'donothing'
-                        ));
+                        $method = new CommentWebMethod($anchor_it);
+                        if ( $method->hasAccess() ) {
+                            if ( preg_match('/O\-(\d+)\s/i', $object_it->get('Content'), $matches) ) {
+                                $commentId = $matches[1];
+                            }
+                            if ( $commentId > 0 ) {
+                                echo $this->getRenderView()->render('core/CommentsReplyIcon.php', array (
+                                    'objectIt' => $anchor_it,
+                                    'commentId' => $commentId
+                                ));
+                            }
+                        }
 					}
 					else {
 						if ( $anchor_it->getId() != '' )
@@ -72,6 +81,7 @@ class ProjectLogDetailsList extends PMDetailsList
 							echo $anchor_it->object->getDisplayName().': ';
 						}
 						parent::drawCell( $object_it, 'Caption' );
+                        $field->drawReadonly();
 					}
 				echo '</div>';
 			echo '</li>';
@@ -90,5 +100,9 @@ class ProjectLogDetailsList extends PMDetailsList
                 echo '<a href="'.$report_it->getUrl().'">'.text(2323).'</a>';
             echo '</div>';
         }
+    }
+
+    function getNoItemsMessage() {
+        return '';
     }
 }

@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-import org.openqa.selenium.By;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -99,7 +98,7 @@ public class TaskTest extends ProjectTestBase {
 		tvp.addTestDocumentation(testScenario.getName());
 		String testScenarioID = tvp.getLastActivityID('S');
 		mtp = tvp.gotoTasks();
-		mtp.addColumn("TestScenario");
+		mtp.showColumn("TestScenario");
 		Assert.assertEquals(mtp.getTaskProperty(testTask.getId(), "testscenario"),testScenarioID);
 		mtp.removeColumn("TestScenario");
 		
@@ -209,7 +208,11 @@ public class TaskTest extends ProjectTestBase {
 	 */
 	@Test(priority = 2)
 	public void massOperationsTest() {
-		TasksPage mtp = (new SDLCPojectPageBase(driver)).gotoTasks();
+		PageBase page = new PageBase(driver);
+		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
+				new Template(this.waterfallTemplateName));
+		SDLCPojectPageBase favspage = (SDLCPojectPageBase) page.gotoProject(webTest);
+		TasksPage mtp = favspage.gotoTasks();
 		RTask testTask1 = createTask();
 		RTask testTask2 = createTask(); 
 		mtp.showAll();
@@ -237,15 +240,19 @@ public class TaskTest extends ProjectTestBase {
 		PageBase page = new PageBase(driver);
 		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
 				new Template(this.waterfallTemplateName));
-		  page.gotoProject(webTest);
-		  RTask testTask = new RTask("TestTask"+DataProviders.getUniqueString(), user, RTask.getRandomType(), RTask.getRandomEstimation());
-		
-		TasksPage mtp = (new SDLCPojectPageBase(driver)).gotoTasks();
-		
-		//Create object for Task and set up all the properties
+		page.gotoProject(webTest);
+
+		RTask testTask = new RTask("TestTask"+DataProviders.getUniqueString(), user, RTask.getRandomType(), RTask.getRandomEstimation());
 		testTask.setIteration("0.1");
 		testTask.setPriority(RTask.getRandomPriority());
-		  
+
+		RTask previousTask = new RTask("PreviousTestTask"+DataProviders.getUniqueString(), user, RTask.getRandomType(), RTask.getRandomEstimation());
+		TasksPage mtp = (new SDLCPojectPageBase(driver)).gotoTasks();
+		TaskNewPage ntp = mtp.createNewTask();
+		ntp.createTask(previousTask);
+
+		//Create object for Task and set up all the properties
+
 		//Create document
 		DocumentsPage dp = (new SDLCPojectPageBase(driver)).gotoDocuments();
 		DocumentNewPage ndp = dp.clickNewDoc();
@@ -263,39 +270,40 @@ public class TaskTest extends ProjectTestBase {
 		testPlan.setContent("");
 		TestSpecificationViewPage tspecp = ntsp.create(testPlan);
 		
-		
 		TestScenario testScenario = new TestScenario("TestScenario"+DataProviders.getUniqueString());
 		TestScenarioViewPage tsvp = tspecp.addNewTestScenario(testScenario);
 		StartTestingPage stp = tsvp.beginTest();
-                TestScenarioTestingPage tstp = stp.startTest("0.1", "");
+		TestScenarioTestingPage tstp = stp.startTest("0.1", "");
 		String testResults = tstp.getTestRunId();
 		tstp.passTest(testScenario);
 		driver.navigate().refresh();
 		
 		//Create Task in system and fill all the properties
 		mtp = (new SDLCPojectPageBase(driver)).gotoTasks();
-		TaskNewPage ntp = mtp.createNewTask();
+		ntp = mtp.createNewTask();
 	    mtp = ntp.createTask(testTask);
 	    TaskViewPage tvp = mtp.clickToTask(testTask.getId());
 	    TaskEditPage tep = tvp.editTask();
-	    tep.addPreviousTask("TestTask");
+	    tep.addPreviousTask(previousTask.getName());
 	    tep.addTestDoc(testScenario.getName());
-	    tep.addTestResults(testPlan.getName());
 	    tep.addDocs("TestDoc");
-	    tep.addWatcher(user);
 	    tep.addRequest("issue");
 	    tvp= tep.saveChanges();
-        		
+
+		tep = tvp.editTask();
+		tep.addTestResults(testScenario.getName());
+		tep.addWatcher(user);
+		tep.saveChanges();
+
 		//Read and check the properties 
 	    Assert.assertEquals(tvp.readName(), testTask.getName());
 	    Assert.assertTrue(tvp.readIteration().contains(testTask.getIteration()));
 	    Assert.assertEquals(tvp.readType(), testTask.getType());
 	    Assert.assertEquals(tvp.readPriority(), testTask.getPriority());
 	    Assert.assertEquals(tvp.readOwner(), testTask.getExecutor());
-	    Assert.assertTrue(tvp.readPreviousTasks().get(0).contains("TestTask"));
+	    Assert.assertTrue(tvp.readPreviousTasks().get(0).contains(previousTask.getName()));
 	    Assert.assertTrue(tvp.readTestDoc().get(0).contains(testScenario.getName()));
 	    Assert.assertTrue(tvp.readTestResults().get(0).contains(testResults));
-	    //Assert.assertTrue(tvp.readRequirements().get(0).contains("R"));
 	    Assert.assertTrue(tvp.readDocs().get(0).contains("TestDoc"));
 	    Assert.assertTrue(tvp.readRequest().contains("I"));
 	    Assert.assertTrue(tvp.readWatchers().get(0).contains(user));
@@ -315,8 +323,10 @@ public class TaskTest extends ProjectTestBase {
 		ReleasesIterationsPage rip = favspage.gotoReleasesIterations();
 	
 		//Creating 2 iterations for the release
-		Iteration iteration2 = new Iteration("","Old iteration", DateHelper.getDayBefore(8), DateHelper.getDayBefore(3), "0");
-		Iteration iteration1 = new Iteration("","Current iteration", DateHelper.getCurrentDate(), DateHelper.getDayAfter(5), "0");
+		Iteration iteration2 = new Iteration(DataProviders.getUniqueStringAlphaNum(),"Old iteration",
+				DateHelper.getDayBefore(8), DateHelper.getDayBefore(3), "0");
+		Iteration iteration1 = new Iteration(DataProviders.getUniqueStringAlphaNum(),"Current iteration",
+				DateHelper.getCurrentDate(), DateHelper.getDayAfter(5), "0");
 				
 		IterationNewPage inp = rip.addIteration();
 		rip = inp.createIteration(iteration2);
@@ -343,7 +353,9 @@ public class TaskTest extends ProjectTestBase {
         //Go to "Релизы и итерации" and check the Task
         
         rip = tvp.gotoReleasesIterations();
-        Assert.assertTrue(rip.isTaskPresent(testTask.getId()), "Задача не обнаружена");
+		rip.showAll();
+		rip.setFilter("start","last-year");
+        Assert.assertTrue(rip.isTaskPresent(testTask.getId()), "Задача " + testTask.getId() + " не обнаружена");
 	}
 		
 	@Test(description="S-1864")
@@ -356,8 +368,8 @@ public class TaskTest extends ProjectTestBase {
 		RTask testTask = createTask();
 		MyProjectsPageBase mppb = mtp.gotoMyProjects();
 		MyTasksPage mytp = mppb.gotoMyTasks();
-		mytp.showNRows("all");
-		mytp.addColumn("Spent");
+		mytp.showAll();
+		mytp.showColumn("Spent");
 		Spent spent1 = new Spent(DateHelper.getCurrentDate(), 2.0, executor, "Списание из портфеля Мои проекты");
 		mytp = mytp.addSpentRecord(spent1, testTask.getId());
 		TaskViewPage tvp = mytp.clickToTask(testTask.getId());
@@ -368,15 +380,14 @@ public class TaskTest extends ProjectTestBase {
 		favspage = (SDLCPojectPageBase) tvp.gotoProject(webTest);
 		mtp = favspage.gotoTasks();
 		mtp.showAll();
-		mtp.addColumn("Spent");
+		mtp.showColumn("Spent");
 		spentRecords = mtp.readSpentRecords(testTask.getId());
 		Assert.assertTrue(spentRecords.size()>0, "При открытии задачи из проекта нет записей о затратах времени");
 		Assert.assertEquals(spentRecords.get(0), spent1, "Неверная запись о затратах времени при открытии задачи из проекта");
 		
 		Spent spent2 = new Spent(DateHelper.getCurrentDate(), 2.0, executor, "Списание из проекта");
 		mtp.addSpentRecord(spent2, testTask.getId());
-		TimetablePage tp = tvp.gotoTimetablePage();
-		tp = tp.setMode("tasks");
+		TimetablePage tp = tvp.gotoTasksTimetablePage();
 		TimetableItem[] items = tp.readTimetable();
 		for( TimetableItem i : items ) {
 			if ( i.getName().contains(testTask.getName()) ) {
@@ -421,7 +432,7 @@ public class TaskTest extends ProjectTestBase {
 			tsmp.saveChanges();
 			tsp = new TasksStatePage(driver);
 			tp = tsp.gotoTasks();
-			tp = tp.turnOffFilter("taskassignee");
+			tp.removeFilter("taskassignee");
 			tnp = tp.createNewTask();
 			Assert.assertTrue(tnp.isFieldNotVisibleByLabel("Исполнитель"), "Не скрыто поле 'Исполнитель'");
 			Assert.assertTrue(tnp.isFieldNotVisibleByLabel("Тип"), "Не скрыто поле 'Тип'");
@@ -440,7 +451,7 @@ public class TaskTest extends ProjectTestBase {
 	public void moveTaskToAnotherProject() {
 		
 		String p = DataProviders.getUniqueString();
-			String comment = "Тест по сценарию S-2222";
+			String comment = "Тест по сценарию";
 			String attachment = "Attachment" + DataProviders.getUniqueStringAlphaNum() + ".png";
 			
 			//Создаем новый проект SDLC
@@ -462,6 +473,7 @@ public class TaskTest extends ProjectTestBase {
 			LinkProjectsPage lipp = lpp.includeToProgram();
 			lipp.setRequestOptionsValue("1");
 			lipp.setReleaseOptionsValue("2");
+			lipp.setTasksOptions("3");
 			lipp.linkProject(sdlcTest.getName());
 			
 			//Создаем задачу, чтобы проект отображался на кросс-проектной доске
@@ -482,6 +494,7 @@ public class TaskTest extends ProjectTestBase {
 		    tvp = tep.saveChanges();
 		    Spent spent = new Spent("", 1.0, user, "Тестовое списание");
 		    tvp.addSpentTimeRecord(spent);
+		    driver.navigate().refresh();
 		    tvp = tvp.addComment(comment);
 		    
 		    //Идем в Избранное, настраиваем отображение Кросс-проектной доски задач
@@ -492,6 +505,7 @@ public class TaskTest extends ProjectTestBase {
 			favspage =  mcp.close();
 			favspage.gotoCustomReport("favs", "", "Доска задач");
 			CrossProjectsTasksBoard cprb = new CrossProjectsTasksBoard(driver);
+			cprb.showAll();
 			cprb.setupGrouping("Project");
 			cprb = cprb.moveToAnotherProject(testTask.getNumericId(), scrumProject.getName(), 1);
 			Assert.assertTrue(cprb.isRequestInSection(testTask.getNumericId(), scrumProject.getName(), 1), "Пожелание не найдено в другом проекте после перемещения");
@@ -504,17 +518,15 @@ public class TaskTest extends ProjectTestBase {
 			Assert.assertEquals(attachments.size(), 1, "Количество аттачментов неверное");
 			Assert.assertEquals(attachments.get(0), attachment, "Неверное имя файла аттачмента");
 	}
-	
-	
-	
+
 	private RTask createTask(){
 		RTask testTask = new RTask("TestTask"+DataProviders.getUniqueString(), username, RTask.getRandomType(), RTask.getRandomEstimation());
 		testTask.setPriority(RTask.getRandomPriority());
 		TasksPage mtp = new TasksPage(driver);
 	    TaskNewPage ntp = mtp.createNewTask();
 	    mtp = ntp.createTask(testTask);
+	    driver.navigate().refresh();
 	    FILELOG.debug("Task created: " + testTask);
 		return testTask; 
 	}
-
 }

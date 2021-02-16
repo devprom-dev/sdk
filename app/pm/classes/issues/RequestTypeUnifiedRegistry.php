@@ -6,7 +6,7 @@ class RequestTypeUnifiedRegistry extends ObjectRegistrySQL
     {
         return "(
             SELECT DISTINCT
-                   t.ReferenceName as entityId,
+                   t.ReferenceName as pm_IssueTypeId,
                    t.ReferenceName,
                    t.Caption,
                    '".$this->getObject()->getVpdValue()."' VPD,

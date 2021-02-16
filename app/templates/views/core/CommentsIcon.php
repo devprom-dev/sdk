@@ -3,10 +3,8 @@ if ( $text == '' ) $text = translate('Ответить');
 include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
 
 $method = new CommentWebMethod( $object_it );
-		
 if ( !$method->hasAccess() ) return;
-
-$method->setRedirectUrl($redirect != '' ? $redirect : 'function() {window.location.reload();}');
+if ( $redirect != '' ) $method->setRedirectUrl($redirect);
 
 ?>
 <div>

@@ -6,6 +6,7 @@ class UndoWebMethod extends WebMethod
 {
 	private $transaction = '';
     private $projectCode = '';
+    private $entitiesProcessed = 0;
 
  	function __construct( $transaction = '', $projectCode = '' ) {
 		$this->transaction = $transaction;
@@ -57,12 +58,17 @@ class UndoWebMethod extends WebMethod
 		$this->context->setResetState(false);
 		$this->context->setResetDates(false);
 		$this->context->setResetAssignments(false);
+		$this->context->setRestoreFromTemplate(false);
 
 		$this->project_it = getSession()->getProjectIt();
 		$this->processXml(
 			file_get_contents(UndoLog::Instance()->getPath($this->transaction))
 		);
 
+		if ( $this->entitiesProcessed < 1 ) {
+            \Logger::getLogger('System')->error('No entities were restored');
+            return;
+        }
 		\Logger::getLogger('System')->info('Transaction '.$this->transaction.' has been undone');
 
 		$log_it = getFactory()->getObject('ChangeLog')->getRegistry()->Query(
@@ -76,7 +82,7 @@ class UndoWebMethod extends WebMethod
 		while( !$log_it->end() ) {
             $object_it = $log_it->getObjectIt();
             if ( $object_it->getId() != '' && $redirect_url == '' ) {
-                $redirect_url = $object_it->getViewUrl();
+                $redirect_url = $object_it->getUidUrl();
             }
 			$log->delete($log_it->getId());
 			$log_it->moveNext();
@@ -99,14 +105,29 @@ class UndoWebMethod extends WebMethod
 		if ( !class_exists($class_name, false) ) return true;
 
 		$object = getFactory()->getObject($class_name);
+        $object->removeNotificator('ChangeLogNotificator');
+        $object->removeNotificator('EmailNotificator');
+
 		$registry = new ObjectRegistrySQL($object);
 		$iterator = $object->createXMLIterator($entity);
-
 		$ids = $iterator->idsToArray();
 
 		// exclude items exist already
 		$object_it = $registry->Query(array(new FilterInPredicate($ids)));
 		$foundIds = $object_it->idsToArray();
+
+		foreach( $foundIds as $foundId ) {
+		    if ( $foundId < 1 ) continue;
+
+            $iterator->moveFirst();
+            while( !$iterator->end() ) {
+                if ( $iterator->getId() == $foundId ) {
+                    $object_it->object->modify_parms($foundId, $iterator->getData());
+                }
+                $iterator->moveNext();
+            }
+        }
+
 		$ids = array_diff($ids, $foundIds);
 		if ( count($ids) < 1 ) return true;
 
@@ -117,11 +138,9 @@ class UndoWebMethod extends WebMethod
 		$this->context->setIdsMap($idsMap);
 		\Logger::getLogger('System')->info('UNDO: '.$class_name.' ['.join(',',$idsMap[$object->getEntityRefName()]).']');
 
-		$object->removeNotificator('ChangeLogNotificator');
-		$object->removeNotificator('EmailNotificator');
-
 		$iterator->moveFirst();
 		CloneLogic::Run( $this->context, $object, $iterator, $this->project_it);
+		$this->entitiesProcessed++;
 
 		return true;
 	}

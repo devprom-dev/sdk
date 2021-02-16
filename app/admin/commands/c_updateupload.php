@@ -1,5 +1,4 @@
 <?php
-
 include_once "MaintenanceCommand.php";
 include_once SERVER_ROOT_PATH.'admin/classes/maintenance/BackupAndRecoveryOnWindows.php';
 include_once SERVER_ROOT_PATH.'admin/classes/StrategyUpdate.php';
@@ -29,10 +28,13 @@ class UpdateUpload extends MaintenanceCommand
 		
 		$filepath = SERVER_UPDATE_PATH.$pathinfo['basename'];
 		
-		if ( $_REQUEST['parms'] == '' )
-		{
+		if ( $_REQUEST['parms'] == '' ) {
 		    move_uploaded_file( $_FILES['Update']['tmp_name'], $filepath );
 		}
+
+		if ( filesize($filepath) < 100 ) {
+            $this->replyError(text(2933));
+        }
 
 		$configuration = getConfiguration();
 		
@@ -40,19 +42,20 @@ class UpdateUpload extends MaintenanceCommand
 		
 		$strategy->update_clean();
 		
-		if ( is_dir(SERVER_UPDATE_PATH.'htdocs') )
-		{
+		if ( is_dir(SERVER_UPDATE_PATH.'htdocs') ) {
 			$this->replyError(str_replace('%1', SERVER_UPDATE_PATH.'htdocs', text(1433)));
 		}
 		
-		if ( is_dir(SERVER_UPDATE_PATH.'devprom') )
-		{
+		if ( is_dir(SERVER_UPDATE_PATH.'devprom') ) {
 			$this->replyError(str_replace('%1', SERVER_UPDATE_PATH.'htdocs', text(1433)));
 		}
-		
-		$result = $strategy->update_unzip( $pathinfo['basename'] );
-			
-		if ( $result != '' ) $this->replyError($result);
+
+		try {
+            $strategy->update_unzip( $pathinfo['basename'] );
+        }
+		catch( \Exception $e ) {
+		    $this->replyError($e->getMessage());
+        }
 
 		unlink($filepath);
 

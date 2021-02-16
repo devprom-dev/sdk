@@ -24,7 +24,7 @@ class SettingsPage extends AdminPage
 		return true;
 	}
 
-	function getForm()
+	function getEntityForm()
 	{
 		$form = new SystemSettingsForm();
 		$form->edit( $this->settings_it->getId() );

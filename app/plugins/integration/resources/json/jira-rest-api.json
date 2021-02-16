@@ -9,7 +9,7 @@
   },
   "Request": {
     "url": "/rest/api/latest/issue",
-    "link": "/browse/{id}",
+    "link": "/browse/{key}",
     "Caption": "fields.summary",
     "Description": "fields.description",
     "Type": {
@@ -24,7 +24,9 @@
       "mapping": [{"submitted":"Backlog"},{"submitted":"To Do"},{"development":"Selected for Development"},{"development":"В работе"},{"development":"In Progress"},{"resolved":"Done"},{"resolved":"Готово"},{"submitted":"*"}],
       "readonly": "true"
     },
-    "SubmittedVersion": "fields.versions:first.name",
+    "SubmittedVersion": {
+      "Caption": "fields.versions:first.name"
+    },
     "PlannedRelease": {
       "Caption": "fields.fixVersions:first.name"
     },
@@ -89,7 +91,7 @@
   },
   "Task": {
     "url": "/rest/api/latest/issue",
-    "link": "/browse/{id}",
+    "link": "/browse/{key}",
     "Caption": "fields.summary",
     "Description": "fields.description",
     "Priority": {"Id":"fields.priority.id"},
@@ -100,11 +102,12 @@
     },
     "TaskType": {
       "ReferenceName": "fields.issuetype.name",
-      "mapping": [{"":"Task"}]
+      "mapping": [{"development":"*"}],
+      "readonly": "true"
     },
     "State": {
       ".": "fields.status.name",
-      "mapping": [{"submitted":"Backlog"},{"analysis":"Selected for Development"},{"development":"In Progress"},{"resolved":"Done"},{"submitted":"*"}],
+      "mapping": [{"submitted":"Backlog"},{"planned":"Backlog"},{"analysis":"Selected for Development"},{"development":"In Progress"},{"inprogress":"In Progress"},{"resolved":"Done"},{"planned":"*"}],
       "readonly": "true"
     },
     "comments": {
@@ -116,6 +119,11 @@
       "reference":"fields.worklog.worklogs",
       "type":"ActivityTask",
       "readonly": "true"
+    },
+    "attachments": {
+      "reference":"fields.attachment",
+      "type":"TaskAttachment",
+      "readonly": "true"
     }
   },
   "ActivityTask": {
@@ -126,6 +134,15 @@
     "Description": "comment",
     "Capacity": "timeSpentSeconds",
     "ReportDate": "started"
+  },
+  "TaskAttachment": {
+    "url": "/rest/api/latest/attachment",
+    "url-append": "/rest/api/latest/issue/{parent}/attachments",
+    "link": "/attachments/{id}",
+    "ObjectId": "{parentId}",
+    "FileMime": "mimeType",
+    "FileExt": "filename",
+    "File": "content"
   },
   "TaskComment": {
     "url": "/rest/api/latest/issue/{parent}/comment",

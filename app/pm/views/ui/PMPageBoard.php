@@ -69,7 +69,6 @@ class PMPageBoard extends PageBoard
 	function getGroupFields()
 	{
 		$skip = array_merge(
-            $this->getObject()->getAttributesByGroup('trace'),
             array_diff(
                 $this->getObject()->getAttributesByGroup('workflow'),
                 array(
@@ -80,22 +79,17 @@ class PMPageBoard extends PageBoard
 		return array_diff(parent::getGroupFields(), $skip );
 	}
 
-    function getGroupNullable( $field_name )
+    function getGroupNullable( $field_name, $state )
     {
         switch( $field_name ) {
             case 'Project':
             case 'State':
                 return false;
             default:
-                return parent::getGroupNullable($field_name);
+                return parent::getGroupNullable($field_name, $state);
         }
     }
 
-	function getColumnFields()
-	{
-		return array_merge(parent::getColumnFields(), $this->getObject()->getAttributesByGroup('workflow'));
-	}
-	
 	function hasCommonStates()
 	{
         $values = array();
@@ -163,28 +157,15 @@ class PMPageBoard extends PageBoard
         return $names;
     }
 
-    function setFilterActions( $actions ) {
-        $this->filterActions = $actions;
-    }
-    function getFilterActions() {
-        return $this->filterActions;
-    }
-
     function drawHeader( $board_value, $board_title )
     {
-        if ( !$this->report_link_drawn )
+        if ( !$this->report_link_drawn && $_REQUEST['tableonly'] == '' )
         {
-            $actions = $this->getFilterActions();
             echo '<div class="board-header-up">';
                 echo '<div class="btn-group pull-left">';
-                    echo '<div id="filter-settings" class="btn dropdown-toggle btn-sm btn-secondary" data-toggle="dropdown" href="#" data-target="#boardmenu">';
+                    echo '<button id="filter-settings" class="btn dropdown-toggle btn-xs btn-secondary">';
                         echo '<i class="icon-cog icon-white"></i>';
-                    echo '</div>';
-                echo '</div>';
-                echo '<div class="btn-group dropdown-fixed" id="boardmenu">';
-                    echo $this->getRenderView()->render('core/PopupMenu.php', array(
-                        'items' => $actions
-                    ));
+                    echo '</button>';
                 echo '</div>';
             echo '</div>';
 
@@ -204,11 +185,10 @@ class PMPageBoard extends PageBoard
 		switch( $attr )
 		{
 			case 'State':
-            	echo $this->getRenderView()->render('pm/StateColumn.php', array (
-									'color' => $object_it->get('StateColor'),
-									'name' => $object_it->get('StateName'),
-									'terminal' => $object_it->get('StateTerminal') == 'Y'
-							));
+            	echo $this->getRenderView()->render('pm/StateColumn.php',
+                    array (
+                        'stateIt' => $object_it->getStateIt()
+                    ));
 				break;
 				
 			default:
@@ -255,7 +235,9 @@ class PMPageBoard extends PageBoard
 
     function buildProjectIt()
     {
-        foreach( $this->getTable()->getFilterPredicates() as $filter ) {
+        $values = $this->getTable()->getPredicateFilterValues();
+
+        foreach( $this->getTable()->getFilterPredicates($values) as $filter ) {
             if ( $filter instanceof FilterVpdPredicate ) {
                 $vpd_filter = $filter;
             }
@@ -264,8 +246,7 @@ class PMPageBoard extends PageBoard
             $vpd_filter = new FilterVpdPredicate(join(',',$this->getObject()->getVpds()));
         }
 
-        $values = $this->getFilterValues();
-        $groupFilter = in_array($values['target'],array('all','none','hide')) ? '' : $values['target'];
+        $groupFilter = in_array($values['target'],PageTable::FILTER_OPTIONS) ? '' : $values['target'];
 
         $registry = getFactory()->getObject('Project')->getRegistry();
         $registry->setPersisters(array());
@@ -292,6 +273,7 @@ class PMPageBoard extends PageBoard
 		{
 			$method = new ObjectModifyWebMethod($iterator);
 			if ( $method->hasAccess() ) {
+                $method->setRedirectUrl('function() {window.location.reload();}');
 				$custom_actions[] = array (
 						'name' => translate('Редактировать'),
 						'url' => $method->getJSCall() 
@@ -301,6 +283,7 @@ class PMPageBoard extends PageBoard
 
 			$method = new ObjectCreateNewWebMethod($iterator->object);
 			if ( $method->hasAccess() ) {
+                $method->setRedirectUrl('function() {window.location.reload();}');
 				$custom_actions[] = array (
 						'name' => text(2011),
 						'url' => $method->getJSCall(array('OrderNum' => $iterator->get('OrderNum') + 2)) 
@@ -313,7 +296,7 @@ class PMPageBoard extends PageBoard
 			}
 
             $transition_actions = array();
-            $transition_it = WorkflowScheme::Instance()->getStateTransitionIt($this->getObject(), $board_value);
+            $transition_it = WorkflowScheme::Instance()->getStateTransitionIt($this->getObject(), array($board_value));
             while( !$transition_it->end() ) {
                 $method = new ObjectModifyWebMethod($transition_it);
                 if ( $method->hasAccess() ) {
@@ -335,6 +318,7 @@ class PMPageBoard extends PageBoard
 
             $method = new DeleteObjectWebMethod($iterator);
             if ( $method->hasAccess() ) {
+                $method->setRedirectUrl('function() {window.location.reload();}');
                 $delete_actions[] = array();
                 $delete_actions[] = array (
                     'name' => $method->getCaption(),
@@ -367,23 +351,20 @@ class PMPageBoard extends PageBoard
 		return array_merge($custom_actions, $actions, $delete_actions);
 	}
 
-    function buildFilterActions( & $base_actions )
-    {
-        parent::buildFilterActions( $base_actions );
-        $this->buildFilterColumnsGroup( $base_actions, 'workflow' );
-        $this->buildFilterColumnsGroup( $base_actions, 'trace' );
-        $this->buildFilterColumnsGroup( $base_actions, 'workload' );
-        $this->buildFilterColumnsGroup( $base_actions, 'dates' );
-        $this->buildFilterColumnsGroup( $base_actions, 'sla' );
-    }
-
     function getPriorityBackgroundColor( $priorityId ) {
         return $this->backgroundColors[$priorityId];
     }
 
-    private $report_up_url = '';
-    private $report_down_url = '';
-    private $parent_it = null;
+    function getGroupEntityName( $groupField, $object_it, $referenceIt )
+    {
+        if ( $referenceIt->object instanceof Request ) return "";
+        if ( $referenceIt->object instanceof User ) return "";
+        if ( $referenceIt->object instanceof Build ) {
+            return $object_it->object->getAttributeUserName($groupField);
+        }
+        return parent::getGroupEntityName($groupField, $object_it, $referenceIt);
+    }
+
     private $report_link_drawn = false;
     private $stateObjects = array();
     private $projectIt = null;

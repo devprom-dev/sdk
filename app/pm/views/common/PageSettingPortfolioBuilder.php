@@ -9,7 +9,6 @@ class PageSettingPortfolioBuilder extends PageSettingBuilder
         // product backlog report
         $setting = new ReportSetting('productbacklog');
         $setting->setSorts( array('Priority') );
-        $setting->setFilters( array('state', 'owner', 'target') );
         $setting->setVisibleColumns( array('UID', 'Priority', 'Caption', 'State', 'Project', 'RecordCreated') );
         $settings->add( $setting );
     }

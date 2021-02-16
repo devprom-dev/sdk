@@ -39,10 +39,9 @@ class FieldText extends Field
 	{
 		if ( $this->readOnly() )
 		{
-		    echo '<span id="'.$this->getId().'" class="input-block-level well well-text" style="width:100%;height:auto;word-break: break-all;">';
+		    echo '<span class="input-block-level well well-text" style="width:100%;height:auto;word-break: break-all;">';
 		        echo $this->getText();
 		    echo '</span>';
-
         	echo '<input type="hidden" name="'.$this->getName().'" value="'.htmlentities($this->getValue()).'">';
 		}
 		else
@@ -56,7 +55,7 @@ class FieldText extends Field
 			{
 			echo '<div class="for-textarea">';
 			    ?>
-		        <textarea class="<?php echo $this->getClassName() ?>" id="<? echo $this->getId() ?>" name="<? echo $this->getName(); ?>" rows="<?php echo $this->getRows(); ?>" tabindex="<? echo $this->getTabIndex() ?>" placeholder="<?php echo htmlentities($this->getDefault()) ?>" <?=($this->getRequired() ? 'required' : '')?> <?=($this->wrap ? : 'wrap="off"')?> ><? echo $this->getValue(); ?></textarea>
+		        <textarea class="<?php echo $this->getClassName() ?>" id="<? echo $this->getId() ?>" name="<? echo $this->getName(); ?>" rows="<?php echo $this->getRows(); ?>" tabindex="<? echo $this->getTabIndex() ?>" <?=($this->getRequired() ? 'required' : '')?> <?=($this->wrap ? : 'wrap="off"')?> ><? echo $this->getValue(); ?></textarea>
 				<?
 				echo '</div>';
 			}

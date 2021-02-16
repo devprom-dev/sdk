@@ -14,13 +14,8 @@ class FieldNumber extends Field
       
  	function draw( $view = null )
 	{
-		if ( $this->readOnly() )
-		{
-		    echo '<span id="'.$this->getId().'" class="input-block-level well well-text" style="width:150px;min-width: 150px;">';
-		        echo $this->getValue();
-		    echo '</span>';
-			
-			echo '<input name="'.$this->getName().'" type="hidden" value="'.$this->getValue().'">';
+		if ( $this->readOnly() ) {
+			echo '<input class="input-medium" type="text" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'" readonly>';
 		}
 		else
 		{

@@ -29,6 +29,12 @@ class Methodology {
     private $support;
 
     /**
+     * @ORM\Column(type="string", name="IsRequirements")
+     * @var string
+     */
+    private $requirements;
+
+    /**
      * @param Project $project
      */
     public function setProject($project)
@@ -74,6 +80,22 @@ class Methodology {
     public function getSupport()
     {
         return $this->support;
+    }
+
+    /**
+     * @param string $check
+     */
+    public function setRequirements($check)
+    {
+        $this->requirements = $check;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRequirements()
+    {
+        return $this->requirements;
     }
 
     function __toString()

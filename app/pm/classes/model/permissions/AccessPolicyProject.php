@@ -11,7 +11,7 @@ class AccessPolicyProject extends AccessPolicyBase
 {
  	var $access_it, $base_role_map, $object_access_it,
  		$role_manager, $role_user, $role_guest, $role_linkedguest,
- 		$linked_vpds, $role_it, $check_type, $role_reference_names;
+ 		$role_it, $check_type, $role_reference_names;
  	private $project_it = null;
 
  	function buildRoles()
@@ -125,6 +125,7 @@ class AccessPolicyProject extends AccessPolicyBase
  		$permissions['guest'] = $this->role_guest;
  		$permissions['linkedguest'] = $this->role_linkedguest;
         $permissions['restrictions'] = $user_it->getRestrictions();
+        $this->setRestrictions($permissions['restrictions']);
  		$permissions['role_iterator'] = $this->role_it->getRowset();
 	 	$permissions['access_iterator'] = $this->access_it->getRowset();
 	 	$permissions['object_access_iterator'] = $this->object_access_it->getRowset();
@@ -143,6 +144,8 @@ class AccessPolicyProject extends AccessPolicyBase
  	
  	function getSharedAccess( $object, $role_id )
  	{
+ 	    if ( $object->getVpdValue() == '' ) return true;
+
  		switch ( $this->base_role_map[$role_id] )
  		{
  			case ROLE_GUEST:
@@ -166,7 +169,7 @@ class AccessPolicyProject extends AccessPolicyBase
  			{
                 $access = $this->access_it->getAttributeAccess( $role_id, $object, $attribute_refname );
 				$access_map[$role_id] = $access > -1
-						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
+						? $this->parseAccess($access, $action_kind)
 						: null;
 
  			 	// entity level access for references
@@ -180,7 +183,7 @@ class AccessPolicyProject extends AccessPolicyBase
                         )
                     );
                     $access_map[$role_id] = $access > -1
-                            ? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
+                            ? $this->parseAccess($access, $action_kind)
                             : null;
 
                     if ( is_null($access_map[$role_id]) ) {
@@ -188,7 +191,7 @@ class AccessPolicyProject extends AccessPolicyBase
                         $access = $this->access_it->getEntityAccess( $role_id, $reference_class );
 
                         $access_map[$role_id] = $access > -1
-                                ? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
+                                ? $this->parseAccess($access, $action_kind)
                                 : null;
                     }
 	 			}
@@ -197,11 +200,11 @@ class AccessPolicyProject extends AccessPolicyBase
                     $access = $this->access_it->getClassAccess( $role_id,
                         array_merge(
                             class_parents($object, false),
-                            array(get_class($object))
+                            array(get_class($object), $object->getEntityRefName())
                         )
                     );
                     $access_map[$role_id] = $access > -1
-                        ? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
+                        ? $this->parseAccess($access, $action_kind)
                         : null;
                 }
  			}
@@ -218,6 +221,8 @@ class AccessPolicyProject extends AccessPolicyBase
                     return $action_kind == ACCESS_READ;
             }
         }
+
+        if ( $attribute_refname == 'RecentComment' ) return true;
 
         $modifiableAttributes = array('State', 'TransitionComment');
  		if ( !in_array($attribute_refname, $modifiableAttributes) ) {
@@ -238,12 +243,12 @@ class AccessPolicyProject extends AccessPolicyBase
 				$access = $this->access_it->getClassAccess( $role_id,
                     array_merge(
                         class_parents($object, false),
-                        array(get_class($object))
+                        array(get_class($object), $object->getEntityRefName())
                     )
                 );
 				$access_map[$role_id] = $access > -1
-						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
-						: null; 
+						? $this->parseAccess($access, $action_kind)
+						: null;
  			}
 
  			$access = $this->calculateAccess($access_map);
@@ -256,7 +261,7 @@ class AccessPolicyProject extends AccessPolicyBase
  				// obolete method
 				$access = $this->access_it->getEntityAccess( $role_id, $object->getEntityRefName() );
 				$access_map[$role_id] = $access > -1
-						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
+						? $this->parseAccess($access, $action_kind)
 						: null; 
  			}
 
@@ -364,11 +369,11 @@ class AccessPolicyProject extends AccessPolicyBase
 
 					case 'pm_ProjectUse':
 						return $action_kind == ACCESS_READ || $action_kind == ACCESS_MODIFY;
-							
-					case 'pm_Participant':
-					    return $action_kind == ACCESS_READ;
 
-					case 'pm_Invitation':
+                    case 'pm_Invitation':
+					case 'pm_Participant':
+					    return $action_kind == ACCESS_READ || getSession()->getUserIt()->IsAdministrator();
+
 					case 'pm_ProjectRole':
 					case 'pm_ParticipantRole':
 						if ( $action_kind == ACCESS_CREATE )
@@ -434,7 +439,7 @@ class AccessPolicyProject extends AccessPolicyBase
 						
 					case 'pm_Participant':
 					case 'pm_Invitation':
-						return in_array($action_kind, array(ACCESS_READ));
+						return in_array($action_kind, array(ACCESS_READ)) || getSession()->getUserIt()->IsAdministrator();
 						
 					case 'pm_Project': 
 						return parent::getDefaultEntityAccess($action_kind, $object)
@@ -542,20 +547,15 @@ class AccessPolicyProject extends AccessPolicyBase
 				case 'cms_Report':
 				case 'pm_CustomReport':
 					$access = $this->access_it->getReportAccess( $role_id, $object_it );
-
-					if ( $access > -1 )
-					{
+					if ( $access > -1 ) {
 						return $access == 1;
 					}
 					break;
 
 				case 'WikiPage':
 					$access = $this->access_it->getWikiAccess( $role_id, $object_it );
-	
-					if ( $access > -1 )
-					{
-						return $access == 1 && $action_kind == ACCESS_READ
-							|| $access == 2;
+					if ( $access > -1 ) {
+						return $this->parseAccess($access, $action_kind);
 					}
 					break;
 			}
@@ -564,31 +564,23 @@ class AccessPolicyProject extends AccessPolicyBase
  		if ( $this->object_access_it->count() > 0 )
  		{
  			$access = $this->object_access_it->getAccess( $role_id, $object_it );
-
-			if ( $access > -1 )
-			{
-				return $access == 1 && $action_kind == ACCESS_READ
-					|| $access == 2;
+			if ( $access > -1 ) {
+				return $this->parseAccess($access, $action_kind);
 			}
 			
 			switch ( strtolower(get_class($object_it->object)) )
 			{
 				case 'projectpage':
-
 					$parent_it = $object_it->getParentsIt();
-					
 					while( !$parent_it->end() )
 					{
 			 			$access = $this->object_access_it->getAccess( $role_id, $parent_it );
-			 			
-						if ( $access > -1 )
-						{
-							if ( !($access == 1 && $action_kind == ACCESS_READ) || $access != 2 ) return false;
+						if ( $access > -1 ) {
+							if ( !$this->parseAccess($access, $action_kind) ) return false;
 						}
 						
 						$parent_it->moveNext();
 					}
-					
 					break;
 			}			
  		}
@@ -698,21 +690,16 @@ class AccessPolicyProject extends AccessPolicyBase
 				switch ( $ref_name )
 				{
 					case 'pm_Question':
-						
 						return $action_kind == ACCESS_READ || $object_it->get('Author') == $user_it->getId();
 					
 					case 'pm_ProjectUse':
-						
 						return $action_kind == ACCESS_READ || $action_kind == ACCESS_MODIFY;
 						
 					case 'pm_Participant':
-
-						if ( $object_it->getId() == $part_it->getId() )
-						{
+						if ( $object_it->getId() == $part_it->getId() ) {
 					    	$this->setReason(text(1247));
 					    	return true;
 						}
-
 						break;
 						
 					case 'cms_Snapshot':
@@ -720,10 +707,6 @@ class AccessPolicyProject extends AccessPolicyBase
 
                     case 'pm_Activity':
                         return $object_it->get('Participant') == $user_it->getId() || $action_kind == ACCESS_READ;
-
-					case 'pm_CustomReport':
-						// common reports can be modified or deleted by lead only
-						return $object_it->get('Author') > 0 || $action_kind == ACCESS_READ;
 				}
 		}
 	}
@@ -759,5 +742,13 @@ class AccessPolicyProject extends AccessPolicyBase
             return !in_array(get_class($object), $this->getRestrictions());
         }
         return $access;
+    }
+
+    function parseAccess( $access, $action_kind )
+    {
+        return ($access == 1 && $action_kind == ACCESS_READ
+                    || $access == 3 && $action_kind != ACCESS_DELETE
+                    || $access == 2)
+            ? 1 : 0;
     }
 }

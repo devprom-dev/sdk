@@ -32,22 +32,15 @@ class StateTable extends SettingsTableBase
 		return $fields;
 	}
 	
-    function getUrl()
-    {
-        $session = getSession();
-        
-        return $session->getApplicationUrl().'project/workflow?dict='.SanitizeUrl::parseUrl($_REQUEST['dict']);
-    }
-
     function getFilters()
     {
         return parent::getFilters();
     }
     
- 	function getFilterPredicates()
+ 	function getFilterPredicates( $values )
  	{
 		return array_merge( 
-				parent::getFilterPredicates(),
+				parent::getFilterPredicates( $values ),
 				array (
 						new FilterBaseVpdPredicate()
 				)
@@ -66,5 +59,9 @@ class StateTable extends SettingsTableBase
             );
         }
         return $actions;
+    }
+
+    function getDetails() {
+        return array();
     }
 }

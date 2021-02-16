@@ -7,27 +7,21 @@ class FieldWatchers extends FieldForm
  	
  	function FieldWatchers( $object_it = null, $writable = true, $persistent_mode = false )
  	{
- 		global $model_factory;
- 		
- 		if ( is_a($object_it, 'IteratorBase') )
- 		{
+ 		if ( is_a($object_it, 'IteratorBase') ) {
  		    $this->object_it = $object_it;
  		}
- 		else
- 		{
+ 		else {
  		    $this->object_it = $object_it->createCachedIterator(array());
  		}
  			
  		$this->writable = $writable;
  		$this->persistent_mode = $persistent_mode;
 
-	    if ( isset($this->object_it) )
-	    {
-	        $this->watchers = $model_factory->getObject2('pm_Watcher', $this->object_it );
+	    if ( isset($this->object_it) ) {
+	        $this->watchers = getFactory()->getObject2('pm_Watcher', $this->object_it );
 
 	        $email_parts = preg_split('/</', $this->object_it->getHtmlDecoded('ExternalAuthor'));
-	        
-	        $this->watchers->addFilter( 
+	        $this->watchers->addFilter(
 	        		new FilterHasNoAttributePredicate('Email', 
  		    				count($email_parts) > 1 ? trim($email_parts[1], '>') : $this->object_it->get('ExternalAuthor')
  		    		)
@@ -59,26 +53,21 @@ class FieldWatchers extends FieldForm
 	
 	function drawBody( $view = null )
 	{
-		global $model_factory;
-		
- 		$form = new FormWatcherEmbedded( 
+ 		$form = new FormWatcherEmbedded(
  			is_object($this->getWatchers()) ? 
- 				$this->getWatchers() : $model_factory->getObject('pm_Watcher'), 
+ 				$this->getWatchers() : getFactory()->getObject('pm_Watcher'),
 			'ObjectId' );
  			
 		$object_it = $this->getObjectIt();
 		
 		$form->setAnchorIt( $object_it );
 		
- 		if ( is_object($object_it) )
- 		{
+ 		if ( is_object($object_it) ) {
  			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );
  		}
 
  		$form->setReadonly( $this->readOnly() );
- 			
  		$form->setTabIndex( $this->getTabIndex() );
- 			
  		$form->draw( $view );
 	}
 }

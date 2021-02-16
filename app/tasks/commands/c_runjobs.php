@@ -5,6 +5,10 @@ class RunJobs extends Command
 {
 	private $timeWaitedForPrevInstance = 300;
 
+    function IsAuthenticationRequired() {
+        return false;
+    }
+
  	function execute()
 	{
 		global $model_factory, $plugins, $_REQUEST, $_SERVER;
@@ -18,12 +22,11 @@ class RunJobs extends Command
 			}
 			return;
 		}
-		$maintainLock = new GlobalLock();
+        $maintainLock = new GlobalLock();
 
 		$this->logStart();
 
 		$jobs_to_run = array();
-		$jobs_locks = array();
 
         // see SessionBuilder for more details
         \FileSystem::rmdirr( SERVER_FILES_PATH . 'sessions' );
@@ -84,26 +87,13 @@ class RunJobs extends Command
 			
 			$job_it->moveNext();		
 		}
-		
+
 		// execute jobs
 		if ( count($jobs_to_run) > 0 )
 		{
 			$job_it = $job->getInArray('co_ScheduledJobId', $jobs_to_run);
 			while ( !$job_it->end() )
 			{
-				/*
-				$lock = new LockFileSystem(BACKGROUND_TASKS_LOCK_NAME.'-'.$job_it->getId());
-				if ( $lock->Locked($this->timeWaitedForPrevInstance) ) {
-					if ( is_object($this->getLogger()) ) {
-						$this->getLogger()->info( 'Another instance of background job is running at the moment: '.$job_it->getDisplayName() );
-					}
-					$job_it->moveNext();
-					continue;
-				}
-				$lock->Lock();
-				$jobs_locks[] = $lock;
-				*/
-
 				$model_factory = new ModelFactoryExtended($plugins);
 				SessionBuilderCommon::Instance()->openSession();
 
@@ -118,18 +108,12 @@ class RunJobs extends Command
  					include( $include );
 				}
  				
-				$start_date = SystemDateTime::date();
-				
-				if ( class_exists($classname) )
-				{
+				if ( class_exists($classname) ) {
 				 	$command = new $classname;	
 				}
-				else
-				{
+				else {
 					$parts = preg_split('/\//', $classname);
-					
-					if ( count($parts) > 1 )
-					{
+					if ( count($parts) > 1 ) {
 				 		$command = $plugins->getCommand( $parts[0], 'co', $parts[1] );
 					}
 				}
@@ -142,17 +126,22 @@ class RunJobs extends Command
 					{
 						// pass concrete chunk to be processed
 						if ( $_REQUEST['chunk'] != '' ) $command->setChunk(TextUtils::parseIds($_REQUEST['chunk']));
-						
-						ob_start();
-						$command->execute();
 
-						if ( $_REQUEST['redirect'] == '' )
-						{
-							echo $job_it->getDisplayName().': '.translate('Выполнено').': '.SystemDateTime::date();
-						}
-						$result = ob_get_contents();
+                        $jobLock = new LockFileSystem($classname);
+                        if ( !$jobLock->Locked(defined('JOB_LOCK_TIMEOUT') ? JOB_LOCK_TIMEOUT : 1800) ) {
+                            $jobLock->Lock();
+                            $command->execute();
+                            $jobLock->Release();
+                            $result = translate('Выполнено');
 
-						if ( is_object($this->getLogger()) ) $this->getLogger()->info($result);
+                        }
+                        else {
+                            $result = translate('В ожидании');
+                        }
+
+						if ( is_object($this->getLogger()) ) $this->getLogger()->info(
+                            $job_it->getDisplayName().': '.$result.': '.SystemDateTime::date()
+                        );
 						
 						getFactory()->getObject('co_JobRun')->add_parms( array ( 
 							'ScheduledJob' => $job_it->getId(),
@@ -192,13 +181,13 @@ class RunJobs extends Command
 				$job_it->moveNext();
 			}
 		}
-		
-		$this->logFinish();
 
-		foreach( $jobs_locks as $lock ) {
-			$lock->Release();
-		}
+		$this->logFinish();
 		$maintainLock->Release();
+
+		if ( $_REQUEST['redirect'] != '' ) {
+		    exit(header('Location: ' . $_REQUEST['redirect']));
+        }
 	}
 	
 	function checkForPattern( $value, $pattern )
@@ -233,7 +222,12 @@ class RunJobs extends Command
 	
 	function repairTables()
 	{
-	    DAL::Instance()->Query("check table co_JobRun");
+        $it = getFactory()->getObject('cms_SystemSettings')->createSQLIterator(
+            "show table status where Comment like '%crashed%' and Name = 'co_JobRun'"
+        );
+        if ( $it->count() < 1 ) return;
+
+        DAL::Instance()->Query("check table co_JobRun");
 	    DAL::Instance()->Query("repair table co_JobRun USE_FRM ");
 	}
 }

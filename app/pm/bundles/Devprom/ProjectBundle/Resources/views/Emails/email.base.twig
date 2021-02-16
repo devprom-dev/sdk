@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+        img {
+            max-width: 640px !important;
+            height: auto !important;
+        }
+        body {
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: none;
+            width: 100% !important;
+            height: 100%;
+            line-height: 1.6em;
+        }
+        body {
+            background-color: #f6f6f6;
+        }
+        @media only screen and (max-width: 640px) {
+            body {
+                padding: 0 !important;
+            }
+            h1 {
+                font-size: 22px !important;
+                font-weight: 800 !important;
+                margin: 20px 0 5px !important;
+            }
+            h2 {
+                font-size: 18px !important;
+                font-weight: 800 !important;
+                margin: 20px 0 5px !important;
+            }
+            h3 {
+                font-weight: 800 !important;
+                margin: 20px 0 5px !important;
+                font-size: 16px !important;
+            }
+            h4 {
+                font-weight: 800 !important;
+                margin: 20px 0 5px !important;
+            }
+            .container {
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            .content {
+                padding: 0 !important;
+            }
+            .content-wrap {
+                padding: 10px !important;
+            }
+        }
+    </style>
+</head>
+<body style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: none; width: 100% !important; height: 100%; line-height: 1.6em; background-color: #f6f6f6; margin: 0;" bgcolor="#f6f6f6">
+    <table class="body-wrap" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; width: 100%; background-color: #f6f6f6; margin: 0;" bgcolor="#f6f6f6">
+        <tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+            <td style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0;" valign="top"></td>
+            <td class="container" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; display: block !important; clear: both !important; margin: 0 auto;" valign="top">
+                <div class="content" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; display: block; margin: 0 auto; padding: 20px;">
+                    <table class="main" width="100%" cellpadding="0" cellspacing="0" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; border-radius: 3px; background-color: #fff; margin: 0; border: 1px solid #e9e9e9;" bgcolor="#fff">
+                        <tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                            <td class="content-wrap" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 20px;" valign="top">
+                                <table width="100%" cellpadding="0" cellspacing="0" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                    <tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                        <td class="content-block" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+                                            <h3>{% block title %}{% endblock %}</h3>
+                                        </td>
+                                    </tr>
+                                    {% block content %}{% endblock %}
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="footer" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; width: 100%; clear: both; color: #999; margin: 0; padding: 20px; padding-left: 0;">
+                        <table width="100%" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                            <tr style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                <td class="content-block" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 12px; vertical-align: top; color: #999; margin: 0; padding: 0 0 20px;" valign="top" width="36">
+                                    <a href="https://devprom.ru"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAnEAYAAAA3BDZ1AAAABGdBTUEAALGPC/xhBQAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+MHHxEjDEylqlgAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAF0ElEQVRo3u1aMWvbXBSVgymZSrxmsgrtFFp7KIESsPUDAk7GLrXo0NERZCtEsaFbwU63DiXu0tFRyQ+wAqHgqaZ06tCqS+gW0yl0cYfDqfyu9Cw5sWzy8b3lIduS7j06995zr5wzlrR+/37x4t69eh1HjQb2Ukn9VRBg933szebdu2/ffv/Oz7NfueUA0+/jqFqd7ezRCLtlAajhMGt7VxYLTLutAkOHbRsO53Lc8blpYvc87Gtr2Pt9XI/Ht5hBcISAkDlc5XJaJsQzr9PB+Y5zyxnkuuoxc8msIWLb6vHeHoArFm8dQDC8VlOfOJNrpzPr9dTkTKCaTezZAZQ6xP78+fBhfT0pqQbBnTtPn15cBAEA+vFDdcC2v3y5uHj5kjlFVq1FrdFoa+v09PnzZAbn4oFg8mNosBwnJUXLuro6O1tdJZA83/fBAMs6P9/efvfuulVs/kCpRcBxABw/1wKkc4B6hFT/+ZM3AjDdLo7JHAJqWWAOr8Pr05Cjo8UA8uiRymjJYNpjmgQqrwJDpsgybFkIHT0l1TJOYLpdMMf3z8+3tw3j82eZrGHI7DnppgtMJlAnJypgPLas3HTm2DaAITN0wPBGZA6XaYI5vN7xMRkIYEzTMFqtwSCrkGs2DePgYHPz8DAdUFH7BUDjsfqDQgEAhTGZTp80mwCGzCBzaIhlbW09fryxwVAlcPNaMgJME0Dp/YjPjZaVj4/BZIWqCkBpEIHZ21OB8X0wx/cN4/R0MrnPD5xWazAg4EwZDH2po2bWQTLHJFFePnnHAXMIMJvQ8Pv5AdHrXV4eHmLv97HzgVAfcdXrAC4qK8Ac2httlgVA79+rx9JB2YWTGcMhkjFzFct7mKzT6o7ZFu/HB9luG8bGxoMHkzlocpFJchFY2kumRwCiHmCoVKvxAlHeqNlUkx0B5HWy6JV2dwsFnTKnffw89AdMkv5IIoTA/gNITcbSIRlKkgmkJs8P9Y0UXtksOsT71GpgEu1K64/nhTlS04upZZ0nFouqTpI3bDQePlxff/VK5ppF6Jvd3UKBwMiQcl1Ur6g/YJL0J8r0XLreSypf04RyJpV5IwrD2avFfJN3tAc0jK9fv31jSEb90ckAbTcPJpFqcmAlqwUvXK8jiS+rCdVVS9dFyJFB9Ev6M8O44/XrT58qFTIoesPV1Url6orHspfSVYvsFuyt1RByfKAEgkwiEJLhrouQi45NVuJvxJDp99+8KRbv3+e3MqewnPNzUrhaVedBWQNDJhwfq/ZHc6UqA3T+JDJI/pAhEw0pMEl+v2gmySa5UlEfmOwQyJSoP1IGrMQzJ2wN9vefPDk78zxVBkSrhSoUQ2qDSfoYvxlz+GCk7qJ9UQGIEPR9NSnLFPHsmYZB4RfxQDB5R0NKlQE8j0DxiWbFnDAX7u//+sUMFI0EXXWVoUY/DCOv64LBnFAwTa8WnJ+QSXxdk3T+TZLxpL1SUUvgOh1VeU8uMqnVGgxoLxV3qZS/rqFgkueBOeGFcczxxrwU9MePKnOjrQ6YkxRys661tXy85C6VmJPAJP3ATGUSgZm3DrJt2CPHJ8NhaF+vF33vdnSkKm3deCSumz842Nz0/Xx8N88fttswLAh0IcdRLJhTLqedJ6UdqkNm0EGZUxwHylmOioMAwOgniaruYYoIpw/aVgOA6JjAGF7cnwdUw2mP5yGkmHTlxHJnB60Fz5PFRzfvirYeuenJkE+A44Ds34WnW6YJgMic8PUSgNnZUWfMSXaTMY4je7LULw5V3bEsoEYjAEMGSwDKZbUpnZYLkWOS7pjhnxd6vcvLuGYwKTekua6cOXe7uO78pwgZ/nlhsnpQKLpuOEu+DjDzLuNLBWiaIm804HCaPx1MMlFOAlnGsysaCwCIvU/cXOnkBADEvT2ZBJD6hgyiXst+YrnAv+BNMkE6nD5JY7csAP8f+guempP4opAKXFdNGDosw6a5KGD+MWg8Ho/lC+f/V7j+AmsC3T0kGXP0AAAAAElFTkSuQmCC"></a>
+                                </td>
+                                <td class="content-block" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 12px; vertical-align: top; color: #999; margin: 0; padding: 0 0 20px; padding-left: 16px;" valign="top">
+                                    {% block footer %}{% endblock %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </td>
+            <td style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0;" valign="top"></td>
+        </tr>
+    </table>
+</body>
+</html>

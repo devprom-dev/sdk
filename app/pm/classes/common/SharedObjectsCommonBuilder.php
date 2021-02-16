@@ -11,14 +11,17 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
     
     public function build( SharedObjectRegistry & $set )
     {
+        $requestSection = 'Requests';
+        if ( getSession()->IsRDD() ) {
+            $requestSection = 'Tasks';
+        }
      	$entities = array ( 
-            'Request' => 'Requests',
-            'RequestTraceBase' => 'Requests',
-            'RequestLink' => 'Requests',
-            'RequestType' => 'Requests',
+            'Request' => $requestSection,
+            'RequestTraceBase' => $requestSection,
+            'RequestLink' => $requestSection,
             'Feature' => 'Features',
-            'FeatureType' => 'Features',
-            'TaskType' => 'Tasks',
+            'FeatureHasIssues' => 'Features',
+            'FeatureTerminal' => 'Features',
             'PMBlogPost' => 'Blog',
             'BlogPostFile' => 'Blog',
             'Activity' => '3',
@@ -35,11 +38,18 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
             'ProjectPage' => 'KnowledgeBase',
             'CustomTag' => '3',
             'RequestTag' => '3',
+            'TaskTag' => '3',
+            'QuestionTag' => '3',
+            'FeatureTag' => '3',
             'WikiTag' => '3',
             'WikiPageFile' => '3',
             'Tag' => '3',
             'pm_Integration' => '3',
-            'pm_TextTemplate' => '3'
+            'pm_TextTemplate' => '3',
+            'PMCustomAttribute' => '3',
+            'PMCustomAttributeValue' => '3',
+            'Snapshot' => '3',
+            'Baseline' => '3'
         );
     
 		foreach( $entities as $key => $category ) {

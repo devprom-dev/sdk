@@ -93,7 +93,6 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
 		if ( $object_it->object instanceof AffectedObjects ) return; // avoid infinite recursion
-		if ( $object_it->object instanceof CoScheduledJob ) return;
 		if ( in_array($object_it->object->getEntityRefName(), $this->skipped_entities) ) return; // skip unnesessary events
 
         // put itself in the queue
@@ -120,10 +119,9 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
     		
     		$ref = $object_it->object->getAttributeObject($attribute);
     		if ( in_array($ref->getEntityRefName(), $this->skipReferences) ) continue;
-    		
+
     		$class_name = get_class($ref);
-    		
-    		$ref_it = $object_it->getRef($attribute);
+    		$ref_it = $this->getReferenceIt($ref, $object_it->get($attribute));
    			$this->storeAffectedRows($class_name, $ref_it);
    			
 			foreach( $this->getDescendants($class_name) as $class ) {
@@ -162,6 +160,14 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	
 	function getDescendants( $class_name )
 	{
+	    if ( in_array($class_name, array('WikiPage', 'PMWikiPage')) ) {
+            return array(
+                'Requirement',
+                'TestScenario',
+                'HelpPage',
+                'ProjectPage'
+            );
+	    }
 		if ( $class_name == 'Metaobject' ) return array();
 		if ( $class_name == 'Object' ) return array();
 
@@ -179,12 +185,12 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		{
 		    case 'pm_Activity':
 				if ( $object_it->get('Task') == '' ) return array();
-		    	$ref_it = $object_it->getRef('Task');
-		    	
+		    	$ref_it = $this->getReferenceIt($object_it->object->getAttributeObject('Task'), $object_it->get('Task'));
+
 		    	if ( $ref_it instanceof TaskIterator && $ref_it->object->getAttributeType('ChangeRequest') != '' )
 		    	{
 			    	return array( 
-			    		'Request' => $ref_it->getRef('ChangeRequest')
+			    		'Request' => $this->getReferenceIt($ref_it->object->getAttributeObject('ChangeRequest'), $ref_it->get('ChangeRequest'))
 			    	);
 		    	}
 		    	else
@@ -208,11 +214,19 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 				$classes = array('WorkItem' => $object_it->copy());
 				return $classes;
 
+            case 'pm_CustomReport':
+                $classes = array('PMReport' => $object_it->copy());
+                return $classes;
+
 		    case 'pm_Release':
 		    	return array( 
 		    		'Stage' => $object_it->copy()
 		    	);
-		    case 'pm_Version': 
+            case 'pm_RequestTag':
+                return array(
+                    'Issue' => $object_it->getRef('Request')->getSpecifiedIt()
+                );
+		    case 'pm_Version':
 		    	return array( 
 		    		'Stage' => $object_it->copy()
 		    	);
@@ -276,5 +290,13 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		
 		return array();		
 	}
+
+	function getReferenceIt ($ref, $value)
+    {
+	    if ( $value == '' ) return $ref->getEmptyIterator();
+        $registry = new ObjectRegistrySQL($ref);
+        return $registry->Query(array(
+            new FilterInPredicate($value)
+        ));
+    }
 }
- 

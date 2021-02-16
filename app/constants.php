@@ -9,7 +9,8 @@ define( 'SHARED_DIRECTION_BWD', 'backward' );
 define( 'DUMMY_PROJECT_VPD', '-' );
 define( 'MAINTENANCE_LOCK_NAME', 'maintenance' );
 define( 'BACKGROUND_TASKS_LOCK_NAME', 'background' );
-define('APP_CHARSET', 'utf8'); //db level
-define('APP_ENCODING', 'utf-8'); //app level (php,front)
+define( 'APP_CHARSET', 'utf8'); //db level
+define( 'APP_ENCODING', 'utf-8'); //app level (php,front)
+define( 'EMAIL_MSG_ID_SEPARATOR', '-devpromalm-');
 if ( date_default_timezone_get() != "UTC" ) date_default_timezone_set('UTC');
 

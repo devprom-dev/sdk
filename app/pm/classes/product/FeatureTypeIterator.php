@@ -1,5 +1,5 @@
 <?php
 
-class FeatureTypeIterator extends OrderedIterator
+class FeatureTypeIterator extends CacheableIterator
 {
 } 

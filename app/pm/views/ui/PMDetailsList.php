@@ -2,7 +2,7 @@
 
 class PMDetailsList extends PageList
 {
-	function getIds() {
+	function getIds( $values ) {
 		return array(); // skip incremental update of list content
 	}
 

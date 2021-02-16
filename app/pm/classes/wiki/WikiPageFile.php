@@ -11,6 +11,9 @@ class WikiPageFile extends Metaobject
         $this->addAttribute('ContentExt', 'VARCHAR', '', false, true);
         $this->addAttribute('ContentPath', 'VARCHAR', '', false, true);
         $this->addAttribute('ContentMime', 'VARCHAR', '', false, true);
+
+        $this->addAttributeGroup('WikiPage', 'alternative-key');
+        $this->addAttributeGroup('ContentExt', 'alternative-key');
 	}
 
  	function createIterator() {

@@ -9,7 +9,7 @@ class InvitationPage extends PMPage
  		return true;
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		$_REQUEST['formonly'] = 'true';
  		

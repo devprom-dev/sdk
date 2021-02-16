@@ -1,5 +1,4 @@
 <?php
-
 include "StateBaseIterator.php";
 include "StateBaseRegistry.php";
 include "predicates/StateClassPredicate.php";
@@ -20,15 +19,26 @@ class StateBase extends Metaobject
  	function __construct() 
  	{
  		parent::__construct('pm_State', new StateBaseRegistry($this));
- 		$this->defaultsort = " OrderNum ASC ";
+
+        foreach( array('ReferenceName','ObjectClass') as $attribute ) {
+            $this->addAttributeGroup($attribute, 'alternative-key');
+        }
+
+        $this->defaultsort = " OrderNum ASC ";
  	}
  	
  	function createIterator() 
  	{
  		return new StateBaseIterator( $this );
  	}
- 	
- 	function getObjectClass()
+
+ 	function getValidators() {
+        return array(
+            new StateModelValidator()
+        );
+    }
+
+    function getObjectClass()
  	{
  		return '';
  	}
@@ -145,8 +155,12 @@ class StateBase extends Metaobject
 			$class = getFactory()->getClass($this->getObjectClass());
 			if ( class_exists($class, false) )
 			{
-				$sql = " UPDATE ".getFactory()->getObject($class)->getEntityRefName()." SET State = '".$now_state_it->get('ReferenceName')."' WHERE State = '".$was_state_it->get('ReferenceName')."' AND VPD = '".$now_state_it->get('VPD')."' ";
-				DAL::Instance()->Query($sql);
+                $this->updateObjectState(
+                    $class,
+                    $now_state_it->get('ReferenceName'),
+                    $was_state_it->get('ReferenceName'),
+                    $now_state_it->get('VPD')
+                );
 			}
 		}
 
@@ -180,13 +194,28 @@ class StateBase extends Metaobject
         $class = getFactory()->getClass($this->getObjectClass());
         if ( class_exists($class, false) )
         {
-            $states = $this->getAll()->fieldToArray('ReferenceName');
-            $firstState = array_shift($states);
-
-            $sql = " UPDATE ".getFactory()->getObject($class)->getEntityRefName()." SET State = '".$firstState."' WHERE State = '".$wasStateIt->get('ReferenceName')."' AND VPD = '".$wasStateIt->get('VPD')."' ";
-            DAL::Instance()->Query($sql);
+            $this->updateObjectState(
+                $class,
+                array_shift($this->getAll()->fieldToArray('ReferenceName')),
+                $wasStateIt->get('ReferenceName'),
+                $wasStateIt->get('VPD')
+            );
         }
 
         return $result;
+    }
+
+    function updateObjectState( $className, $newState, $wasState, $vpd )
+    {
+        DAL::Instance()->Query(
+            " UPDATE ".getFactory()->getObject($className)->getEntityRefName()." 
+                 SET State = '".DAL::Instance()->Escape($newState)."' 
+               WHERE State = '".DAL::Instance()->Escape($wasState)."' 
+                 AND VPD = '".$vpd."' " . $this->getObjectStateUpdateClausePredicate()
+        );
+    }
+
+    function getObjectStateUpdateClausePredicate() {
+ 	    return "";
     }
 }

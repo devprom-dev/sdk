@@ -1,5 +1,6 @@
 <?php
 include SERVER_ROOT_PATH . "core/classes/system/validators/ModelValidatorSystemSettingsTimezone.php";
+include "ui/FieldRestCache.php";
 
 class SystemSettingsForm extends PageForm
 {
@@ -10,7 +11,13 @@ class SystemSettingsForm extends PageForm
 		parent::__construct( $object );
 	}
 
-	function validateInputValues( $id, $action )
+	function extendModel()
+    {
+        parent::extendModel();
+        $this->getObject()->addAttribute('ResetCache', '', '', true, false, '', 50);
+    }
+
+    function validateInputValues( $id, $action )
 	{
 	    $result = parent::validateInputValues( $id, $action );
 	    
@@ -36,6 +43,10 @@ class SystemSettingsForm extends PageForm
 		}
 	}
 
+    function getBodyTemplate() {
+        return "core/PageFormBody.php";
+    }
+
 	function getFieldDescription( $name )
 	{
 		switch ( $name )
@@ -50,15 +61,16 @@ class SystemSettingsForm extends PageForm
 
 	function createFieldObject( $attr_name )
 	{
-		global $model_factory;
-
 		switch ( $attr_name )
 		{
 			case 'Parameters':
 				return new FieldLargeText();
 
 			case 'EmailTransport':
-				return new FieldDictionary($model_factory->getObject('co_MailTransport'));
+				return new FieldDictionary(getFactory()->getObject('co_MailTransport'));
+
+            case 'ResetCache':
+                return new FieldRestCache(getSession()->getApplicationUrl().'clear-cache.php');
 		}
 
 		return parent::createFieldObject( $attr_name );
@@ -78,10 +90,6 @@ class SystemSettingsForm extends PageForm
 				
 			case 'ServerPort':
 				$field->setDefault(text(466).EnvironmentSettings::getServerPortDefault());
-				break;
-
-			case 'ServerName':
-				$field->setDefault(text(466).EnvironmentSettings::getServerNameDefault());
 				break;
 		}
 
@@ -127,16 +135,23 @@ class SystemSettingsForm extends PageForm
 			return join($lines, "\r\n");
 	}
 	
-    function getModelValidator()
-    {
-        $validator = parent::getModelValidator();
-        $validator->addValidator( new ModelValidatorSystemSettingsTimezone() );
-        return $validator;
+    function getValidators() {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new ModelValidatorSystemSettingsTimezone()
+            )
+        );
     }
 
     function getPageTitle()
     {
         return translate('Приложение');
+    }
+
+    function IsNeedButtonDelete()
+    {
+        return false;
     }
 }
 

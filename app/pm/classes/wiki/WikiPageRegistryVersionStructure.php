@@ -3,13 +3,11 @@ include_once SERVER_ROOT_PATH.'core/classes/versioning/VersionedObject.php';
 
 class WikiPageRegistryVersionStructure extends ObjectRegistrySQL
 {
-    public function setDocumentIt($document_it)
-	{
-		$this->document_it = $document_it->copy();
-	}
-	
-	public function setSnapshotIt($snapshot_it)
-	{
+    public function setDocumentIt($documentIt) {
+        $this->document_it = $documentIt;
+    }
+
+	public function setSnapshotIt($snapshot_it) {
 		$this->snapshot_it = $snapshot_it->copy();
 	}
 	
@@ -17,21 +15,23 @@ class WikiPageRegistryVersionStructure extends ObjectRegistrySQL
 	{
 		$versioned = new VersionedObject();
 		$versionedIt = $versioned->getExact(get_class($this->getObject()));
- 		$real_attributes = $versionedIt->get('Attributes');
+ 		$versionedAttributes = $versionedIt->get('Attributes');
 	    $attributes = array();
+        $syntethicAttributes = array();
 
-	    foreach( $this->getObject()->getAttributes() as $attribute => $data )
+        foreach( $this->getObject()->getAttributes() as $attribute => $data )
 	    {
-	    	if ( in_array($attribute, $real_attributes) ) continue;
+            if ( $attribute != 'DocumentVersion' && !$this->getObject()->IsAttributeStored($attribute) ) {
+                $syntethicAttributes[] = $attribute;
+                continue;
+            }
+	    	if ( in_array($attribute, $versionedAttributes) ) continue;
 			if ( in_array($attribute, array('UID', 'DocumentId')) ) continue;
-	        if ( $attribute != 'DocumentVersion' && !$this->getObject()->IsAttributeStored($attribute) ) continue;
-	        
 	        $attributes[] = $attribute;
 	    }
 
         $sqlPredicate = '';
-        foreach( $this->getFilters() as $filter )
-        {
+        foreach( $this->getFilters() as $filter ) {
             if ( $filter instanceof FilterInPredicate ) {
                 $filter->setAlias('t');
                 $filter->setObject( $this->getObject() );
@@ -40,10 +40,10 @@ class WikiPageRegistryVersionStructure extends ObjectRegistrySQL
         }
 
 	    $sqlAttributes = array_map(
-	        function($value) {
-                return "t.".$value;
+	        function($value) use($syntethicAttributes) {
+                return in_array($value, $syntethicAttributes) ? ' NULL as '.$value : 't.'.$value;
             },
-            array_merge($real_attributes, $attributes)
+            array_merge($versionedAttributes, $attributes)
         );
 
         $persister = new SnapshotItemValuePersister($this->snapshot_it->getId());
@@ -71,17 +71,17 @@ class WikiPageRegistryVersionStructure extends ObjectRegistrySQL
 
         return " (SELECT t.WikiPageId, t.UID, t.DocumentId, t.VPD, t.RecordVersion, ".join(",",$sqlAttributes).
 	    	   "	FROM WikiPage t ".
-	    	   "   WHERE t.DocumentId = ".$this->document_it->getId().$sqlPredicate.
+	    	   "   WHERE t.DocumentId = " . $this->document_it->getId() . $sqlPredicate .
 	    	   "   UNION ".
-	    	   "  SELECT t.ObjectId, (SELECT p.UID FROM WikiPage p WHERE p.WikiPageId = t.ObjectId AND p.DocumentId = ".$this->document_it->getId()."), ".$this->document_it->getId().", ".
+	    	   "  SELECT t.ObjectId, (SELECT p.UID FROM WikiPage p WHERE p.WikiPageId = t.ObjectId), ".$this->document_it->getId().", ".
 		       "		 t.VPD, NULL, ".join(",",array_merge($snapshotAttributes)).
 	    	   "	FROM cms_SnapshotItem t ".
 	    	   "   WHERE t.Snapshot = ".$this->snapshot_it->getId().
-	    	   "     AND NOT EXISTS (SELECT 1 FROM WikiPage p ".
-	    	   "					  WHERE p.DocumentId = ".$this->document_it->getId()." AND p.WikiPageId = t.ObjectId) ".  
+	    	   "     AND NOT EXISTS (SELECT 1 FROM WikiPage p1, WikiPage p2 ".
+	    	   "					  WHERE p1.DocumentId = ".$this->document_it->getId()." AND p1.UID = p2.UID AND p2.WikiPageId = t.ObjectId) ".
 	    	   "  ) ";
 	}
 	
 	private $snapshot_it;
-	private $document_it;
+    private $document_it;
 }

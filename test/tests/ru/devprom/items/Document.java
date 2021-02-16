@@ -3,11 +3,13 @@ package ru.devprom.items;
 public class Document {
 	private String name;
 	private String body;
+	private String id;
 
 	public Document(String name, String body) {
 		super();
 		this.name = name;
 		this.body = body;
+		this.id = "";
 	}
 
 	public String getName() {
@@ -18,12 +20,19 @@ public class Document {
 		this.name = name;
 	}
 
-	public String getBody() {
+	public String getContent() {
 		return body;
 	}
 
-	public void setBody(String body) {
+	public void getContent(String body) {
 		this.body = body;
 	}
 
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getId() {
+		return id;
+	}
 }

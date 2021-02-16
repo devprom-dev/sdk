@@ -75,7 +75,7 @@ class ProjectDashboardList extends PMPageList
                 if ( $object_it->get('IssuesTotal') > 0 ) {
                     echo '<tr>';
                     echo '<td style="vertical-align: top;text-align:right;">';
-                        echo translate('Пожелания');
+                        echo translate('Требования');
                     echo '</td>';
 
                     $total = $object_it->get('IssuesTotal');
@@ -141,7 +141,7 @@ class ProjectDashboardList extends PMPageList
         return $actions;
     }
 
-    function getIds() {
+    function getIds( $values ) {
         return array();
     }
 }

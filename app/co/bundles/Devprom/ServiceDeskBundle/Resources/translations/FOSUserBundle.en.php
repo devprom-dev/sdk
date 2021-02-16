@@ -35,14 +35,8 @@ return array(
     'registration.cancel' => 'Cancel',
     'registration.submit' => 'Register',
     'registration.title' => 'Please fill the simple form',
-    'registration.email.subject' => 'Welcome %username%!',
-    'registration.email.message' => '
-            Hello %username%!
-
-            To finish activating your account - please visit %confirmationUrl%
-
-            Regards,
-            the Team.',
+    'registration.email.subject' => 'Registration confirmation',
+    'registration.email.message' => 'Hello %username%! <br/><br/> To finish activating your account - please visit %confirmationUrl%',
 
 # Password resetting
     'resetting.title' => 'Please enter your email address and we will send you the link to create new password.',

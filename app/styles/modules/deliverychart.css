@@ -1,0 +1,177 @@
+.vis-timeline.root {
+  border-color: #8d8d8d #8d8d8d transparent transparent;
+}
+.vis-timeline .currenttime {
+  background-color: #ff7f6e;
+}
+.vis-timeline .labelset .vlabel,
+.vis-timeline .foreground .group,
+.vis-timeline .vis-panel.center,
+.vis-timeline .vis-panel.left,
+.vis-timeline .vis-panel.right,
+.vis-timeline .vis-panel.top,
+.vis-timeline .vis-panel.bottom {
+  border-color: #8d8d8d;
+}
+.vis-timeline .vis-panel.left {
+  max-width: 210px;
+  line-height: 1.6;
+}
+.vis-timeline .timeaxis .grid.minor {
+  border-color: #f3f3f3;
+}
+.vis-timeline .labelset .vlabel,
+.vis-timeline .timeaxis .text {
+  color: #787878;
+}
+.vis-timeline .vis-item.background {
+  color: #424242;
+  background-color: rgba(239, 137, 0, 0.3);
+  border-left: 5px solid rgba(239, 137, 0, 0.6);
+}
+.vis-timeline .vis-item.background.overlapped .vis-item-content {
+  top: 20px !important;
+}
+.vis-timeline .vis-box {
+  max-width: 250px;
+  border: 0;
+  -webkit-border-radius: 3px;
+          border-radius: 3px;
+}
+.vis-timeline .vis-box a {
+  color: inherit;
+  text-decoration: none;
+}
+.vis-timeline .vis-box .popover {
+  color: black;
+  text-decoration: none;
+}
+.vis-timeline .vis-box a:hover {
+  text-decoration: underline;
+}
+.vis-timeline .vis-box.function,
+.vis-timeline .vis-box.issues {
+  border-left: 5px solid;
+}
+.vis-timeline .vis-box.function {
+  color: #ffffff;
+  background-color: #3f8d55;
+  border-color: #3f8d55;
+}
+.vis-timeline .vis-box.issues {
+  color: #ffffff;
+  background-color: #3064d4;
+  border-color: #3064d4;
+}
+.vis-timeline .vis-box.issues.complete {
+  color: #ffffff;
+  background-color: #a8afa5;
+  border-color: #a8afa5;
+}
+.vis-timeline .vis-box.issues .vis-item-content:before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  margin-top: -1px;
+  vertical-align: middle;
+  background: transparent 50% 50% no-repeat;
+}
+.vis-timeline .vis-box.issues.issues-bug .vis-item-content:before {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAKYSURBVDjLnZPJT1NRFMb5G1wDHV5boNiqdHrvFYolCAtsGSSWKpMFKhYqlDI6oAEKaVJwCIgSphaKtLYWCgSNBgRjMNHoxsSFS3cmJmA0NMTw+R6JKKZl4eJL7sm953fOd3JPHIC4WMpcppG5SGnZc8ZjVVF6QLn975sDgfaZmvg71oRJZIRUYcuAnq/2KWroGfm3QwEn2YpLVPPvOD2oiqj9yq/mGznegl56mx6T7ZbY1M6YAM0CuZkxT0b2Wg6QW/SsApRXDsotR+d6E9Y/h9DuqoCuJq0lKoDxqU1/pITGR27mBU4h+GEcTz5OY+ClA5JbyahYzof/9TBO9B/FcWcqpA4xU3We3GJ87ntnfO5meinMvruNnqcmXA2XoDVcCc0wCYkzBaZpA7ILRJ/2O2B87jA+QT9UeDRe8svZYAG8b/txc6kc9mA+yqayYPQXwvdmBEOrA5B2p0BtFIYOWKCm5RukWwZyXIbA+0F0LpaiKaBHmVsLw4we99ccsM8a8GClF5JOMcQdou8prULrgRmQo7KI0VcE13MrGv06lE5kodhzGvdWu2GdKkTVWC4DcELcJkKyXbCb1EhAVM//M0DVUNqP2qAJd1baUDaZjTMTeXAttsPi0cM0mgvHvA0NkxYk2QRIrieOsDmEmXttH0DfVfSluSToWmpD8bgOroUOWNw6VI7koGfOBuq6EqLLTNU6ojrmP5D1HVsjmrkYezGIrlA9LjKgnrlGXJlpgbCOD0EtD0QNN8I3cZqjAlhJr4rXpB1iNLhrYffUQWoT7yUKzbxqJlHLq0jc5JYmgHMunogKYJVqF7mTrPyfgktMRTMX/CrOq1gLF3fYNrLiX+Bs8MoTwT2fQPwXgBXHGL+TaIjfinb3C7cscRMIcYL6AAAAAElFTkSuQmCC");
+}
+.vis-timeline .vis-box.issues.issues- .vis-item-content:before {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHTSURBVDjLY/j//z8DJRhMxE8+VwjEE4D4DBD/j5989l/8pLP/4yec+Z8IpJMnn/2fOPH0//i+0+9TJp063b3uxv/uNdf/Ixsw+z+JoHPVNRQDboB4c468hePZeDAIJPYc+4EwYOLZDzADDt76AsaHbmPHMAMiWg7+gxsQN+HML5DgbAI2I7sgvHEfwguxfaf/kRoGoXV7EAbE9JwCC4bU7/nvU7vrv1fNLjD/3tMPWDFYbc1OhAHRXSfAgg5l2/83L7v436J4G9yA1++/oWCYAcEV2xAGRHUcBwsa5235X7f0wn+9nE0oBjx78/X/moMr/5fMTPif1uf/P7HL679veRGSC9qOgjXopK//X7rg7H/tlLUoBizfu/h/4+rE/1uuTP1/4dmu//27s/6H9+v+N8+W7IG4oO0I3ICS+ZgGgGzceHnC/43XJoHFe/ak/u/fkw4y4DvYgIimQ/9gBoA0IxsAwj7Vhv+3XZmDEgubLk0FGQDJEKENB+7hizL7QqX/3buS/rfvSgDz23cmoLogtHZff0jN3q3B1XveBVfu+h9Yvu1/YNmW/wElG//7F63975wX/z+4R+N/764UsM0gGsSHhwExGKi4A4g/gZwNpTtA4gDRWxxGCQ/RXQAAAABJRU5ErkJggg==");
+}
+.vis-timeline .vis-box.issues.issues-enhancement .vis-item-content:before {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJeSURBVDjLpZNLSNRRFIe/O81o+WjISM0epuarEHuDqIFEDyoqEFtFD4gWQVDQoo0QhFARbowKNNpKi0DJRYVGqRmY5oPUBs3S1GnMcdR0/v8Z554WM44RGURne7nf+X6cc5SI8D9lBTh79/0VIBkoAHaCCIJCCxaLwqJAa40O4LFZpT9z/cpdaOFqcZZCRDhT0V4p/1i3HveIiAQNgEKAh83usNrfgp3Pj6NvyGOGI6AlceExPT4SAKX+/PnjNxMAr+GPCANEJGqhq8NlLtk53myk0FlN/0QO19a+Ul33Lp4OArRYF9SWqrmxWqb7WliRcwp7ynY8g5n0Pa+6vQBQACXX6zG0RgvU3djP4OhUMI7nBXZ6iEvPxz3QS4TyEbsykZjVG+0hgAbgu9fPvm1J1LWNhDtH+1qxSRf21IOYY9VERCm+dPQxPatQvolcS8gAgBkjgF+EOXM+OImpZmw/GrCnHcYYrUTZJrHFxBItbh4N5bH70hOHBUCFDEzTj9cfIGD4cfbWEjX7GvvmYxgj97HY/PimN+Fq7GTNgTKchh2AoMEvUxeBnKgOPF+bid96BJ+zimURgjmdzHhTO6qonOUJ2YjMLwL0vA4ThluqKT0UwBdIYqy7Ao3BrHsdrre9qKJyVHQCodgSBgS0/gzQ/eAExWntbCm4QORwE46aZjqeuXG87GTD8TukZmSRkmQPmcrk4iYGdE1JaUOGiOTlulyrfB+ekpJbyNT4BANtDupjLzNe9g6R1lBIPQOWXgD1+zmf3Bvn3ZGaYN2TnYLYzDde1/i5oze7Pi21YD8BVSdMJ0n4cQkAAAAASUVORK5CYII=");
+}
+.vis-timeline .vis-box.demo {
+  color: #ffffff;
+  background-color: #e23535;
+  border-color: #e23535;
+}
+.vis-timeline .vis-box.priority-1 {
+  border-color: #ff0054;
+}
+.vis-timeline .vis-box.priority-2 {
+  border-color: #4560e8;
+}
+.vis-timeline .vis-box.priority-3 {
+  border-color: #35d13d;
+}
+.vis-timeline .vis-box.priority-4 {
+  border-color: #bfc603;
+}
+.vis-timeline .vis-box.priority-5 {
+  border-color: #81dbf9;
+}
+.vis-timeline .vis-box.priority-6 {
+  border-color: #25be5e;
+}
+.vis-timeline .vis-box.overflow:after {
+  content: "";
+  position: absolute;
+  width: 60px;
+  top: 0;
+  right: 10px;
+  bottom: 0;
+}
+.vis-timeline .vis-box.overflow.function:after {
+  background-image: -webkit-gradient(linear, left top, right top, from(rgba(63, 141, 85, 0)), to(#3f8d55));
+  background-image: -webkit-linear-gradient(left, rgba(63, 141, 85, 0) 0%, #3f8d55 100%);
+  background-image: -o-linear-gradient(left, rgba(63, 141, 85, 0) 0%, #3f8d55 100%);
+  background-image: linear-gradient(to right, rgba(63, 141, 85, 0) 0%, #3f8d55 100%);
+}
+.vis-timeline .vis-box.overflow.issues:after {
+  background-image: -webkit-gradient(linear, left top, right top, from(rgba(48, 100, 212, 0)), to(#3064d4));
+  background-image: -webkit-linear-gradient(left, rgba(48, 100, 212, 0) 0%, #3064d4 100%);
+  background-image: -o-linear-gradient(left, rgba(48, 100, 212, 0) 0%, #3064d4 100%);
+  background-image: linear-gradient(to right, rgba(48, 100, 212, 0) 0%, #3064d4 100%);
+}
+.vis-timeline .vis-box.overflow.issues.complete:after {
+  background-image: -webkit-gradient(linear, left top, right top, from(rgba(48, 100, 212, 0)), to(#a8afa5));
+  background-image: -webkit-linear-gradient(left, rgba(48, 100, 212, 0) 0%, #a8afa5 100%);
+  background-image: -o-linear-gradient(left, rgba(48, 100, 212, 0) 0%, #a8afa5 100%);
+  background-image: linear-gradient(to right, rgba(48, 100, 212, 0) 0%, #a8afa5 100%);
+}
+.vis-timeline .vis-box.overflow.demo:after {
+  background-image: -webkit-gradient(linear, left top, right top, from(rgba(226, 53, 53, 0)), to(#e23535));
+  background-image: -webkit-linear-gradient(left, rgba(226, 53, 53, 0) 0%, #e23535 100%);
+  background-image: -o-linear-gradient(left, rgba(226, 53, 53, 0) 0%, #e23535 100%);
+  background-image: linear-gradient(to right, rgba(226, 53, 53, 0) 0%, #e23535 100%);
+}
+.vis-timeline .vis-box.overflow.selected:after {
+  background-image: -webkit-gradient(linear, left top, right top, from(rgba(255, 194, 0, 0)), to(#ffc200));
+  background-image: -webkit-linear-gradient(left, rgba(255, 194, 0, 0) 0%, #ffc200 100%);
+  background-image: -o-linear-gradient(left, rgba(255, 194, 0, 0) 0%, #ffc200 100%);
+  background-image: linear-gradient(to right, rgba(255, 194, 0, 0) 0%, #ffc200 100%);
+}
+.vis-timeline .vis-item.function {
+  border-color: #3f8d55;
+}
+.vis-timeline .vis-item.issues {
+  border-color: #3064d4;
+}
+.vis-timeline .vis-item.demo {
+  border-color: #e23535;
+}
+.vis-timeline .vis-item.dot {
+  -webkit-border-radius: 0;
+          border-radius: 0;
+}
+
+.vis-timeline .vis-box.selected {
+  color: #424242;
+  background-color: #ffc200;
+  border-color: #ffc200;
+  opacity: 1;
+}
+.vis-timeline .vis-item.selected {
+  border-color: #ffc200;
+}
+.vis-item .vis-item-content {
+  overflow: hidden;
+  margin-right: 10px;
+}

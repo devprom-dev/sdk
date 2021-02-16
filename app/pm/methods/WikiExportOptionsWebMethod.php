@@ -3,7 +3,7 @@ include_once SERVER_ROOT_PATH.'pm/methods/WikiExportBaseWebMethod.php';
 
 class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
 {
-    function url( $page_it = null, $class, $title = '', $baseline = '' )
+    function url( $page_it = null, $class, $title = '', $baseline = '', $compare = '' )
     {
         $parms = array(
             get_class($this),
@@ -11,10 +11,11 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
             "entity=".strtolower(get_class($page_it->object)),
             'objects=%ids%',
             'baseline='.$baseline,
+            'compare='.$compare,
             'ExportTemplate'
         );
         $parms = array_merge($parms, array_keys($this->getCheckOptions($class)));
-        if ( in_array($class, array('WikiConverterPanDocMSWord','WikiConverterPanDocODF')) ) {
+        if ( count(array_intersect(class_parents($class), array('WikiConverterPanDoc','WikiConverterLibreOffice'))) > 0 ) {
             $parms[] = 'File';
         }
         return "javascript:processBulk('".translate('Экспорт').': '.$title."','?formonly=true&operation=Method:".join(":",$parms)."', '".(is_object($page_it) ? $page_it->getId() : '%ids%')."', '');";
@@ -24,9 +25,12 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
     {
         $options = array(
             'UseNumbering' => 'numbering',
-            'ExportChildren' => 'children',
+            'ExportChildren' => 'children'
         );
-        if ( !in_array($class, array('WikiConverterPanDocMSWord')) ) {
+        if ( count(array_intersect(class_parents($class), array('WikiConverterPanDoc','WikiConverterLibreOffice'))) > 0 ) {
+            $options['UseSyntax'] = 'syntax';
+        }
+        if ( !in_array($class, array('WikiConverterPanDocMSWord', 'WikiConverterLibreOfficeMSWord')) ) {
             $options['UsePaging'] = 'paging';
         }
         return $options;
@@ -40,7 +44,6 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
         ob_end_clean();
 
         $options = array();
-
         if ( $_REQUEST['ExportTemplate'] != '' ) {
             $template_it = getFactory()->getObject('ExportTemplate')->getExact($_REQUEST['ExportTemplate']);
             if ( $template_it->getId() > 0 ) {
@@ -49,7 +52,9 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
             }
         }
 
+        $data = array();
         foreach( $this->getCheckOptions($_REQUEST['class']) as $requestKey => $optionName ) {
+            $data[$requestKey] = $_REQUEST[$requestKey];
             if ( in_array($_REQUEST[$requestKey], array('Y','on')) ) {
                 $options[] = $optionName;
             }
@@ -61,8 +66,12 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
                 }
             }
         }
+
         if ( $_REQUEST['baseline'] != '' ) {
             $options[] = 'baseline,'.$_REQUEST['baseline'];
+        }
+        if ( $_REQUEST['compare'] != '' ) {
+            $options[] = 'compare,'.$_REQUEST['compare'];
         }
 
         if ( file_exists($_FILES['File']['tmp_name']) ) {
@@ -76,7 +85,14 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
             $options[] = 'template='.$template_it->getId();
         }
 
-        $url = '?'.$url.'&options='.join('-',$options);
+        $url = '?' . $url . '&' . http_build_query(
+            array_merge(
+                array(
+                    'options' => join('-',$options)
+                ),
+                $data
+            )
+        );
 
         echo JsonWrapper::encode(
             array (
@@ -85,6 +101,7 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
                 'object' => $url
             )
         );
+
         exit();
     }
 }

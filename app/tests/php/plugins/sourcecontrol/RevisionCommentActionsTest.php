@@ -12,27 +12,48 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
     {
         parent::setUp();
         
-        $this->handler = $this->getMock(
-        		'RevisionCommentActionsTrigger', 
-        		array('bindObjects','addWorkLog','moveObjects','info'),
-        		array(getSession())
-        );
+        $this->handler = $this->getMockBuilder(\RevisionCommentActionsTrigger::class)
+            ->setConstructorArgs(array(getSession()))
+            ->setMethods(['bindObjects','addWorkLog','moveObjects','info','addComment'])
+            ->getMock();
 
-        $request = $this->getMock('Request', array('getStates'));
+        $request = $this->getMockBuilder(\Request::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getStates'])
+            ->getMock();
         $request->expects($this->any())->method('getStates')->will( $this->returnValue(
                  array('submitted','inprogress','resolved')
         ));
         
-        $task = $this->getMock('Task', array('getStates'));
+        $task = $this->getMockBuilder(\Task::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getStates'])
+            ->getMock();
         $task->expects($this->any())->method('getStates')->will( $this->returnValue(
                  array('submitted','open','closed')
         ));
-        
+
+        $user = new \User();
+
+        $userRegistry = $this->getMockBuilder(ObjectRegistrySQL::class)
+            ->setConstructorArgs(array($user))
+            ->setMethods(['QueryById'])
+            ->getMock();
+        $userRegistry->expects($this->any())->method('QueryById')->will(
+            $this->returnValue($user->createCachedIterator(array(
+                array(
+                    'cms_UserId' => 1,
+                    'Caption' => 'test'
+                )
+            )))
+        );
+        $user->setRegistry($userRegistry);
+
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
                         array ( 'Request', null, $request ),
                         array ( 'Task', null, $task ),
-                        array ( 'User', null, new User() )
+                        array ( 'User', null, $user )
                 ) 
         ));
     }
@@ -43,8 +64,8 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
     	$this->handler->process((new Commit)->createCachedIterator(
     			array (
 	        		array (
-	        				'pm_SubversionRevisionId' => 1,
-	        				'Description' => 'I -123'
+                        'pm_SubversionRevisionId' => 1,
+                        'Description' => 'I -123'
 	        		)
     			)
         ), TRIGGER_ACTION_ADD);
@@ -154,8 +175,8 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
     	$commit_it = (new Commit)->createCachedIterator(
     			array (
 	        		array (
-	        				'pm_SubversionRevisionId' => 1,
-	        				'Description' => 'I-123 #submitted'
+                        'pm_SubversionRevisionId' => 1,
+                        'Description' => 'I-123 #submitted'
 	        		)
     			)
         	);
@@ -167,10 +188,86 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
         $this->handler->expects($this->atLeastOnce())->method('moveObjects')->with(
         		$this->anything(),
         		$this->anything(),
-        		$this->anything(),
         		$this->stringContains('submitted')
         	);
         
     	$this->handler->process($commit_it, TRIGGER_ACTION_ADD);
+    }
+
+    function testMessOfTags()
+    {
+        $commit_it = (new Commit)->createCachedIterator(
+            array (
+                array (
+                    'pm_SubversionRevisionId' => 1,
+                    'Description' => 'I-123 #submitted',
+                    'SystemUser' => 1
+                )
+            )
+        );
+
+        $this->handler->expects($this->atLeastOnce())->method('bindObjects')->will(
+            $this->returnValue(array($commit_it))
+        );
+
+        $this->handler->expects($this->exactly(2))->method('addWorkLog')->with(
+            $this->anything(),
+            $this->anything(),
+            $this->callback(function($o) {
+                return $o == 2;
+            }),
+            $this->callback(function($o) {
+                return $o == 'asdasd';
+            })
+        );
+        $this->handler->expects($this->exactly(0))->method('addComment');
+
+
+        $this->handler->process((new Commit)->createCachedIterator(
+            array (
+                array (
+                    'pm_SubversionRevisionId' => 1,
+                    'Description' =>
+                        '[T-687] #comment asdasd #time 2h'.PHP_EOL.
+                        '[T-688] #time 2h #comment asdasd'
+                )
+            )
+        ), TRIGGER_ACTION_ADD);
+    }
+
+    function testComments()
+    {
+        $commit_it = (new Commit)->createCachedIterator(
+            array (
+                array (
+                    'pm_SubversionRevisionId' => 1,
+                    'Description' => 'I-123 #submitted',
+                    'SystemUser' => 1
+                )
+            )
+        );
+
+        $this->handler->expects($this->atLeastOnce())->method('bindObjects')->will(
+            $this->returnValue(array($commit_it))
+        );
+
+        $this->handler->expects($this->exactly(1))->method('addComment')->with(
+            $this->anything(),
+            $this->anything(),
+            $this->callback(function($o) {
+                return $o == 'asdasd';
+            }),
+            $this->anything()
+        );
+
+        $this->handler->process((new Commit)->createCachedIterator(
+            array (
+                array (
+                    'pm_SubversionRevisionId' => 1,
+                    'Description' =>
+                        '[T-687] #comment asdasd'
+                )
+            )
+        ), TRIGGER_ACTION_ADD);
     }
 }

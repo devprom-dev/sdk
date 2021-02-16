@@ -86,7 +86,6 @@
                     margin: 0;
                 }
                 .template i.icon-info {
-                    display: none;
                     background: url(/images/icon-info-mini.png) 0 0 no-repeat;
                     width: 28px;
                     height: 28px;

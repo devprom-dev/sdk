@@ -1,8 +1,7 @@
 <?php
-
-$view->extend('pm/RequestPageBody.php'); 
-
-$view['slots']->output('_content');
+if ( $_REQUEST['attributesonly'] == '' ) {
+    $view->extend('core/PageBody.php');
+}
 
 $linked_attrs = array(
 	'SourceCode', 
@@ -24,13 +23,12 @@ $fields_dont_skip_if_empty = array (
     'Type',
     'Owner',
     'PlannedRelease',
-    'Iteration'
+    'Iteration',
+    'Deadlines',
+    'Severity'
 );
 
-$fields_to_be_skiped = array (
-	'FinishDate',
-    'State'
-);
+$fields_to_be_skiped = $form->getObject()->getAttributesByGroup('form-column-skipped');
 
 // attributes to be displayed in first column
 if ( array_key_exists('ResponseSLA', $attributes) ) {
@@ -76,35 +74,36 @@ foreach( $attributes as $name => $attribute )
 	$columns[$recent_column][$name] = $attribute;
 }
 
-// attributes to be displayed in fourth column
-$recent_column++;
-if ( is_array($attributes['Attachment']) ) {
-	$columns[$recent_column]['Attachment'] = $attributes['Attachment'];
-}
-if ( is_array($attributes['Tasks']) ) {
-	$columns[$recent_column]['Tasks'] = $attributes['Tasks'];
-}
-$section_class['Tasks'] = 'hidden-desktop';
-$section_class['Trace'] = 'hidden-desktop';
+// attributes to be displayed in third column
+if ( $_REQUEST['attributesonly'] == '' ) {
+    $recent_column++;
+    if ( is_array($attributes['Attachment']) ) {
+        $columns[$recent_column]['Attachment'] = $attributes['Attachment'];
+    }
+    if ( is_array($attributes['Tasks']) ) {
+        $columns[$recent_column]['Tasks'] = $attributes['Tasks'];
+    }
+    $section_class['Tasks'] = 'hidden-desktop';
+    $section_class['Trace'] = 'hidden-desktop';
 
-$wordyAttributes = array();
-foreach( $attributes as $name => $attribute ) 
-{
-	if ( !in_array($name, $linked_attrs) && $name != 'Attachment' ) continue;
-    if ( is_null($attribute['field']) ) continue;
-	if ( !$attribute['visible'] ) continue;
-    if ( is_null($attribute['field']) ) continue;
+    $wordyAttributes = array();
+    foreach( $attributes as $name => $attribute )
+    {
+        if ( !in_array($name, $linked_attrs) && $name != 'Attachment' ) continue;
+        if ( is_null($attribute['field']) ) continue;
+        if ( !$attribute['visible'] ) continue;
+        if ( is_null($attribute['field']) ) continue;
 
-	if ( count(preg_split('/,/',$attribute['value'])) > 20 ) {
-		$wordyAttributes[$name] =  $attribute;
-	}
-	else {
-		$columns[$recent_column][$name] = $attribute;
-	}
+        if ( count(preg_split('/,/',$attribute['value'])) > 20 ) {
+            $wordyAttributes[$name] =  $attribute;
+        }
+        else {
+            $columns[$recent_column][$name] = $attribute;
+        }
+    }
 }
 
 // other attributes
-
 $trace_attributes = array();
 
 foreach( $attributes as $name => $attribute ) 
@@ -117,56 +116,42 @@ foreach( $attributes as $name => $attribute )
 }
 
 ?>
+<div class="history-user">
 
 <div class="actions hidden-print">
 	<?php
 	if ( count($actions) > 0 && $action != 'show' ) {
 		echo $view->render('core/PageFormButtons.php', array(
 		    'actions' => $actions,
-            'sections' => $bottom_sections
+            'sections' => $sections
         ));
 	}
 	?>
 </div> <!-- end actions -->
 
-<ul class="breadcrumb hidden-print">
 <?php
-	if ( $uid != '' ) {
-		if ( $navigation_url != '' ) {
-            if ( $parent_widget_url != '' ) {
-                echo '<li><a href="'.$parent_widget_url.'">'.$parent_widget_title.'</a><span class="divider">/</span></li>';
-            }
-			echo '<li><a href="'.$navigation_url.'">'.$nearest_title.'</a><span class="divider">/</span></li>';
-		}
-		else if ( $caption != '' ) {
-			echo '<li>'.$caption.'<span class="divider">/</span></li>';
-		}
-		echo '<li>'.$view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)).'</li>';
-
-        if ( $state_name != '' ) {
-            echo '<li class="clip" style="margin-left:8px;">'.$view->render('pm/StateColumn.php', array (
-                    'color' => $form->getObjectIt()->get('StateColor'),
-                    'name' => $form->getObjectIt()->get('StateName'),
-                    'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y',
-                    'id' => 'state-label',
-                    'referenceName' => $form->getObjectIt()->get('State'),
-                    'listWidgetIt' => $listWidgetIt
-                )).'</li>';
-        }
-
-		if ( $nextUrl != '' ) {
-            echo '<li class="hidden-phone next-item">&#10140; <a title="'.text(2333).'" href="'.$nextUrl.'">'.$nextTitle.'</a></li>';
-        }
-	}
-	else {
-		echo '<li><a href="'.$navigation_url.'">'.$title.'</a></li>';
-	}
+    echo $view->render('core/PageBreadcrumbs.php', array(
+        'navigation_url' => $navigation_url,
+        'parent_widget_url' => $parent_widget_url,
+        'parent_widget_title' => $parent_widget_title,
+        'nearest_title' => $nearest_title,
+        'has_caption' => $has_caption,
+        'caption' => $caption,
+        'uid' => $uid,
+        'uid_url' => $uid_url,
+        'state_name' => $state_name,
+        'form' => $form,
+        'listWidgetIt' => $listWidgetIt,
+        'nextUrl' => $_REQUEST['attributesonly'] == '' ? $nextUrl : "",
+        'nextTitle' => $nextTitle,
+        'title' => $title
+    ));
 ?>
-</ul> <!-- end breadcrumb -->
 
-<h4 class="bs" style="width:90%;">
+<div class="form-container">
+<h4 class="bs page-form-view" style="width:90%;">
 	<? 
-	if ( $attributes['Caption']['field'] instanceof FieldWYSIWYG )
+	if ( $attributes['Caption']['field'] instanceof FieldEditable )
 	{
 	    $attributes['Caption']['field']->draw();
 	}
@@ -211,12 +196,11 @@ foreach( $attributes as $name => $attribute )
 								<td>
 									<?
 									if ( is_array($refs_actions[$ref_name]) ) {
-										$title = IteratorBase::getHtmlValue($attribute['text']);
 										if ( $ref_name == 'BlockReason' ) {
 											echo '<div class="alert alert-blocked">';
 										}
 										echo $this->render('core/EmbeddedRowTitleMenu.php', array (
-												'title' => $title,
+												'title' => $attribute['text'],
 												'items' => $refs_actions[$ref_name]
 										));
 										if ( $ref_name == 'BlockReason' ) {
@@ -224,7 +208,7 @@ foreach( $attributes as $name => $attribute )
 										}
 									}
 									else {
-										echo $view->render('pm/PageFormAttribute.php', $attribute);
+										echo $view->render('core/PageFormViewAttribute.php', $attribute);
 									}
 									?>
 								</td>
@@ -238,18 +222,20 @@ foreach( $attributes as $name => $attribute )
 							<?php foreach( $column as $ref_name => $attribute ) { ?>
 								<tr name="<?=$ref_name?>">
 									<th title="<?=htmlentities(strip_tags($attribute['description']))?>">
-										<?=$attribute['name']?>:
+                                        <?php if ( $attribute['type'] != 'char' ) { ?>
+										    <?=$attribute['name']?>:
+                                        <?php } ?>
 									</th>
 									<td>
 										<?
 										if ( is_array($refs_actions[$ref_name]) ) {
 											echo $this->render('core/EmbeddedRowTitleMenu.php', array (
-												'title' => IteratorBase::getHtmlValue($attribute['text']),
+												'title' => $attribute['text'],
 												'items' => $refs_actions[$ref_name]
 											));
 										}
 										else {
-											echo $view->render('pm/PageFormAttribute.php', $attribute);
+											echo $view->render('core/PageFormViewAttribute.php', $attribute);
 										}
 										?>
 									</td>
@@ -261,6 +247,7 @@ foreach( $attributes as $name => $attribute )
 
 				<!--  -->
                 <?
+                $wasToolbar = false;
                 foreach( $attributes as $key => $attribute )
                 {
                     if ( !$attribute['visible'] ) continue;
@@ -272,9 +259,14 @@ foreach( $attributes as $name => $attribute )
 						<?=$attribute['name']?>
 					</a>
 				</div>
-				<div class="accordion-body in collapse" style="overflow-x: hidden;">
+				<div class="accordion-body in collapse" style="overflow: hidden;">
 					<?
 					if ( is_a($attribute['field'], 'Field') ) {
+					    if ( !$wasToolbar && $attribute['field']->contentEditable() && $attribute['editable'] ) { $wasToolbar = true; ?>
+                            <div class="hidden-print documentToolbar sticks-top" style="overflow:hidden;">
+                                <div class="sticks-top-body hidden-print" id="documentToolbar" style="z-index:2;"></div>
+                            </div>
+                        <? }
                         $attribute['field']->draw($this);
 					}
 					else {
@@ -288,6 +280,7 @@ foreach( $attributes as $name => $attribute )
                 ?>
 
 			</div>
+            <? if ( is_array($columns[2]) ) { ?>
 			<div class="properties-cell-2">
 				<div class="properties-column">&nbsp;</div>
 				<?php $column = $columns[2]; ?>
@@ -302,12 +295,12 @@ foreach( $attributes as $name => $attribute )
 									<?
 									if ( is_array($refs_actions[$ref_name]) ) {
 										echo $this->render('core/EmbeddedRowTitleMenu.php', array (
-											'title' => IteratorBase::getHtmlValue($attribute['text']),
+											'title' => $attribute['text'],
 											'items' => $refs_actions[$ref_name]
 										));
 									}
 									else {
-										echo $view->render('pm/PageFormAttribute.php', $attribute);
+										echo $view->render('core/PageFormViewAttribute.php', $attribute);
 									}
 									?>
 								</td>
@@ -316,9 +309,24 @@ foreach( $attributes as $name => $attribute )
 					</table>
 				</div>
 			</div>
+            <? } ?>
 		</div>
 	</div>
-	
+
+    <?php if ( $attributes['Attachment']['visible'] ) { ?>
+        <div class="accordion-heading <?=$section_class['Trace']?>">
+            <a class="to-drop-btn" data-toggle="collapse" href="#collapseFour" tabindex="-1">
+                <span class="caret"></span>
+                <?=$attributes['Attachment']['name']?>
+            </a>
+        </div>
+        <div id="collapseFour" class="accordion-body in collapse <?=$section_class['Trace']?>">
+            <? echo $view->render('core/PageFormViewAttribute.php', $attributes['Attachment']); ?>
+            <div class="clearfix"></div>
+            <br/>
+        </div>
+    <?php } ?>
+
 	<?php if ( $attributes['Tasks']['visible'] ) { ?>
 
 	<div class="accordion-heading <?=$section_class['Tasks']?>">
@@ -329,7 +337,7 @@ foreach( $attributes as $name => $attribute )
 	</div>
 				
 	<div id="collapseThree" class="accordion-body collapse <?=$section_class['Tasks']?>">
-	    <? echo $view->render('pm/PageFormAttribute.php', $attributes['Tasks']); ?>
+	    <? echo $view->render('core/PageFormViewAttribute.php', $attributes['Tasks']); ?>
 	    <br/>
 	</div>
 	
@@ -343,26 +351,10 @@ foreach( $attributes as $name => $attribute )
 			</a>
 		</div>
 		<div id="collapse<?=$name?>" class="accordion-body">
-			<? echo $view->render('pm/PageFormAttribute.php', $attribute); ?>
+			<? echo $view->render('core/PageFormViewAttribute.php', $attribute); ?>
 			<br/>
 		</div>
 	<?php }	?>
-
-
-	<?php if ( $attributes['Attachment']['visible'] ) { ?>
-	
-	<div class="accordion-heading <?=$section_class['Trace']?>">
-	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseFour" tabindex="-1">				
-		<span class="caret"></span>
-		<?=$attributes['Attachment']['name']?> 
-	  </a>
-	</div>
-	<div id="collapseFour" class="accordion-body collapse <?=$section_class['Trace']?>">
-    	<? echo $view->render('pm/PageFormAttribute.php', $attributes['Attachment']); ?>
-    	<br/>
-	</div>
-	
-	<?php } ?>
 
 	<?php if ( count($trace_attributes) > 0 ) { ?>
 	<div class="accordion-heading <?=$section_class['Trace']?>">
@@ -379,7 +371,7 @@ foreach( $attributes as $name => $attribute )
 					<?=$attribute['name']?>: 
 				</th>
 				<td>
-				    <? echo $view->render('pm/PageFormAttribute.php', $attribute); ?>
+				    <? echo $view->render('core/PageFormViewAttribute.php', $attribute); ?>
 				</td>
 			</tr>
 		<?php } ?>
@@ -387,19 +379,19 @@ foreach( $attributes as $name => $attribute )
 	</div>
 	<?php }	?>
 	
-<?php if (!$formonly && $draw_sections) { ?>
+<?php if (!$formonly || $_REQUEST['attributesonly'] != '') { ?>
 
 	<div class="accordion-heading">
-	  <a id="comments-section" class="to-drop-btn <?=($_COOKIE['devprom_request_form_section#collapseComments']=='0'?'collapsed':'')?>" data-toggle="collapse" href="#collapseComments" tabindex="-1">
+	  <a id="comments-section" class="to-drop-btn" tabindex="-1">
 		<span class="caret"></span>
 		<?=text(1346)?>
 		<?=($comments_count > 0 ? ' ('.$comments_count.')' : '')?>
 	  </a>
 	</div>
-	<div id="collapseComments" class="accordion-body <?=($_COOKIE['devprom_request_form_section#collapseComments']=='0'?'':'in')?> collapse" style="overflow: inherit;">
+	<div id="collapseComments" class="accordion-body in collapse" style="overflow: inherit;">
         <?php 
         	echo $view->render('core/PageSections.php', array(
-        		'sections' => array_merge($bottom_sections, $sections),
+        		'sections' => $sections,
         		'object_class' => $object_class,
         		'object_id' => $object_id,
 				'placement' => 'bottom'
@@ -410,9 +402,11 @@ foreach( $attributes as $name => $attribute )
 <?php } ?>
 
 </div> <!-- end accordion -->
+</div>
+</div>
 
 <script language="javascript">
-	cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
+	cookies.setOptions({expires:new Date(new Date().getFullYear() + 1, 1, 1)});
 	
 	$(document).ready(function() {
 		$(".accordion-heading > a")
@@ -420,12 +414,5 @@ foreach( $attributes as $name => $attribute )
 		      cookies.set('devprom.request.form.section' + $(this).attr('href'), 
 		  	      	$(this).hasClass('collapsed') ? '1' : '0');
 			});
-		
-		var locstr = String(window.location);
-		
-		if ( locstr.indexOf('#comment') > 0 && $('#comments-section').hasClass('collapsed') )
-		{
-			$("#comments-section").click();
-		}
 	});
 </script>

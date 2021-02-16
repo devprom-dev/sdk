@@ -5,6 +5,10 @@ class NotificationRegistry extends ObjectRegistrySQL
  	function createSQLIterator( $sql )
  	{
  	  	$values = array (
+ 	  	    array(
+ 	  	        'entityId' => '',
+                'Caption' => text(2451),
+            ),
   			array (
   			    'entityId' => 'direct',
 	 			'Caption' => text(2466)

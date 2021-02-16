@@ -52,6 +52,8 @@ class UserPicSpritesGenerator extends CssSpritesGenerator
             if ( strpos($file, SERVER_ROOT_PATH) !== false ) continue;
             unlink($file);
 		}
+
+        file_put_contents(DOCUMENT_ROOT.'conf/userpic.info', time());
 	}
 
 	protected function getPhotoFilePath( $user_it )

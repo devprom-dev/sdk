@@ -4,7 +4,7 @@ class MilestoneIterator extends OrderedIterator
 {
  	 function getDisplayName()
  	 {
-		$title = getSession()->getLanguage()->getDateFormattedShort($this->get('MilestoneDate'));
+		$title = $this->getDateFormattedShort('MilestoneDate');
 
          if ( $this->get('DueWeeks') != '' && $this->get('DueWeeks') < 3 ) {
              $title = '<span class="label '.($this->get('DueWeeks') < 1 ? 'label-important' : 'label-warning').'">' . $title . '</span>';

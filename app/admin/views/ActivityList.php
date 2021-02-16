@@ -2,28 +2,16 @@
 
 class ActivityList extends StaticPageList
 {
-	function getPredicates( $values )
-	{
-		return array(
-		    new FilterModifiedAfterPredicate($values['modified'])
-		);
-	}
-	
-	function IsNeedToDisplay( $attr )
-	{
-		switch ( $attr )
-		{
-			case 'RecordModified':
-			case 'SystemUser':
-				return true;
-
-			case 'Author':
-				return false;
-				
-			default:
-				return parent::IsNeedToDisplay( $attr );
-		}
-	}
+	function extendModel()
+    {
+        parent::extendModel();
+        foreach( $this->getObject()->getAttributes() as $attribute => $data ) {
+            $this->getObject()->setAttributeVisible($attribute, false);
+        }
+        foreach( array('RecordModified', 'SystemUser', 'Caption') as $attribute ) {
+            $this->getObject()->setAttributeVisible($attribute, true);
+        }
+    }
 
  	function getImage( $object_it )
  	{
@@ -76,22 +64,9 @@ class ActivityList extends StaticPageList
 
 	function getColumnWidth( $attr ) 
 	{
-		if ( $attr == 'RecordModified' ) 
-		{
-			return "120";
-		}
-
-		if($attr == 'Caption') 
-		{
-			return "30%";
-		}
-
-		if($attr == 'SystemUser') 
-		{
-			return "15%";
-		}
-
-		return '';
+		if ( $attr == 'RecordModified' ) return "120";
+		if ( $attr == 'SystemUser' ) return "15%";
+		return parent::getColumnWidth( $attr );
 	}
 
 	function getColumnsOrder() 

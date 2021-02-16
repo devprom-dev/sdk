@@ -159,10 +159,12 @@ public class ProjectTest extends ProjectTestBase {
 			pnp.createNew(project);
 			SDLCPojectPageBase sdlcFirstPage =  new SDLCPojectPageBase(driver); 
 			FILELOG.debug("Created new project " + project.getName());
-			
+
+			String roleId = sdlcFirstPage.gotoProjectRolesPage().getRoleId(role);
+
 			PermissionsPage pp = sdlcFirstPage.gotoPermissionsPage();
-		    pp = pp.showAll();
-		    pp.selectRole(role);
+		    pp.showAll();
+		    pp.setFilter("role", roleId);
 		    pp.setRight("Настройки: Атрибуты", "none");
 			pp.setRight("Бэклог", "none");
 			pp.setRight("Обсуждение", "none");
@@ -175,18 +177,18 @@ public class ProjectTest extends ProjectTestBase {
 			Assert.assertTrue(new ProjectPageBase(driver).isSettingAccessible("dicts-pmcustomattribute"), "Недоступен отчет Атрибуты");	
 			
 			MenuCustomizationPage mcp = new SDLCPojectPageBase(driver).gotoMenuFavsCustomization();
-			mcp.searchMenuItem("Обсуждения");
+			mcp.searchMenuItem("Все обсуждения");
 			if (projectType.equals("Scrum")){
-			mcp.addFilteredMenuItem("Обсуждения", "Бэклог");
+			mcp.addFilteredMenuItem("Все обсуждения", "Бэклог");
 			mcp.saveChanges();
 			mcp.close();
-			new ProjectPageBase(driver).gotoCustomReport("favs", "menu-folder-settings", "Обсуждения");
+			new ProjectPageBase(driver).gotoCustomReport("favs", "menu-folder-settings", "Все обсуждения");
 			}
 			else {
-			mcp.addFilteredMenuItem("Обсуждения", "Бэклог");
+			mcp.addFilteredMenuItem("Все обсуждения", "Бэклог");
 			mcp.saveChanges();
 			mcp.close();
-			new ProjectPageBase(driver).gotoCustomReport("favs", "", "Обсуждения");
+			new ProjectPageBase(driver).gotoCustomReport("favs", "", "Все обсуждения");
 			}
 			QuestionsPage qp = new QuestionsPage(driver);
 			QuestionNewPage qnp = qp.addNewQuestion();
@@ -222,7 +224,7 @@ public class ProjectTest extends ProjectTestBase {
 			Assert.assertFalse(new ProjectPageBase(driver).isSettingAccessible("dicts-pmcustomattribute"), "Ошибочно доступен отчет Атрибуты");	
 
 			mcp = new SDLCPojectPageBase(driver).gotoMenuFavsCustomization();
-		    Assert.assertFalse(mcp.isItemExists("Обсуждения"), "Ошибочно доступен отчет Обсуждения");
+		    Assert.assertFalse(mcp.isItemExists("Все обсуждения"), "Ошибочно доступен отчет Обсуждения");
 			mcp.close();
 			
 			new ProjectPageBase(driver).gotoCustomReport("reqs", "", requestsReport);
@@ -241,7 +243,8 @@ public class ProjectTest extends ProjectTestBase {
 					new Template(this.waterfallTemplateName));
      	   Request request = new Request("Доработка"+p, "", "Высокий", 10.0, "Доработка");
      	    RTask task = new RTask("Задача-1", member.getUsernameLong(), "Разработка", 6.0);
-     	    RTask task2 = new RTask("Задача-2", member.getUsernameLong(), "Разработка", 6.0);
+     	   task.setIteration("0.1");
+     	   RTask task2 = new RTask("Задача-2", member.getUsernameLong(), "Разработка", 6.0);
      	    
      	    LoginPage lp = (new PageBase(driver)).logOut();
 	        FavoritesPage fp = lp.loginAs(testUser.getUsername(), testUser.getPass());

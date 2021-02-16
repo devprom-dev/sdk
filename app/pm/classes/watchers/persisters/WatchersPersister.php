@@ -37,13 +37,14 @@ class WatchersPersister extends ObjectSQLPersister
         foreach( preg_split('/,/', $parms['Watchers']) as $watcher )
         {
             if ( filter_var($watcher, FILTER_VALIDATE_EMAIL) === false ) {
-                $userIt = getFactory()->getObject('User')->getByRef('Caption', $watcher);
+                $userIt = getFactory()->getObject('IssueAuthor')->getExact($watcher);
                 if ( $userIt->getId() != '' ) {
                     $registry->Merge(
                         array(
                             'ObjectId' => $object_id,
                             'ObjectClass' => strtolower(get_class($this->getObject())),
-                            'SystemUser' => $userIt->getId()
+                            'SystemUser' => $userIt->getId() < 1000000 ? $userIt->getId() : '',
+                            'Email' => $userIt->getId() > 1000000 ? $userIt->get('Email') : ''
                         )
                     );
                 }

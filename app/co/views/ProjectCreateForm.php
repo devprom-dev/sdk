@@ -62,12 +62,23 @@ class CreateProjectForm extends AjaxForm
 		    	return getFactory()->getObject('pm_ProjectTemplate')->getExact($template)->getDisplayName();
 		    	
 		    case 'CodeName':
-		        $codeName = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? md5(microtime(true)) : "";
-                if ( $codeName == "" && is_numeric($_REQUEST['program']) ) {
+		        $names = array();
+		        for( $i = 0; $i < 20; $i++ ) {
+		            $names[] = \TextUtils::generateCodeName();
+                }
+                $names[] = md5(microtime(true));
+
+		        $foundNames = getFactory()->getObject('Project')->getRegistry()->Query(
+                        array(
+                            new FilterAttributePredicate('CodeName', $names)
+                        )
+                    )->fieldToArray('CodeName');
+                $codeName = array_shift(array_diff($names, $foundNames));
+
+                if ( is_numeric($_REQUEST['program']) ) {
                     $programIt = getFactory()->getObject('Project')->getExact($_REQUEST['program']);
                     if ( $programIt->getId() != '' ) {
-                        $projectsNumber = count(preg_split('/,/', $programIt->get('LinkedProject')));
-                        $codeName = $programIt->get('CodeName') . '-' .strval($projectsNumber + 1);
+                        $codeName = $programIt->get('CodeName') . '-' . $codeName;
                     }
                 }
 		    	return $codeName;
@@ -146,8 +157,6 @@ class CreateProjectForm extends AjaxForm
 				 $field->SetValue($value);
 				 $field->SetTabIndex($tab_index);
 				 $field->SetRequired(true);
-
-				 echo $this->getName($attribute);
 				 $field->draw();
 				 break;
 
@@ -203,6 +212,7 @@ class CreateProjectForm extends AjaxForm
          $rightColumn = array();
 
          foreach( array('Participants', 'Users') as $attribute ) {
+             if ( !array_key_exists($attribute, $attributes) ) continue;
              $rightColumn[$attribute] = $attributes[$attribute];
              unset($leftColumn[$attribute]);
          }

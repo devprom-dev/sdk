@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
 include_once "persisters/IterationMetricsPersister.php";
 include_once "persisters/CapacityPersister.php";
@@ -10,7 +9,10 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
     public function build( ObjectMetadata $metadata )
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Release' ) return;
-		$metadata->addAttributeGroup('ReleaseNumber', 'alternative-key');
+
+        foreach ( array('ReleaseNumber','Version') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'alternative-key');
+        }
     	$metadata->addPersister( new CapacityPersister() );
 
         $metadata->setAttributeType('StartDate', 'DATE');
@@ -19,7 +21,7 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttribute('EstimatedFinishDate', 'DATE', translate('Оценка окончания'), false, false);
 		$metadata->addPersister( new IterationMetricsPersister() );
  		
-    	$metadata->addAttribute( 'Caption', 'TEXT', translate('Итерация'), false );
+    	$metadata->addAttribute( 'Caption', 'TEXT', translate('Итерация'), false, false, '', 1);
     	$metadata->addPersister( new IterationTitlePersister() );
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
@@ -49,6 +51,11 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
         else {
             $metadata->setAttributeVisible('InitialVelocity', true);
             $metadata->setAttributeRequired('InitialVelocity', false);
+            $metadata->addAttributeGroup('InitialVelocity', 'nonbulk');
+        }
+
+        foreach ( array('IsClosed') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'bulk');
         }
     }
 }

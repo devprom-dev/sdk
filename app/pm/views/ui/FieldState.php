@@ -2,10 +2,16 @@
 
 class FieldState extends FieldDictionary
 {
+    private $instantiationAllowedOnly = false;
+
     function __construct( $object )
     {
         parent::__construct($object);
         $this->setNullOption(false);
+    }
+
+    function setInstantiationAllowedOnly( $value ) {
+        $this->instantiationAllowedOnly = $value;
     }
 
     function getOptions()
@@ -15,7 +21,11 @@ class FieldState extends FieldDictionary
         $entity_it = $this->getObject()->getAll();
         while( !$entity_it->end() )
         {
-            $options[] = array (
+            if ( $this->instantiationAllowedOnly && $entity_it->get('IsNewArtifacts') != 'Y' ) {
+                $entity_it->moveNext();
+                continue;
+            }
+            $options[$entity_it->get('ReferenceName')] = array (
                 'value' => $entity_it->get('ReferenceName'),
                 'referenceName' => $entity_it->get('ReferenceName'),
                 'caption' => $entity_it->getDisplayName(),

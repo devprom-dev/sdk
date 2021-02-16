@@ -75,7 +75,7 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  	
 	function getAttributeObject( $name )
 	{
-		if ( $name == 'ObjectId' ) {
+		if ( $name == 'ObjectId' && !$this->getObject()->IsReference($name) ) {
 			return $this->trace_object;
 		}
 		
@@ -120,17 +120,23 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  	function getActions( $object_it, $item )
  	{
 		$actions = array();
+		$baselineAttribute = $this->getObject()->getBaselineReference();
  	    $anchor_it = $this->getTargetIt($object_it);
+
+        $url = $anchor_it->getUidUrl();
+        if ( $object_it->get($baselineAttribute) != '' ) {
+            $url .= strpos($url, '?') >= 0
+                ? '&baseline='.$object_it->get($baselineAttribute)
+                : '?baseline='.$object_it->get($baselineAttribute);
+        }
+        $actions[] = array (
+            'name' => translate('Открыть'),
+            'url' => $url,
+            'uid' => 'open-form'
+        );
 
         if ( !$anchor_it->object instanceof TestCaseExecution && $_REQUEST['formonly'] == '' )
         {
-            $method = new ObjectModifyWebMethod($anchor_it);
-            $actions[] = array (
-                'name' => translate('Редактировать'),
-                'url' => $method->getJSCall(),
-                'uid' => 'open-form'
-            );
-
             if ( $anchor_it->object instanceof Commit ) {
                 $plugin_actions = array();
                 foreach( PluginsFactory::Instance()->getPluginsForSection(getSession()->getSite()) as $plugin ) {
@@ -142,28 +148,13 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
             }
         }
 
-		$url = $anchor_it->getViewUrl();
-		if ( $object_it->get('Baseline') != '' ) {
-			$url .= strpos($url, '?') >= 0
-					? '&baseline='.$object_it->get('Baseline')
-					: '?baseline='.$object_it->get('Baseline');
-		}
-		if ( $object_it->get('Revision') != '' ) {
-            $url .= strpos($url, '?') >= 0 ? '&' : '?';
-            if ( $object_it->get('Baseline') == '' ) {
-                $changeIt = $object_it->getRef('Revision');
-                $url .= '&bydate='.$changeIt->getDateFormat('RecordCreated');
-            }
-        }
-
         if ( $anchor_it->object instanceof WikiPage )
         {
             $actions[] = array();
-            if ( $anchor_it->get('BrokenTraces') != "" ) {
+            if ( $anchor_it->get('Suspected') > 0 ) {
                 $method = new OpenBrokenTraceWebMethod();
                 $actions[] = array(
                     'name' => text(1933),
-                    'target' => "_blank",
                     'url' => $method->getJSCall(array('object' => $anchor_it->getId()))
                 );
             }
@@ -174,16 +165,8 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
                     'name' => text(1933)
                 );
             }
+            $actions[] = array();
         }
-
-        $actions[] = array();
- 	    $actions[] = array (
-			'name' => $anchor_it->object instanceof WikiPage ? text(2163) : translate('Открыть'),
-			'url' => $url,
-			'uid' => 'show-in-document',
-            'target' => defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'
-		);
-		$actions[] = array();
 
  	    return array_merge($actions, parent::getActions( $object_it, $item ));
  	}
@@ -196,32 +179,23 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
     {
         parent::drawAddButton($view, $tabindex);
 
-        $field = $this->getFormField();
-        if ( $field == 'Issues' ) $field = 'Request';
-
-        $value = $_REQUEST[$field];
-        if ( $value != '' ) {
+        $value = $_REQUEST[$this->getFormField()];
+        if ( $value != '' || $_REQUEST['Request'] != '' ) {
+            switch( $this->getFormField() ) {
+                case 'Issues':
+                    $object_it = getFactory()->getObject('Issue')->getExact($_REQUEST['Request']);
+                    break;
+                case 'Increments':
+                    $object_it = getFactory()->getObject('Increment')->getExact($_REQUEST['Request']);
+                    break;
+                default:
+                    $object_it = $this->trace_object->getExact($value);
+            }
+            if ( $object_it->getId() == '' ) return;
             $uid = new ObjectUID();
             echo '<br/>';
             echo '<br/>';
-            if ( $field == 'Request' ) {
-                $object_it = getFactory()->getObject('Request')->getExact($value);
-            }
-            else {
-                $object_it = $this->trace_object->getExact($value);
-            }
             $uid->drawUidInCaption($object_it);
         }
-    }
-
-    function getFieldDescription($attr)
-    {
-        $value = parent::getFieldDescription($attr);
-        if ( $this->trace_object instanceof Milestone ) {
-            if ( $attr == 'ObjectId' ) {
-                $value = str_replace('%1', getFactory()->getObject('Module')->getExact('project-plan-hierarchy')->getUrl(), text(2275));
-            }
-        }
-        return $value;
     }
 }

@@ -9,18 +9,20 @@ class WrtfCKEditorPageParser extends WikiParser
 {
     private $tableRowIndex = 0;
     private $codeBlocks = array();
+    private $imageBlocks = array();
 
     function parse( $content = null )
     {
         $this->tableRowIndex = 0;
+        $this->setInlineSectionNumbering(true);
 
         $callbacks = array(
             CODE_ISOLATE => array($this, 'codeIsolate'),
+            IMAGE_ISOLATE => array($this, 'imageIsolate'),
             REGEX_UID => array($this, 'parseUidCallback'),
             REGEX_UPDATE_UID_TITLE => array($this, 'updateUIDTitle'),
             REGEX_UPDATE_UID => array($this, 'parseUpdateUidCallback'),
             REGEX_IFRAME_UPDATE => array($this, 'parseIframeAttributes'),
-            '/\s+src="([^d][^"]+)"/i' => array($this, 'parseImageSrcCallback'),
             TextUtils::REGEX_SHARE => array(TextUtils::class, 'shrinkLongShare')
         );
 
@@ -34,6 +36,8 @@ class WrtfCKEditorPageParser extends WikiParser
 
         $callbacks = array_merge($callbacks,
             array(
+                IMAGE_RESTORE => array($this, 'imageRestore'),
+                '/\s+src="([^d][^"]+)"/i' => array($this, 'parseImageSrcCallback'),
                 CODE_RESTORE => array($this, 'codeRestore')
             )
         );
@@ -58,12 +62,24 @@ class WrtfCKEditorPageParser extends WikiParser
         $this->codeBlocks = array();
     }
 
+    function getCodeBlocks() {
+        return $this->codeBlocks;
+    }
+
     function codeIsolate( $match ) {
         return '<code'.$match[1].'>'.array_push($this->codeBlocks, $match[2]).'</code>';
     }
 
     function codeRestore( $match ) {
         return '<code'.$match[1].'>'.$this->codeBlocks[$match[2] - 1].'</code>';
+    }
+
+    function imageIsolate( $match ) {
+        return '<img'.array_push($this->imageBlocks, $match[0]).'/>';
+    }
+
+    function imageRestore( $match ) {
+        return $this->imageBlocks[$match[1] - 1];
     }
 
     function parseIframeAttributes( $match )
@@ -101,10 +117,8 @@ class WrtfCKEditorPageParser extends WikiParser
         if ( $title == '' ) return $match[0];
 
         $urlMatches = array();
-        if ( !preg_match('/\[([A-Z]{1}-[0-9]+)\]/i', $title, $matches)) return $match[0];
-        if ( count($matches) < 2 ) return $match[0];
-
         if ( !preg_match('/\/([A-Z]{1}-[0-9]+)/i', $attributes, $urlMatches)) return $match[0];
+
         $info = $this->getUidInfo($urlMatches[1]);
         if ( $info['caption'] == '' ) return $match[0];
 
@@ -113,7 +127,7 @@ class WrtfCKEditorPageParser extends WikiParser
             $title = $callback($info);
         }
         else {
-            $title = '[' . $info['uid'] . '] '. $info['caption'];
+            $title = '[' . $info['uid'] . '] '. $info['native'];
         }
         return '<a ' . $attributes . '>' . $title . '</a>';
     }

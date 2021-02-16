@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelChangeNotification;
 
 class ClearChangeNotificationsEvent extends ObjectFactoryNotificator
 {
@@ -12,9 +13,7 @@ class ClearChangeNotificationsEvent extends ObjectFactoryNotificator
 
  	function delete( $object_it ) 
 	{
-	    if ( $object_it->getId() == "" ) return;
-	    DAL::Instance()->Query(
-	        " DELETE FROM ObjectChangeNotification WHERE ObjectId = ".$object_it->getId()." AND ObjectClass = '".get_class($object_it->object)."' "
-        );
+	    $service = new ModelChangeNotification();
+        $service->clearAll($object_it);
 	}
 }

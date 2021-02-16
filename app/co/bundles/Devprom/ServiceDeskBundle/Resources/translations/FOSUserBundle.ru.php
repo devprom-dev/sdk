@@ -35,6 +35,8 @@ return array(
     'registration.cancel' => 'Отмена',
     'registration.submit' => 'Регистрация',
     'registration.title' => 'Для регистрации заполните эту простую форму',
+    'registration.email.subject' => 'Завершение регистрации',
+    'registration.email.message' => 'Здравствуйте, %username%! <br/><br/> Чтобы завершить регистрацию на сайте технической поддержки, пожалуйста, перейдите по ссылке %confirmationUrl%',
 
 # Password resetting
     'resetting.title' => 'Пожалуйста, введите Ваш email, и мы вышлем Вам ссылку для создания нового пароля',

@@ -6,6 +6,7 @@ define ('MAX_PASSWORD_RETRIES', 10);
 
 class LoginUserService
 {
+    const WRONG_PASSWORD = 2;
  	var $user_it;
  	
  	function validate( $login = '', $password = '', $email = '')
@@ -101,7 +102,7 @@ class LoginUserService
 				}
 			}
 
-			return 2;
+			return self::WRONG_PASSWORD;
 		}
 		else
 		{
@@ -129,8 +130,8 @@ class LoginUserService
  	}
 
 	function validateUser( $user_it ) {
-		if ( !is_object($user_it) ) return 2;
-		if ( $user_it->getId() < 1 ) return 2;
+		if ( !is_object($user_it) ) return self::WRONG_PASSWORD;
+		if ( $user_it->getId() < 1 ) return self::WRONG_PASSWORD;
 		if ( $user_it->IsBlocked() ) return 4;
 		return 0;
 	}
@@ -150,7 +151,7 @@ class LoginUserService
 			case 1:
 				return text(224);
 				
-			case 2:
+            case self::WRONG_PASSWORD:
 				return str_replace('%1', MAX_PASSWORD_RETRIES, text(494));
 
 			case 3:
@@ -182,7 +183,6 @@ class LoginUserService
    		$mail->appendAddress($user_it->get('Email'));
    		$mail->setBody($body);
    		$mail->setSubject( text(227) );
-   		$mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
 		$mail->send();
 	}
 }

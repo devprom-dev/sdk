@@ -33,7 +33,7 @@ class MilestonePage extends PMPage
  		return new MilestoneTable( $this->getObject() );
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		return new MilestoneForm( $this->getObject() );
  	}

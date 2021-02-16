@@ -36,11 +36,6 @@ public class RepositoryCommitsPage extends SDLCPojectPageBase {
 	                                        +revisionNumber+"')]/following-sibling::td[@id='description']")).getText();
 	}
 	
-	public CommitPage clickToTheLastCommit(){
-		driver.findElement(By.xpath("//tr[contains(@id,'subversionrevisionlist')]/td[@id='uid']/a")).click();
-		return new CommitPage(driver);
-	}
-	
 	public CommitPage clickToTheLastCommitCommentedAs(String comment){
 		driver.findElement(By.xpath("//tr[contains(@id,'subversionrevisionlist')]/td[@id='description' and contains(.,'"+comment+"')]/preceding-sibling::td[@id='uid']/a")).click();
 		return new CommitPage(driver);
@@ -88,22 +83,6 @@ public class RepositoryCommitsPage extends SDLCPojectPageBase {
 		return tasksLinks;
 	}
 	
-	
-	public RepositoryCommitsPage setConnectionFilter(String connectionName){
-		driver.findElement(By.xpath("//div[contains(@class,'filter')]/div[2]/a")).click();
-		String code = driver.findElement(By.xpath("//div[contains(@class,'filter')]/div[2]/ul/li/a[text()='"+connectionName+"']")).getAttribute("onkeydown");
-		
-		String substr =  "filterLocation.turnOn\\('subversion', '[0-9]+', 0\\)";
-	        Pattern p = Pattern.compile(substr);
-	        Matcher m = p.matcher(code);
-	        m.find();
-	        String script = m.group(); 
-	        ((JavascriptExecutor) driver).executeScript(script);
-	     
-	    driver.findElement(By.xpath("//div[contains(@class,'filter')]/div[2]/a")).click();   
-		return new RepositoryCommitsPage(driver);
-	}
-	
 	public List<Commit> readCommitsByVersion(String revisionNumber){
 		List<Commit> commits = new ArrayList<Commit>();
 		List<WebElement> rows = driver.findElements(By.xpath("//tr[contains(@id,'subversionrevisionlist')]/td[@id='version' and contains(.,'"
@@ -117,7 +96,9 @@ public class RepositoryCommitsPage extends SDLCPojectPageBase {
 		return commits;
 	}
 	
-	public RepositoryCommitsPage update(){
+	public RepositoryCommitsPage update()
+	{
+		String currentUrl = driver.getCurrentUrl();
 		(new WebDriverWait(driver, 3)).until(ExpectedConditions.visibilityOf(updateBtn));
 		updateBtn.click();
 		try {
@@ -125,6 +106,7 @@ public class RepositoryCommitsPage extends SDLCPojectPageBase {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		driver.navigate().to(currentUrl);
 		return new RepositoryCommitsPage(driver);
 	}
 	

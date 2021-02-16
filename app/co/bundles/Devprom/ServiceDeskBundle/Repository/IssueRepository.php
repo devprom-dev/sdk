@@ -23,15 +23,15 @@ class IssueRepository extends EntityRepository
             ->leftJoin('issue.severity', 'severity')
             ->leftJoin('issue.customer', 'customer')
             ->leftJoin('issue.product', 'product')
+            ->leftJoin('issue.project', 'project')
             ->leftJoin('issue.assignedTo', 'assignee')
             ->leftJoin('issue.stateComment', 'IssueStateComment')
             ->leftJoin('issue.comments', 'comments',
                 'WITH',
                 'comments.objectClass IN(\'request\',\'issue\')')
-            ->join('issue.state', 'state',
+            ->leftJoin('issue.state', 'state',
                 'WITH',
-                'state.objectClass IN (\'request\',\'issue\') AND state.vpd = issue.vpd')
-            ->where("issue.author is NULL");
+                'state.objectClass IN (\'request\',\'issue\') AND state.vpd = issue.vpd');
     }
 
     /**
@@ -67,31 +67,31 @@ class IssueRepository extends EntityRepository
          Please use one of specific methods to retrieve Issue");
     }
 
-    public function findByAuthor($authorEmail, $orderBy = null, $limit = null, $offset = null) {
+    public function findByAuthor($authorEmail, $orderBy = null, $state = '', $limit = null, $offset = null) {
         /** @var QueryBuilder $qb */
         $qb = $this->getBaseQuery();
-        $qb->andWhere('customer.email = ?1')->setParameter(1, $authorEmail);
+        $qb->andWhere('customer.email = ?1 and state.terminal IN (?2)')
+            ->setParameter(1, $authorEmail)
+            ->setParameter(2, in_array($state, array('','all')) ? array('N','Y','I') : ($state == 'open' ? array('N','I') : array('Y')));
 
-        foreach ($orderBy as $column => $direction)
-        {
+        foreach ($orderBy as $column => $direction) {
             $qb->addOrderBy($column, $direction);
         }
-
         return $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
     }
 
-    public function findByCompany($authorEmail, $orderBy = null, $limit = null, $offset = null) {
+    public function findByCompany($authorEmail, $orderBy = null, $state = '', $limit = null, $offset = null) {
         /** @var QueryBuilder $qb */
         $qb = $this->getBaseQuery();
         $qb->andWhere(
         		'customer.email IN (SELECT u2.email FROM Devprom\\ServiceDeskBundle\\Entity\\User u1, Devprom\\ServiceDeskBundle\\Entity\\User u2 '.
-        		'			  WHERE u1.email = ?1 AND u1.company = u2.company)')->setParameter(1, $authorEmail);
+        		'			  WHERE u1.email = ?1 AND u1.company = u2.company) and state.terminal IN (?2)')
+            ->setParameter(1, $authorEmail)
+            ->setParameter(2, in_array($state, array('','all')) ? array('N','Y','I') : ($state == 'open' ? array('N','I') : array('Y')));
 
-        foreach ($orderBy as $column => $direction)
-        {
+        foreach ($orderBy as $column => $direction) {
             $qb->addOrderBy($column, $direction);
         }
-
         return $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
     }
     

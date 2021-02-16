@@ -1,5 +1,4 @@
 <?php
-
 include "IterationIterator.php";
 include "IterationRegistry.php";
 include "predicates/IterationTimelinePredicate.php";
@@ -7,6 +6,7 @@ include "predicates/IterationReleasePredicate.php";
 include "predicates/IterationUserHasTasksPredicate.php";
 include "sorts/SortRecentNumberClause.php";
 include "sorts/SortReleaseIterationClause.php";
+include_once "validators/ModelValidatorDatesCausality.php";
 
 class Iteration extends Metaobject
 {
@@ -21,7 +21,13 @@ class Iteration extends Metaobject
 		));
 	}
 
-	function DeletesCascade( $object )
+	function getValidators() {
+        return array(
+            new ModelValidatorDatesCausality()
+        );
+    }
+
+    function DeletesCascade( $object )
 	{
 	    switch ( $object->getEntityRefName() )
 	    {
@@ -44,7 +50,11 @@ class Iteration extends Metaobject
 		return new IterationIterator( $this );
 	}
 
-	function getDefaultAttributeValue( $name ) 
+    function getPageFormPopup() {
+        return true;
+    }
+
+	function getDefaultAttributeValue( $name )
 	{
 		global $_REQUEST, $model_factory;
 		
@@ -126,7 +136,11 @@ class Iteration extends Metaobject
 				   			strtotime($weeks.' week', strtotime( $parms['StartDate'] ) ) ) 
 				   );
 		}
-	
+
+		if ( $parms['Caption'] != '' && $parms['ReleaseNumber'] == ''  ) {
+            $parms['ReleaseNumber'] = $parms['Caption'];
+        }
+
 		$result = parent::add_parms( $parms );
 		
 		if ( $result < 1 ) return $result;
@@ -161,8 +175,7 @@ class Iteration extends Metaobject
 			if ( $result < 1 ) return $result;
 		}
 
-		if ( $parms['StartDate'] != '' )
-		{
+		if ( $parms['StartDate'] != '' ) {
 			$object_it->resetBurndown();
 		}
 		
@@ -171,15 +184,7 @@ class Iteration extends Metaobject
 		return $result;
 	}
 	
-	function getPage() 
-	{
-		$url = getSession()->getApplicationUrl($this).'plan/hierarchy?';
-		
-		if( $_REQUEST['version'] > 0 )
-		{
-		    $url .= '&version='.$version.'&';
-		}
-			
-		return $url;
+	function getPage() {
+		return getSession()->getApplicationUrl($this).'iterations?';
 	}
 }

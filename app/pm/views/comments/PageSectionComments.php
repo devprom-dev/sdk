@@ -1,6 +1,5 @@
 <?php
-
-include_once 'CommentList.php';
+include_once 'CommentsThread.php';
 
 class PageSectionComments extends InfoSection
 {
@@ -42,8 +41,11 @@ class PageSectionComments extends InfoSection
 	    $this->options = $options;
     }
 
- 	function getObjectIt()
- 	{
+    function setObjectIt( $objectIt ) {
+ 	    $this->object_it = $objectIt;
+    }
+
+ 	function getObjectIt() {
  		return $this->object_it;
  	}
 
@@ -61,10 +63,7 @@ class PageSectionComments extends InfoSection
  	
  	function render( $view, $parms = array() )
  	{
-		$comment_list = new CommentList( $this->object_it, $this->baseline );
-        if ( array_key_exists('collapsable', $this->options) ) {
-            $comment_list->setCollabseable($this->options['collapsable']);
-        }
+		$comment_list = new CommentsThread( $this->object_it, $this->baseline );
         if ( array_key_exists('autorefresh', $this->options) ) {
             $comment_list->setAutoRefresh($this->options['autorefresh']);
         }
@@ -73,5 +72,10 @@ class PageSectionComments extends InfoSection
 
     function modifiable() {
         return getFactory()->getAccessPolicy()->can_modify(getFactory()->getObject('Comment'));
+    }
+
+    function getNewCommentFormUrl() {
+        $method = new CommentWebMethod( $this->object_it );
+        return $method->getJSCall();
     }
 }

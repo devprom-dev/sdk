@@ -8,12 +8,10 @@ class RequestTagCaptionPersister extends ObjectSQLPersister
  		$alias = $alias != '' ? $alias."." : "";
  		
  		array_push( $columns, 
- 			"(SELECT ts.Caption FROM Tag ts ".
- 			"  WHERE ts.TagId = ".$alias."Tag ) Caption " );
+ 			"(SELECT ts.Caption FROM Tag ts WHERE ts.TagId = ".$alias."Tag ) Caption " );
 
  		array_push( $columns, 
- 			"(SELECT COUNT(1) FROM pm_RequestTag ts ".
- 			"  WHERE ts.Tag = ".$alias."Tag ) ItemCount " );
+ 			"(SELECT COUNT(1) FROM pm_RequestTag ts WHERE ts.Tag = ".$alias."Tag ) ItemCount " );
  		
  		array_push( $columns, " ".$alias."Tag TagId " );
  		

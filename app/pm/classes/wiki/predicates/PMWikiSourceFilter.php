@@ -7,25 +7,19 @@ class PMWikiSourceFilter extends FilterPredicate
  		switch ( $filter )
  		{
  			case 'none':
-		 		return " AND NOT EXISTS (SELECT 1 FROM WikiPageTrace tr ". 
-		 			   " 			  	  WHERE tr.TargetPage = t.WikiPageId )";
-
+		 		return " AND NOT EXISTS (SELECT 1 FROM WikiPageTrace tr ".
+		 			   " 			  	  WHERE tr.TargetPage = t.WikiPageId AND tr.Type = 'branch' )";
  			default:
- 				$ids = array_filter( preg_split('/,/', $filter), function( $value ) {
- 					return $value > 0;
- 				});
- 				
-		 		$object_it = getFactory()->getObject('WikiPage')->getRegistry()->Query(
-		 				array( 
-		 						count($ids) > 1 ? new FilterInPredicate($ids) : new ParentTransitiveFilter($ids[0])
-		 				)
-				);
-		 		
-		 		if ( $object_it->count() < 1 ) return " AND 1 = 2 ";
-		 		
-		 		return " AND EXISTS (SELECT 1 FROM WikiPageTrace tr ". 
-		 			   " 			  WHERE tr.SourcePage IN (".join(',',$object_it->idsToArray()).")".
-		 			   "				AND tr.TargetPage = t.WikiPageId )";
+                $likes = array();
+ 				$ids = \TextUtils::parseIds($filter);
+                foreach( $ids as $id ) {
+                    $likes[] = " p.ParentPath LIKE '%,".$id.",%' ";
+                }
+                if ( count($likes) < 1 ) return " AND 1 = 2 ";
+
+		 		return " AND EXISTS (SELECT 1 FROM WikiPageTrace tr, WikiPage p ".
+		 			   " 			  WHERE p.WikiPageId = tr.SourcePage AND (".join(' OR ', $likes).") ".
+		 			   "				AND tr.Type = 'branch' AND tr.TargetPage = t.WikiPageId )";
  		}
  	}
 }

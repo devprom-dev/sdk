@@ -17,7 +17,7 @@ class InvitationPage extends CoPage
  		return true;
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		$_REQUEST['formonly'] = 'true';
  		return new InvitationForm(getFactory()->getObject('Invitation'), $this->controller);

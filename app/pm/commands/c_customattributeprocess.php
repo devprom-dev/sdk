@@ -4,9 +4,7 @@
  {
  	function validate()
  	{
-		global $_REQUEST;
- 		
-		$this->checkRequired( 
+		$this->checkRequired(
 			array('form_url', 'EntityReferenceName', 'AttributeType') );
 
 		return true;
@@ -14,8 +12,6 @@
  	
  	function create()
 	{
-		global $_REQUEST, $model_factory;
-
 		$url = SanitizeUrl::parseUrl($_REQUEST['form_url']).
 			'&EntityReferenceName='.SanitizeUrl::parseUrl($_REQUEST['EntityReferenceName']).
 			'&AttributeType='.SanitizeUrl::parseUrl($_REQUEST['AttributeType']).
@@ -26,5 +22,3 @@
 		$this->replyRedirect($url);
 	}
  }
- 
-?>

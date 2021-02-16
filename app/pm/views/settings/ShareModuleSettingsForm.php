@@ -66,4 +66,8 @@ class ShareModuleSettingsForm extends PMPageForm
 
         return true;
     }
+
+    function getCaption() {
+        return text(2481);
+    }
 }

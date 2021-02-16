@@ -13,7 +13,7 @@ public class NewIssuePage extends EditIssuePage {
     }
 
     public NewIssuePage selectFileForUpload(String filePath) {
-        driver.findElement(By.id("issue_newAttachment_file")).sendKeys(filePath);
+        driver.findElement(By.id("issue_form_newAttachment_file")).sendKeys(filePath);
         return this;
     }
 }

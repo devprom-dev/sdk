@@ -17,7 +17,7 @@ class ProjectTemplatePage extends AdminPage
 		return new ProjectTemplateTable($this->getObject());
 	}
 
-	function getForm()
+	function getEntityForm()
 	{
 		return new ProjectTemplateForm($this->getObject());
 	}

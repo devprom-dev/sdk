@@ -24,7 +24,7 @@ foreach ( $items as $item_key => $item )
 
 ?>
 
-<ul class="menu vertical-menu sticks-top-body" id="menu_<?=$area_id?>" style="display:<?=($area_id == $active_area_uid ? 'block': 'none')?>;">
+<ul class="menu vertical-menu" id="menu_<?=$area_id?>" style="display:<?=($area_id == $active_area_uid ? 'block': 'none')?>;">
     <?php foreach ( $items as $item_key => $item ) { ?>
     
     <?php if ( $item['name'] == '' && count($item['items']) > 0 ) { ?>

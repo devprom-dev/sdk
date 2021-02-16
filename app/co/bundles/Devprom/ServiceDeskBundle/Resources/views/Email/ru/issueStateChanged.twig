@@ -2,7 +2,7 @@
 <p>Заявка "<a href="{{ issueLink }}">{{ issue.caption }}</a>" изменила состояние:</p>
 {{ changes | unescapeHtml | raw }}
 {% if version != '' %}
-    <p><b>Выполнено в версии:</b>{{ version | unescapeHtml }}</p>
+    <p><b>Выполнено в версии:</b> {{ version | unescapeHtml }}</p>
 {% endif %}
 <br/>
 {% if comment != '' %}

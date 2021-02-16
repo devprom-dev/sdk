@@ -11,6 +11,7 @@ include "predicates/TaskReleasePredicate.php";
 include "predicates/TaskFeaturePredicate.php";
 include "predicates/TaskIssueStatePredicate.php";
 include "sorts/TaskAssigneeSortClause.php";
+include "validators/ModelValidatorTaskDeadlines.php";
 include "TaskModelExtendedBuilder.php";
 
 class Task extends MetaobjectStatable 
@@ -26,8 +27,18 @@ class Task extends MetaobjectStatable
             )
         );
  	}
-	
-	function getPage() 
+
+ 	function getValidators()
+    {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new ModelValidatorTaskDeadlines()
+            )
+        );
+    }
+
+    function getPage()
 	{
 		return getSession()->getApplicationUrl($this).'tasks/board?';
 	}
@@ -41,43 +52,14 @@ class Task extends MetaobjectStatable
 	{
 	}
 	
- 	function getOrderStep()
-	{
+ 	function getOrderStep() {
 	    return 1;
 	}
 	
 	function IsDeletedCascade( $object )
 	{
 	    if ( is_a($object, 'Request') ) return true;
-	    
 		return false;
-	}
-
-	function _cacheTypes()
-	{
-		global $model_factory;
-		
-		if ( !is_object($this->type_cache) )
-		{
-			$types = $model_factory->getObject('TaskType');
-			$this->type_cache = $types->getAll(); 
-		}
-		
-		$this->type_cache->moveFirst();
-	}
-	
-	function getTypesMap()
-	{
-		$this->_cacheTypes();
-		$map = array();
-		
-		while ( !$this->type_cache->end() )
-		{
-			$map[$this->type_cache->get('ReferenceName')] = $this->type_cache->getId();
-			$this->type_cache->moveNext();
-		}
-		
-		return $map;
 	}
 
 	function getDefaultAttributeValue($attr)
@@ -85,6 +67,10 @@ class Task extends MetaobjectStatable
         switch( $attr ) {
             case 'Author':
                 return getSession()->getUserIt()->getId();
+            case 'TaskType':
+                $registry = getFactory()->getObject('TaskType')->getRegistryBase();
+                $registry->setLimit(1);
+                return $registry->Query(array(new FilterVpdPredicate()))->getId();
             default:
                 return parent::getDefaultAttributeValue($attr);
         }

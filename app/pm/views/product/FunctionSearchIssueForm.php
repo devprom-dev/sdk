@@ -6,10 +6,10 @@ class FunctionSearchIssueForm extends PMPageForm
     {
         parent::extendModel();
         foreach( array_keys($this->getObject()->getAttributes()) as $attribute ) {
+            if ( $attribute == 'Request' ) continue;
             $this->getObject()->setAttributeVisible($attribute, false);
             $this->getObject()->setAttributeRequired($attribute, false);
         }
-        $this->getObject()->addAttribute('Issue', 'REF_RequestId', translate('Пожелание'), true);
         $this->getObject()->addAttribute('BindIssue', 'VARCHAR', '', false);
         $this->getObject()->setAttributeDefault('BindIssue', 'true');
     }
@@ -18,7 +18,7 @@ class FunctionSearchIssueForm extends PMPageForm
 	{
 		if ( $this->getAction() != 'modify' ) return parent::process();
 
-		$issueIt = getFactory()->getObject('Request')->getExact($_REQUEST['Issue']);
+		$issueIt = $this->getObject()->getAttributeObject('Request')->getExact($_REQUEST['Request']);
 		if ( $issueIt->getId() != '' ) {
             $issueIt->object->getRegistry()->Store(
                 $issueIt,

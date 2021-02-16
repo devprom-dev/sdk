@@ -1,6 +1,6 @@
 <?php
 
-class PMReportIterator extends OrderedIterator
+class PMReportIterator extends CacheableIterator
 {
 	function get( $attr )
 	{
@@ -58,18 +58,14 @@ class PMReportIterator extends OrderedIterator
 
 	    $module_uid = $this->get('Module');
 	    
-	    if ( $module_uid == '' )
-	    {
+	    if ( $module_uid == '' ) {
 	        $report_it = $this->object->getExact( $this->get('Report') );
-	        
 	        if ( !getFactory()->getAccessPolicy()->can_read($report_it) ) return array();
 	        
 	        $module_uid = $report_it->get('Module');
-
 	        $base_parm = "&basereport=".$report_it->getId();
 	    }
-	    else
-	    {
+	    else {
 	        $base_parm = "&basemodule=".$module_uid;
 	    }
 	    
@@ -97,6 +93,8 @@ class PMReportIterator extends OrderedIterator
 	    }
 
 	    if ( $url == '' ) return array();
+	    if ( $query_string != '' ) $query_string .= '&clear';
+
 	    return array(
             'name' => $this->getDisplayName(),
 	        'title' => $this->getDisplayName(),
@@ -109,7 +107,7 @@ class PMReportIterator extends OrderedIterator
 	
 	function getUrl( $query_string = '', $projectIt = null )
 	{
-	    $info = $this->buildMenuItem($query_string);
+	    $info = $this->buildMenuItem(trim($query_string,'?&'));
 	    return is_object($projectIt)
             ? preg_replace('/\/pm\/[^\/]+\//i', '/pm/'.$projectIt->get('CodeName').'/', $info['url'])
             : $info['url'];

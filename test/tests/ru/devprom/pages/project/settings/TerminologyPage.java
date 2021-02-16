@@ -21,7 +21,7 @@ public class TerminologyPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
-	@FindBy(xpath = "//input[@valueparm='searchsystem']")
+	@FindBy(xpath = "//*[@id='search-area']/input")
 	protected WebElement filterInput;
 	
 	@FindBy(xpath = "//a[text()='Очистить значения']")
@@ -42,7 +42,6 @@ public class TerminologyPage extends SDLCPojectPageBase {
 		element.sendKeys(termNewName);
 		element.sendKeys(Keys.TAB);
 		Thread.sleep(10000);
-		
 	}
 	
 	public TerminologyPage resetToDefaults(){
@@ -62,19 +61,11 @@ public class TerminologyPage extends SDLCPojectPageBase {
 		return new TerminologyPage(driver);
 	}
 	
-	public TerminologyPage showAll(){
-		filterBtn.click();
-		String code = "filterLocation.setup( 'rows=all', 0 );";
-		((JavascriptExecutor) driver).executeScript(code);
-		filterBtn.click();
-		return new TerminologyPage(driver);
-	}
-	
 	public TerminologyPage filterBy(String text){
 		filterInput.clear();
 		filterInput.sendKeys(text + "\n");
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 		}
 		return new TerminologyPage(driver);

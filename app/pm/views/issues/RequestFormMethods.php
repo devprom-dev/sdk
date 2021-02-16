@@ -1,8 +1,8 @@
 <?php
-
-include_once SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
-include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/RequestCreateTaskWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/MoveToProjectWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/DuplicateIssuesWebMethod.php";
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
 
 class RequestFormMethods
@@ -12,17 +12,22 @@ class RequestFormMethods
 	private $method_duplicate_issue = null;
 	private $method_move = null;
 	private $method_watch = null;
-	private $new_template_url = '';
+	private $new_template_method = null;
 	private $target_projects = array();
  	private $method_spend_time = null;
  	private $featureTypesCount = 0;
 	private $linkTypes = array();
 	private $object = null;
 	private $formDisplayed = false;
+	private $implementObject = null;
+	private $duplicateMethod = null;
 
-	function __construct( $object, $formDisplayed ) {
+	function __construct( $object, $formDisplayed, $implementObject = null )
+    {
 	    $this->object = $object;
 	    $this->formDisplayed = $formDisplayed;
+        $this->implementObject = is_object($implementObject) ? $implementObject : $this->object;
+
 	    $this->buildMethods();
     }
 
@@ -44,23 +49,22 @@ class RequestFormMethods
 
  		$method = new RequestCreateTaskWebMethod($object_it);
 		if ( $method->hasAccess() ) {
-			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
 			$this->method_create_task = $method;
 		}
 
-		$method = new ObjectCreateNewWebMethod($object);
-		if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+		$method = new ObjectCreateNewWebMethod($this->implementObject);
 		if ( $method->hasAccess() ) $this->method_duplicate = $method;
 
 		if ( class_exists('Issue') ) {
             $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Issue'));
-            if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
             if ( $method->hasAccess() ) $this->method_duplicate_issue = $method;
         }
 
 		$method = new MoveToProjectWebMethod($object_it);
 		if ( $method->hasAccess() ) {
- 			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+		    if ( $this->formDisplayed ) {
+                $method->setUrl($object_it->object->getPage());
+            }
 			$this->method_move = $method;
 		}
 
@@ -73,11 +77,13 @@ class RequestFormMethods
 
 	 	$method = new SpendTimeWebMethod($object_it);
  		if ( $method->hasAccess() ) {
- 			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
  			$this->method_spend_time = $method;
  		}
-		
-		$this->new_template_url = getFactory()->getObject('RequestTemplate')->getPageNameObject().'&ObjectId=%object-id%&items=%object-id%';
+
+        $method = new ObjectCreateNewWebMethod(getFactory()->getObject('RequestTemplate'));
+ 		if ( $method->hasAccess() ) {
+            $this->new_template_method = $method;
+        }
 
  		if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED || defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED ) {
             $projects = array_filter(
@@ -111,22 +117,25 @@ class RequestFormMethods
 		if ( count($projects) > 0 && count($projects) < $top_limit )
 		{
 			while( !$linked_it->end() ) {
-				$this->target_projects[$linked_it->getId()] = array (
+				$this->target_projects[$linked_it->get('VPD')] = array (
+				    'id' => $linked_it->getId(),
 					'title' => $linked_it->getDisplayName(),
 					'vpd' => $linked_it->get('VPD'),
                     'issue' => $linked_it->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD
 				);
 				$linked_it->moveNext();
 			}
-			if ( !getSession()->getProjectIt()->IsPortfolio() ) {
-				$this->target_projects[getSession()->getProjectIt()->getId()] = array (
-					'title' => getSession()->getProjectIt()->getDisplayName(),
-					'vpd' => getSession()->getProjectIt()->get('VPD'),
-                    'issue' => false
+			$projectIt = getSession()->getProjectIt();
+			if ( !$projectIt->IsPortfolio() ) {
+				$this->target_projects[$projectIt->get('VPD')] = array (
+                    'id' => $projectIt->getId(),
+					'title' => $projectIt->getDisplayName(),
+					'vpd' => $projectIt->get('VPD'),
+                    'issue' => $projectIt->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD
 				);
 			}
 		}
-		
+
 		$this->featureTypesCount = getFactory()->getObject('pm_FeatureType')->getRecordCount();
 
 		$type_it = getFactory()->getObject('RequestLinkType')->getAll();
@@ -157,6 +166,8 @@ class RequestFormMethods
                 'url' => "javascript:processBulk('".translate('Назначить')."','?formonly=true&operation=AttributeOwner','%ids');"
             );
         }
+
+        $this->duplicateMethod = new DuplicateIssuesWebMethod();
     }
 
 	function getDeleteActions( $object_it, $actions )
@@ -174,59 +185,79 @@ class RequestFormMethods
 
 		return $actions;
 	}
-	
+
+	function getRequestCleansedData( $objectIt )
+    {
+        $skipAttributes = array_merge(
+            $objectIt->object->getAttributesByGroup('system'),
+            $objectIt->object->getAttributesByGroup('trace'),
+            $this->duplicateMethod->getAttributesToReset()
+        );
+	    return \JsonWrapper::encode(
+	        array_filter(
+                $objectIt->getData(),
+                function($value,$key) use($skipAttributes) {
+                    return !is_numeric($key) && !in_array($key, $skipAttributes) && mb_strlen($value) < 256;
+                },
+                ARRAY_FILTER_USE_BOTH
+            )
+        );
+    }
+
  	function getMoreActions( $object_it, $actions )
 	{
-		if ( is_object($this->method_duplicate) )
-		{
-			$parms = array(
-				'Request' => $object_it->getId(),
-				'LinkType' => $this->linkTypes['implemented']
-			);
-			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
+        $vpd = $object_it->get('VPD');
+        $other_projects = array_filter($this->target_projects, function($project) use ($vpd) {
+            return $project['vpd'] != $vpd;
+        });
 
-			$vpd = $object_it->get('VPD');
-			$other_projects = array_filter($this->target_projects, function($project) use ($vpd) {
-				return $project['vpd'] != $vpd;
-			});
-			if ( count($other_projects) > 0 )
-			{
-				$items = array();
-				foreach( $other_projects as $id => $data )
-				{
-				    $method = $data['issue'] && is_object($this->method_duplicate_issue)
-                        ? $this->method_duplicate_issue
-                        : $this->method_duplicate;
+        if ( !getSession()->IsRDD() || $this->getObject() instanceof Issue ) {
+            if ( !$this->target_projects[$object_it->get('VPD')]['issue'] && is_object($this->method_duplicate) ) {
+                $parms = array(
+                    'Request' => $this->getRequestCleansedData($object_it),
+                    'LinkType' => $this->linkTypes['implemented']
+                );
+                if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
+                if ( count($other_projects) > 0 )
+                {
+                    $items = array();
+                    foreach( $other_projects as $data )
+                    {
+                        $method = $data['issue'] && is_object($this->method_duplicate_issue)
+                            ? $this->method_duplicate_issue
+                            : $this->method_duplicate;
 
-                    $method->setVpd($data['vpd']);
-					$items[] = array (
-                        'name' => $data['title'],
-                        'url' => $method->getJSCall(
-                                    array_merge($parms, array('Project'=>$id))
-                                 )
-					);
-				}
+                        $method->setVpd($data['vpd']);
+                        $items[] = array (
+                            'name' => $data['title'],
+                            'url' => $method->getJSCall(
+                                array_merge($parms, array('Project' => $data['id']))
+                            )
+                        );
+                    }
 
-				$items[] = array();
-				$this->method_duplicate->setVpd($object_it->get('VPD'));
-				$items[] = array (
-						'name' => translate('Выбрать'),
-						'url' => $this->method_duplicate->getJSCall($parms)
-				);
+                    $items[] = array();
+                    $this->method_duplicate->setVpd($object_it->get('VPD'));
+                    $items[] = array (
+                        'name' => translate('Выбрать'),
+                        'url' => $this->method_duplicate->getJSCall($parms)
+                    );
 
-				$actions[] = array(
-					'name' => text(867),
-					'items' => $items
-				);
-			}
-			else
-			{
-				$actions[] = array(
-						'name' => translate('Реализовать'),
-						'url' => $this->method_duplicate->getJSCall($parms)
-				);
-			}
-		}
+                    $actions[] = array(
+                        'name' => text(867),
+                        'items' => $items
+                    );
+                }
+                else
+                {
+                    $actions[] = array(
+                        'name' => text(2694),
+                        'url' => $this->method_duplicate->getJSCall($parms),
+                        'uid' => 'implement'
+                    );
+                }
+            }
+        }
 
 		if ( is_object($this->method_move) )
 		{
@@ -234,10 +265,10 @@ class RequestFormMethods
 			if ( count($other_projects) > 0 )
 			{
 				$items = array();
-				foreach( $other_projects as $id => $data ) {
+				foreach( $other_projects as $data ) {
 					$items[] = array (
 							'name' => $data['title'],
-							'url' => $this->method_move->getJsCall(array('Project'=>$id))
+							'url' => $this->method_move->getJsCall(array('Project' => $data['id']))
 					);
 				}
 
@@ -301,9 +332,8 @@ class RequestFormMethods
             );
         }
 
-		if ( $this->IsFormDisplayed() )
-		{
-			$method = new ObjectCreateNewWebMethod($this->getObject());
+		if ( $this->IsFormDisplayed() ) {
+			$method = new ObjectCreateNewWebMethod($this->implementObject);
 			if ( $method->hasAccess() ) {
                 $typeIt = getFactory()->getObject('RequestType')->getAll();
                 while(!$typeIt->end()) {
@@ -318,10 +348,15 @@ class RequestFormMethods
                     );
                     $typeIt->moveNext();
                 }
-                if ( is_object($this->method_duplicate) ) {
+                if ( is_object($this->new_template_method) ) {
                     $actions[] = array(
                         'name' => text(1519),
-                        'url' => preg_replace('/%object-id%/', $object_it->getId(), $this->new_template_url),
+                        'url' => $this->new_template_method->getJSCall(
+                                        array(
+                                            'ObjectId' => $object_it->getId(),
+                                            'items' => $object_it->getId()
+                                        )
+                                    ),
                         'uid' => 'as-template'
                     );
                 }

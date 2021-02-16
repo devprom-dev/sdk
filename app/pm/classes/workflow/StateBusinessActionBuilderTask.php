@@ -9,6 +9,7 @@ include "actions/TaskBusinessActionGetIssueInWork.php";
 include "actions/TaskBusinessActionMoveIssueNextState.php";
 include "actions/TaskBusinessActionMoveIssueNextStateExt.php";
 include "actions/TaskBusinessActionMoveIssuePrevState.php";
+include "actions/TaskBusinessActionMoveTracesNextState.php";
 include "actions/BusinessActionTaskIssueAutoActionWorkflow.php";
 
 class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
@@ -20,7 +21,6 @@ class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
     public function build( StateBusinessActionRegistry & $set )
     {
  		$set->registerRule( new TaskBusinessActionResolveIssue() );
- 		$set->registerRule( new TaskBusinessActionDeclineIssue() );
  		$set->registerRule( new TaskBusinessActionAssignParticipant() );
  		$set->registerRule( new TaskBusinessActionResetAssignee() );
  		$set->registerRule( new TaskBusinessActionReopenIssue() );
@@ -28,6 +28,7 @@ class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
         $set->registerRule( new TaskBusinessActionMoveIssueNextState() );
         $set->registerRule( new TaskBusinessActionMoveIssueNextStateExt() );
         $set->registerRule( new TaskBusinessActionMoveIssuePrevState() );
+        $set->registerRule( new TaskBusinessActionMoveTracesNextState() );
 
         $it = getFactory()->getObject('IssueAutoAction')->getRegistry()->Query(
             array(

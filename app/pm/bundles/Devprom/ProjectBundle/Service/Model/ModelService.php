@@ -1,22 +1,17 @@
 <?php
 namespace Devprom\ProjectBundle\Service\Model;
 
-include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
-include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.php';
-
 class ModelService
 {
-    private $selfUrl = '';
     private $recursive = false;
 
-	public function __construct( $validator_serivce, $mapping_service, $filter_resolver = array(), $uidService = null, $recursive = false )
+	public function __construct( $validator_serivce = null, $mapping_service = null, $filter_resolver = array(), $uidService = null, $recursive = false )
 	{
 		$this->validator_service = $validator_serivce;
 		$this->mapping_service = $mapping_service;
 		$this->filter_resolver = $filter_resolver;
         $this->uidService = is_object($uidService) ? $uidService : new \ObjectUID();
         $this->recursive = $recursive;
-        $this->selfUrl = \EnvironmentSettings::getServerUrl().getSession()->getApplicationUrl().'api/latest/';
 	}
 	
 	public function set( $entity, $data, $id = '' )
@@ -128,7 +123,7 @@ class ModelService
 	public function find( $entity, $limit = '', $offset = '' )
 	{
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
-		
+
 		$registry = $object->getRegistry();
 		if ( $limit > 0 ) $registry->setLimit($limit);
 		
@@ -165,7 +160,7 @@ class ModelService
 
 		return $this->sanitizeData(
 			$object_it->object,
-			$object_it->object->createCachedIterator()->getData()
+			$object_it->object->getEmptyIterator()->getData()
 		);
 	}
 
@@ -203,6 +198,9 @@ class ModelService
                         while( !$refIt->end() ) {
                             $values[] = $refIt->getDisplayName();
                             $refIt->moveNext();
+                        }
+					    if ( $refIt->count() == 0 ) {
+                            $values[] = $refIt->object->getEmptyValueName();
                         }
 					}
 					else {
@@ -272,6 +270,7 @@ class ModelService
 		foreach( $data as $key => $value ) {
 			if ( $value == $object_it->getHtmlDecoded($key) ) unset($data[$key]);
 		}
+
 		if ( count($data) < 1 ) return 1; // do not modify if there were no changes
 
         $data['WasRecordVersion'] = $object_it->get('RecordVersion');
@@ -386,19 +385,19 @@ class ModelService
 					}
 				}
 				else {
-					$result[$attribute] = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
-					if ( in_array($type, array('wysiwyg')) ) {
+					$result[$attribute] = stripslashes(
+					    html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING)
+                    );
 
+					if ( in_array($type, array('wysiwyg')) )
+					{
                         $editor = \WikiEditorBuilder::build($result['ContentEditor']);
                         $editor->setObject($object);
                         $parser = $editor->getHtmlParser();
                         $parser->setObjectIt( $object->createCachedIterator(array($data)) );
                         $result[$attribute] = $parser->parse($result[$attribute]);
 
-						if ( $output == 'html' ) {
-							$result[$attribute] = \IteratorBase::getHtmlValue(str_replace(chr(10), ' ', $result[$attribute]));
-						}
-						else {
+						if ( $output != 'html' ) {
 							$html2text = new \Html2Text\Html2Text($result[$attribute], array('width'=>0));
 							$result[$attribute] = $html2text->getText();
 						}
@@ -432,16 +431,15 @@ class ModelService
 			unset($result[$field]);
 		}
 
-		if ( array_key_exists('UID', $data) ) {
-		    $result['UID'] = $data['UID'];
-        }
-        if ( array_key_exists('URL', $data) ) {
-            $result['URL'] = $data['URL'];
-        }
-        if ( array_key_exists('Id', $result) ) {
-            $result['self'] = $this->getSelfUrl($object, $result['Id']);
+		foreach( array('UID', 'URL', 'ProjectCodeName') as $key ) {
+            if ( array_key_exists($key, $data) ) {
+                $result[$key] = $data[$key];
+            }
         }
 
+        if ( array_key_exists('Id', $result) ) {
+            $result['self'] = $this->getSelfUrl($object, $result);
+        }
 		return $result;
 	}
 	
@@ -450,13 +448,24 @@ class ModelService
 		$class_name = getFactory()->getClass($entity_name);
 		
 		if ( $class_name == '' ) throw new \Exception('Unknown class name: '.$entity_name);
-		
-		return getFactory()->getObject($class_name);
+
+		$object = getFactory()->getObject($class_name);
+
+		if ( $object instanceof \WikiPage ) {
+            $registry = new \WikiPageRegistryContent($object);
+            $registry->setPersisters($object->getPersisters());
+            $object->setRegistry($registry);
+        }
+
+		return $object;
 	}
 	
 	protected function buildSearchQuery( $object, $data )
 	{
-		$query = array();
+		// convert data into database format
+        $this->mapping_service->map($object, $data);
+
+        $query = array();
 		if ( $data['Id'] != '' ) {
 			$query[] = new \FilterInPredicate($data['Id']);
 		}
@@ -473,9 +482,8 @@ class ModelService
 				if ( $object->getAttributeDbType($attribute) == '' ) continue;
 				if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
 				if ( !$object->IsAttributeStored($attribute) ) continue;
-				if ( $attribute == "Description" ) continue;
 
-				$predicate = new \FilterAttributePredicate($attribute, \IteratorBase::utf8towin($value));
+				$predicate = new \FilterAttributePredicate($attribute, $value);
 				$predicate->setHasMultipleValues(false);
 
 				$query[] = $predicate;
@@ -496,12 +504,13 @@ class ModelService
 		$this->skipFields = $fieldsArray;
 	}
 
-	protected function getSelfUrl( $object, $id )
+	protected function getSelfUrl( $object, $data )
     {
+        $id = $data['Id'];
         $className = strtolower(get_class($object));
 
         if ( !in_array($className, $this->selfControllers) ) {
-            $url = $this->selfUrl . $className . '/items';
+            $url = $this->getObjectUrl($data['ProjectCodeName'] != '' ? $data['ProjectCodeName'] : $object) . $className . '/items';
             if ( $id != '' ) $url .= '/' . $id;
             return $url;
         }
@@ -529,7 +538,7 @@ class ModelService
             '/$/'=> 's');
         $className = preg_replace( array_keys($plural), array_values($plural), $className );
 
-        $url = $this->selfUrl . $className;
+        $url = $this->getObjectUrl($data['ProjectCodeName'] != '' ? $data['ProjectCodeName'] : $object) . $className;
         if ( $id != '' ) $url .= '/' . $id;
         return $url;
     }
@@ -538,9 +547,10 @@ class ModelService
     {
         $result = array();
         $referenceIt = null;
+        $uid = new \ObjectUID();
 
         $text = preg_replace_callback('/\{([^\}]+)\}/',
-            function($match) use ($objectIt, &$referenceIt, &$result)
+            function($match) use ($objectIt, &$referenceIt, &$result, $uid)
             {
                 list($path,$default) = preg_split('/,/', $match[1]);
 
@@ -563,6 +573,9 @@ class ModelService
                             }
                             else {
                                 $objectIt = $objectIt->getRef($refName);
+                                if ( $attributeIndex >= count($attributes) - 1 ) {
+                                    return $uid->getUidWithCaption($objectIt) . '&nbsp;';
+                                }
                                 continue;
                             }
                         }
@@ -600,7 +613,7 @@ class ModelService
                 $result = array_merge( $result,
                     strpos($text, '{}') === false
                         ? self::computeFormula($referenceIt, $text)
-                        : array($referenceIt->copy())
+                        : array($uid->getUidWithCaption($referenceIt) . '&nbsp;')
                 );
                 $referenceIt->moveNext();
             }
@@ -615,9 +628,13 @@ class ModelService
             );
         }
 
-        return array_filter($result, function($value) {
+        return array_filter(array_unique($result), function($value) {
             return $value != '';
         });
+    }
+
+    protected function getObjectUrl( $object ) {
+        return \EnvironmentSettings::getServerUrl().getSession()->getApplicationUrl($object).'api/latest/';
     }
 
 	private $validator_service = null;

@@ -29,6 +29,24 @@ class ObjectsListWidgetRegistry extends ObjectRegistrySQL
  		foreach( getSession()->getBuilders('ObjectsListWidgetBuilder') as $builder ) {
  			$builder->build($this);
  		}
+
+        $report = getFactory()->getObject('PMReport');
+        $report_it = $report->getAll();
+        $module = getFactory()->getObject('Module');
+        $module_it = $module->getAll();
+
+        foreach( $this->data as $key => $item )
+        {
+            switch( $item['ReferenceName'] ) {
+                case 'PMReport':
+                    $widget_it = $report_it->moveToId($item['entityId']);
+                    break;
+                default:
+                    $widget_it = $module_it->moveToId($item['entityId']);
+            }
+            $this->data[$key]['data'] = $widget_it->getData();
+        }
+
         return $this->createIterator( $this->data );
  	}
 }

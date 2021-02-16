@@ -1,13 +1,11 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/methods/c_date_methods.php";
-include SERVER_ROOT_PATH."pm/classes/plan/CycleState.php";
 include "VersionList.php";
+include "VersionTree.php";
 
 class VersionTable extends PMPageTable
 {
-	function getList()
-	{
-		return new VersionList( $this->getObject() );
+	function getList() {
+		return new VersionTree( $this->getObject() );
 	}
 
 	function getNewActions()
@@ -86,16 +84,21 @@ class VersionTable extends PMPageTable
         );
 	}
 	
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
-	    $values = $this->getFilterValues();
 	    return array_merge(
-	        parent::getFilterPredicates(),
-            array (
+	        parent::getFilterPredicates( $values ),
+            array(
                 new FilterDateAfterPredicate('EstimatedFinishDate', $values['start']),
                 new FilterDateBeforePredicate('EstimatedFinishDate', $values['finish']),
-	            new StageTimelinePredicate($values['state'])
-	        )
+                new StageTimelinePredicate($values['state']),
+                $_REQUEST['roots'] == '0'
+                    ? new FilterAttributeNullPredicate('ParentStage')
+                    : new FilterAttributePredicate('ParentStage', $_REQUEST['roots']),
+                $_REQUEST['roots'] == '0'
+                    ? new FilterAttributeNullPredicate('ParentStageClass')
+                    : new FilterAttributePredicate('ParentStageClass', $_REQUEST['rootclass'])
+            )
         );
 	}
 	
@@ -103,19 +106,14 @@ class VersionTable extends PMPageTable
 	{
 	    $filter = new FilterObjectMethod( new CycleState(), '', 'state' );
 	    $filter->setHasNone(false);
+        $filter->setDefaultValue('not-passed');
 	    $filter->setType( 'singlevalue' );
 	    $filter->setIdFieldName( 'ReferenceName' );
 	    return $filter;
 	}
 
-    function buildStartFilter()
-    {
-        if( array_key_exists('start',$_REQUEST) and in_array($_REQUEST['start'],array('','hide')) ) {
-            unset($_REQUEST['start']);
-        }
-        $filter = new ViewStartDateWebMethod();
-        $filter ->setDefault(getSession()->getLanguage()->getPhpDate(strtotime('-7 day', strtotime(date('Y-m-j')))));
-        return $filter;
+    function buildStartFilter() {
+        return new FilterDateWebMethod(translate('Начало'), 'start');
     }
 
     function buildFinishFilter()
@@ -127,6 +125,15 @@ class VersionTable extends PMPageTable
         return $filter;
     }
 
+    public function buildFilterValuesByDefault( & $filters )
+    {
+        $values = parent::buildFilterValuesByDefault( $filters );
+        if ( $values['start'] == '' ) {
+            $values['start'] = getSession()->getLanguage()->getPhpDate(strtotime('-1 weeks', strtotime(date('Y-m-j'))));
+        }
+        return $values;
+    }
+
     function getExportActions() {
         return array();
     }
@@ -136,12 +143,16 @@ class VersionTable extends PMPageTable
         switch( $module ) {
             case 'project-plan-hierarchy':
                 return array (
+                    'delivery',
+                    'releases',
+                    'iterations',
                     'milestones',
                     'tasksplanningboard',
                     'iterationplanningboard',
                     'releaseplanningboard',
                     'assignedtasks',
-                    'projects'
+                    'projects',
+                    'process/metrics'
                 );
             default:
                 return parent::getFamilyModules($module);
@@ -151,7 +162,6 @@ class VersionTable extends PMPageTable
     protected function getChartModules( $module )
     {
         return array (
-            'ee/delivery',
             'resman/resourceload',
             'projectburnup',
             'iterationburndown',
@@ -174,5 +184,10 @@ class VersionTable extends PMPageTable
             return $this->issues_widget = $report->getExact('issues-trace');
         }
         return parent::getReferencesListWidget( $parm, $referenceName );
+    }
+
+    function getImportActions()
+    {
+        return array();
     }
 }

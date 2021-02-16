@@ -1,7 +1,8 @@
 <?php
 include_once "EstimationProxy.php";
+include_once "IterationDatesIterator.php";
 
-class IterationIterator extends OrderedIterator
+class IterationIterator extends IterationDatesIterator
 {
 	function IsFinished() 
 	{
@@ -9,11 +10,6 @@ class IterationIterator extends OrderedIterator
 		$it = $this->object->createSQLIterator( $sql );
 		
 		return $it->get('Offset') > 0;
-	}
-	
-	function IsDraft()
-	{
-		return $this->get('IsDraft') == 'Y';
 	}
 	
 	function IsCurrent()
@@ -32,15 +28,6 @@ class IterationIterator extends OrderedIterator
 
 		$it = $this->object->createSQLIterator( $sql );
 		return $it->get('diff') < 0;
-	}
-	
-	function IsEmpty()
-	{
-		global $model_factory;
-		$task = $model_factory->getObject('pm_Task');
-		
-		return $task->getByRefArrayCount(
-			array('Release' => $this->getId() ) ) < 1;
 	}
 	
 	function getDuration()
@@ -182,7 +169,7 @@ class IterationIterator extends OrderedIterator
 		$request->addFilter( new RequestIterationFilter($this->getId()) );
 				
 		return array_shift(
-            $this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
+            $this->getRef('Project')->getMethodologyIt()->getIterationEstimationStrategy()->getEstimation( $request )
 		);
 	}
 
@@ -192,7 +179,7 @@ class IterationIterator extends OrderedIterator
 		$request->addFilter( new RequestIterationFilter($this->getId()) );
 		$request->addFilter( new StatePredicate('terminal') );
 		return array_shift(
-            $this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
+            $this->getRef('Project')->getMethodologyIt()->getIterationEstimationStrategy()->getEstimation( $request )
 		);
 	}
 
@@ -203,7 +190,7 @@ class IterationIterator extends OrderedIterator
 		$request->addFilter( new StatePredicate('notresolved') );
 
 		return array_shift(
-			$this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
+			$this->getRef('Project')->getMethodologyIt()->getIterationEstimationStrategy()->getEstimation( $request )
 		);
 	}
 
@@ -291,35 +278,6 @@ class IterationIterator extends OrderedIterator
 		return $this->get('Velocity'); 
 	}
 	
-	function getRecentBuildIt()
-	{
-		global $model_factory;
-		
-		$sql = 
-			" SELECT b.* " .
-			"   FROM pm_Build b" .
-			"  WHERE b.Release = ".$this->getId().
-			"  ORDER BY b.Caption DESC" .
-			"  LIMIT 1";
-			
-		$build = $model_factory->getObject('pm_Build');
-		return $build->createSQLIterator( $sql );
-	}
-	
-	function getBuildsIt()
-	{
-		global $model_factory;
-		
-		$sql = 
-			" SELECT b.* " .
-			"   FROM pm_Build b" .
-			"  WHERE b.Release = ".$this->getId().
-			"  ORDER BY b.Caption DESC";
-			
-		$build = $model_factory->getObject('pm_Build');
-		return $build->createSQLIterator( $sql );
-	}
-
 	function storeMetricsSnapshot()
 	{
 		$sql = " SELECT GREATEST(LEAST(TO_DAYS(NOW()), TO_DAYS(r.FinishDate)), TO_DAYS(r.StartDate)) TodayDays, " .
@@ -463,17 +421,6 @@ class IterationIterator extends OrderedIterator
         }
 	}
 	
-	function getMetricsDate()
-	{
-		$sql = " SELECT MAX(m.RecordModified) LastDate " .
-			   "   FROM pm_IterationMetric m " .
-			   "  WHERE m.Iteration = ".$this->getId();
-			   
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->getDateTimeFormat('LastDate');
-	}
-
 	function getSeparateTaskIt()
 	{
 		$sql = 'SELECT * FROM pm_Task t ' .
@@ -486,12 +433,12 @@ class IterationIterator extends OrderedIterator
  
 	function getStartDate()
 	{
-		return $this->getDateFormat('StartDate');
+		return $this->getDateFormatted('StartDate');
 	}
 	
 	function getFinishDate()
 	{
-		return $this->getDateFormat('FinishDate');
+		return $this->getDateFormatted('FinishDate');
 	}
 
 	function getWorkItemsMaxDateQuery() {

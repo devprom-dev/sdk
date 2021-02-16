@@ -8,7 +8,7 @@ class MethodologyPage extends PMPage
         return null;
     }
 
-    function getForm()
+    function getEntityForm()
     {
         $form = new MethodologyForm(getFactory()->getObject('pm_Methodology'));
 

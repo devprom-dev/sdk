@@ -1,21 +1,14 @@
 <?php
 
-include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.php";
-
 class FilterAttributePredicate extends FilterPredicate
 {
  	private $attr = '';
- 	
- 	private $has_null = false;
- 	
  	private $ids = array();
- 	
  	private $has_multiple_values = true;
  	
  	function __construct( $attr, $filter )
  	{
  		$this->attr = $attr;
- 		
  		parent::__construct( $filter );
  	}
  	
@@ -34,16 +27,6 @@ class FilterAttributePredicate extends FilterPredicate
  		return $this->has_multiple_values;
  	}
  	
- 	function setNullValue( $flag )
- 	{
- 		$this->has_null = $flag;
- 	}
- 	
- 	function hasNullValue()
- 	{
- 		return $this->has_null;
- 	}
- 	
  	function setIds( $array )
  	{
  		$this->ids = $array;
@@ -53,28 +36,37 @@ class FilterAttributePredicate extends FilterPredicate
  	{
  		return $this->ids;
  	}
- 	
+
+    function check( $filter )
+    {
+        if ( is_array($filter) ) {
+            if ( count($filter) < 1 ) return $filter;
+
+            array_walk( $filter, function (&$value, $key) {
+                return $value = addslashes($value);
+            });
+            return join(',', $filter);
+        }
+        else if ( is_object($filter) ) {
+            return $filter;
+        }
+        else {
+            return addslashes($filter);
+        }
+    }
+
  	function _predicate( $filter )
  	{
  		$object = $this->getObject();
 
  		if ( $object->getAttributeDbType($this->attr) == '' ) {
- 			$this->setIds(array('-1'));
- 			return $this->getQueryPredicate();
+ 			return " AND 1 = 2 ";
  		}
-
- 		if ( !$this->getObject() instanceof User && is_object(getSession()) ) {
-            $filter = preg_replace('/user-id/', getSession()->getUserIt()->getId(), $filter);
-        }
-        $has_null_value = strpos($filter, 'none') !== false;
 
  		if ( $this->hasMultipleValues() && $object->IsReference($this->attr) ) {
             $values = \TextUtils::parseIds($filter);
             if ( count($values) < 1 ) {
                 $values = \TextUtils::parseItems($filter);
-            }
-            elseif ( $has_null_value ) {
-                $values[] = 0;
             }
  		}
  		else {
@@ -93,14 +85,11 @@ class FilterAttributePredicate extends FilterPredicate
  			}
  		}
 
- 		$this->setNullValue($has_null_value);
- 		
- 		if ( $object->IsReference( $this->attr ) )
- 		{
+ 		if ( $object->IsReference( $this->attr ) ) {
  			$ref = $object->getAttributeObject( $this->attr );
  			if ( $ref instanceof CacheableSet ) {
                 foreach( $values as $key => $value ) {
-                    $values[$key] = $object->formatValueForDb($this->attr, addslashes($value));
+                    $values[$key] = $object->formatValueForDb($this->attr, $value);
                 }
             }
             else {
@@ -132,33 +121,43 @@ class FilterAttributePredicate extends FilterPredicate
                 }
                 else {
                     foreach( $values as $key => $value ) {
-                        $values[$key] = $object->formatValueForDb($this->attr, addslashes($value));
+                        $values[$key] = $object->formatValueForDb($this->attr, $value);
                     }
                 }
             }
  		}
- 		else
- 		{
+ 		else {
  			foreach( $values as $key => $value ) {
- 				$values[$key] = $object->formatValueForDb($this->attr, addslashes($value));
+ 				$values[$key] = $object->formatValueForDb($this->attr, $value);
  			}
  		}
 
- 		if ( count($values) < 1 ) $values = array(0);
+        $sqls = array();
 
- 		$this->setIds($values);
+ 		if ( count($values) > 0 ) {
+            $this->setIds($values);
+            $sqls[] = $this->getQueryPredicate();
+        }
+ 		if ( $this->hasAny($filter) ) {
+            $sqls[] = $this->getAlias().".".$this->getAttribute()." IS NOT NULL ";
+        }
+        if ( $this->hasNone($filter) ) {
+            $sqls[] = $this->getAlias().".".$this->getAttribute()." IS NULL ";
+        }
 
- 		return $this->getQueryPredicate();
+ 		return count($sqls) < 1 ? " AND 1 = 2 " : " AND (".join(" OR ", $sqls).") ";
  	}
  	
  	function getQueryPredicate()
  	{
 		$field = $this->getAlias().".".$this->getAttribute();
- 	 	if ( $this->hasNullValue() ) {
- 			return " AND (".$field." IN (".join($this->getIds(),',').") OR ".$this->getAlias().".".$this->getAttribute()." IS NULL )";
- 		}
- 		else {
- 			return " AND ".$field." IN (".join($this->getIds(),',').") ";
- 		}
+		if ( in_array('multiselect', $this->getObject()->getAttributeGroups($this->getAttribute())) ) {
+            $sql = array();
+            foreach($this->getIds() as $value) {
+                $sql[] = " FIND_IN_SET(".$value.", ".$field.") > 0  ";
+            }
+            return join(' OR ', $sql);
+        }
+        return " ".$field." IN (".join($this->getIds(),',').") ";
  	}
 }

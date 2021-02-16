@@ -53,7 +53,7 @@ class UserParticipanceForm extends UserParticipancePreForm
 		return true;
 	}
 
-	function IsAttributeModifable( $attribute )
+	function IsAttributeModifiable( $attribute )
 	{
 		switch ( $attribute )
 		{

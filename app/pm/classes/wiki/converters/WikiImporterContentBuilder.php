@@ -17,17 +17,58 @@ class WikiImporterContentBuilder
         $parms = array (
             'Caption' => $documentTitle,
             'Content' => $documentContent,
-            'ParentPage' => $parentId
+            'ParentPage' => $parentId,
+            'IsDocument' => 1,
+            'DocumentVersion' => $options['DocumentVersion']
         );
         if ( $options['State'] != '' ) {
             $parms['State'] = $options['State'];
         }
-        return $this->object->getRegistryBase()->Create($parms);
+
+        return getFactory()->createEntity($this->object, $parms);
     }
 
-    public function buildPage($title, $content, $options, $parentId)
+    public function storeDocumentContent($documentId, $content)
     {
-        return $this->object->getRegistryBase()->Create(
+        return $this->object->modify_parms($documentId, array(
+            'Content' => $content
+        ));
+    }
+
+    public function buildPage($title, $content, $options, $parentId, $documentIt, $sectionNumber = '', $uid = '')
+    {
+        $registry = $this->object->getRegistryBase();
+        if ( $uid != '' ) {
+            $pageIt = $registry->Query(
+                array(
+                    new WikiDocumentFilter($documentIt),
+                    new FilterTextExactPredicate('UID', $uid)
+                )
+            );
+            if ( $pageIt->getId() != '' ) {
+                $this->object->modify_parms($pageIt->getId(), array(
+                    'Caption' => $title,
+                    'Content' => $content,
+                ));
+                return $this->object->getExact($pageIt->getId());
+            }
+        }
+        if ( $sectionNumber != '' ) {
+            $pageIt = $registry->Query(
+                array(
+                    new FilterAttributePredicate('ParentPage', $parentId),
+                    new FilterTextExactPredicate('SectionNumber', $sectionNumber)
+                )
+            );
+            if ( $pageIt->getId() != '' ) {
+                $this->object->modify_parms($pageIt->getId(), array(
+                    'Caption' => $title,
+                    'Content' => $content,
+                ));
+                return $this->object->getExact($pageIt->getId());
+            }
+        }
+        return $registry->Create(
             array_merge(
                 array (
                     'Caption' => $title,
@@ -44,7 +85,7 @@ class WikiImporterContentBuilder
         $this->document_it = $documentIt;
         $pageIt = $this->getObject()->getRegistry()->Query(
             array(
-                new WikiDocumentWaitFilter($documentIt->getId()),
+                new WikiDocumentFilter($documentIt),
                 new SortDocumentClause()
             )
         );
@@ -72,7 +113,7 @@ class WikiImporterContentBuilder
     {
         $refIt = $this->getObject()->getRegistry()->Query(
             array(
-                new FilterAttributePredicate('DocumentId', $this->document_it->getId()),
+                new WikiDocumentFilter($this->document_it),
                 new FilterSearchAttributesPredicate(urldecode(preg_replace('/[_-]/', ' ', $match[1])), array('Caption'))
             )
         );

@@ -1,5 +1,4 @@
 <?php
-
 include "CustomAttributeEntityField.php";
 include "CustomAttributeTypeClassNameField.php";
 
@@ -83,33 +82,21 @@ class CustomAttributeEntityForm extends PMForm
 		switch ( $attribute ) 
 		{
 			case 'EntityReferenceName':
-			    
-			    if ( $value == '' )
-			    {
+			    if ( $value == '' ) {
 			        $entities = preg_split('/,/', $_REQUEST['customattributeentity']);
-
-			        $value = $entities[0]; 
+			        $value = $entities[0];
 			    }
 			    
 				$this->drawEntities( $value, $tab_index );
-				
 				break;
 				
 			case 'AttributeTypeClassName':
-				
-				echo '<div>';
-					echo '<label>'.text(1827).'</label>';
-					
-					$field = new CustomAttributeTypeClassNameField($this->getObject());
-					
-					$field->setId($attribute);
-					$field->setName($attribute);
-					$field->setTabIndex($tab_index);
-					$field->setNullOption(false);
-					
-					$field->draw();
-				echo '</div>';
-
+                $field = new CustomAttributeTypeClassNameField($this->getObject());
+                $field->setId($attribute);
+                $field->setName($attribute);
+                $field->setTabIndex($tab_index);
+                $field->setNullOption(false);
+                $field->draw();
 				break;
 				
 			default:
@@ -129,16 +116,15 @@ class CustomAttributeEntityForm extends PMForm
 		}
 
 		asort($keys);
-		
-		echo '<label>'.$this->getObject()->getAttributeUserName('EntityReferenceName').'</label>';
-		
+
 		$field = new CustomAttributeEntityField($this->getObject());
-		
+
+		$default = $this->getAttributeDefault('EntityReferenceName');
+		if ( $default == '' ) $default = 'request';
 		$field->setId('EntityReferenceName');
 		$field->setName('EntityReferenceName');
-		$field->setValue($this->getAttributeDefault('EntityReferenceName'));
+		$field->setValue($default);
 		$field->setNullOption(false);
-		
 		$field->draw();
 		
 		$ref_type_it = getFactory()->getObject('PMCustomAttribute')->getAttributeObject('AttributeType')->getByRef('ReferenceName', 'reference');
@@ -147,7 +133,7 @@ class CustomAttributeEntityForm extends PMForm
 		<script type="text/javascript">
 			$(document).ready( function()
 			{
-				$('#AttributeTypeClassName').parent().hide();
+                showAttributeTypeClassName(false);
 
 				window.setTimeout( function() { 
 					$('#AttributeTypeText').on("autocompleteselect", function(event,ui)
@@ -155,13 +141,23 @@ class CustomAttributeEntityForm extends PMForm
 						if ( !ui.item ) return;
 						
 						if ( ui.item.label == '<?=$ref_type_it->getDisplayName()?>' ) {
-							$('#AttributeTypeClassName').parent().show();						
+                            showAttributeTypeClassName(true);
 						} else {
-							$('#AttributeTypeClassName').parent().hide();						
+                            showAttributeTypeClassName(false);
 						}
 					});
 				}, 500);
 			});
+			function showAttributeTypeClassName(visible) {
+			    if ( visible ) {
+                    $('#AttributeTypeClassName').show();
+                    $('#AttributeTypeClassName').prev('label').show();
+                }
+			    else {
+                    $('#AttributeTypeClassName').hide();
+                    $('#AttributeTypeClassName').prev('label').hide();
+                }
+            }
 		</script>
 		<?php
 	}

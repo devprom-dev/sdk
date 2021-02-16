@@ -3,9 +3,7 @@
 class FilterIterationMethod extends FilterObjectMethod
 {
     function __construct( $parmName = 'iteration' ) {
-        $release = getFactory()->getObject('Iteration');
-        $release->setSortDefault(new SortAttributeClause('StartDate.D'));
-        parent::__construct($release, $release->getDisplayName(), $parmName);
+        parent::__construct(getFactory()->getObject('IterationRecent'), '', $parmName);
     }
 
     function getValues()
@@ -14,9 +12,29 @@ class FilterIterationMethod extends FilterObjectMethod
         return array_merge(
             array_slice($values, 0, 1),
             $this->getHasAll()
-                ? array ('notpassed' => text(2327))
+                ? array (
+                        'notpassed' => text(2327),
+                        'current' => translate('Текущая')
+                    )
                 : array(),
             array_slice($values, 1)
         );
+    }
+
+    function parseFilterValue($value)
+    {
+        $value = preg_replace_callback('/notpassed/i', function() {
+                return join(',',getFactory()->getObject('IterationActual')->getAll()->idsToArray());
+            }, $value);
+
+        $value = preg_replace_callback('/current/i', function() {
+                return join(',',getFactory()->getObject('Iteration')->getRegistry()->Query(array(
+                            new FilterVpdPredicate(),
+                            new IterationTimelinePredicate(IterationTimelinePredicate::CURRENT)
+                        ))->idsToArray()
+                    );
+            }, $value);
+
+        return $value;
     }
 }

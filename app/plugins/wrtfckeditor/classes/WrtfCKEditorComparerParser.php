@@ -10,7 +10,7 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 
 		$callbacks = array(
             CODE_ISOLATE => array($this, 'codeIsolate'),
-            '/<img\s+alt="([^"]+)"[^>]+>/i' => array($this, 'parseUMLImage'),
+            '/<img\s([^>]+)>/i' => array($this, 'parseUMLImage'),
             REGEX_INCLUDE_PAGE => array($this, 'parseIncludePageCallback'),
             REGEX_MATH_TEX => array($this, 'parseMathTex'),
             CODE_RESTORE => array($this, 'codeRestore'),
@@ -33,8 +33,10 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 	
 	function parseUMLImage( $match )
 	{
+	    if ( !preg_match('/(alt|uml)="([^"]+)"/i', $match[1], $umlMatches) ) return $match[0];
+
 		// decode %u0444 symbols
-		$json = JsonWrapper::decode('{"t":"'.str_replace('%u', '\u', base64_decode($match[1])).'"}');
+		$json = JsonWrapper::decode('{"t":"'.str_replace('%u', '\u', base64_decode($umlMatches[2])).'"}');
 		$uml_code = urldecode($json['t']);
 		if ( $uml_code == '' ) return $match[0];
 
@@ -48,16 +50,13 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 			'</code></pre>';
 	}
 
-    function codeIsolate( $match ) {
-        return '<code'.$match[1].'>'.array_push($this->codeBlocks, trim($match[2]," \r\n")).'</code>';
-    }
-
     function codeRestore( $match ) {
+ 	    $blocks = $this->getCodeBlocks();
         return '<code'.$match[1].'>'.
             join('',
                 array_map(function($line) {
                     return $line.'<br/>';
-                }, preg_split('/[\r\n]/',$this->codeBlocks[$match[2] - 1]))
+                }, preg_split('/[\r\n]/',$blocks[$match[2] - 1]))
             )
         .'</code>';
     }

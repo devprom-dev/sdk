@@ -25,13 +25,17 @@ class PluginList extends StaticPageList
 		return $this->getObject()->createCachedIterator(array_values($rowset));
 	}
 
-	function getColumns()
-	{
-		$this->object->addAttribute('Description', '', translate('Назначение'), true);
-		$this->object->addAttribute('File', '', translate('Файл'), true);
+	function extendModel()
+    {
+        parent::extendModel();
 
-		return parent::getColumns();
-	}
+        foreach( $this->getObject()->getAttributes() as $attribute => $data ) {
+            if ( $attribute == 'Caption' ) continue;
+            $this->getObject()->setAttributeVisible($attribute, false);
+        }
+        $this->getObject()->addAttribute('Description', '', translate('Назначение'), true);
+        $this->getObject()->addAttribute('File', '', translate('Файл'), true);
+    }
 
 	function IsNeedToDisplay( $attr )
 	{

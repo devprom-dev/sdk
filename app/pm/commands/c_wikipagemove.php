@@ -61,7 +61,7 @@ class WikiPageMove extends CommandForm
              echo JsonWrapper::encode($resultSet);
          }
          catch (Exception $e) {
-             $this->replyError( text(1728) );
+             $this->replyError( text(1728) . '<br/><br/>' . $e->getMessage() );
          }
      }
 

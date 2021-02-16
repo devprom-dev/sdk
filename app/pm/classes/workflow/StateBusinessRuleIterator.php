@@ -1,6 +1,6 @@
 <?php
 
-class StateBusinessRuleIterator extends OrderedIterator
+class StateBusinessRuleIterator extends CacheableIterator
 {
 	function check( $object_it, $transitionIt )
 	{

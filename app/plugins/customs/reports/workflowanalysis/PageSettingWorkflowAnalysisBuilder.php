@@ -27,7 +27,6 @@ class PageSettingWorkflowAnalysisBuilder extends PageSettingBuilder
         $settings->add( $setting );
 
         $setting = new PageTableSetting('ReportWorkflowAnalysisTable');
-        $setting->setFilters( array('submittedon', 'submittedbefore', 'state', 'target') );
         $setting->setSorts( array('State', 'RecordCreated') );
         $settings->add( $setting );
     }

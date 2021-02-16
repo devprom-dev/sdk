@@ -5,11 +5,16 @@ class AttachmentEntityRegistry extends ObjectRegistrySQL
     function createSQLIterator($sql_query)
     {
         $objects = array();
-        foreach( array('Task','Request','Question','Comment','TestCaseExecution') as $class ) {
+        foreach( array('Task','Request','Question','Comment','TestCaseExecution','Issue') as $class ) {
             if ( !class_exists($class) ) continue;
+            $object = getFactory()->getObject($class);
+            $title = $object->getDisplayName();
+            if ( $class == 'Request' && getSession()->IsRDD() && class_exists('Increment') ) {
+                $title = getFactory()->getObject('Increment')->getDisplayName();
+            }
             $objects[] = array (
-                'entityId' => strtolower($class),
-                'Caption' => getFactory()->getObject($class)->getDisplayName()
+                'entityId' => get_class($object),
+                'Caption' => $title
             );
         }
         $type_it = getFactory()->getObject('WikiType')->getAll();
@@ -18,9 +23,10 @@ class AttachmentEntityRegistry extends ObjectRegistrySQL
                 $type_it->moveNext();
                 continue;
             }
+            $object = getFactory()->getObject($type_it->get('ClassName'));
             $objects[] = array (
-                'entityId' => $type_it->get('ClassName'),
-                'Caption' => getFactory()->getObject($type_it->get('ClassName'))->getDisplayName()
+                'entityId' => get_class($object),
+                'Caption' => $object->getDisplayName()
             );
             $type_it->moveNext();
         }

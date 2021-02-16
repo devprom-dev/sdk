@@ -1,5 +1,4 @@
 <?php
-
 include_once "IssueAuthorRegistryBuilder.php";
 
 class IssueAuthorRegistryUsersBuilder extends IssueAuthorRegistryBuilder
@@ -23,9 +22,6 @@ class IssueAuthorRegistryUsersBuilder extends IssueAuthorRegistryBuilder
             return;
         }
 
-        $predicate = new UserStatePredicate();
-        $predicate->setObject(getFactory()->getObject('UserActive'));
-
         $registry->merge("
                 SELECT t.cms_UserId, 
                        t.Caption, 
@@ -37,7 +33,7 @@ class IssueAuthorRegistryUsersBuilder extends IssueAuthorRegistryBuilder
                        t.IsReadonly,
                        t.OrderNum
                   FROM cms_User t
-                 WHERE 1 = 1 ". $predicate->getPredicate('nonblocked')."
+                 WHERE 1 = 1
             ");
     }
 }

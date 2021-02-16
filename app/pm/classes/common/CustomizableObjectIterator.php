@@ -1,6 +1,6 @@
 <?php
 
-class CustomizableObjectIterator extends OrderedIterator
+class CustomizableObjectIterator extends CacheableIterator
 {
     function getDisplayName()
     {

@@ -1,6 +1,6 @@
 <?php
 
-class ModuleIterator extends OrderedIterator
+class ModuleIterator extends CacheableIterator
 {
 	function get( $attribute )
 	{
@@ -15,7 +15,7 @@ class ModuleIterator extends OrderedIterator
 			'name' => $this->getDisplayName(), 
 			'url' => strpos($query_string, '/') !== false 
  	    				? $this->get('Url').$query_string.'?' 
- 	    				: $this->get('Url').($query_string != '' ? '?'.trim($query_string, '?') : ''),
+ 	    				: $this->get('Url').($query_string != '' ? '?clear&'.trim($query_string, '?') : ''),
 			'uid' => preg_replace('/\//', '-', $this->getId()),
 			'icon' => $this->get('Icon'),
  	        'module' => $this->getId()
@@ -24,7 +24,7 @@ class ModuleIterator extends OrderedIterator
 
 	function getUrl( $query_string = '', $projectIt = null )
 	{
-		$info = $this->buildMenuItem($query_string);
+		$info = $this->buildMenuItem(trim($query_string,'?&'));
 		return is_object($projectIt)
             ? preg_replace('/\/pm\/[^\/]+\//i', '/pm/'.$projectIt->get('CodeName').'/', $info['url'])
             : $info['url'];

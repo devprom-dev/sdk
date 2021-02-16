@@ -87,6 +87,10 @@ class FlotChartBarWidget extends FlotChartWidget
                     reserveSpace: true,
                     labelWidth: 15
 				},
+                yaxis: {
+                    labelWidth: 35,
+                    reserveSpace: true,
+                },
 				grid: {
 					hoverable: true,
 					clickable: true

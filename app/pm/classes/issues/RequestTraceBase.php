@@ -6,13 +6,18 @@ include "RequestInversedTraceBaseIterator.php";
 include "predicates/RequestTraceObjectPredicate.php";
 include "predicates/RequestTracePredicate.php";
 include "predicates/RequestTraceStatePredicate.php";
+include "predicates/RequestTraceRequirementLinkedPredicate.php";
      
 class RequestTraceBase extends Metaobject
 {
  	function __construct( ObjectRegistry $registry = null )
  	{
  		parent::__construct('pm_ChangeRequestTrace', is_object($registry) ? $registry : new RequestTraceBaseRegistry());
- 		
+
+        foreach( array('ObjectId','ObjectClass','ChangeRequest') as $attribute ) {
+            $this->addAttributeGroup($attribute, 'alternative-key');
+        }
+
  		$object_class = $this->getObjectClass();
  		if ( $object_class != '' ) {
  		    $this->setAttributeType('ObjectId', 'REF_'.$object_class.'Id');
@@ -34,30 +39,14 @@ class RequestTraceBase extends Metaobject
 
 	function getObjectIt( $request_it )
 	{
-		global $model_factory;
-		
 		$it = $this->getByRefArray(
 			array( 'ChangeRequest' => $request_it->getId() ) 
 			);
 
-		$object = $model_factory->getObject( $this->getObjectClass() );
-		
-		if ( $it->count() < 1 ) return $object->getEmptyIterator(); 
+		$object = getFactory()->getObject( $this->getObjectClass() );
+		if ( $it->count() < 1 ) return $object->getEmptyIterator();
 		
 		return $object->getExact( $it->fieldToArray('ObjectId') );
-	}
-
-	function getRequestIt( $object_it )
-	{
-		global $model_factory;
-		
-		$it = $this->getByRef('ObjectId', $object_it->getId());
-		
-		$request = $model_factory->getObject('pm_ChangeRequest');
-		
-		if ( $it->count() < 1 ) return $request->getEmptyIterator();
-		
-		return $request->getExact( $it->fieldToArray('ChangeRequest') );
 	}
 
 	function getDefaultAttributeValue( $attr )
@@ -74,7 +63,7 @@ class RequestTraceBase extends Metaobject
 
     function IsDeletedCascade( $object )
     {
-        if ( is_a($object, 'WikiPageChange') )return false;
+        if ( is_a($object, 'WikiPageChange') ) return false;
         return parent::IsDeletedCascade($object);
     }
 }

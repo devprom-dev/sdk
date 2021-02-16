@@ -1,7 +1,10 @@
 function uploadFiles(element)
 {
+    var project = element.attr('project');
+    if ( !project ) project = devpromOpts.project;
+
     var flow = new Flow({
-        target: '/pm/' + devpromOpts.project + '/attachments/upload',
+        target: '/pm/' + project + '/attachments/upload',
         testChunks: false,
         query:{
             objectClass: element.attr('objectclass'),
@@ -32,7 +35,7 @@ function uploadFiles(element)
         });
     flow.on("complete", function() {
         if ( element.attr("post-action") == "refresh" ) {
-            window.location.reload();
+            devpromOpts.updateUI();
         }
     });
     flow.on("fileAdded", function(file, chunk)
@@ -41,7 +44,7 @@ function uploadFiles(element)
         if ( $('#' + fileid).length > 0 ) return;
 
         element.parent().parent().find('.attachment-items').append(
-            '<span id="'+fileid+'" class="badge-file"><a class="att-act" href="#">&#10006;</a>'+file.name+'</span>'
+            '<span id="'+fileid+'" class="badge-file"><a class="att-act" href="">&#10006;</a> '+file.name+' </span>'
         );
         $('#' + fileid).circleProgress({
             value: 0,

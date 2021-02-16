@@ -22,10 +22,19 @@ class RequestKanbanModelTest extends DevpromKanbanTestCase
         
         // entity mocks
 
-        $entity = $this->getMock('Request', array('getExact','moveToState','getStates'));
+        $entity = $this->getMockBuilder(Request::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getExact','moveToState','getStates', 'getTerminalStates'])
+            ->getMock();
+
         $entity->expects($this->any())->method('getStates')->will( $this->returnValue(
             array (
                 'submitted',
+                'resolved'
+            )
+        ));
+        $entity->expects($this->any())->method('getTerminalStates')->will( $this->returnValue(
+            array (
                 'resolved'
             )
         ));
@@ -41,8 +50,11 @@ class RequestKanbanModelTest extends DevpromKanbanTestCase
                 ) 
         ));
         
-        $task = $this->getMock('Task', array('createSQLIterator'));
-        
+        $task = $this->getMockBuilder(Task::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['createSQLIterator'])
+            ->getMock();
+
         $task->expects($this->any())->method('createSQLIterator')->will( $this->returnValue(
                  $task->createCachedIterator(array (
                          array (

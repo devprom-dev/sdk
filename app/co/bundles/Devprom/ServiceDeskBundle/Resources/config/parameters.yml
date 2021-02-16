@@ -5,8 +5,8 @@ parameters:
     locale: en
     secret: a5f77b39610bc536efa946c97e32b2dc227518a0
     registration_enabled: true
-    max_products_in_combo: 6
-    use_knowledgebase: true
+    resetting_enabled: true
+    max_products_in_combo: 1
 
     accepted_settings: [ 'supportProjectId', 'appUrl' ]
 
@@ -15,3 +15,4 @@ parameters:
     mailer_port: 25
     mailer_user: ''
     mailer_password: ''
+    adminEmail: 'noreply@localhost'

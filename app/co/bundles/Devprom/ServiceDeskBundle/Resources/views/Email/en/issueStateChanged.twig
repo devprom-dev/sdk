@@ -2,7 +2,7 @@
 <p>The request "<a href="{{ issueLink }}">{{ issue.caption }}</a>" have been updated:</p>
 {{ changes | unescapeHtml | raw }}
 {% if version != '' %}
-    <p><b>Resolved in version:</b>{{ version|unescapeHtml }}</p>
+    <p><b>Resolved in version:</b> {{ version|unescapeHtml }}</p>
 {% endif %}
 <br/>
 {% if comment != '' %}

@@ -2,9 +2,8 @@
 
 class ProjectRoleInheritedFilter extends FilterPredicate
 {
- 	function ProjectRoleInheritedFilter()
- 	{
- 		parent::FilterPredicate('inherited');
+ 	function ProjectRoleInheritedFilter() {
+ 		parent::__construct('inherited');
  	}
  	
  	function _predicate( $filter )

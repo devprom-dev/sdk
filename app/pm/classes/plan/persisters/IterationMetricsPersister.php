@@ -18,16 +18,16 @@ class IterationMetricsPersister extends ObjectSQLPersister
   		$objectPK = $this->getPK($alias);
  		
  		$columns[] = 
- 			"(SELECT m.MetricValueDate " .
+ 			"(SELECT DATE(MIN(m.MetricValueDate)) " .
 			"   FROM pm_IterationMetric m" .
 			"  WHERE m.Iteration = " .$objectPK.
-			"	 AND m.Metric = 'EstimatedStart' LIMIT 1) EstimatedStartDate ";
+			"	 AND m.Metric = 'EstimatedStart') EstimatedStartDate ";
 
  		$columns[] = 
- 			"(SELECT m.MetricValueDate " .
+ 			"(SELECT DATE(MAX(m.MetricValueDate)) " .
 			"   FROM pm_IterationMetric m" .
 			"  WHERE m.Iteration = " .$objectPK.
-			"	 AND m.Metric = 'EstimatedFinish' LIMIT 1) EstimatedFinishDate ";
+			"	 AND m.Metric = 'EstimatedFinish') EstimatedFinishDate ";
 
  		$columns[] = 
  			"(SELECT m.MetricValue " .

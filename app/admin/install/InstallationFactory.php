@@ -16,7 +16,6 @@ include_once 'SetupPhpOpCache.php';
 include_once 'SetupUserGroups.php';
 include_once 'SDKSetup.php';
 include_once 'AttachCustomersToCompanies.php';
-include_once 'SetupSupportProjectSettings.php';
 include_once 'MigrateDatabaseUTF8.php';
 include_once 'MigrateTablesTrueUTF8.php';
 include_once 'MigrateDatabaseInnoDB.php';
@@ -65,7 +64,6 @@ class InstallationFactory
         	new SetupUserGroups(),
         	new SDKSetup(),
         	new AttachCustomersToCompanies(),
-        	new SetupSupportProjectSettings(),
 			new CacheParameters(),
 	        new ClearCache(),
 			new DownloadProductChangesInfo()

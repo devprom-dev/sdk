@@ -1,6 +1,7 @@
 <?php
-
-include_once 'CommentList.php';
+use Devprom\ProjectBundle\Service\Email\CommentNotificationService;
+use Devprom\ProjectBundle\Service\Model\ModelChangeNotification;
+include_once 'CommentsThread.php';
 include_once "FieldCheckNotifications.php";
 
 class CommentsFormMinimal extends PMPageForm
@@ -20,6 +21,13 @@ class CommentsFormMinimal extends PMPageForm
         if ( is_object($objectIt) && $objectIt->getId() != '' ) {
             $this->private = $objectIt->get('IsPrivate') == 'Y';
         }
+
+        if ( $_REQUEST['ObjectId'] != '' && $_REQUEST['ObjectClass'] != '' ) {
+            $className = getFactory()->getClass($_REQUEST['ObjectClass']);
+            if ( class_exists($className) ) {
+                $this->anchor_it = getFactory()->getObject($className)->getExact($_REQUEST['ObjectId']);
+            }
+        }
 	}
 
 	public function setObjectIt($object_it) {
@@ -31,15 +39,14 @@ class CommentsFormMinimal extends PMPageForm
 
     public function setCommentIt($commentIt) {
         $this->anchor_it = $commentIt->getAnchorIt();
-	    $this->commentIt = $commentIt;
+	    $this->commentIt = $commentIt->getRollupIt();
     }
 
     public function getCommentIt() {
 	    return $this->commentIt;
     }
 
-    public function setAnchorIt( $anchor_it )
-	{
+    public function setAnchorIt( $anchor_it ) {
 		$this->anchor_it = $anchor_it;
 	}
 	
@@ -91,8 +98,9 @@ class CommentsFormMinimal extends PMPageForm
 				return $field;
 
             case 'Notification':
+                $options = new CommentNotificationService($this->anchor_it);
                 $field = new FieldCheckNotifications();
-                $field->setAnchor($this->anchor_it);
+                $field->setEmails($options->getEmails());
                 return $field;
 
 		    default:
@@ -102,20 +110,13 @@ class CommentsFormMinimal extends PMPageForm
 
 	function getRenderParms()
 	{
-        if ( is_object($this->anchor_it) && $this->anchor_it->getId() != "" && getSession()->getUserIt()->getId() != "" ) {
-            DAL::Instance()->Query(
-                " DELETE FROM ObjectChangeNotification 
-                   WHERE ObjectId = ".$this->anchor_it->getId()." 
-                     AND ObjectClass = '".get_class($this->anchor_it->object)."' 
-                     AND SystemUser = ".getSession()->getUserIt()->getId()
-            );
-        }
+        $service = new ModelChangeNotification();
+        $service->clearUser($this->anchor_it, getSession()->getUserIt());
 
 		return array_merge( 
             parent::getRenderParms(),
             array(
-                'form_body_template' => "pm/CommentsFormMinimal.php",
-                'comment_it' => $this->commentIt
+                'form_body_template' => "pm/CommentsFormMinimal.php"
             )
 		);
 	}
@@ -124,30 +125,33 @@ class CommentsFormMinimal extends PMPageForm
 	{
 		$field = new FieldWYSIWYG();
 		
-		while( !$comment_it->end() ) 
-		{
-	   		ob_start();
-	   		
-			$field->setObjectIt( $comment_it );
-			$field->setValue( $comment_it->get('Caption') );
-			$field->drawReadonly();
-			
-	   		$text = ob_get_contents();
-	   		ob_end_clean();
-			
-			$comments[] = array (
-	 				'id' => $comment_it->getId(),
-	 				'author' => $comment_it->get('AuthorName'),
-	 			    'author_id' => $comment_it->get('AuthorId'),
-	 				'created' => $comment_it->getDateTimeFormat('RecordCreated'),
-	 				'actions' => array(),
-	 				'html' => $text,
-	 				'thread_it' => $comment_it->getThreadIt(),
-					'files' => array()
-			);
-			$comment_it->moveNext();
-		}
-		
+        ob_start();
+
+        $field->setObjectIt( $comment_it );
+        $field->setValue( $comment_it->get('Caption') );
+        $field->drawReadonly();
+
+        $text = ob_get_contents();
+        ob_end_clean();
+
+        $commentData = array (
+            'id' => $comment_it->getId(),
+            'uid' => md5(get_class($this).$comment_it->getId()),
+            'author' => $comment_it->get('AuthorName'),
+            'author_id' => $comment_it->get('AuthorId'),
+            'created' => $comment_it->getDateTimeFormat('RecordCreated'),
+            'actions' => array(),
+            'html' => $text,
+            'text' => \TextUtils::stripAnyTags($text),
+            'files' => array()
+        );
+
+        $comment_it->moveNext();
+        if ( !$comment_it->end() ) {
+            $commentData['thread_it'] = $comment_it;
+        }
+        $comments[] = $commentData;
+
 		return array(
 			'list' => $this,
 			'comments' => $comments,
@@ -163,7 +167,7 @@ class CommentsFormMinimal extends PMPageForm
 			$comment->addSort(new SortAttributeClause('RecordCreated'));
 			
 			$comment_it = $comment->getAllRootsForObject($this->anchor_it);
-			$comment_it->moveToPos(max(0,$comment_it->count() - 2));
+			$comment_it->moveToPos(max(0,$comment_it->count() - 1));
  		}
  		
  		if ( $level > 50 || $comment_it->count() < 1 ) return;

@@ -82,6 +82,8 @@ class CacheEngineFS extends CacheEngine
             \FileSystem::rmdirr( $this->getFilePath('', $path) );
         }
         if ( function_exists('opcache_reset') ) opcache_reset();
+
+        $lock->Release();
 	}
 	
 	protected function getFilePath( $key, $category )

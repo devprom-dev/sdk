@@ -11,6 +11,7 @@ class ProjectMetricRegistry extends ObjectRegistrySQL
             }
         }
 		return " (SELECT t.pm_ProjectMetricId,
+		                 t.Caption,
 		 				 IFNULL(t.Metric, '$default_metric') Metric,
 		 				 t.MetricValue,
 		 				 IFNULL(t.RecordCreated,i.StartDate) RecordCreated,
@@ -24,7 +25,7 @@ class ProjectMetricRegistry extends ObjectRegistrySQL
 				  ) ";
 	}
 
-    function setMetric( $metric, $value )
+    function setMetric( $metric, $value, $title )
     {
         $object = new Metaobject($this->getObject()->getEntityRefName());
         $registry = $object->getRegistry();
@@ -39,8 +40,8 @@ class ProjectMetricRegistry extends ObjectRegistrySQL
         $rowId = $row_it->getId() != '' ? $row_it->getId() : 'NULL';
         if ( $value == '' ) $value = 0;
         DAL::Instance()->Query("
-            REPLACE INTO pm_ProjectMetric (pm_ProjectMetricId, Project, VPD, Metric, MetricValue, RecordModified, RecordCreated)
-              VALUES (".$rowId.", ".getSession()->getProjectIt()->getId().", '".getSession()->getProjectIt()->get('VPD')."', '".$metric."', ".$value.", NOW(), NOW())
+            REPLACE INTO pm_ProjectMetric (pm_ProjectMetricId, Project, VPD, Metric, MetricValue, RecordModified, RecordCreated, Caption)
+              VALUES (".$rowId.", ".getSession()->getProjectIt()->getId().", '".getSession()->getProjectIt()->get('VPD')."', '".$metric."', ".$value.", NOW(), NOW(), '".$title."')
         ");
     }
 }

@@ -1,20 +1,16 @@
 <?php
-
 include_once "MaintenanceCommand.php";
 include SERVER_ROOT_PATH.'admin/classes/maintenance/BackupAndRecoveryOnWindows.php';
 
 class BackupApplication extends MaintenanceCommand
 {
-	function validate()
-	{
+	function validate() {
 		return true;
 	}
 
 	function create()
 	{
-	    $configuration = getConfiguration();
-	    
-	    $backup = $configuration->getBackupAndRecoveryStrategy();
+	    $backup = getConfiguration()->getBackupAndRecoveryStrategy();
 
 	    $result = $backup->backup_htdocs();
 	    

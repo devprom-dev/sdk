@@ -2,12 +2,12 @@ services:
     mail_transport_logger:
         class: Devprom\ApplicationBundle\Service\Mailer\MailTransportLogger
         arguments:
-            logger: "@logger"
+            $logger: "@logger"
         tags:
             - { name: monolog.logger, channel: mail }
     message_logger:
         class: Devprom\ApplicationBundle\Service\Mailer\MessageLogger
         arguments:
-            logger: "@logger"
+            $logger: "@logger"
         tags:
             - { name: monolog.logger, channel: mail }

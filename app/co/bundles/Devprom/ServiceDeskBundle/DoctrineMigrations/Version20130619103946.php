@@ -13,8 +13,9 @@ class Version20130619103946 extends AbstractMigration
 {
     public function up(Schema $schema)
     {
-        $this->addSql('ALTER TABLE cms_ExternalUser ADD language VARCHAR(3)');
-
+        if (!$schema->getTable('cms_ExternalUser')->hasColumn('language')) {
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD language VARCHAR(3)');
+        }
     }
 
     public function down(Schema $schema)

@@ -16,6 +16,8 @@ class ReleaseMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addPersister( new ReleaseMetricsPersister() );
 
         $metadata->addAttributeGroup('Caption', 'alternative-key');
+
+        $metadata->setAttributeCaption('Caption', translate('Название'));
     	$metadata->addAttribute( 'PlannedCapacity', 'FLOAT', text(1421), false );
         $metadata->addAttribute( 'LeftCapacityInWorkingDays', 'FLOAT', text(1422), false );
  	    $metadata->addPersister( new CapacityPersister() );
@@ -25,6 +27,9 @@ class ReleaseMetadataBuilder extends ObjectMetadataEntityBuilder
         foreach ( array('StartDate','FinishDate','Caption','Description') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'permissions');
         }
+        foreach ( array('InitialEstimationError', 'InitialBugsInWorkload') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'system');
+        }
 
         $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
         if ( !$methodology_it->IsAgile() ) {
@@ -33,6 +38,13 @@ class ReleaseMetadataBuilder extends ObjectMetadataEntityBuilder
             }
             $metadata->setAttributeVisible('InitialVelocity', false);
             $metadata->setAttributeRequired('InitialVelocity', false);
+        }
+        else {
+            $metadata->addAttributeGroup('InitialVelocity', 'nonbulk');
+        }
+
+        foreach ( array('IsClosed') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'bulk');
         }
     }
 }

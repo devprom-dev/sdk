@@ -82,6 +82,19 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 		return new TransitionEditPage(driver);
 	}
 
+	public TransitionEditPage addPreconditionByValue(String precondition) {
+		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(preconditionAddBtn));
+		preconditionAddBtn.click();
+		WebElement selectElem = driver
+				.findElement(By
+						.xpath("//input[@value='transitionpredicate']/following-sibling::div[contains(@id,'fieldRowPredicate')]//select[contains(@id,'Predicate')]"));
+		(new Select(selectElem)).selectByValue(precondition);
+		driver.findElement(
+				By.xpath("//input[@value='transitionpredicate']/following-sibling::div[contains(@class,'embedded_footer')]/input[contains(@id,'saveEmbedded')]"))
+				.click();
+		return new TransitionEditPage(driver);
+	}
+
 	public void addResetField(String field)
 	{
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(resetFieldAddBtn));

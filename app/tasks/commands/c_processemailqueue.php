@@ -58,7 +58,7 @@ class ProcessEmailQueue extends TaskCommand
 
 		while ( !$queue_it->end() )
 		{
-		    $bodyData = unserialize($queue_it->getHtmlDecoded('Description'));
+		    $bodyData = \JSONWrapper::decode($queue_it->getHtmlDecoded('Description'));
 			$body = $bodyData['native'];
 			$bodyText = $bodyData['text'];
 
@@ -66,68 +66,75 @@ class ProcessEmailQueue extends TaskCommand
 			$address_it = $address->getByRef('EmailQueue', $queue_it->getId());
 			while ( !$address_it->end() )
 			{
-				$to_address = $address_it->getHtmlDecoded('ToAddress');
+			    try {
+                    $to_address = $address_it->getHtmlDecoded('ToAddress');
 
-	   			$body = str_replace('<%EMAIL%>', $to_address, $body);
-				if ( $address_it->get('cms_UserId') > 0 ) {
-					$user_it = $user->getExact($address_it->get('cms_UserId'));
-		   			$body = str_replace('%USERNAME%', $user_it->getDisplayName(), $body);
-				}
-
-				$address->delete($address_it->getId());
-
-				list($from_email, $from_name) = HtmlMailBox::parseAddressString($from_address);
-				list($to_email, $to_name) = HtmlMailBox::parseAddressString($to_address);
-
-				$messageToBeSent = DevpromSwiftMessage::newInstance()
-                    ->setContentType(HtmlMailBox::getContentType())
-                    ->setTo($to_email, $to_name != '' ? $to_name : null)
-                    ->setSubject($queue_it->getHtmlDecoded('Caption'))
-                    ->setReplyTo($from_email, $from_name != '' ? $from_name : null);
-
-				$attachments = unserialize($queue_it->getHtmlDecoded('Attachments'));
-				if ( is_array($attachments) && count($attachments) > 0 ) {
-                    $messageToBeSent->setBody($bodyText, 'text/html');
-                    foreach( $attachments as $attachment ) {
-                        $messageToBeSent->attach(
-                            Swift_Attachment::fromPath($attachment['path'])->setFilename($attachment['title'])
-                        );
-                    }
-                }
-                else {
-                    $messageToBeSent->setBodyNative($body);
-                }
-                $messageToBeSent->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'OOF');
-
-				try {
-					if ( $from_email == $to_email ) throw new \Exception("do not send itself ".$from_email);
-                    if ( in_array($to_email, $supportEmails) ) throw new \Exception("do not send to support addresses ".$to_email);
-
-                    $senderEmail = $from_email;
-                    if ( $account_email != '' && !HtmlMailBox::compareDomains($senderEmail, $account_email) ) {
-                        $senderEmail = $account_email;
+                    $body = str_replace('<%EMAIL%>', $to_address, $body);
+                    if ($address_it->get('cms_UserId') > 0) {
+                        $user_it = $user->getExact($address_it->get('cms_UserId'));
+                        $body = str_replace('%USERNAME%', $user_it->getDisplayName(), $body);
                     }
 
-                    $messageToBeSent->setFrom($senderEmail, $from_name != '' ? $from_name : null)
-                        ->setSender($senderEmail, $from_name != '' ? $from_name : null);
+                    $address->delete($address_it->getId());
 
-					$mailer->send($messageToBeSent);
-				}
-                catch (\Swift_SwiftException $e) {
-                    $this->getLogger()->info("Unable send email from ".$senderEmail.", retry using account email");
+                    list($from_email, $from_name) = HtmlMailBox::parseAddressString($from_address);
+                    list($to_email, $to_name) = HtmlMailBox::parseAddressString($to_address);
+
+                    $messageToBeSent = DevpromSwiftMessage::newInstance()
+                        ->setContentType(HtmlMailBox::getContentType())
+                        ->setTo($to_email, $to_name != '' ? $to_name : null)
+                        ->setSubject($queue_it->getHtmlDecoded('Caption'))
+                        ->setReplyTo($from_email, $from_name != '' ? $from_name : null);
+
+                    if ( $queue_it->getHtmlDecoded('EmailMessageId') != '' ) {
+                        $messageToBeSent->setId(uniqid($queue_it->getId()) . EMAIL_MSG_ID_SEPARATOR
+                            . trim($queue_it->getHtmlDecoded('EmailMessageId'),'<>'));
+                    }
+
+                    $attachments = unserialize($queue_it->getHtmlDecoded('Attachments'));
+                    if (is_array($attachments) && count($attachments) > 0) {
+                        $messageToBeSent->setBody($bodyText, 'text/html');
+                        foreach ($attachments as $attachment) {
+                            $messageToBeSent->attach(
+                                Swift_Attachment::fromPath($attachment['path'])->setFilename($attachment['title'])
+                            );
+                        }
+                    } else {
+                        $messageToBeSent->setBodyNative($body);
+                    }
+                    $messageToBeSent->getHeaders()->addTextHeader('Auto-Submitted', 'auto-generated');
+                    $messageToBeSent->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'All');
+
                     try {
-                        $messageToBeSent->setFrom($account_email, $from_name != '' ? $from_name : null)
-                            ->setSender($account_email, $from_name != '' ? $from_name : null);
+                        if ($from_email == $to_email) throw new \Exception("do not send itself " . $from_email);
+                        if (in_array($to_email, $supportEmails)) throw new \Exception("do not send to support addresses " . $to_email);
+
+                        $senderEmail = $from_email;
+                        if ($account_email != '' && !HtmlMailBox::compareDomains($senderEmail, $account_email)) {
+                            $senderEmail = $account_email;
+                        }
+
+                        $messageToBeSent->setFrom($senderEmail, $from_name != '' ? $from_name : null)
+                            ->setSender($senderEmail, $from_name != '' ? $from_name : null);
 
                         $mailer->send($messageToBeSent);
-                    }
-                    catch (\Exception $e) {
-                        $this->getLogger()->error("Unable send email: ".$e->getMessage().PHP_EOL.$e->getTraceAsString());
+                    } catch (\Swift_SwiftException $e) {
+                        $this->getLogger()->info("Unable send email from " . $senderEmail . ", retry using account email");
+                        try {
+                            $messageToBeSent->setFrom($account_email, $from_name != '' ? $from_name : null)
+                                ->setSender($account_email, $from_name != '' ? $from_name : null);
+
+                            $mailer->send($messageToBeSent);
+                        } catch (\Exception $e) {
+                            $this->getLogger()->error("Unable send email: " . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
+                        }
+                    } catch (\Exception $e) {
+                        $this->getLogger()->error("Skip sending email: " . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
                     }
                 }
-				catch (\Exception $e) {
-                    $this->getLogger()->error("Skip sending email: ".$e->getMessage().PHP_EOL.$e->getTraceAsString());
-				}
+                catch (\Exception $e) {
+                    $this->getLogger()->error("Skip sending email: " . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
+                }
 
 				$address_it->moveNext();
 			}

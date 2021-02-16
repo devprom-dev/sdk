@@ -112,9 +112,12 @@ class BulkComplete extends CommandForm
 
 				$attribute = array_pop(array_keys($data['attributes']));
 				if ( $attribute == 'Project' && $object_it->object instanceof WikiPage ) {
-					$object_it = $object_it->object->getRegistry()->Query(
+					$object_it = $object_it->object->getRegistry()->useImportantPersistersOnly()->Query(
 						array (
-						    new ParentTransitiveFilter($object_it->idsToArray()),
+                            join(',',array_unique($object_it->fieldToArray('ParentPage'))) != ''
+                                ? new ParentTransitiveFilter($object_it->idsToArray())
+                                : new SortDocumentClause(),
+                            new FilterAttributePredicate('DocumentId', $object_it->fieldToArray('DocumentId')),
                             new SortDocumentClause()
                         )
 					);
@@ -124,40 +127,48 @@ class BulkComplete extends CommandForm
 				while ( !$object_it->end() )
     			{
     				try {
-    				    $object = getFactory()->getObject(get_class($object_it->object));
+                        if ( $object_it->object instanceof MetaobjectStatable ) {
+                            if ( $object_it->getStateIt()->getId() != '' ) {
+                                $model_builder = new WorkflowStateAttributesModelBuilder(
+                                    $object_it->getStateIt(), array_keys($data['attributes'])
+                                );
+                                $tempObject = getFactory()->getObject(get_class($object_it->object));
+                                $model_builder->build($tempObject);
+                                foreach( $data['attributes'] as $key => $value ) {
+                                    if ( !$tempObject->getAttributeEditable($key) ) {
+                                        throw new Exception(sprintf(text(3016), $tempObject->getAttributeUserName($key)));
+                                    }
+                                }
+                            }
+                        }
+
                         $key = array();
 	    		        $this->processEmbeddedForms( $object_it, $key );
-                        $mapper = new ModelDataTypeMapper();
-                        $mapper->map( $object, $data['attributes'] );
-                        $object->modify_parms($object_it->getId(), $data['attributes']);
+	    		        getFactory()->modifyEntity($object_it, $data['attributes']);
 						$processedIds[] = $object_it->getId();
     				}
     				catch( Exception $e ) {
 	   					$except_items[] = array (
-	   							'it' => $object_it->copy(),
-	   							'ex' => $e
+                            'it' => $object_it->copy(),
+                            'ex' => $e
 	   					);
     				}
+
+    				\ZipSystem::sendResponse();
     				$object_it->moveNext();
     			}
 
 				if ( count($processedIds) > 0 ) {
 					$processedIt = $object_it->object->getExact($processedIds);
 					if ( $_REQUEST['OpenList'] != '' && $processedIt->count() > 0 ) {
-						if ( $processedIt->count() == 1 ) {
-							$_REQUEST['redirect'] = $processedIt->getViewUrl();
+						if ( $processedIt->count() == 1 || ($attribute == 'Project' && $object_it->object instanceof WikiPage) ) {
+							$_REQUEST['redirect'] = $processedIt->getUidUrl();
 						}
 						else {
-							$it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', get_class($object_it->object));
-							if ( $it->getId() != '' ) {
-								$widget = getFactory()->getObject($it->get('ReferenceName'));
-								$widget->setVpdContext($processedIt);
-								$widget_it = $widget->getExact($it->getId());
-								if ( $widget_it->getId() != '' ) {
-									$_REQUEST['redirect'] =
-										$url = $widget_it->getUrl(strtolower(get_class($object_it->object)).'='.\TextUtils::buildIds($processedIt->idsToArray()).'&clickedonform');
-								}
-							}
+                            $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIt($processedIt);
+                            if ( $url != '' ) {
+                                $_REQUEST['redirect'] = $url;
+                            }
 						}
 					}
 				}
@@ -168,9 +179,30 @@ class BulkComplete extends CommandForm
 		    	$transition_it = getFactory()->getObject('Transition')->getExact($data['parameter']);
                 $data['attributes']['IsPrivate'] = $_REQUEST['IsPrivate'];
 
+                $emptyOnlyAttributes = array();
+                foreach( $data['attributes'] as $attribute => $value ) {
+                    $actualData = array_unique($object_it->fieldToArray($attribute));
+                    if ( count($actualData) > 1 ) {
+                        if ( in_array('', $actualData) ) {
+                            $emptyOnlyAttributes[$attribute] = $value;
+                        }
+                        unset($data['attributes'][$attribute]);
+                    }
+                }
+
+                getFactory()->transformEntityData($object_it->object, $data['attributes']);
+
+                $object_it->moveFirst();
 				while ( !$object_it->end() )
     			{
     				try {
+    				    $attributes = $data['attributes'];
+    				    foreach( $emptyOnlyAttributes as $attribute => $value ) {
+    				        if ( $object_it->get($attribute) == '' ) {
+                                $attributes[$attribute] = $value;
+                            }
+                        }
+
                         $key = array();
     					$this->processEmbeddedForms( $object_it, $key );
     					
@@ -183,7 +215,7 @@ class BulkComplete extends CommandForm
                             $transition_it->getId(),
                             $object_it->getId(),
                             get_class($object_it->object),
-                            $data['attributes'],
+                            $attributes,
                             false
 						);
 	    				ob_end_clean();
@@ -194,6 +226,7 @@ class BulkComplete extends CommandForm
     							'ex' => $e
     					); 
     				}
+                    \ZipSystem::sendResponse();
     				$object_it->moveNext();
     			}
 

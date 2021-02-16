@@ -1,5 +1,4 @@
 <?php
-include "CoPageMenu.php";
 
 class CoPageNavigation extends PageNavigation
 {
@@ -75,12 +74,11 @@ class CoPageNavigation extends PageNavigation
 
     function getHelpActions()
     {
-        $docs_url = defined('HELP_DOCS_URL') ? HELP_DOCS_URL : 'http://devprom.ru/docs';
         return array_merge(
             array(
                 array (
                     'name' => text('guide.userdocs'),
-                    'url' => $docs_url,
+                    'url' => \EnvironmentSettings::getHelpDocsUrl(),
                     'target' => '_blank'
                 )
             ),
@@ -90,10 +88,19 @@ class CoPageNavigation extends PageNavigation
 
     function getTabs()
     {
-        if ( getSession()->getUserIt()->getId() < 1 ) return array();
+        $pages = array();
+        if ( getSession()->getUserIt()->getId() < 1 ) return $pages;
 
-        $menu = new CoPageMenu();
-        return $menu->getTabs();
+        $pages['main'] = array(
+            'uid' => 'main',
+            'items' => array(
+                array( 'url' => '/profile', 'name' => translate('Профиль'), 'uid' => 'profile' ),
+                array( 'url' => '/notifications', 'name' => text(1912), 'uid' => 'notifications' ),
+                array( 'url' => '/keys', 'name' => text(2913), 'uid' => 'keys' )
+            )
+        );
+
+        return $pages;
     }
 
     function getQuickActions()

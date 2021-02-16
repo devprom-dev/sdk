@@ -9,7 +9,8 @@ class ModelFactoryAdmin extends ModelFactoryExtended
 		return array_merge( parent::buildClasses(), array(
 			'pm_changerequestlinktype' => array('RequestLinkType'),
 			'pm_importance' => array('Importance'),
-			'cms_blacklist' => array('BlackList')
+			'cms_blacklist' => array('BlackList'),
+            'cms_backup' => array('Backup')
 		));
 	}	
 }

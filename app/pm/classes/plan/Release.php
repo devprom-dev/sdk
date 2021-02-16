@@ -1,10 +1,10 @@
 <?php
-
 include "ReleaseIterator.php";
 include "ReleaseRegistry.php";
 include "predicates/ReleaseTimelinePredicate.php";
 include "predicates/ReleaseUserHasTasksPredicate.php";
 include "sorts/SortReleaseEstimatedStartClause.php";
+include_once "validators/ModelValidatorDatesCausality.php";
 
 class Release extends Metaobject
 {
@@ -15,12 +15,21 @@ class Release extends Metaobject
 		$this->setSortDefault( array( new SortAttributeClause('StartDate'), new SortAttributeClause('Caption')) );
 	}
 
-	function createIterator() 
-	{
+	function createIterator() {
 		return new ReleaseIterator( $this );
 	}
 
-	function getDefaultAttributeValue( $name ) 
+	function getValidators() {
+        return array(
+            new ModelValidatorDatesCausality()
+        );
+    }
+
+    function getPageFormPopup() {
+        return true;
+    }
+
+    function getDefaultAttributeValue( $name )
 	{
 		switch ( $name )
 		{
@@ -98,7 +107,7 @@ class Release extends Metaobject
 
 	function getPage()
 	{
-		return getSession()->getApplicationUrl($this).'plan/hierarchy?';
+		return getSession()->getApplicationUrl($this).'releases?';
 	}
 
 	function cacheDeps()
@@ -174,8 +183,10 @@ class Release extends Metaobject
 	
 	function modify_parms( $object_id, $parms )
 	{
-		$parms['FinishDate'] = $this->getDefaultFinishDate($parms['StartDate'], $parms['FinishDate']);
-		
+	    if ( array_key_exists('StartDate', $parms) && array_key_exists('FinishDate', $parms) ) {
+            $parms['FinishDate'] = $this->getDefaultFinishDate($parms['StartDate'], $parms['FinishDate']);
+        }
+
 		$result = parent::modify_parms( $object_id, $parms );
 		if ( $result < 1 ) return $result;
 		

@@ -11,7 +11,7 @@ class FieldPassword extends Field
 	{
 		if ( $this->readOnly() )
 		{
-			echo '<input class="input-block-level" type="text" value="'.$this->getValue().'" disabled>';
+			echo '<input class="input-block-level" type="text" value="'.SHADOW_PASS.'" disabled>';
 		}
 		else
 		{

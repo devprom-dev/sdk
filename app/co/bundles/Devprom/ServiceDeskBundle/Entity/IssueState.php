@@ -25,6 +25,12 @@ class IssueState extends BaseEntity {
     private $name;
 
     /**
+     * @ORM\Column(type="string", name="Description")
+     * @var string
+     */
+    private $description;
+
+    /**
      * @ORM\Column(type="string", name="ReferenceName")
      * @ORM\Id
      * @var string
@@ -86,6 +92,22 @@ class IssueState extends BaseEntity {
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setDescription($value)
+    {
+        $this->description = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
     }
 
     /**

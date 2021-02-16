@@ -38,7 +38,7 @@ class ShareWidgetService
                 'Login' => $login,
                 'Email' => $email,
                 'Password' => $password,
-                'IsReadonly' => ''
+                'IsReadonly' => 'Y'
             ),
             array(
                 'Email'
@@ -85,7 +85,6 @@ class ShareWidgetService
         );
 
         $mail = new \HtmlMailBox();
-        $mail->setFromUser(getSession()->getUserIt());
         $mail->appendAddress( $userIt->get('Email') );
         $mail->setSubject( $emailSubject );
         $mail->setBody($render_service->getContent('share-widget.twig', $parms));

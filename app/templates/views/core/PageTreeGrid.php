@@ -15,27 +15,23 @@ foreach( $columns as $key => $attr )
 }
 $columns_number = count($columns_info);
 
+$uid = new ObjectUID();
+$hasUid = $uid->hasUidObject($list->getObject());
+
 if ( $message != '' ) {
     echo '<div class="alert alert-hint">' . $message . '</div>';
 }
 ?>
-<div>
+<div class="list-container">
     <table id="<?=$table_id?>" class="table-inner <?=$table_class_name?>" created="<?=$created_datetime?>" uid="<?=$widget_id?>">
         <thead>
 
 		<tr class="header-row">
 			<th class="for-num" width="<?=$numbers_column_width?>" uid="numbers">
                 <div class="btn-group pull-left">
-                    <div id="filter-settings" class="btn dropdown-toggle btn-sm btn-secondary" data-toggle="dropdown" href="#" data-target="#listmenu<?=$table_id?>">
+                    <button id="filter-settings" class="btn dropdown-toggle btn-xs btn-secondary">
                         <i class="icon-cog icon-white"></i>
-                    </div>
-                </div>
-                <div class="btn-group dropdown-fixed" id="listmenu<?=$table_id?>">
-                <?php
-                    echo $view->render('core/PopupMenu.php', array(
-                        'items' => $filter_actions
-                    ));
-                ?>
+                    </button>
                 </div>
             </th>
 			<th class="for-chk visible" width="1%" uid="checkbox">
@@ -50,21 +46,21 @@ if ( $message != '' ) {
 
 				$header_attrs = $list->getHeaderAttributes( $attr );
 				echo '<th width="'.$width.'" uid="'.strtolower($attr).'" title="'.$title.'" class="'.$header_attrs['class'].'">';
-				if ( $header_attrs['script'] != '#' ) {
+				if ( $header_attrs['script'] != '#' && in_array($attr, $sorts) ) {
 					echo '<a class="mode-sort" href="'.$header_attrs['script'].'">';
 						echo $header_attrs['name'];
                         if ( $header_attrs['sort'] != '' ) {
                             echo $header_attrs['sort'] == 'up' ? '&#x25B2;' : '&#x25BC;';
                         }
 					echo '</a>';
-                    if ( $attr == 'Caption' ) {
-                        echo ' <a class="dashed" id="collapseTree" onclick="">'.translate('свернуть').'</a> ';
-                        echo ' <a class="dashed" id="restoreTree" onclick="">'.translate('развернуть').'</a> ';
-                    }
 				}
 				else {
 					echo $header_attrs['name'];
 				}
+                if ( $attr == 'Caption' ) {
+                    echo ' <a class="dashed" id="collapseTree" onclick="">'.translate('свернуть').'</a> ';
+                    echo ' <a class="dashed" id="restoreTree" onclick="">'.translate('развернуть').'</a> ';
+                }
 				echo '</th>';
 			}
 			$columns_number++;
@@ -80,7 +76,7 @@ if ( $message != '' ) {
                 <td uid="checkbox-field"></td>
                 <?php
                     foreach( $columns as $attr ) {
-                        echo '<td id="'.strtolower($attr).'" uid="'.strtolower($attr).'"></td>';
+                        echo '<td id="'.strtolower($attr).'" uid="'.strtolower($attr).'" class="cell-'.$list->getColumnAlignment($attr).'"></td>';
                     }
                 ?>
                 <td id="operations" uid="actions" class="hidden-print"></td>
@@ -99,15 +95,30 @@ if ( $message != '' ) {
             checkbox: false,
             icon: false,
             debugLevel: 0,
+            dataUrl: "<?=$jsonUrl?>",
             table: {
                 indentation: 20,      // indent 20px per node level
-                nodeColumnIdx: 3,     // render the node title into the 2nd column
+                nodeColumnIdx: <?=($hasUid ? '3' : '2')?>,     // render the node title into the 2nd column
+            },
+            persist: {
+                expandLazy: true,
+                store: "local",
+                types: "active expanded focus selected"  // which status types to store
             },
             source: {
-                url: "<?=$jsonUrl?>"
+                url: "<?=$jsonUrl?>&roots=0"
             },
             lazyLoad: function(event, data) {
-                data.result = {url: "ajax-sub2.json"}
+                var node = data.node;
+                data.result = {
+                    url: "<?=$jsonUrl?>",
+                    data: {
+                        mode: "children",
+                        roots: node.data.id,
+                        rootclass: node.data.class
+                    },
+                    cache: false
+                };
             },
             renderColumns: function(event, data) {
                 $(data.node.tr).find(">td").each(function() {
@@ -118,11 +129,14 @@ if ( $message != '' ) {
                 });
 
                 $(data.node.tr).find(">td").eq(0)
-                    .text(data.node.data['uid'] ? data.node.getIndexHier() : '')
+                    .text(data.node.data['section'] ? data.node.data['section'] : data.node.getIndexHier())
                     .addClass("alignRight");
 
                 $(data.node.tr)
                     .attr('object-id', data.node.key)
+                    .attr('raw-id', data.node.data.id)
+                    .attr('state', data.node.data['object-state'])
+                    .attr('project', data.node.data['project'])
                     .attr('modified', data.node.data['modified']);
             },
             strings: {
@@ -134,19 +148,32 @@ if ( $message != '' ) {
         /* Handle custom checkbox clicks */
         $("#<?=$table_id?>").on("click", "", function(e){
             var node = $.ui.fancytree.getNode(e);
-            if ( node && node.tr ) {
+            if ( node && node.tr && $(e.target).is('input,td,.fancytree-title') ) {
                 var id = $(node.tr).attr('object-id');
                 if ( id != '' ) {
-                    $(document).trigger("trackerItemSelected", [node.data['id'], e.ctrlKey || e.metaKey, node.data['class']]);
+                    $(document).trigger("trackerItemSelected",
+                        [node.data['id'], e.ctrlKey || e.metaKey || $(e.target).is('input'),
+                            node.data['class']]);
+                }
+            }
+        });
+        $("#<?=$table_id?>").on("dblclick", "", function(e){
+            var node = $.ui.fancytree.getNode(e);
+            if ( node && node.tr ) {
+                var ref = $(node.tr).find('td[id=operations] li>a:eq(0)');
+                if (ref.is('[onclick]')) {
+                    ref.click();
+                } else if (ref.is('[href]')) {
+                    window.location = ref.attr('href');
                 }
             }
         });
 
         $('#collapseTree').click(function() {
-            $("#<?=$table_id?>").fancytree("getTree").expandAll(false);
+            $.ui.fancytree.getTree("#<?=$table_id?>").expandAll(false);
         });
         $('#restoreTree').click(function() {
-            $("#<?=$table_id?>").fancytree("getTree").expandAll();
+            $.ui.fancytree.getTree("#<?=$table_id?>").expandAll();
         });
 
         initializeTreeGrid('<?=$table_id?>', {});

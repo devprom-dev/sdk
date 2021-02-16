@@ -12,8 +12,4 @@ class SettingsTableBase extends PMPageTable
             )
         );
     }
-
-    function buildOpenInOtherMenu() {
-        return array();
-    }
 }

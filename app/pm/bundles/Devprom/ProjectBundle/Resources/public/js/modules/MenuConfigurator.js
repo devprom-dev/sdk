@@ -54,7 +54,7 @@ App.module("MenuConfigurator", function(MenuConfigurator, App, Backbone, Marione
 	    tagName: 'ul',
 	    attributes:{
 		"class": 'nav nav-pills',
-		"style": 'margin-bottom: 10px'
+		"style": 'margin-bottom: 0px'
 	    },
 	    itemView: FunctionSpaceView,
 	    

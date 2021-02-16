@@ -2,9 +2,8 @@
 
 class WikiSectionFilter extends FilterPredicate
 {
- 	function WikiSectionFilter()
- 	{
- 		parent::FilterPredicate('section');
+ 	function WikiSectionFilter() {
+ 		parent::__construct('section');
  	}
  	
  	function _predicate( $filter )

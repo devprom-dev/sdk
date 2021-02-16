@@ -3,7 +3,9 @@ include "ApplicationSlackBuilder.php";
 include "ApplicationJiraBuilder.php";
 include "ApplicationReviewBoardBuilder.php";
 include "ApplicationRedmineBuilder.php";
+include "ApplicationTfsBuilder.php";
 include "ApplicationYouTrackBuilder.php";
+include "ApplicationGitlabBuilder.php";
 
 class IntegrationApplicationRegistry extends ObjectRegistrySQL
 {
@@ -35,10 +37,24 @@ class IntegrationApplicationRegistry extends ObjectRegistrySQL
                     'Type' => 'tracker'
                 ),
                 array (
+                    'entityId' => 'gitlab',
+                    'Caption' => 'GitLab',
+                    'ReferenceName' => '/plugins/integration/resources/json/gitlab-rest-api.json',
+                    'ModelBuilder' => 'ApplicationGitlabBuilder',
+                    'Type' => 'tracker'
+                ),
+                array (
                     'entityId' => 'redmine',
                     'Caption' => 'Redmine',
                     'ReferenceName' => '/plugins/integration/resources/json/redmine-rest-api.json',
                     'ModelBuilder' => 'ApplicationRedmineBuilder',
+                    'Type' => 'tracker'
+                ),
+                array (
+                    'entityId' => 'tfs',
+                    'Caption' => 'TFS',
+                    'ReferenceName' => '/plugins/integration/resources/json/tfs-rest-api.json',
+                    'ModelBuilder' => 'ApplicationTfsBuilder',
                     'Type' => 'tracker'
                 ),
 				array (

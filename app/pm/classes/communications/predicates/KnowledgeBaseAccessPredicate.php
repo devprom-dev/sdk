@@ -8,6 +8,10 @@ class KnowledgeBaseAccessPredicate extends FilterPredicate
  	
  	function _predicate( $filter )
  	{
+ 	    if ( !is_object(getSession()) ) return " AND 1 = 1 ";
+        if ( !is_object(getSession()->getUserIt()) ) return " AND 1 = 1 ";
+        if ( getSession()->getUserIt()->getId() == '' ) return " AND 1 = 1 ";
+
 		return  " AND NOT EXISTS (" .
 				"	   SELECT a.VPD, a.ObjectId " .
 				"		 FROM pm_ObjectAccess a, pm_ParticipantRole pr, pm_Participant p " .

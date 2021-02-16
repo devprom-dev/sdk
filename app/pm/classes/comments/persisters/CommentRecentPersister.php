@@ -12,6 +12,12 @@ class CommentRecentPersister extends ObjectSQLPersister
  			"     AND so.ObjectClass = '".get_class($this->getObject())."'".
  			"   ORDER BY so.RecordCreated DESC LIMIT 1 ) RecentComment ";
 
+        $columns[] =
+            "( SELECT so.RecordModified FROM Comment so ".
+            "   WHERE so.ObjectId = ".$this->getPK($alias).
+            "     AND so.ObjectClass = '".get_class($this->getObject())."'".
+            "   ORDER BY so.RecordCreated DESC LIMIT 1 ) RecentCommentDate ";
+
 		$columns[] =
 			"( SELECT so.AuthorId FROM Comment so ".
 			"   WHERE so.ObjectId = ".$this->getPK($alias).
@@ -21,7 +27,7 @@ class CommentRecentPersister extends ObjectSQLPersister
  		$columns[] =
  			"( SELECT COUNT(1) FROM Comment so ".
  			"   WHERE so.ObjectId = ".$this->getPK($alias).
- 			"     AND so.ObjectClass = '".get_class($this->getObject())."' ) CommentsCount ";
+ 			"     AND so.ObjectClass = '".get_class($this->getObject())."' AND so.Closed = 'N') CommentsCount ";
 
  		$userIt = getSession()->getUserIt();
  		if ( $userIt->getId() != '' ) {

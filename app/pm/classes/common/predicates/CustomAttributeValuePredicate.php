@@ -1,7 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.php";
-
 class CustomAttributeValuePredicate extends FilterPredicate
 {
  	var $attribute;
@@ -45,11 +43,22 @@ class CustomAttributeValuePredicate extends FilterPredicate
         }
 
         if ( count($values) > 0 ) {
-            $sql[] =
-                " EXISTS (SELECT 1 FROM pm_AttributeValue av ".
-                "		   WHERE av.ObjectId = t.".$object->getClassName()."Id ".
-                "		   	 AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ".
-                "			 AND av.".$value_column." IN (".join(",",$values).") ) ";
+            if ( in_array('multiselect', $object->getAttributeGroups($this->attribute)) ) {
+                foreach($values as $value) {
+                    $sql[] =
+                        " EXISTS (SELECT 1 FROM pm_AttributeValue av ".
+                        "		   WHERE av.ObjectId = t.".$object->getClassName()."Id ".
+                        "		   	 AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ".
+                        "			 AND FIND_IN_SET(".$value.", av.".$value_column.") > 0 ) ";
+                }
+            }
+            else {
+                $sql[] =
+                    " EXISTS (SELECT 1 FROM pm_AttributeValue av ".
+                    "		   WHERE av.ObjectId = t.".$object->getClassName()."Id ".
+                    "		   	 AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ".
+                    "			 AND av.".$value_column." IN (".join(",",$values).") ) ";
+            }
         }
 
  		return " AND (".join(" OR ", $sql)." ) ";

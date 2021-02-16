@@ -5,11 +5,8 @@ class ApplicationSlackBuilder extends ObjectModelBuilder
 {
     public function build( Metaobject $object )
     {
-        $visible = array('ProjectKey', 'URL', 'MappingSettings','Log','HttpUserName');
-        foreach( array_keys($object->getAttributes()) as $attribute )
-        {
-            if ( in_array($attribute, $visible) ) continue;
-            $object->setAttributeRequired($attribute, false);
+        $invisible = array('Type', 'HttpUserPassword', 'HttpHeaders');
+        foreach( $invisible as $attribute ) {
             $object->setAttributeVisible($attribute, false);
         }
         $object->setAttributeCaption('ProjectKey', text('integration16'));

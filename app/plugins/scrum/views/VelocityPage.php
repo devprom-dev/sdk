@@ -28,7 +28,7 @@ class VelocityPage extends PMPage
  		return new VelocityTable( $this->getObject() );
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		return null;
  	}

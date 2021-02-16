@@ -32,8 +32,8 @@ public class RequirementsTracePage extends SDLCPojectPageBase{
         
     public String getIdByName(String requirementName) {
         String ids = 
-    		driver.findElement(By.xpath("//tr[contains(@id,'requirementtracelist1_row')]/*[@id='caption']/*[contains(.,'"+
-				requirementName+"')]/../preceding-sibling::td[@id='uid']/a")).getAttribute("href");
+    		driver.findElement(By.xpath("//tr[contains(@id,'requirementtracelist1_row')]/*[@id='caption' and contains(.,'"+
+				requirementName+"')]/preceding-sibling::td[@id='uid']/a")).getAttribute("href");
         String id = ids.substring(ids.lastIndexOf("/") + 1);
         FILELOG.debug("Click to UID of requirement");
         return id;

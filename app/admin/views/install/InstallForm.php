@@ -68,7 +68,7 @@ class InstallForm extends AjaxForm
 			case 'Database':
 			case 'DatabaseUser':
 			case 'DatabasePass':
-				return 'text';
+				return 'varchar';
 
 			case 'SkipCreation':
 			case 'SkipStructure':

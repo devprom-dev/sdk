@@ -54,14 +54,12 @@ class ProcessRevisionLog extends TaskCommand
 
 	function processChunk( $chunk )
 	{
-		global $model_factory, $session;
+		global $session;
 
-		$user = getFactory()->getObject('cms_User');
-		
-		$scm_it = getFactory()->getObject('pm_Subversion')->getRegistry()->Query( 
-				array (
-						new FilterInPredicate($chunk)		
-				)
+		$scm_it = getFactory()->getObject('pm_Subversion')->getRegistry()->Query(
+            array (
+                new FilterInPredicate($chunk)
+            )
 		);
 		
 		while ( !$scm_it->end() )
@@ -71,13 +69,11 @@ class ProcessRevisionLog extends TaskCommand
 			$project_it = $scm_it->getRef('Project');
 
 			$auth_factory = new AuthenticationFactory();
-			$auth_factory->setUser( $user->getEmptyIterator() );
+			$auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
 			
 			$session = new PMSession($project_it->copy(), $auth_factory);
 			getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
 			
-			ob_start();
-
 			$object = getFactory()->getObject('pm_Subversion');
 			
 			if ( !$object instanceof Subversion ) {

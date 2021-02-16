@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/history/ChangeLogEntitiesBuilder.php";
 
 class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
@@ -34,7 +33,8 @@ class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
         	'pm_Watcher',
         	'pm_FunctionTrace',
             'cms_Snapshot',
-            'cms_SnapshotItem'
+            'pm_CustomReport',
+            'pm_Invitation'
  		);
         
         if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' )

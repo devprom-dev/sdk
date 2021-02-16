@@ -20,12 +20,13 @@ class IntegrationPage extends PMPage
         return new IntegrationTable($this->getObject());
     }
 
-    function getForm()
+    function getEntityForm()
     {
-        $form = new IntegrationForm($this->getObject());
+        $object = $this->getObject();
+        $form = new IntegrationForm($object);
         if ( $this->needDisplayForm() ) {
-            $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'mapping', translate('integration6')));
-            $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Лог')));
+            $this->addInfoSection(new PageSectionAttributes($object, 'mapping', translate('integration6')));
+            $this->addInfoSection(new PageSectionAttributes($object, 'additional', translate('Лог')));
         }
         return $form;
     }

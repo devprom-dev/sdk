@@ -11,7 +11,7 @@ include('c_iterator.php');
  include_once SERVER_ROOT_PATH."cms/classes/model/StoredObjectDB.php";
 
  /////////////////////////////////////////////////////////////////////////////////////////////////////////
- class Object
+ class AbstractObject
  {
  	var $attributes = array();
 	var $classname;
@@ -33,7 +33,7 @@ include('c_iterator.php');
 		return array_key_exists($name, $this->attributes);
 	}
 	
- 	function addAttribute( $ref_name, $type, $caption, $b_visible, $b_stored = false, $description = '', $ordernum = 999 ) 
+ 	function addAttribute( $ref_name, $type, $caption, $b_visible = true, $b_stored = false, $description = '', $ordernum = 999 )
 	{
 		if ( $ordernum == 999 ) $ordernum = $this->getLatestOrderNum() + 10;
 		
@@ -128,6 +128,7 @@ include('c_iterator.php');
 
      function getAttributeEditable( $name )
      {
+         if ( !array_key_exists($name, $this->attributes) ) return true;
          return array_key_exists('editable', $this->attributes[$name]) ? $this->attributes[$name]['editable'] : true;
      }
 
@@ -153,6 +154,7 @@ include('c_iterator.php');
 	}
 
 	function resetAttributeGroup( $attribute, $group ) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return;
         $this->attributes[$attribute]['groups'] =
             array_diff($this->attributes[$attribute]['groups'], array($group));
     }
@@ -181,95 +183,85 @@ include('c_iterator.php');
  	//----------------------------------------------------------------------------------------------------------
 	function getAttributeOrigin( $name ) 
 	{
+        if ( !array_key_exists($name, $this->attributes) ) return '';
 		return $this->attributes[$name]['origin'];
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
 	function attributesHasOrigin( $origin ) 
 	{
-		foreach( $this->attributes as $key => $value )
-		{
+		foreach( $this->attributes as $key => $value ) {
 			if ( $value['origin'] == $origin ) return true;
 		}
-
 		return false;
 	}
 	
  	function IsAttributeRequired( $name ) 
 	{
+        if ( !array_key_exists($name, $this->attributes) ) return false;
 		return $this->attributes[$name]['required'];
 	}
 	
  	function getDefaultAttributeValue( $name ) 
 	{
+        if ( !array_key_exists($name, $this->attributes) ) return '';
 		return $this->attributes[$name]['default'];
 	}
 	
   	function setAttributeOrigin( $ref_name, $value )
 	{
 	    if ( !array_key_exists($ref_name, $this->attributes) ) return;
-		
 	    $this->attributes[$ref_name]['origin'] = $value;
 	}
 	
 	function setAttributeDefault( $ref_name, $value )
 	{
 	    if ( !array_key_exists($ref_name, $this->attributes) ) return;
-		
 	    $this->attributes[$ref_name]['default'] = $value;
 	}
 	
 	function setAttributeRequired( $ref_name, $value )
 	{
 	    if ( !array_key_exists($ref_name, $this->attributes) ) return;
-		
 	    $this->attributes[$ref_name]['required'] = $value;
 	}
 
      function setAttributeEditable( $ref_name, $value )
      {
          if ( !array_key_exists($ref_name, $this->attributes) ) return;
-
          $this->attributes[$ref_name]['editable'] = $value;
      }
 
 	function setAttributeGroups( $name, array $groups )
 	{
 	    if ( !array_key_exists($name, $this->attributes) ) return;
-		
 	    $this->attributes[$name]['groups'] = $groups;
 	}
 	
 	function addAttributeGroup( $name, $group )
 	{ 
 	    if ( !array_key_exists($name, $this->attributes) ) return;
-		
-		if ( !isset($this->attributes[$name]['groups']) )
-		{
+		if ( !isset($this->attributes[$name]['groups']) ) {
 			$this->attributes[$name]['groups'] = array();
 		}
-		
 		$this->attributes[$name]['groups'][] = $group;
 	}
 	
 	function setAttributeCaption( $ref_name, $caption )
 	{
 	    if ( !array_key_exists($ref_name, $this->attributes) ) return;
-	    
 		$this->attributes[$ref_name]['caption'] = $caption;
 	}
 	
 	function setAttributeDescription( $ref_name, $text )
 	{
 	    if ( !array_key_exists($ref_name, $this->attributes) ) return;
-	    
 	    $this->attributes[$ref_name]['description'] = $text;
 	}
 	
 	function setAttributeVisible( $ref_name, $visible )
 	{
 	    if ( !array_key_exists($ref_name, $this->attributes) ) return;
-	    
 	    $this->attributes[$ref_name]['visible'] = $visible;
 	}
 	
@@ -284,7 +276,6 @@ include('c_iterator.php');
  	function setAttributeStored( $ref_name, $value )
 	{
 	    if ( !array_key_exists($ref_name, $this->attributes) ) return;
-	    
 	    $this->attributes[$ref_name]['stored'] = $value;
 	}
 	
@@ -312,22 +303,38 @@ include('c_iterator.php');
 		return $this->attributes[$name]['stored'];
 	}
 
-	function getAttributes() 
+     function IsAttributePersisted( $name )
+     {
+         return $this->IsAttributeStored($name) || $this->getAttributeOrigin($name) == ORIGIN_CUSTOM;
+     }
+
+	function getAttributes()
 	{
 		return $this->attributes;
 	}
 
-	 function getAttributesVisible()
-	 {
+    function getAttributesVisible()
+	{
 		 return array_keys(
-			 array_map(
+			 array_filter( $this->attributes,
 				 function($attribute) {
 					 return $attribute['visible'];
-			 	 },
-				 $this->attributes
+			 	 }
 			 )
 		 );
-	 }
+	}
+
+    function getAttributesRequired()
+    {
+         return array_keys(
+             array_filter(
+                 $this->attributes,
+                 function($attribute) {
+                     return $attribute['required'];
+                 }
+             )
+         );
+    }
 
  	function setAttributes( $attributes )
 	{
@@ -453,254 +460,6 @@ include('c_iterator.php');
 	}
  }
  
- /////////////////////////////////////////////////////////////////////////////////////////////////////////
- class FileStoring
- {
- 	var $object;
- 	function FileStoring( $object ) {
-		$this->object = $object;
-	}
-	function getDataDefinition( $name ) {}
-	function readFile( $name, $it ) {}
-	function getCheckSum( $name, $it ) {}
-	function getSizeKb( $name, $it ) {}
-	function getSizeMb( $name, $it ) {}
- 	function storeFile( $name, $it, $parms ) {}
-	function removeFile( $name, $it ) {}
- 	function copyFile( $name, $source_it, $dest_it ) {}
-	function getFilePath( $name, $it ) {}
-	function createFilePath( $name, $it ) {}
-	function getFileName( $name, $it ) {
-		return $name.$it->getId();
-	}
- }
- 
- /////////////////////////////////////////////////////////////////////////////////////////////////////////
- class FileStoringFS extends FileStoring
- {
-	//----------------------------------------------------------------------------------------------------------
- 	function getDataDefinition( $name ) {
-		return $name."Mime TEXT, ".$name."Path TEXT, ".$name."Ext VARCHAR(32)";
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function readFile( $name, $it )
-	{
-		$filepath = $this->getFilePath($name, $it);
-		$file = fopen( $filepath, "r" );
-		echo fread( $file, filesize($filepath));
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getCheckSum( $name, $it )
-	{
-		$filepath = $this->getFilePath($name, $it);
-		$file = fopen( $filepath, "r" );
-		return abs(crc32(fread( $file, filesize($filepath))));
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getSizeKb( $name, $it )
-	{
-		$filepath = $this->getFilePath($name, $it);
-		return round(filesize($filepath) / 1024, 1);
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getSizeMb( $name, $it )
-	{
-		return round($this->getSizeKb( $name, $it ) / 1024, 1);
-	}
-	
-	//----------------------------------------------------------------------------------------------------------
- 	function storeFile( $name, $it, $parms )
-	{
-		if ( is_uploaded_file($_FILES[$name]['tmp_name']) || file_exists($_FILES[$name]['tmp_name']) )
-		{
-			if ( $_FILES[$name]['name'] == '' ) {
-				$file_name = 'unnamed';
-			}
-			else
-			{
-				$file_name = $_FILES[$name]['name'];
-				$file_name = preg_replace('/\[/', '(', $file_name);
-				$file_name = preg_replace('/\]/', ')', $file_name);
-			}
-
-			// каждый файл размещается в подкаталоге с именем класса
-			$filepath = $this->createFilePath($name, $it);
-
-			// копируем файл в подкаталог
-			copy( $_FILES[$name]['tmp_name'], $filepath);
-
-            $fileSizeAddition = '';
-			if ( $this->object->getAttributeType('FileSize') != '' ) {
-			    $fileSizeAddition = "FileSize = ".max(0, filesize($filepath)).",";
-            }
-
-    		$sql = "UPDATE ".$this->object->getClassName()." SET ".$name."Path = '".
-    			DAL::Instance()->Escape(addslashes($filepath))."',
-    			".$fileSizeAddition." 
-    			".$name."Mime = '".DAL::Instance()->Escape(addslashes($_FILES[$name]['type']))."',
-				".$name."Ext = '".DAL::Instance()->Escape(addslashes($file_name)).
-				"' WHERE ".$this->object->getClassName()."Id = ".$it->getId();
-
-    		$r2 = DAL::Instance()->Query($sql);
-			getFactory()->resetCachedIterator($it->object);
-
-			unlink($_FILES[$name]['tmp_name']);
-		}
-		else if ( $parms['FileExt'] != '' ) {
-            DAL::Instance()->Query(
-                "UPDATE ".$this->object->getClassName()." SET  
-                ".$name."Path = '".DAL::Instance()->Escape(addslashes($parms['FilePath']))."',
-                ".$name."Mime = '".DAL::Instance()->Escape(addslashes($parms['FileMime']))."',
-				".$name."Ext = '".DAL::Instance()->Escape(addslashes($parms['FileExt'])).
-                "' WHERE ".$this->object->getClassName()."Id = ".$it->getId()
-            );
-        }
-	}
-	
-	//----------------------------------------------------------------------------------------------------------
-	function removeFile( $name, $it )
-	{
-		$filepath = $this->getFilePath($name, $it);
-		if ( $filepath != '' && file_exists($filepath) ) unlink($filepath);
-	}
-
-	//----------------------------------------------------------------------------------------------------------
- 	function copyFile( $name, $source_it, $dest_it )
-	{
-		// формируем новое имя файла
-		$filepath = $this->createFilePath($name, $dest_it);
-		// определим путь к копируемому файлу
-		$src_filepath = $this->getFilePath($name, $source_it);
-
-		copy( $src_filepath, $filepath );
-
-		$sql = "UPDATE ".$this->object->getClassName()." SET ".$name."Path = '".$filepath."' WHERE ".$this->object->getClassName()."Id = ".$dest_it->getId();
-		
-		$r2 = DAL::Instance()->Query($sql);
-	}
-
-	//----------------------------------------------------------------------------------------------------------
- 	function copyFileOnPath( $name, $it, $dest_path )
-	{
-		// определим путь к копируемому файлу
-		$src_filepath = $this->getFilePath($name, $it);
-		// копируем файл
-		copy( $src_filepath, $dest_path );
-	}
-
-	//----------------------------------------------------------------------------------------------------------
- 	function copyFileExt( $name, $src_file_path, $dest_objectid )
-	{
-		// формируем новое имя файла
-		$filepath = $this->createFilePath($name, $dest_objectid);
-
-		// определим путь к копируемому файлу
-		copy( $src_file_path, $filepath );
-
-		$pathinfo = pathinfo($src_file_path);			
-		switch(strtolower($pathinfo['extension'])) {
-			case 'jpg':
-				$mime = 'image/jpeg';
-				break;
-			case 'gif':
-				$mime = 'image/gif';
-				break;
-			case 'pdf':
-				$mime = 'application/pdf';
-				break;
-			case 'doc':
-				$mime = 'application/msword';
-				break;
-			default:
-				$mime = 'image/jpeg';
-		}
-		
-		$sql = "UPDATE ".$this->object->getClassName()." SET ".$name."Path = '".$filepath."', 
-					   ".$name."Mime = '".$mime."',
-		   			   ".$name."Ext = '".$pathinfo['basename']."' WHERE ".$this->object->getClassName()."Id = ".$dest_objectid;
-		
-		$r2 = DAL::Instance()->Query($sql);
-	}
- 
-	//----------------------------------------------------------------------------------------------------------
-	function createFilePath ($name, $it )
-	{
-		if(!file_exists(SERVER_FILES_PATH)) mkdir(SERVER_FILES_PATH);
-		
-		$filepath = SERVER_FILES_PATH.$this->object->getClassName();
-		if(!file_exists($filepath)) mkdir($filepath);
-		
-		$filepath .= '/'.$name.$it->getId();
-		
-		return $filepath;
-	}
- 
-	//----------------------------------------------------------------------------------------------------------
-	function getFilePath ($name, $it )
-	{
-		if ( $it->getId() < 1 ) return '';
-		if ( $it->get($name.'Path') == '' ) return '';
-		
-		if ( file_exists($it->get($name.'Path')) ) return $it->get($name.'Path'); 
-		return SERVER_FILES_PATH.$this->object->getClassName().'/'.basename($it->get($name.'Path'));
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getFileName( $name, $it ) 
-	{
-		return $it->get($name.'Ext');
-	}
- }
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- 
-
- //////////////////////////////////////////////////////////////////////////////////////////////
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
-
-
- //////////////////////////////////////////////////////////////////////////////////////////////
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- //////////////////////////////////////////////////////////////////////////////////////////////
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- //////////////////////////////////////////////////////////////////////////////////////////////
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- //////////////////////////////////////////////////////////////////////////////////////////////
- 
- //////////////////////////////////////////////////////////////////////////////////////////////
-
- //////////////////////////////////////////////////////////////////////////////////////////////
- 
  //////////////////////////////////////////////////////////////////////////////////////////////
  class AggregateBase
  {
@@ -799,6 +558,7 @@ include('c_iterator.php');
 
  	function getColumn()
  	{
+ 	    if ( is_numeric($this->attribute) ) return $this->attribute;
  		return $this->getAlias() != '' ? $this->getAlias().'.'.$this->attribute : $this->attribute;
  	}
 

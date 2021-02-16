@@ -70,10 +70,7 @@ class WikiHandler extends EmailNotificatorHandler
 	
 	protected function getDiff( $was_value, $now_value )
 	{
- 		$diff = html_diff(
-			IteratorBase::wintoutf8($was_value),
-			IteratorBase::wintoutf8($now_value)
-		);
+ 		$diff = html_diff($was_value, $now_value);
 			
  		if ( strpos($diff, "diff-html-") !== false )
  		{
@@ -101,7 +98,6 @@ class WikiHandler extends EmailNotificatorHandler
 				$editor->setObjectIt( $object_it );
 				$parser = $editor->getComparerParser();
 				$text = $parser->parse($object_it->getHtmlDecoded('Content'));
-                $text = TextUtils::breakLongWords($text);
                 return $text;
 
 			default:

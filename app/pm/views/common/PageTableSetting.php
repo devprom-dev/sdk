@@ -12,16 +12,6 @@ class PageTableSetting
         return $this->class_name;
     }
 
-    function setFilters( $filters_array )
-    {
-        $this->filters = $filters_array;
-    }
-    
-    function getFilters()
-    {
-        return $this->filters;
-    }
-    
     function setRowsNumber( $rows )
     {
         $this->rows = $rows;
@@ -47,8 +37,5 @@ class PageTableSetting
     }
     
     protected $sorts;
-    
-    protected $filters;
-    
     protected $rows;
 }

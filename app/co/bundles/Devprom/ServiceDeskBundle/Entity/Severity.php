@@ -1,7 +1,5 @@
 <?php
-
 namespace Devprom\ServiceDeskBundle\Entity;
-
 use Doctrine\ORM\Mapping as ORM;
 
 /**

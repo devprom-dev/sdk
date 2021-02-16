@@ -134,8 +134,9 @@ class Issue extends BaseEntity {
     private $severity;
     
     /**
-     * @ORM\Column(type="string", name="ClosedInVersion")
-     * @var string
+     * @ORM\OneToOne(targetEntity="Build")
+     * @ORM\JoinColumn(name="ClosedInVersion", referencedColumnName="pm_BuildId")
+     * @var Build
      */
     private $resolvedVersion;
 
@@ -151,6 +152,17 @@ class Issue extends BaseEntity {
      */
     private $notifications;
 
+    /**
+     * @ORM\Column(type="string", name="EmailMessageId")
+     * @var string
+     */
+    private $emailMessageId;
+
+    /**
+     * @ORM\Column(type="integer", name="OrderNum")
+     * @var integer
+     */
+    protected $orderNum;
 
     function __construct()
     {
@@ -460,6 +472,22 @@ class Issue extends BaseEntity {
     }
 
     /**
+     * @param $value
+     */
+    public function setOrderNum($value)
+    {
+        $this->orderNum = $value;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getOrderNum()
+    {
+        return $this->orderNum;
+    }
+
+    /**
      * @param string $text
      */
     public function setChannelEmail($text)
@@ -473,6 +501,22 @@ class Issue extends BaseEntity {
     public function getChannelEmail()
     {
         return $this->channelEmail;
+    }
+
+    /**
+     * @param string $text
+     */
+    public function setEmailMessageId($text)
+    {
+        $this->emailMessageId = $text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEmailMessageId()
+    {
+        return html_entity_decode($this->emailMessageId);
     }
 
     /**

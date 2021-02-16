@@ -43,8 +43,9 @@
 		elseif ( $state_it->get('Comment') != '' ) {
 			$comment = $state_it->get("Comment");
 		}
-		
-		return array( $base_it->getDisplayName(), $transition_it->getDisplayName(), $comment, $base_it->get('ReferenceName') );
+		$sourceStateIt = $transition_it->getRef('SourceState');
+
+		return array( $base_it->getDisplayName(), $transition_it->getDisplayName(), $comment, $base_it->get('ReferenceName'), $sourceStateIt );
  	}
  	
  	function getRenderParms()
@@ -52,6 +53,7 @@
 		$rows = array();
         $lastDuration = $duration = round($this->getObjectIt()->get('StateDurationRecent'), 1);
         $lastComment = '';
+        $timeCreated = strtotime($this->getObjectIt()->get('RecordCreated'));
 
  		$state_it = $this->getIterator();
  		while ( !$state_it->end() )
@@ -60,12 +62,12 @@
 					? round($state_it->get('Duration'), 1)
 					: $duration;
 
-			list( $state, $transition, $comment, $stateRef ) = $this->getState( $state_it );
-			
+			list( $state, $transition, $comment, $stateRef, $sourceStateIt ) = $this->getState( $state_it );
+
 			$rows[] = array(
 				'author' => $state_it->getRef('Author')->getDisplayName(),
 			 	'datetime' => $state_it->getDateTimeFormat('RecordCreated'),
-                'date' => $state_it->getDateFormatShort('RecordCreated'),
+                'date' => $state_it->getDateFormattedShort('RecordCreated'),
 				'duration' => getSession()->getLanguage()->getDurationWording($duration),
                 'duration-value' => $duration,
 				'state' => $state,
@@ -74,7 +76,9 @@
 				'comment' => IteratorBase::getWordsOnlyValue($comment, 35),
 				'icon' => 'icon-pencil'
 			);
-			$lastDuration = (strtotime($state_it->get('RecordCreated')) - strtotime($this->getObjectIt()->get('RecordCreated'))) / (60 * 60);
+
+			$lastDuration = (strtotime($state_it->get('RecordCreated')) - $timeCreated) / (60 * 60);
+			$lastState = $sourceStateIt->get('ReferenceName');
             if ( $lastComment == '' ) {
                 $lastComment = $comment . ' ';
             }
@@ -87,6 +91,7 @@
  		
  		$object = getFactory()->getObject('ObjectChangeLog');
  		$object->setRegistry($registry);
+        $object->setLimit(1);
  		
  		$change_it = $object->getRegistry()->Query(
             array (
@@ -95,27 +100,32 @@
             )
 		);
 
+        $this->getObjectIt()->object->setVpdContext($this->getObjectIt());
+        $objectStateIt = WorkflowScheme::Instance()->getStateIt($this->getObjectIt()->object);
+
 		if ( $change_it->count() > 0 )
 		{
-            $stateIt = WorkflowScheme::Instance()->getStateIt($this->getObjectIt()->object);
-            if ( $stateIt->getId() != '' ) {
+            if ( $objectStateIt->getId() != '' ) {
                 if ( count($rows) < 1 ) {
-                    $stateIt->moveTo('ReferenceName', $this->getObjectIt()->get('State'));
+                    $objectStateIt->moveTo('ReferenceName', $this->getObjectIt()->get('State'));
+                }
+                else {
+                    $objectStateIt->moveTo('ReferenceName', $lastState);
                 }
                 $rows[] = array(
-                    'state' => $stateIt->getDisplayName(),
-                    'state-ref' => $stateIt->get('ReferenceName'),
+                    'state' => $objectStateIt->getDisplayName(),
+                    'state-ref' => $objectStateIt->get('ReferenceName'),
                     'author' => $change_it->get('AuthorName'),
                     'datetime' => $change_it->getDateTimeFormat('RecordModified'),
-                    'date' => $change_it->getDateFormatShort('RecordModified'),
+                    'date' => $change_it->getDateFormattedShort('RecordModified'),
                     'duration' => getSession()->getLanguage()->getDurationWording($lastDuration),
                     'duration-value' => $lastDuration,
                     'icon' => 'icon-plus-sign'
                 );
             }
+            $objectStateIt->moveFirst();
 		}
 
-		$objectStateIt = WorkflowScheme::Instance()->getStateIt($this->getObjectIt()->object);
 		return array_merge( parent::getRenderParms(), array (
 			'section' => $this,
 			'rows' => $rows,

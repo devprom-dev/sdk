@@ -94,6 +94,9 @@ class AccessRightIterator extends OrderedIterator
 
 		switch ( $access )
 		{
+            case 'cru':
+                return 3;
+
 			case 'modify':
 				return 2;
 				
@@ -114,6 +117,9 @@ class AccessRightIterator extends OrderedIterator
             $access = $this->getHashedAccess( $role_id, $class_name, 'Y' );
             switch ( $access )
             {
+                case 'cru':
+                    return 3;
+
                 case 'modify':
                     return 2;
 
@@ -134,9 +140,7 @@ class AccessRightIterator extends OrderedIterator
  	
  	function getDisplayName()
  	{
- 		global $model_factory;
- 		
- 		$role_it = $this->getRef('ProjectRole');
+		$role_it = $this->getRef('ProjectRole');
  		$caption = $role_it->getDisplayName();
  		
  		switch ( $this->get('ReferenceType') )
@@ -150,7 +154,7 @@ class AccessRightIterator extends OrderedIterator
  				break;
  				
  			case 'O':
-				$object = $model_factory->getObject('pm_ObjectAccess');
+				$object = getFactory()->getObject('pm_ObjectAccess');
 				
 				$object_it = $object->getByRefArray( array (
 					'ObjectId' => $this->get('ReferenceName'),
@@ -164,20 +168,16 @@ class AccessRightIterator extends OrderedIterator
  			    break;
  				
  			case 'PMPluginModule':
-				
- 			    $caption .= ': '.$model_factory->getObject('Module')->getDisplayName();
- 			    
+ 			    $caption .= ': '.getFactory()->getObject('Module')->getDisplayName();
  				break;
  			    
  			default:
-				$object = $model_factory->getObject($this->get('ReferenceType'));
+				$object = getFactory()->getObject($this->get('ReferenceType'));
  				$caption .= ': '.$object->getDisplayName();
  				break;
  		}
  		
  		$caption .= ' ('.$this->getObjectName().')';
- 		
- 		
  		switch ( $this->get('AccessType') )
  		{
  			case 'none':
@@ -189,8 +189,12 @@ class AccessRightIterator extends OrderedIterator
  				break;
 
  			case 'modify':
- 				$caption .= ' ['.translate('Изменение').']';
+ 				$caption .= ' ['.text(2811).']';
  				break;
+
+            case 'cru':
+                $caption .= ' ['.text(2812).']';
+                break;
  		}
  		
  		return $caption;

@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'core/classes/versioning/VersionedObject.php';
 
 class WikiPageRegistryBaseline extends ObjectRegistrySQL
@@ -17,7 +16,7 @@ class WikiPageRegistryBaseline extends ObjectRegistrySQL
 		$attributes = array();
 
 	    foreach( $this->getObject()->getAttributes() as $attribute => $data ) {
-	    	if ( in_array($attribute, array('Caption', 'Content')) ) continue;
+	    	if ( in_array($attribute, array('Caption', 'Content', 'DocumentVersion')) ) continue;
 	        if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
 	        
 	        $attributes[] = "t.".$attribute;
@@ -37,7 +36,7 @@ class WikiPageRegistryBaseline extends ObjectRegistrySQL
 	    	   "	FROM WikiPage t ".
 	    	   "   WHERE t.DocumentId = ".$this->document_it->getId().$sqlPredicate.
 	    	   "   UNION ".
-	    	   "  SELECT t.WikiPageId, t.VPD, NULL, ".$this->document_it->getId().", t.DocumentVersion, t.SortIndex, NULL, NULL, ".join(",",$attributes).
+	    	   "  SELECT t.WikiPageId, t.VPD, NULL, ".$this->document_it->getId().", '".$this->document_it->getHtmlDecoded('DocumentVersion')."', t.SortIndex, NULL, NULL, ".join(",",$attributes).
 	    	   "	FROM WikiPage t ".
 	    	   "   WHERE t.DocumentId = ".$this->baseline_it->getId().
 	    	   "     AND NOT EXISTS (SELECT 1 FROM WikiPage p ".

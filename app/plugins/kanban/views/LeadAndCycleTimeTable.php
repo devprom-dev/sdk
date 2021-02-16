@@ -1,6 +1,6 @@
 <?php
-include_once SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
-include_once SERVER_ROOT_PATH.'pm/methods/c_request_methods.php';
+include_once SERVER_ROOT_PATH."pm/methods/ViewRequestEstimationWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/StateExFilterWebMethod.php";
 include "LeadAndCycleTimeChart.php";
 
 class LeadAndCycleTimeTable extends PMPageTable
@@ -10,11 +10,10 @@ class LeadAndCycleTimeTable extends PMPageTable
 		return new LeadAndCycleTimeChart( $this->getObject() );
 	}
 
- 	function getFilterPredicates()
+ 	function getFilterPredicates( $values )
  	{
- 		$values = $this->getFilterValues();
- 		return array_merge(
-			parent::getFilterPredicates(),
+        return array_merge(
+			parent::getFilterPredicates( $values ),
 			array (
 				new FilterSubmittedAfterPredicate($values['submittedon']),
 				new FilterSubmittedBeforePredicate($values['submittedbefore']),
@@ -23,7 +22,8 @@ class LeadAndCycleTimeTable extends PMPageTable
 				new FilterAttributePredicate('Type', $values['type']),
 				new FilterAttributePredicate('Priority', $values['priority']),
                 new FilterAttributePredicate( 'Owner', $values['owner'] ),
-                new RequestEstimationFilter($values['estimation'])
+                new RequestEstimationFilter($values['estimation']),
+                new StatePredicate( $values['state'] )
 			)
  		);
  	}
@@ -32,7 +32,7 @@ class LeadAndCycleTimeTable extends PMPageTable
 	{
 		$filter = new ViewModifiedAfterDateWebMethod();
 		$filter->setCaption(text(2162));
-		
+
 		$filters = array(
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
@@ -41,10 +41,20 @@ class LeadAndCycleTimeTable extends PMPageTable
 			$this->buildTypeFilter(),
 			$this->buildFilterAuthor(),
             $this->buildFilterOwner(),
-            $this->buildFilterEstimation()
-		);
+            $this->buildFilterEstimation(),
+            new StateExFilterWebMethod(WorkflowScheme::Instance()->getStateIt($this->getObject()), 'state', "Y")
+        );
 		return array_merge( $filters, parent::getFilters() );
 	}
+
+    function buildFilterValuesByDefault(&$filters)
+    {
+        $values = parent::buildFilterValuesByDefault($filters);
+        if ( !array_key_exists('modifiedafter', $values) ) {
+            $values['modifiedafter'] = 'last-month';
+        }
+        return $values;
+    }
 
     protected function buildFilterOwner() {
         return new FilterObjectMethod(
@@ -70,10 +80,8 @@ class LeadAndCycleTimeTable extends PMPageTable
 	}
 
 	protected function buildFilterAuthor() {
-		return new FilterObjectMethod(getFactory()->getObject('IssueAuthor'), translate('Автор'), 'author');
+        $filter = new FilterObjectMethod(getFactory()->getObject('IssueAuthor'), translate('Автор'), 'author');
+        $filter->setLazyLoad(true);
+		return $filter;
 	}
-
-	function getFiltersDefault() {
-        return array('type','priority','modifiedafter','owner','estimation');
-    }
 }

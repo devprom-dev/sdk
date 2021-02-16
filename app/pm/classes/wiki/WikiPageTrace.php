@@ -19,6 +19,10 @@ class WikiPageTrace extends Metaobject
  		$this->addPersister( new WikiPageTraceKeyPersister() );
  		$this->setAttributeType('UnsyncReasonType', 'REF_WikiPageTraceUnsyncReasonId');
         $this->setAttributeRequired('OrderNum', false);
+
+        foreach( array('SourcePage','TargetPage') as $attribute ) {
+            $this->addAttributeGroup($attribute, 'alternative-key');
+        }
  	}
  	
  	function createIterator() 

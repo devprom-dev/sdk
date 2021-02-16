@@ -23,40 +23,36 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
 	@FindBy(xpath = "//a[contains(.,'Задача')]")
 	protected WebElement newTaskBtn;
         
-        //фильтер Статус
-        @FindBy(xpath = "//a[contains(.,'Статус: Не завершено')]")//"//div[@class='filter hidden-print']/div[2]/a")//"//a[contains(.,'Статус')]")
-	protected WebElement statusFilterBtn;
-        
-         //добавить затраченное время на форма перехода
-        @FindBy(xpath = ".//*[@id='pm_TaskFact']//a[contains(@class,'embedded-add-button')]")
+     //добавить затраченное время на форма перехода
+    @FindBy(xpath = ".//*[@id='pm_TaskFact']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTimeBtn;        
         
-        //добавить затраченное время на форма перехода для требования
-        @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
+    //добавить затраченное время на форма перехода для требования
+    @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTimeReqBtn;  
         
-        //поле добавления времени на форме перехода для требования
-        @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//input[contains(@name,'_Capacity')]")
+    //поле добавления времени на форме перехода для требования
+    @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//input[contains(@name,'_Capacity')]")
 	protected WebElement addTimeReqField;  
         
-        //поле добавления времени на форме перехода
-        @FindBy(xpath = "//span[@name='pm_TaskFact']//input[contains(@name,'_Capacity')]")
+    //поле добавления времени на форме перехода
+    @FindBy(xpath = "//span[@name='pm_TaskFact']//input[contains(@name,'_Capacity')]")
 	protected WebElement addTimeField;   
         
-        //кнопка добавить время после ввода на форме  перехода
-        @FindBy(xpath="//span[@name='pm_TaskFact']//input[contains(@id,'saveEmbedded')]")
+    //кнопка добавить время после ввода на форме  перехода
+    @FindBy(xpath="//span[@name='pm_TaskFact']//input[contains(@id,'saveEmbedded')]")
 	protected WebElement saveAddedTime;
         
-        //кнопка добавить время после ввода на форме  перехода
-        @FindBy(xpath="//span[@name='pm_ChangeRequestFact']//input[contains(@id,'saveEmbedded')]")
+    //кнопка добавить время после ввода на форме  перехода
+    @FindBy(xpath="//span[@name='pm_ChangeRequestFact']//input[contains(@id,'saveEmbedded')]")
 	protected WebElement saveAddedTimeReq;
         
-        //кнопка сохранить время после ввода на форме  перехода
-        @FindBy(xpath=".//*[@id='pm_TaskSubmitBtn']")
+    //кнопка сохранить время после ввода на форме  перехода
+    @FindBy(xpath=".//*[@id='pm_TaskSubmitBtn']")
 	protected WebElement submitAddedTime;
        
-        //кнопка сохранить время после ввода на форме  перехода для требования
-        @FindBy(xpath=".//*[@id='pm_ChangeRequestSubmitBtn']")
+    //кнопка сохранить время после ввода на форме  перехода для требования
+    @FindBy(xpath=".//*[@id='pm_ChangeRequestSubmitBtn']")
 	protected WebElement submitAddedTimeReq;
 	
 	public KanbanTaskBoardPage(WebDriver driver) {
@@ -70,11 +66,11 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
 	public KanbanTaskViewPage clickToTask(String id) {
 		try {
 		driver.findElement(
-				By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'["+ id + "]')]")).click();
+				By.xpath("//table[@id='requestboard1']//a[contains(.,'["+ id + "]')]")).click();
 		}
 		catch (NoSuchElementException e) {
 			driver.findElement(
-					By.xpath("//table[contains(@id,'requestboard')]//strike[contains(.,'" + id + "')]")).click();
+					By.xpath("//table[@id='requestboard1']//strike[contains(.,'" + id + "')]")).click();
 		}
 		return new KanbanTaskViewPage(driver);
 	}
@@ -82,24 +78,6 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
 	public boolean isTaskPresent(String numericId) {
 		return !driver.findElements(By.xpath("//div[@object='"+numericId+"']")).isEmpty();
 	}
-
-    public void setFilterByStatus(String statusType) {
-        try
-        {
-        (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(statusFilterBtn));
-        statusFilterBtn.click();
-        WebElement menuItem = driver.findElement(By.xpath("(//a[contains(.,'" + statusType + "')])[2]"));
-        (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(menuItem));
-        menuItem.click();
-        Thread.sleep(3000);
-        statusFilterBtn.click();
-        Thread.sleep(3000);
-        }
-        catch(InterruptedException e)
-        {
-            FILELOG.debug("Error in setFilterByStatus" + e);
-        }
-    }
 
     public void clickToContextMenuItem(String taskID, String menuItemName) {
         FILELOG.debug("clickToContextMenuItem Started");
@@ -166,7 +144,8 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
         FILELOG.debug("Set time" + time);
     }
 
-    public String getIDTaskByName(String taskName) {
+    public String getIDTaskByName(String taskName)
+    {
         FILELOG.debug("getIDTaskByName started");
         String IDtask;
         WebElement element = driver.findElement(By.xpath("//div[contains(.,'"+taskName+"')]/preceding-sibling::*/div/a"));
@@ -176,26 +155,19 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
         return IDtask;
     }
 
-    public KanbanTaskNewPage createTaskInCell(int release, String status) {
-        int itemCount = driver.findElements(By.xpath("//table[contains(@id,'requestboard')]/tbody/tr[contains(@class,'board-columns')]/th")).size(); 
+    public KanbanTaskNewPage createTaskInCell(int release, String status)
+    {
+        int itemCount = driver.findElements(By.xpath("//table[@id='requestboard1']//tr[contains(@class,'board-columns')]/th")).size();
         int column = 1;
-	for(int i = 1; i<=itemCount; i++)
-	{
-            if(driver.findElement(By.xpath("//table[contains(@id,'requestboard')]/tbody/tr[contains(@class,'board-columns')]/th["+i+"]"))
+        for(int i = 1; i<=itemCount; i++) {
+            if(driver.findElement(By.xpath("//table[@id='requestboard1']//tr[contains(@class,'board-columns')]/th["+i+"]"))
                     .getText().contains(status))	
                column = i;
         }
-          int rowNum = release+1;
-       WebElement onElement = driver.findElement(By.xpath(
-               ".//table[contains(@id,'requestboard')]//tr[contains(@class,'row-cards')]["+rowNum+"]//td["+column+"]"));
-       
-       (new Actions(driver))
-       		.moveToElement(onElement)
-       		.click(onElement.findElement(By.xpath(".//*[contains(@class,'append-card')]")))
-       		.build()
-       		.perform();
-       return new KanbanTaskNewPage(driver);
+        int rowNum = release+1;
+        WebElement onElement = driver.findElement(By.xpath(
+               ".//table[@id='requestboard1']//tr[contains(@class,'row-cards')]["+rowNum+"]//td["+column+"]"));
+        clickOnInvisibleElement(onElement.findElement(By.xpath(".//*[contains(@class,'append-card')]")));
+        return new KanbanTaskNewPage(driver);
     }
-	
-	
 }

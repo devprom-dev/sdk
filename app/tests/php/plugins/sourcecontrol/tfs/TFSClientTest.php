@@ -3,7 +3,7 @@
 
 include_once SERVER_ROOT_PATH . "/plugins/sourcecontrol/classes/tfs/TFSClient.php";
 
-class TFSClientTest extends PHPUnit_Framework_TestCase
+class TFSClientTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @test
@@ -66,7 +66,7 @@ Foundation Server https://server/defaultcollection."), 0);
             "4 item(s).    ");
         $client = TFSClientWithCLIStubbed::createWithOutput($fixture, 0);
 
-        $files = $client->getDirectoryFiles("$/tfsconnect/samples");
+        $files = $client->getDirectoryFiles("$/tfsconnector/samples");
 
         $this->assertEquals(4, sizeof($files));
         $this->assertEquals("src", $files[1]['name']);
@@ -195,8 +195,11 @@ Foundation Server https://server/defaultcollection."), 0);
                 '</history>');
 
         $client = TFSClientWithCLIStubbed::createWithOutput($outputFromCLI, 0);
-        $historyParserMock = $this->getMock("TFSHistoryParser", array("parse"));
 
+        $historyParserMock = $this->getMockBuilder(\TFSHistoryParser::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['parse'])
+            ->getMock();
         $historyParserMock->expects($this->once())
                 ->method('parse')
                 ->with($this->equalTo(join('', $outputFromCLI)));

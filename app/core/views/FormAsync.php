@@ -11,6 +11,7 @@ class AjaxForm
  	var $action;
  	var $object_it;
  	var $view;
+ 	private $page = null;
  	
  	private $redirect_url = '';
  	private $form_id = '';
@@ -57,7 +58,19 @@ class AjaxForm
  	{
  		return $this->object;
  	}
- 	
+
+ 	function setObject( $object ) {
+ 	    $this->object = $object;
+    }
+
+    function setPage( $page ) {
+ 	    $this->page = $page;
+    }
+
+    function getPage() {
+ 	    return $this->page;
+    }
+
  	function getView()
  	{
  	    return $this->view;
@@ -194,9 +207,10 @@ class AjaxForm
 	/*
 	 * returns visibility of an attribute
 	 */
-	function IsAttributeModifable( $attribute )
+	function IsAttributeModifiable( $attribute )
 	{
-		return getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), $attribute);
+		return getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), $attribute)
+            && $this->getObject()->getAttributeEditable($attribute);
 	}
 
 	/*
@@ -317,17 +331,17 @@ class AjaxForm
 	function drawAttribute( $attribute, $view )
 	{
 		global $tab_index;
-		
+
 		$tab_index++;
 
 		$value = $this->getAttributeValue($attribute);
 		$default = $this->getAttributeDefault($attribute);
-
 		$attribute_type = $this->getAttributeType( $attribute );
 		
-		if ( !$this->IsAttributeVisible($attribute) )
-		{
-            echo '<input type="hidden" id="'.$attribute.'" name="'.$attribute.'" value="'.$value.'">';
+		if ( !$this->IsAttributeVisible($attribute) ) {
+		    if ( $value != '' ) {
+                echo '<input type="hidden" id="'.$attribute.'" name="'.$attribute.'" value="'.$value.'">';
+            }
 			return;
 		}
 
@@ -346,7 +360,7 @@ class AjaxForm
 			$displayValue = $value; 
 		}
 
-		if ( !$this->IsAttributeModifable($attribute) )
+		if ( !$this->IsAttributeModifiable($attribute) )
 		{
 			echo '<input type="hidden" id="'.htmlentities($attribute).'" name="'.htmlentities($attribute).'" value="'.htmlentities($value).'">';
 		    echo '<span class="input-block-level well well-text" style="word-break: break-all;padding: 4px 6px;margin-bottom: 10px;">'.$displayValue.'</span>';
@@ -406,7 +420,7 @@ class AjaxForm
 					break;	
 					
 				case 'object':
-					if ( $object->entity->get('IsDictionary') == 'Y' )
+					if ( $object->IsDictionary() )
 					{
 						$field = new FieldDictionary( $object );
 					}
@@ -432,57 +446,50 @@ class AjaxForm
 					<?
 					break;							
 
-				case 'password':
-					$field = new FieldPassword();
-					$field->SetTabindex($tab_index);
-					$field->SetName($attribute);
-					$field->SetValue($value);
-					$field->SetId($attribute);
-					$field->draw();
-					break;
-
-				case 'char':
-					
-					$field = new FieldCheck($value);
-
-					$field->SetTabindex($tab_index); 
-					$field->SetName($attribute);
-					$field->SetValue($value);
-					$field->SetId($attribute);
-					$field->draw();
-					
-					break;
-
 				default:
-					$this->drawCustomAttribute( $attribute, $value, $tab_index, $view );
+				    $field = $this->createFieldObject($attribute_type, $attribute);
+				    if ( $field ) {
+                        $field->SetTabindex($tab_index);
+                        $field->SetName($attribute);
+                        $field->SetValue($value);
+                        $field->SetId($attribute);
+                        $field->draw();
+                    }
+				    else {
+                        $this->drawCustomAttribute( $attribute, $value, $tab_index, $view );
+                    }
 			}
 		}
-	}	
+	}
+
+	function createFieldObject( $attribute_type, $name )
+    {
+        switch ( $attribute_type )
+        {
+            case 'password':
+                return new FieldPassword();
+            case 'char':
+                return new FieldCheck($this->getName($name));
+        }
+    }
 	
 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
-	    $type = $this->getAttributeType( $attribute );
-	
-	    switch ( $type )
-	    {
-	        case 'float':
-	        case 'number':
-	        case 'integer':
-	
-	            $width = 'width:170px';
-	
-	            break;
-	
-	        default:
-	
-	            $width = '';
-	    }
-	
-	    echo '<div style="'.$width.'">';
-	    ?>
-		<input class="input-block-level" type="text" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>" value="<? echo $value ?>" tabindex="<? echo $tab_index ?>">
-		<?
-		echo '</div>';							
+        switch ( $this->getObject()->getAttributeType($attribute) )
+        {
+            case 'float':
+            case 'number':
+            case 'integer':
+                $width = 'width:170px';
+
+            default:
+                echo '<div style="'.$width.'">';
+                ?>
+                <input class="input-block-level" type="text" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>" value="<? echo $value ?>" tabindex="<? echo $tab_index ?>">
+                <?
+                echo '</div>';
+        }
+
 	}
 		
 	function getSite()
@@ -501,9 +508,14 @@ class AjaxForm
 	{
 	    return getSession()->getApplicationUrl().'command.php?class='.$this->getCommandClass();
 	}
-	
+
+	function extendModel()
+    {
+    }
+
 	function getRenderParms( $view )
 	{
+	    $this->extendModel();
 		$object_it = $this->getObjectIt();
 		
 		$attributes = array();
@@ -514,21 +526,24 @@ class AjaxForm
 		{
             if ( in_array('system', $this->getObject()->getAttributeGroups($attribute)) ) continue;
 
-            $attributes[$attribute] = array (
-				'type' => $this->getAttributeType( $attribute ),
-				'caption' => $this->getName( $attribute ),
-				'description' => $this->getDescription( $attribute ),
-                'value' => $this->getAttributeValue( $attribute  ),
-                'index' => $index,
-                'visible' => $this->IsAttributeVisible($attribute),
-                'id' => $attribute
-			);
-
             ob_start();
             $this->drawAttribute( $attribute, $view );
-             
-            $attributes[$attribute]['html'] = ob_get_contents();
+            $html = ob_get_contents();
             ob_end_clean();
+
+            if ( $html != '' ) {
+                $type = $this->getAttributeType( $attribute );
+                $attributes[$attribute] = array (
+                    'type' => $type,
+                    'caption' => $type == 'char' ? '' : $this->getName( $attribute ),
+                    'description' => $this->getDescription( $attribute ),
+                    'value' => $this->getAttributeValue( $attribute  ),
+                    'index' => $index,
+                    'visible' => $this->IsAttributeVisible($attribute),
+                    'id' => $attribute,
+                    'html' => $html
+                );
+            }
 
             $index++;
 		}

@@ -33,38 +33,27 @@ if ( $show_header && $need_to_select ) $columns_number++;
 <a name="top<? echo $offset_name ?>"></a>
 
 <? if ( $toolbar ) { ?>
-			<div class="hidden-print documentToolbar sticks-top" style="overflow:hidden;">
-				<div class="sticks-top-body hidden-print" id="documentToolbar" style="z-index:2;"></div>
+			<div class="hidden-print documentToolbar" style="overflow:hidden;">
+				<div class="hidden-print" id="documentToolbar" style="z-index:2;"></div>
 			</div>
 <? } ?>
 
 
-<div>
-	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;">
-		<tbody>
-        <tr>
-        <td>
-        <div class="<?=($list_mode == 'infinite' ? 'table-inner-div' : 'wishes')?>">
+        <div class="list-container <?=($list_mode == 'infinite' ? 'table-inner-div' : 'wishes')?>">
         <table id="<?=$table_id?>" class="table-inner <?=$table_class_name?>" created="<?=$created_datetime?>" uid="<?=$widget_id?>">
 
 
 			<?php if ( $show_header ) { ?>
+                <thead>
 		<tr class="header-row">
 			<?php if ( $display_numbers ) { ?>
 			<th class="for-num" width="<?=$numbers_column_width?>" uid="numbers">
-                <? if ( count($filter_actions) > 0 ) { ?>
-                <div class="btn-group pull-left">
-                    <div id="filter-settings" class="btn dropdown-toggle btn-sm btn-secondary" data-toggle="dropdown" href="#" data-target="#listmenu<?=$table_id?>">
-                        <i class="icon-cog icon-white"></i>
+                <? if ( !$tableonly ) { ?>
+                    <div class="btn-group pull-left">
+                        <button id="filter-settings" class="btn dropdown-toggle btn-xs btn-secondary">
+                            <i class="icon-cog icon-white"></i>
+                        </button>
                     </div>
-                </div>
-                <div class="btn-group dropdown-fixed" id="listmenu<?=$table_id?>">
-                <?php
-                    echo $view->render('core/PopupMenu.php', array(
-                        'items' => $filter_actions
-                    ));
-                ?>
-                </div>
                 <?php } ?>
             </th>
 			<?php } ?>
@@ -88,8 +77,8 @@ if ( $show_header && $need_to_select ) $columns_number++;
 
 				$header_attrs = $list->getHeaderAttributes( $attr );
 				echo '<th width="'.$width.'" uid="'.strtolower($attr).'" title="'.$title.'" class="'.$header_attrs['class'].'">';
-				if ( $header_attrs['script'] != '#' ) {
-					echo '<a class="mode-sort" href="'.$header_attrs['script'].'" style="display:table-cell;">';
+				if ( $header_attrs['script'] != '#' && in_array($attr, $sorts) ) {
+					echo '<a class="mode-sort" href="'.$header_attrs['script'].'">';
 						echo $header_attrs['name'];
                         if ( $header_attrs['sort'] != '' ) {
                             echo $header_attrs['sort'] == 'up' ? '&#x25B2;' : '&#x25BC;';
@@ -99,7 +88,11 @@ if ( $show_header && $need_to_select ) $columns_number++;
 				else {
 					echo $header_attrs['name'];
 				}
-				echo '</th>';
+                if ( in_array($attr, array('Caption','File')) && $group_field != '' ) {
+                    echo ' <a class="dashed" onclick="collapseGroups()" style="padding-left: 8px;"> '.translate('свернуть').'</a> ';
+                    echo ' <a class="dashed" onclick="restoreGroups()" style="padding-left: 8px;"> '.translate('развернуть').'</a> ';
+                }
+                echo '</th>';
 			}
 			$numericFields = array_diff(
 				$numericFields,
@@ -116,11 +109,12 @@ if ( $show_header && $need_to_select ) $columns_number++;
 			<?php } ?>
 			
         </tr>
+                </thead>
         <?php } ?>
 
 			<?
 
-			if ( $rows_num < 1 )
+			if ( $rows_num < 1 && $no_items_message != '' )
 			{
 			?>
 			<tr id="no-elements-row">
@@ -135,23 +129,27 @@ if ( $show_header && $need_to_select ) $columns_number++;
 			$group_field_prev_value = '{83C23330-E68F-4852-83D7-6BE4E49FF985}';
 			$rowNumber = intval($offset);
 
-			for( $i = 0; $i < $rows_num; $i++)
-			{
-				if ( $group_field != '' )
-				{
+			echo '<tbody>';
+			for( $i = 0; $i < $rows_num; $i++) {
+				if ( $group_field != '' ) {
 					if ( in_array($it->object->getAttributeType($group_field), array('date','datetime')) ) {
 						$group_field_value = array_shift(preg_split('/\s+/',$it->get($group_field)));
 					}
 					else {
 						$group_field_value = $it->get($group_field);
 					}
+                    $group_field_value = str_replace(',', '', $group_field_value);
 
-					if( $group_field_value != $group_field_prev_value ) 
+					if( $group_field_value != $group_field_prev_value )
 					{
+					    if ( $i > 0 ) echo '</tbody>';
+                        $guid = md5($group_field_value . $it->get('VPD'));
 					?>
-					<tr id="<?=($table_row_id.'g_'.$group_field_value)?>" class="info" group-id="<?=$group_field_value?>">
-						<?php $list->drawGroupRow($group_field, $it, $columns_number); ?>
-					</tr>
+                    <tr id="<?=($table_row_id.'g_'.$group_field_value)?>" class="info" group-id="<?=$group_field_value?>" >
+                        <?php $list->drawGroupRow($group_field, $group_field_value, $it, $columns_number, $guid); ?>
+                    </tr>
+                    </tbody>
+                    <tbody id="gor<?=$guid?>" class="in collapse">
 					<? 
 					}
 					$group_field_prev_value = $group_field_value;
@@ -165,8 +163,7 @@ if ( $show_header && $need_to_select ) $columns_number++;
 
                 $rowNumber++;
 				?>
-				
-				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-id="<?=$it->getId()?>" state="<?=$it->get('State')?>" project="<?=$it->get('ProjectCodeName')?>" group-id="<?=$group_field_value?>" order="<?=$it->get('OrderNum')?>" modified="<?=$it->get('AffectedDate')?>" modifier="<?=$it->get('Modifier')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">
+				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-class="<?=$list->getItemClass($it)?>" object-id="<?=$it->getId()?>" state="<?=$it->get('State')?>" project="<?=$it->get('ProjectCodeName')?>" group-id="<?=$group_field_value?>" order="<?=$it->get('OrderNum')?>" modified="<?=$it->get('AffectedDate')?>" modifier="<?=$it->get('Modifier')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">
 				
 					<? if ( $display_numbers ) { ?>
 					<td name="row-num">
@@ -219,25 +216,21 @@ if ( $show_header && $need_to_select ) $columns_number++;
 							if ( $action['url'] != '' || $action['click'] != '' ) {
                                 ?>
                                 <div class="btn-group visible-operations last">
-                                    <a id="<?=$action['uid']?>" class="btn btn-info btn-xs dropdown-toggle actions-button" href="#" onclick="<?=(!in_array($action['url'],array('','#')) ? $action['url'] : $action['click'])?>"><?=$action['name']?></a>
+                                    <a id="<?=$action['uid']?>" class="btn btn-info btn-xs dropdown-toggle actions-button" onclick="<?=(!in_array($action['url'],array('','#')) ? $action['url'] : $action['click'])?>"><?=$action['name']?></a>
                                 </div>
                                 <?
                             }
 						} else if ( count($actions) > 0 )
 						{
 						?>
-						<div class="btn-group btn-group-actions operation">
-							<a class="btn btn-xs dropdown-toggle actions-button btn-secondary" data-toggle="dropdown" href="#" data-target="#actions<?=$it->getId()?>">
+						<div class="btn-group btn-group-actions operation last">
+							<a class="btn btn-xs dropdown-toggle actions-button btn-secondary" data-toggle="dropdown" data-target="#actions<?=$it->getId()?>">
 								<i class="icon-pencil icon-white"></i>
 								<span class="caret"></span>
 							</a>
-						</div>
-						<div class="btn-group dropdown-fixed last" id="actions<?=$it->getId()?>">
-							<?php
-							echo $view->render('core/PopupMenu.php', array (
-								'items' => $actions
-							));
-							?>
+                            <?php
+                                echo $view->render('core/PopupMenu.php', array('items' => $actions));
+                            ?>
 						</div>
 						<?
 						}
@@ -248,6 +241,7 @@ if ( $show_header && $need_to_select ) $columns_number++;
 			<?
 			$it->moveNext();
 		}
+			echo '</tbody>';
 	?>
 			<?php
 			if ( count($numericFields) > 0 && $list->getItemsCount($it) > 0 ) {
@@ -273,15 +267,11 @@ if ( $show_header && $need_to_select ) $columns_number++;
 			?>
 	</tbody>
 	</table>
-	</div>
-	</td>
-	</tr>
-	
-	</tbody>
-	</table>
+            <?php
+            $list->drawFooter();
+            ?>
 	<?php
-	echo $view->render('core/Hint.php', array('title' => $hint, 'name' => $page_uid, 'open' => $hint_open));
-
+	    echo $view->render('core/Hint.php', array('title' => $hint, 'name' => $page_uid, 'open' => $hint_open));
 	?>
 </div> <!-- end wrapper-scroll -->
 	

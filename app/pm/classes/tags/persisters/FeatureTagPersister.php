@@ -2,7 +2,12 @@
 
 class FeatureTagPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+    function getAttributes()
+    {
+        return array('Tags');
+    }
+
+    function getSelectColumns( $alias )
  	{
  	    return array(
             " (SELECT GROUP_CONCAT(CAST(wt.Tag AS CHAR)) " .

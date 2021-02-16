@@ -37,10 +37,10 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  		$session_hash = $this->getSessionId();
 
 		setcookie('devprom['.$cookie_session.']', $session_hash, 
-			$cookie_expires, '/', $_SERVER['HTTP_HOST'] );
+			$cookie_expires, '/', $_SERVER['HTTP_HOST'], false, true  );
 
 		setcookie('devprom['.$cookie_session.']', $session_hash, 
-			$cookie_expires, '/' );
+			$cookie_expires, '/', '', false, true );
 
         parent::logon($remember, $session_hash);
  	}
@@ -51,21 +51,17 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  		
 		$tokens = array( $this->getToken() );
 
-		if ( is_array($_COOKIE['devprom']) )
-		{
+		if ( is_array($_COOKIE['devprom']) ) {
 			$tokens = array_merge($tokens, array_keys($_COOKIE['devprom']));
 		}
 		
-		foreach( $tokens as $cookie_session )
-		{
-			setcookie('devprom['.$cookie_session.']', '', 0, '/', $_SERVER['HTTP_HOST'] );
-			
-			setcookie('devprom['.$cookie_session.']', '', 0, '/' );
+		foreach( $tokens as $cookie_session ) {
+			setcookie('devprom['.$cookie_session.']', '', 0, '/', $_SERVER['HTTP_HOST'], false, true );
+			setcookie('devprom['.$cookie_session.']', '', 0, '/', '', false, true );
 		}
 		
-		setcookie('devprom', '', 0, '/', $_SERVER['HTTP_HOST'] );
-		
-		setcookie('devprom', '', 0, '/' );
+		setcookie('devprom', '', 0, '/', $_SERVER['HTTP_HOST'], false, true );
+		setcookie('devprom', '', 0, '/', '', false, true );
 		
 		return true;
  	}

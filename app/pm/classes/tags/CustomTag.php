@@ -1,16 +1,17 @@
 <?php
+include_once "TagBase.php";
 include "CustomTagIterator.php";
 include "predicates/CustomTagFilter.php";
 include "persisters/CustomTagDetailsPersister.php";
 
-class CustomTag extends Tag
+class CustomTag extends TagBase
 {
  	var $object;
  	
  	function __construct() 
  	{
  		$this->object = $this->getObject();
- 		parent::Metaobject('pm_CustomTag');
+ 		parent::__construct('pm_CustomTag');
  		$this->addPersister( new CustomTagDetailsPersister() );
         $this->addPersister( new TagParentPersister() );
         $this->setSortDefault(
@@ -20,64 +21,30 @@ class CustomTag extends Tag
         );
  	}
 
-	function createIterator() 
-	{
+	function createIterator() {
 		return new CustomTagIterator($this);
 	}
 	
-	function getObject()
-	{
+	function getObject() {
 		return null;
 	}
 	
-	function getObjectClass()
-	{
+	function getObjectClass() {
 	    return strtolower(get_class($this->object));
 	}
 	
-	function setObject( $object )
-	{
+	function setObject( $object ) {
 		$this->object = $object;
 	}
 	
-	function getGroupKey()
-	{
+	function getGroupKey() {
 		return 'ObjectId';
 	}
 	
- 	function getPageNameObject( $object_id = '' )
- 	{
+ 	function getPageNameObject( $object_id = '' ) {
  		return $this->object->getPage().'&tag='.$object_id;
  	}
 
- 	function getByObject( $object_it )
- 	{
- 		global $model_factory;
-
-		$tag = $model_factory->getObject('Tag');
-		$items = array();
-		
- 		if ( is_numeric($object_it) )
- 		{
- 			array_push($items, $object_it);
- 		}
- 		else
- 		{
- 			$items = array_merge($items, $object_it->idsToArray());
- 		}
-
-		$sql = "SELECT t.TagId, t.Caption, t.Owner, rt.ObjectId, COUNT(1) ItemCount " .
-				" FROM Tag t, pm_CustomTag rt " .
-				"WHERE rt.Tag = t.TagId " .
-				$this->getVpdPredicate('t').
-				"  AND rt.ObjectClass = '".strtolower(get_class($this->object))."' ".
-				"  AND rt.ObjectId IN (".join($items, ',').") ".
-				"GROUP BY rt.ObjectId, t.TagId " .
-				"ORDER BY rt.ObjectId, t.Caption " ;
-
-		return $tag->createSQLIterator($sql);
- 	}
- 	
  	function getByAK( $object_id, $tag_id )
  	{
  		return $this->getByRefArray(
@@ -96,19 +63,6 @@ class CustomTag extends Tag
 			);
  	}
  	
- 	function removeTags( $object_id )
- 	{	
- 		$tag_it = $this->getByObject( $object_id );
- 		
- 		while ( !$tag_it->end() )
- 		{	
- 			$custom_tag_it = $this->getByAK( $object_id, $tag_it->getId() );
- 			$this->delete( $custom_tag_it->getId() );
- 			
- 			$tag_it->moveNext();
- 		}
- 	}
-
  	function add_parms($parms)
     {
         if ( $parms['ObjectClass'] == '' ) {

@@ -35,107 +35,8 @@ import ru.devprom.pages.project.testscenarios.TestSpecificationNewPage;
 import ru.devprom.pages.project.testscenarios.TestSpecificationViewPage;
 import ru.devprom.pages.project.testscenarios.TestSpecificationsPage;
 
-public class TestScenariosTest extends ProjectTestBase {
-
-	
-	/**This method creates Requirement, saves it's version, creates new Test Scenario and trace it on the saved version of the Requirement.
-	 * Then creates Analyst user, that make changes in current version of the Requirement and saves the new version.
-	 * The check is - default user shouldn't see the change notification in Test Scenarios list.
-	 *  */
-	@Test
-		public void traceOnRequirementVersion() {
-		
-		//Test constants 
-        String p = DataProviders.getUniqueString();
-		String content = "Изначальное содержание Требования";
-		String newContent = "Изначальное содержание плюс новый текст";
-		String veryNewContent = "Изначальное содержание плюс новый текст и еще немножко для версии";
-		String version1 = "Итерация 1";
-		String version2 = "Итерация 2";
-		User analyst = new User("Analyst"+p, "1", "Analyst"+p, "analyst"+p+"@mail.com", false, true);
-		Requirement testRequirement = new Requirement("TestR"+p, content);
-		TestScenario testScenario = new TestScenario("TestScenario" + p);
-		TestScenario testScenario2 = new TestScenario("TestScenario2" + p);
-		
-		//Creating Analyst and making him the member of the project
-		PageBase page = new PageBase(driver);
-		ActivitiesPage ap = page.goToAdminTools();
-		UsersListPage ulp = ap.gotoUsers();
-		ulp = ulp.addNewUser(analyst, false);
-		
-		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
-				new Template(this.waterfallTemplateName));
-		SDLCPojectPageBase favspage = (SDLCPojectPageBase) ulp.gotoProject(webTest);
-		ProjectMembersPage pmp = favspage.gotoMembers();
-		
-		pmp = pmp.gotoAddMember().addUserToProject(analyst, "Аналитик", 10, "");
-		
-		//Create a Requirement
-		RequirementsPage rp = pmp.gotoRequirements();
-		RequirementNewPage nrp = rp.createNewRequirement();
-		RequirementViewPage rvp = nrp.create(testRequirement);
-		
-		TestSpecificationsPage tscp = (new SDLCPojectPageBase(driver))
-				.gotoTestPlans();
-		TestSpecificationNewPage ntsp = tscp.createNewSpecification();
-		TestScenario testPlan = new TestScenario("TestPlan"
-				+ DataProviders.getUniqueString());
-		TestSpecificationViewPage tspecp = ntsp.create(testPlan);
-		
-		// Create Test Scenario and trace it to the Requirement
-		TestScenariosPage tsp = tspecp.gotoTestScenarios();
-		TestScenarioNewPage tsnp = tsp.clickNewTestScenario();
-		tsnp.addRequirement(testRequirement.getId(), "");
-		
-		
-		TestScenarioViewPage tsvp = tsnp.createNewScenarioShort(testScenario, testPlan);
-
-		
-		rp = tsvp.gotoRequirements();
-		rvp = rp.clickToRequirement(testRequirement.getId());
-		RequirementEditPage rep = rvp.editRequirement();
-		rep.addContent(newContent);
-		rvp = rep.saveChanges();
-		
-		tsp = favspage.gotoTestScenarios();
-		Assert.assertTrue(tsp.isNotification(testScenario.getId()), "В тестовом сценарии отсутствует оповещение");
-		
-		//Save version
-		rp = tsp.gotoRequirements();
-		rvp = rp.clickToRequirement(testRequirement.getId());
-		RequirementSaveVersionPage rsvp = rvp.saveVersion();
-		rvp = rsvp.saveVersion(version1, "Первичная версия требования");
-		
-		//Create another Test Scenario and trace it to the Requirement's saved version
-		tsp = rvp.gotoTestScenarios();
-		tsnp = tsp.clickNewTestScenario();
-		tsnp.addRequirement(testRequirement.getId(), version1);
-		tsvp = tsnp.createNewScenarioShort(testScenario2, testPlan);				
-		
-		//Login as Analyst
-		LoginPage lp = tsvp.logOut();
-		FavoritesPage fp = lp.loginAs(analyst.getUsername(), analyst.getPass());
-		favspage = (SDLCPojectPageBase) fp.gotoProject(webTest);
-		
-		//Change the Requirement's content and save the new version
-		rp = favspage.gotoRequirements();
-		rvp = rp.clickToRequirement(testRequirement.getId());
-		rvp = rvp.editContent(testRequirement.getClearId(), veryNewContent);
-		rsvp = rvp.saveVersion();
-		rvp = rsvp.saveVersion(version2, "Версия Аналитика");
-		
-		//Login as a default user
-		lp = rvp.logOut();
-		fp = lp.loginAs(Configuration.getUsername(), Configuration.getPassword());
-		favspage = (SDLCPojectPageBase) fp.gotoProject(webTest);
-		
-		//Check the Test Scenarios page for notifications
-		tsp = favspage.gotoTestScenarios();
-		Assert.assertFalse(tsp.isNotification(testScenario2.getId()), "В тестовом сценарии присутствует оповещение");
-		
-	}
-	
-
+public class TestScenariosTest extends ProjectTestBase
+{
 	/**This method creates a Requirement, adds it to Baseline. Then creates Test Scenario links to the Requirement baseline version.
 	 * Then adds the Requirement to another Baseline and checks changes in the Test Scenario.
 	 * @throws InterruptedException 
@@ -162,7 +63,7 @@ public class TestScenariosTest extends ProjectTestBase {
 		//Add To Baseline
 		RequirementAddToBaselinePage ratb = rvp.addToBaseline();
 		Requirement testRequirementBaseline1 = testRequirement.clone();
-		rvp = ratb.addToBaseline(testRequirementBaseline1, baseline1, false);
+		rvp = ratb.Submit(testRequirementBaseline1, baseline1);
 
 		//Create Test Scenario and trace it to the Requirement's saved version
 		TestSpecificationsPage tscp = (new SDLCPojectPageBase(driver))
@@ -181,18 +82,17 @@ public class TestScenariosTest extends ProjectTestBase {
 		rp = tsvp.gotoRequirements();
 		rvp = rp.clickToRequirement(testRequirementBaseline1.getId());
 		Requirement testRequirementBaseline2 = testRequirement.clone();
-		ratb = rvp.addToBaseline();
-		rvp = ratb.addToBaseline(testRequirementBaseline2, baseline2);
+		ratb = rvp.makeBranch();
+		rvp = ratb.Submit(testRequirementBaseline2, baseline2);
 		
 		//Add Scenario to Baseline 2
 		tsp = rvp.gotoTestScenarios();
 		tsvp = tsp.clickToTestScenario(testScenario.getId());
 		TestScenario testScenario2 = testScenario.clone();
-		TestScenarioAddToBaselinePage tsatbp = tsvp.addToBaseline();
-		tsvp =	tsatbp.addToBaseline(testScenario2, baseline2);
-		tsp = tsvp.gotoTestScenarios();
-		tsvp = tsp.clickToTestScenario(testScenario2.getId());
-		
+		TestScenarioAddToBaselinePage tsatbp = tsvp.makeBranch();
+		tsvp =	tsatbp.Submit(testPlan, baseline2);
+		tsvp.gotoPage(testScenario2.getName());
+
 		//Read Properties
 		TestScenarioEditPage tspp = tsvp.edit();
 		List<String> requirements = tspp.readLinkedRequirements();
@@ -204,7 +104,8 @@ public class TestScenariosTest extends ProjectTestBase {
 	
 
 	@Test(description="S-1668")
-		public void updateBaselineWithSpecificationSections() {
+	public void updateBaselineWithSpecificationSections()
+	{
 		String p = DataProviders.getUniqueString();
 		TestScenario specification = new TestScenario("TestSpec" + p);
 		TestScenario specificationInBaseline = specification.clone();
@@ -224,8 +125,8 @@ public class TestScenariosTest extends ProjectTestBase {
 		TestSpecificationViewPage tsvp = tsnp.create(specification);
 		
 		//Add to Baseline
-		TestScenarioAddToBaselinePage tsatb = tsvp.addToBaseline();
-		tsatb.addToBaseline(specificationInBaseline, baseline);
+		TestScenarioAddToBaselinePage tsatb = tsvp.makeBranch();
+		tsatb.Submit(specificationInBaseline, baseline);
 		
 		//Add section to the source specification
 		tsp = tsvp.gotoTestPlans();
@@ -236,7 +137,6 @@ public class TestScenariosTest extends ProjectTestBase {
 		//Compare baseline version with the source
 		tsp = tsvp.gotoTestPlans();
 		tsvp = tsp.clickToSpecification(specificationInBaseline.getId());
-		tsvp = tsvp.showBaseline(baseline);
 		tsvp = tsvp.compareWithVersion(specification.getName());
 		Assert.assertTrue(tsvp.isAlertPresent(), "Нет предупреждающего об изменениях знака");
 		Assert.assertTrue(tsvp.isTextPresent(section.getName()), "В режиме сравнения не видно секции исходной версии");
@@ -280,7 +180,7 @@ public class TestScenariosTest extends ProjectTestBase {
 		tscvp = tscnp.createNewScenarioShort(testScenario2, testPlanOriginal);
 		
 		tscp = tscvp.gotoTestScenarios();
-		tscp.showNRows("all");
+		tscp.showAll();
 		tscp.checkTestScenario(testScenario1.getId());
 		tscp.checkTestScenario(testScenario2.getId());
 		tscp.massIncludeToTestPlan(testPlanNew.getId());

@@ -16,15 +16,19 @@ class FieldStateTaskTypes extends FieldForm
  	function draw( $view = null )
  	{
 		$anchor = getFactory()->getObject('TaskTypeState');
-		
-		if ( is_object($this->object_it) ) {
-			$anchor->addFilter(new FilterAttributePredicate('State', $this->object_it->get('ReferenceName')));
+		if ( is_object($this->object_it) && $this->object_it->getId() != '' ) {
+            $anchorIt = $anchor->getRegistry()->Query(
+                array(
+                    new FilterAttributePredicate('State', $this->object_it->get('ReferenceName')),
+                    new FilterBaseVpdPredicate()
+                )
+            );
 		}
 		else {
-			$anchor->addFilter(new FilterAttributePredicate('State', '-'));
+            $anchorIt = $anchor->getEmptyIterator();
 		}
 
- 		$form = new FormStateTaskTypeEmbedded( $anchor, 'State' );
+ 		$form = new FormStateTaskTypeEmbedded( $anchorIt, 'State' );
  		$form->setReadonly( $this->readOnly() );
  		$form->draw($view);
  	}

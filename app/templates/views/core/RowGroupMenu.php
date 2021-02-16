@@ -11,12 +11,9 @@ $modify_item = array_shift(array_values($items));
 if ( count($items) > 0 ) {
     ?>
     <div class="btn-group row-group-btn more-actions">
-        <div class="btn dropdown-toggle transparent-btn" data-toggle="dropdown" href="#"
-             data-target="#textmenu<?= $id ?>">
+        <div class="btn dropdown-toggle transparent-btn" data-toggle="dropdown">
             <span class="label">...</span>
         </div>
-    </div>
-    <div class="btn-group dropdown-fixed" id="textmenu<?= $id ?>">
         <?php echo $view->render('core/PopupMenu.php', array('items' => $items)); ?>
     </div>
     <?php

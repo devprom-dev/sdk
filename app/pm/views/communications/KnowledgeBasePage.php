@@ -13,54 +13,22 @@ class KnowledgeBasePage extends PMWikiUserPage
 {
  	function __construct()
  	{
-        if ( $_REQUEST['report'] != '' ) {
-            $report_it = getFactory()->getObject('PMReport')->getExact($_REQUEST['report']);
-            $report = is_numeric($report_it->getId()) ? $report_it->get('Report') : $report_it->getId();
-        }
-
- 		$b_show_root = !$this->needDisplayForm()
- 			&& $_REQUEST['mode'] == '' && $_REQUEST['view'] == 'tree'
- 			&& $_REQUEST['export'] == '' && !in_array($report, array('knowledgebaselist','latestarticles'));
- 		
- 		if ( $b_show_root )
- 		{
- 			$_REQUEST['view'] = 'docs';
- 			$_REQUEST['document'] = '1';
- 		}
+        getSession()->addBuilder( new WikiPageModelExtendedBuilder() );
+        getSession()->addBuilder( new KnowledgeBaseSettingBuilder() );
+        getSession()->addBuilder( new KnowledgeBaseDocumentSettingBuilder() );
 
  		parent::__construct();
-
-        getSession()->addBuilder( new KnowledgeBaseSettingBuilder() );
- 		getSession()->addBuilder( new KnowledgeBaseDocumentSettingBuilder() );
  	}
  	
- 	function getPredicates()
- 	{
- 		return array( new KnowledgeBaseAccessPredicate() );
- 	}
- 	
- 	function buildObject()
-	{
-		$object = getFactory()->getObject('ProjectPage');
-		$builders = array (
-			new WikiPageModelExtendedBuilder()
-		);
-		foreach( $builders as $builder ) {
-			$builder->build($object);
-		}
-
-		foreach ( $this->getPredicates() as $predicate ) {
-			$object->addFilter($predicate);
-		}
-		
-		return $object;
+ 	function getObject() {
+		return getFactory()->getObject('ProjectPage');
 	}
 	
 	function getBulkForm() {
 		return new WikiBulkForm($this->getObject());
 	}
 	
-	function getFormBase() {
+	function getEntityForm() {
        	return new KnowledgeBaseForm($this->getObject());
  	}
  	
@@ -72,11 +40,47 @@ class KnowledgeBasePage extends PMWikiUserPage
         return new KnowledgeBaseTable( $this->getObject(), $this->getStateObject(), $this->getForm() );
  	}
 
-	function getExportPersisters() {
-		return array_merge(
-			parent::getExportPersisters(),
-			array (
-			)
-		);
-	}
+ 	function getTable() {
+ 	    if ( $this->getReportBase() == 'knowledgebaselist' ) {
+            return $this->getTableBase();
+        }
+        return parent::getTable();
+    }
+
+    function exportWikiTree()
+    {
+        $rootIds = TextUtils::parseIds($_REQUEST['root']);
+
+        if ( count($rootIds) > 1 ) {
+            if ( $_REQUEST['lazyroot'] > 0 ) {
+                $_REQUEST['root'] = $_REQUEST['lazyroot'];
+                $rootJson = array_shift(parent::exportWikiTree());
+                return $rootJson['children'];
+            }
+            $object_it = $this->getObject()->getExact($rootIds);
+            while( !$object_it->end() ) {
+                $json[] = $this->exportRootNode($object_it);
+                $object_it->moveNext();
+            }
+            return $json;
+        }
+        else {
+            return parent::exportWikiTree();
+        }
+    }
+
+    function exportRootNode( $object_it )
+    {
+        return array (
+            'title' => $object_it->getRef('Project')->getDisplayName(),
+            'folder' => true,
+            'key' => $object_it->getId(),
+            'expanded' => false,
+            'extraClasses' => 'folder',
+            'lazy' => true,
+            'data' => array(
+                'project' => $object_it->get('ProjectCodeName')
+            )
+        );
+    }
 }

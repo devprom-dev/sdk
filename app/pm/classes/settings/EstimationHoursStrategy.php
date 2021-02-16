@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/settings/EstimationStrategy.php";
 
 class EstimationHoursStrategy extends EstimationStrategy
@@ -7,11 +6,6 @@ class EstimationHoursStrategy extends EstimationStrategy
 	function getDisplayName()
 	{
 		return text(1102);
-	}
-	
-	function getEstimationText()
-	{
-		return text(1104);
 	}
 	
 	function getDimensionText( $value )

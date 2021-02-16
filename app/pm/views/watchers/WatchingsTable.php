@@ -1,13 +1,10 @@
 <?php
-
 include "WatchingsList.php";
 
 class WatchingsTable extends PMPageTable
 {
-	function getObject()
-	{
-		global $model_factory;
- 		return $model_factory->getObject('pm_Watcher');
+	function getObject() {
+ 		return $this->getFamilyModules()->getObject('pm_Watcher');
 	}
 	
 	function getList()
@@ -18,11 +15,6 @@ class WatchingsTable extends PMPageTable
 	function getCaption() 
 	{
 		return translate('Объекты под наблюдением');
-	}
-	
-	function getFilterActions()
-	{
-		return array();
 	}
 	
 	function getNewActions()

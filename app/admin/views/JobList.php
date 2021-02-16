@@ -14,16 +14,14 @@ class JobList extends PageList
 		}
 	}
 
-	function getColumns()
-	{
-		$this->object->addAttribute('Schedule', '', translate('Расписание'), true);
-		$this->object->addAttribute('LastRun', '', translate('Предыдущий запуск'), true);
+	function extendModel()
+    {
+        parent::extendModel();
 
-		$this->object->addAttribute('LastDuration', 'INTEGER', text(1124), true);
-		$this->object->addAttribute('AverageDuration', 'INTEGER', text(1125), true);
-
-		return parent::getColumns();
-	}
+        $this->getObject()->addAttribute('LastRun', '', translate('Предыдущий запуск'), true);
+        $this->getObject()->addAttribute('LastDuration', 'INTEGER', text(1124), true);
+        $this->getObject()->addAttribute('AverageDuration', 'INTEGER', text(1125), false);
+    }
 
 	function IsNeedToDisplay( $attr )
 	{
@@ -31,7 +29,6 @@ class JobList extends PageList
 		{
 			case 'Caption':
 			case 'ClassName':
-			case 'Schedule':
 			case 'LastRun':
 				return true;
 		}
@@ -41,33 +38,15 @@ class JobList extends PageList
 
 	function drawCell( $object_it, $attr )
 	{
-		global $model_factory;
-
 		switch ( $attr )
 		{
-			case 'Schedule':
-
-				echo $object_it->get('Minutes').' &nbsp; ';
-				echo $object_it->get('Hours').' &nbsp; ';
-				echo $object_it->get('Days').' &nbsp; ';
-				echo $object_it->get('WeekDays').' &nbsp; ';
-
-				break;
-
 			case 'LastRun':
-
-				$jobrun = $model_factory->getObject('co_JobRun');
-
-				$run_it = $jobrun->getByRefArrayLatest(
+				$run_it = getFactory()->getObject('co_JobRun')->getByRefArrayLatest(
 				array('ScheduledJob' => $object_it->getId() ) );
-
-				if ( $run_it->count() > 0 )
-				{
+				if ( $run_it->count() > 0 ) {
 					echo $run_it->getDateTimeFormat('RecordCreated');
 				}
-					
 				break;
-
 			default:
 				parent::drawCell( $object_it, $attr );
 		}

@@ -146,7 +146,7 @@ class PageController extends MainController
 		return $this->replyError( text(983) );
 	}
 	
-	protected function replyResultBinary( $is_error, $message, $object_id )
+	protected function replyResultBinary( $is_error, $message, $object_id = '' )
 	{
 		return $this->_reply( $is_error ? 'error' : 'success', $message, $object_id);  
 	}    

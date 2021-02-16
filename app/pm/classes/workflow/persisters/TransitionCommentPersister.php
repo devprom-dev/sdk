@@ -2,7 +2,13 @@
 
 class TransitionCommentPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+    function getAttributes() {
+        return array(
+            'TransitionComment'
+        );
+    }
+
+    function getSelectColumns( $alias )
  	{
  		$columns = array();
  		

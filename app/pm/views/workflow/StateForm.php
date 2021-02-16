@@ -14,30 +14,26 @@ class StateForm extends PMPageForm
 
 		$object = $this->getObject();
 
-        $object->addAttribute('Transitions', 'INTEGER', text(2016), true, false,
-				str_replace('%1', $this->getObject()->getPage(), text(2013)), 25);
-
 		$object->addPersister( new StateTransitionsPersister() );
 		$object->setAttributeOrderNum('ReferenceName', 998);
 		$object->setAttributeVisible('ReferenceName', $this->getMode() != 'new');
+
 		$object->setAttributeType('Description', 'TEXT');
 		$object->setAttributeOrderNum('Description', 999);
 		$object->setAttributeOrderNum('OrderNum', 997);
 
-        if ( getFactory()->getObject($object->getObjectClass())->getEntityRefName() == 'pm_ChangeRequest' ) {
+		$stateObject = getFactory()->getObject($object->getObjectClass());
+        if ( $stateObject->getEntityRefName() == 'pm_ChangeRequest' ) {
             $object->addAttribute('TaskTypes', 'REF_TaskTypeId', translate('Задачи'), true, false, text(2273), 40);
+            $object->setAttributeVisible('ArtifactsType', true);
+            $object->addAttributeGroup('ArtifactsType', 'additional');
+        }
+        if ( $stateObject instanceof Requirement) {
             $object->setAttributeVisible('ArtifactsType', true);
             $object->addAttributeGroup('ArtifactsType', 'additional');
         }
 	}
 	
- 	function buildModelValidator()
-    {
-        $validator = parent::buildModelValidator();
-        $validator->addValidator( new StateModelValidator() );
-        return $validator;
-    }
-
     function IsAttributeVisible( $attr_name )
  	{
  		switch ( $attr_name )

@@ -19,24 +19,24 @@ class ProjectTable extends PageTable
 		return '';
 	}
 
-	function getFilterPredicates()
+	function getFilterPredicates( $values )
 	{
-		$values = $this->getFilterValues();
-		
 		return array_merge(
-				parent::getFilterPredicates(),
-				array (
-					new ProjectStatePredicate($values['state'])
-				)
+            parent::getFilterPredicates( $values ),
+            array (
+                new ProjectStatePredicate($values['state'])
+            )
 		);
 	}
 	
 	function getFilters()
 	{
-		return array(
-			new FilterAutoCompleteWebMethod($this->getObject(), translate('Название проекта') ),
-			$this->buildStateFilter()
-		);
+		return array_merge(
+		    parent::getFilters(),
+		    array(
+			    $this->buildStateFilter()
+		    )
+        );
 	}
 	
 	function buildStateFilter()

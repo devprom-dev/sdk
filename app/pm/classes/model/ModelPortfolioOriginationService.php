@@ -16,7 +16,6 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
 	{
 	 	switch ( $object->getClassName() )
  	    {
- 	        case 'pm_Project':
  	        case 'pm_Methodology':
  	        case 'co_UserGroup':
  	        case 'co_ProjectGroup':
@@ -30,10 +29,22 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
  	        case 'cms_PluginModule':
  	            return array( $this->getSession()->getProjectIt()->get('VPD') );
 
+            case 'pm_Project':
+                return $this->getSession()->getLinkedIt()->fieldToArray('VPD');
+
             case 'pm_State':
             case 'pm_Participant':
             case 'pm_CustomAttribute':
-                return $this->getSession()->getLinkedIt()->fieldToArray('VPD');
+            case 'WikiPageType':
+                $vpds = array();
+                $linked_it = $this->getSession()->getLinkedIt();
+                while ( !$linked_it->end() ) {
+                    if ( $linked_it->get('IsClosed') != 'Y' ) {
+                        $vpds[] = $linked_it->get('VPD');
+                    }
+                    $linked_it->moveNext();
+                }
+                return $vpds;
 
             case 'cms_Resource':
                 $linkedIt = $this->getSession()->getLinkedIt();
@@ -45,25 +56,20 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
                 }
 
  	        default:
- 
  	            if ( $object instanceof SharedObjectSet ) return array('-');
- 	            
+                if ( $object instanceof Portfolio ) return array('-');
+                if ( $object instanceof Program ) return array('-');
  	            if ( !$this->getSharedSet()->hasObject($object) ) return array('-');
  	            
  	            $vpds = array();
  	            
  	            $linked_it = $this->getSession()->getLinkedIt();
- 	            
- 	            while ( !$linked_it->end() )
- 	            {
- 	                if ( $this->getSharedSet()->sharedInProject( $object, $linked_it ) )
- 	                {
+ 	            while ( !$linked_it->end() ) {
+ 	                if ( $linked_it->get('IsClosed') != 'Y' && $this->getSharedSet()->sharedInProject( $object, $linked_it ) ) {
  	                    $vpds[] = $linked_it->get('VPD');
  	                }
- 	                
  	                $linked_it->moveNext();
  	            }
- 	            
  	            return count($vpds) > 0 ? $vpds : array('-');
  	    }		
 	}		

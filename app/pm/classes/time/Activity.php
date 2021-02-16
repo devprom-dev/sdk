@@ -37,26 +37,17 @@ class Activity extends Metaobject
         }
     }
  	
- 	function createIterator() 
- 	{
+ 	function createIterator() {
  		return new ActivityIterator( $this );
  	}
  	
- 	function getDisplayName()
- 	{
+ 	function getDisplayName() {
  		return translate('Списание времени');
  	}
 
- 	function getPage()
-    {
+ 	function getPage() {
         return getSession()->getApplicationUrl($this).'worklog?';
     }
-
-    function getByTask( $task_it )
-	{
-		return $this->getByRefArray( 
-			array( 'Task' => $task_it->end() ? -1 : $task_it->getId() ) );
-	}
 
 	function updateTask( & $parms, $activity_id = 0 )
 	{
@@ -64,19 +55,21 @@ class Activity extends Metaobject
 		
 		$task = getFactory()->getObject('pm_Task');
 		$task_it = $task->getRegistry()->Query(
-				array(
-						new FilterInPredicate( $parms['Task'] )
-				)
+            array(
+                new FilterInPredicate( $parms['Task'] )
+            )
 		);
 		
 		if ( $task_it->getId() < 1 ) return;
 		
 		$parms['Iteration'] = $task_it->get('Release');
-		
-		$task->modify_parms($task_it->getId(), array (
-			'LeftWork' => $parms['LeftWork'] != '' 
-		        ? $parms['LeftWork'] : max(0, $task_it->get('LeftWork') - $parms['Capacity'])
-		));
+
+		if ( !$task_it->IsFinished() ) {
+            $task->modify_parms($task_it->getId(), array (
+                'LeftWork' => $parms['LeftWork'] != ''
+                    ? $parms['LeftWork'] : max(0, $task_it->get('LeftWork') - $parms['Capacity'])
+            ));
+        }
 	}
 	
 	function add_parms( $parms )
@@ -118,8 +111,7 @@ class Activity extends Metaobject
 	    return $result;
 	}
 
-	function IsDeletedCascade($object)
-    {
-        return $object instanceof Task;
+	function IsDeletedCascade($object) {
+        return $object instanceof Task || $object instanceof Request;
     }
 }

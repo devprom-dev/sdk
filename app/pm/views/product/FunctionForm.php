@@ -1,7 +1,4 @@
 <?php
-
-include_once SERVER_ROOT_PATH."pm/classes/product/validation/ModelValidatorAvoidInfiniteLoop.php";
-include_once SERVER_ROOT_PATH."pm/classes/product/validation/ModelValidatorChildrenLevels.php";
 include_once SERVER_ROOT_PATH."pm/views/product/FieldFunctionTrace.php";
 include "FieldFeatureTagTrace.php";
 include "FieldFeatureIssues.php";
@@ -14,6 +11,7 @@ class FunctionForm extends PMPageForm
 	private $request_it = null;
 	private $assignRequestIt = null;
 	private $hasFeatureLevelRules = false;
+	private $bind_method = null;
 
 	function __construct( $object )
 	{
@@ -29,18 +27,13 @@ class FunctionForm extends PMPageForm
             : getFactory()->getObject('Request')->getEmptyIterator();
 	}
 	
-	function buildModelValidator()
-	{
-		$validator = parent::buildModelValidator();
-		$validator->addValidator( new ModelValidatorAvoidInfiniteLoop() );
-		$validator->addValidator( new ModelValidatorChildrenLevels() );
-		return $validator;
-	}
-
 	function extendModel()
     {
         if ( $this->getEditMode() ) {
             $this->getObject()->setAttributeVisible('OrderNum', true);
+        }
+        if ( $this->request_it->getId() > 0 ) {
+            $this->getObject()->resetAttributeGroup('Request', 'trace');
         }
 
         parent::extendModel();
@@ -65,23 +58,18 @@ class FunctionForm extends PMPageForm
  			        new FilterBaseVpdPredicate()
                 )
             );
-		    while( !$type_it->end() )
-		    {
+		    while( !$type_it->end() ) {
 		        $method = new ObjectCreateNewWebMethod($this->getObject());
-                if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-		        $this->create_subfunc_actions[$type_it->get('OrderNum')] = array(
+		        $this->create_subfunc_actions[] = array(
 			            'name' => $type_it->getDisplayName(),
 			        	'method' => $method,
 			        	'type' => $type_it->getId(),
 		        		'system-name' => $type_it->get('ReferenceName')
 		        );
-		        
 		        $type_it->moveNext();
 		    }
 		    if ( $type_it->count() < 1 ) {
                 $method = new ObjectCreateNewWebMethod($this->getObject());
-                if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-                $method->setRedirectUrl('donothing');
                 $this->create_subfunc_actions[] = array(
                     'name' => text(2272),
                     'method' => $method
@@ -89,15 +77,12 @@ class FunctionForm extends PMPageForm
             }
  		}
 
-        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-        if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD )
+        if ( getSession()->IsRDD() )
         {
             $request = getFactory()->getObject('Issue');
             if ( getFactory()->getAccessPolicy()->can_create($request) )
             {
                 $method = new ObjectCreateNewWebMethod($request);
-                if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-
                 $this->create_issue_actions[] = array(
                     'name' => $method->getCaption(),
                     'method' => $method
@@ -114,8 +99,6 @@ class FunctionForm extends PMPageForm
                 while( !$type_it->end() )
                 {
                     $method = new ObjectCreateNewWebMethod($request);
-                    if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-
                     $this->create_issue_actions[] = array(
                         'name' => $type_it->getDisplayName(),
                         'method' => $method,
@@ -127,84 +110,101 @@ class FunctionForm extends PMPageForm
             }
         }
 
- 		$report_it = getFactory()->getObject('PMReport')->getExact('allissues');
- 		if ( $report_it->getId() != '' )
- 		{
- 			$this->goto_issues_template = $report_it->getUrl().'&state=all&function=';
+        $it = getFactory()->getObject('ObjectsListWidget')
+            ->getByRef('Caption',
+                get_class($this->getObject()->getAttributeObject('Request'))
+            );
+        if ( $it->getId() != '' ) {
+            $widget_it = $it->getWidgetIt();
+ 			$this->goto_issues_template = $widget_it->getUrl('state=all&function=%ids%');
  		}
+
+        $method = new ObjectModifyWebMethod($this->getObject()->getEmptyIterator());
+        if ( $method->hasAccess() ) {
+            $this->bind_method = array(
+                'name' => text(2692),
+                'url' => $method->getJSCall(
+                    array(
+                        'object_id' => '%ids%&BindIssue=true',
+                        'can_delete' => 'false'
+                    )
+                )
+            );
+        }
  	}
+
+ 	function getAbleCreateIssue( $objectIt ) {
+	    return $objectIt->get('Type') == ''
+            || $objectIt->object->IsReference('Type') != '' && $objectIt->getRef('Type')->get('HasIssues') == 'Y';
+    }
+
+ 	function getNewRelatedActions()
+    {
+        $object_it = $this->getObjectIt();
+
+        $new_actions = array();
+
+        if ( $this->getAbleCreateIssue($object_it) ) {
+            foreach( $this->create_issue_actions as $key => $data ) {
+                $method = $data['method'];
+                $new_actions[] = array(
+                    'name' => $data['name'],
+                    'url' => $method->getJSCall( array(
+                        'Function' => $object_it->getId(),
+                        'Type' => $data['type']
+                    )),
+                    'view' => 'button',
+                    'button-class' => 'btn-success new-at-form',
+                    'icon' => 'icon-plus'
+                );
+            }
+        }
+
+        $levels = array_filter(preg_split('/\s*,\s*/', $object_it->get('ChildrenLevels')), function($value) {
+            return $value != '';
+        });
+        $subfunc_actions = array();
+        foreach( $this->create_subfunc_actions as $key => $data )
+        {
+            if ( $this->hasFeatureLevelRules && !in_array($data['system-name'], $levels) ) continue;
+
+            $method = $data['method'];
+            $subfunc_actions[] = array(
+                'name' => $data['name'],
+                'url' => $method->getJSCall( array(
+                    'ParentFeature' => $object_it->getId(),
+                    'Type' => $data['type']
+                ))
+            );
+        }
+
+        if ( count($subfunc_actions) > 0 ) {
+            if ( $new_actions[array_pop(array_keys($new_actions))]['name'] != '' ) $new_actions[] = array();
+            $new_actions = array_merge($new_actions, $subfunc_actions);
+        }
+
+        return $new_actions;
+    }
 
  	function getActions()
  	{
  		$object_it = $this->getObjectIt();
  		
  		$actions = parent::getActions();
- 		
+
  		if ( !is_object($object_it) ) return $actions;
  		
- 		$new_actions = array();
+ 		if ( $this->getAbleCreateIssue($object_it) && is_array($this->bind_method) ) {
+ 		    $action = $this->bind_method;
+            $action['url'] = str_replace('%ids%', $object_it->getId(), $action['url']);
+ 		    $actions[] = $action;
+        }
  		
- 		$able_create_issues = $object_it->get('Type') == ''
- 				|| $object_it->object->IsReference('Type') != '' && $object_it->getRef('Type')->get('HasIssues') == 'Y';
- 		
- 		if ( $able_create_issues )
- 		{
-	 	 	foreach( $this->create_issue_actions as $key => $data )
-	 		{
-	 			$method = $data['method'];
-	 			
-		        $new_actions[] = array(
-		            'name' => $data['name'],
-		            'url' => $method->getJSCall( array(
-				            		'Function' => $object_it->getId(),
-				            		'Type' => $data['type']
-		            		)),
-                    'view' => 'button',
-                    'button-class' => 'btn-success new-at-form',
-                    'icon' => 'icon-plus'
-		        );
-	 		}
- 		}
- 		
- 		$levels = array_filter(preg_split('/\s*,\s*/', $object_it->get('ChildrenLevels')), function($value) {
- 					return $value != '';
- 		});
- 		$subfunc_actions = array();
- 		foreach( $this->create_subfunc_actions as $key => $data )
- 		{
- 			if ( $this->hasFeatureLevelRules && !in_array($data['system-name'], $levels) ) continue;
- 			
- 			$method = $data['method'];
-	        $subfunc_actions[] = array(
-	            'name' => $data['name'],
-	            'url' => $method->getJSCall( array(
-			            		'ParentFeature' => $object_it->getId(),
-			            		'Type' => $data['type']
-	            		))
-	        );
- 		}
-
- 	 	if ( count($subfunc_actions) > 0 )
- 		{
- 			if ( $new_actions[array_pop(array_keys($new_actions))]['name'] != '' ) $new_actions[] = array();
- 			$new_actions = array_merge($new_actions, $subfunc_actions);
- 		}
- 		
- 		if ( count($new_actions) > 0 )
- 		{
- 			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
- 			$actions[] = array ( 
-				'name' => translate('Создать'),
-	            'items' => $new_actions
-			);
- 		}
- 		
- 		if ( $this->goto_issues_template != '' )
- 		{
+ 		if ( $this->goto_issues_template != '' ) {
 	 		if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 			$actions[] = array(
-			    'url' => $this->goto_issues_template.$object_it->getId(), 
-			    'name' => translate('Перейти к пожеланиям')
+			    'url' => str_replace('%ids%', $object_it->getId(),$this->goto_issues_template),
+			    'name' => $this->getObject()->getAttributeUserName('Request')
 			);
  		}
  		
@@ -236,11 +236,7 @@ class FunctionForm extends PMPageForm
 		switch( $attribute )
 		{
 			case 'Caption':
-				if ( $this->request_it->getId() > 0 ) {
-					return $this->request_it->getHtmlDecoded($attribute);
-				}
-				return parent::getFieldValue( $attribute );
-			case 'Description':
+            case 'Description':
 				if ( $this->request_it->getId() > 0 ) {
 					return $this->request_it->getHtmlDecoded($attribute);
 				}
@@ -272,7 +268,10 @@ class FunctionForm extends PMPageForm
 			    );
 
 			case 'Request':
-				$field = new FieldFeatureIssues(is_object($this->object_it) ? $this->object_it : null);
+				$field = new FieldFeatureIssues(
+				    is_object($this->object_it) ? $this->object_it : null,
+                    $this->getObject()->getAttributeObject('Request')
+                );
                 $field->setIssueIt($this->assignRequestIt);
                 return $field;
 
@@ -280,35 +279,15 @@ class FunctionForm extends PMPageForm
 				return new FieldHierarchySelector($this->getObject());
 
             case 'Children':
+            case 'Increment':
                 if ( is_object($this->getObjectIt()) ) {
-                    return new FieldListOfReferences($this->getObjectIt()->getRef('Children'));
+                    return new FieldListOfReferences($this->getObjectIt()->getRef($name));
                 }
                 return null;
-
-             case 'Caption':
-                if ( !$this->getEditMode() ) {
-                    $field = new FieldWYSIWYG();
-                    $field->setObjectIt( $this->getObjectIt() );
-                    $field->getEditor()->setMode( WIKI_MODE_INPLACE_INPUT );
-                }
-                else {
-                    $field = parent::createFieldObject($name);
-                }
-                return $field;
 
 			default:
 				return parent::createFieldObject( $name );
 		}
-	}
-
-	function IsAttributeEditable( $attr )
-	{
-		switch ( $attr )
-		{
-			case 'Description':
-				return $this->getEditMode();
-		}
-		return parent::IsAttributeEditable($attr);
 	}
 
 	function persist()

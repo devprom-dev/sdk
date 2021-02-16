@@ -46,6 +46,8 @@ class KnowledgeBase extends BaseEntity
      */
     private $parent;
 
+    private $single;
+
     /**
      * @param string $codeName
      */
@@ -124,6 +126,16 @@ class KnowledgeBase extends BaseEntity
     public function getParent()
     {
         return $this->parent;
+    }
+
+    public function setSingle($value)
+    {
+        $this->single = $value;
+    }
+
+    public function getSingle()
+    {
+        return $this->single;
     }
 
     /**

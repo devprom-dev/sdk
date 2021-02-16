@@ -1,7 +1,7 @@
 <?php
 foreach( $files as $file )
 {
-    $url = $file['type'] == 'image' ? $file['url'].'&.png' : $file['url'];
+    $url = $file['type'] == 'image' ? $file['url'] : $file['url'];
     $title = $file['name']." (".$file['size']." KB)";
 
     if ( $file['type'] == 'image' ) {

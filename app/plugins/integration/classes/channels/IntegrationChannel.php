@@ -14,7 +14,8 @@ abstract class IntegrationChannel
     }
 
     public function getTimestamp() {
-        return SystemDateTime::date();
+        $time = new DateTime("now", new DateTimeZone("UTC"));
+        return $time->format('Y-m-d H:i:s');
     }
 
     protected function getLogger() {
@@ -33,9 +34,9 @@ abstract class IntegrationChannel
         $this->mapping = $mapping;
     }
 
-    public function setIdsMap( $map ) {
+    public function setIdsMap( $map, $backward ) {
         $this->idsMapWrite = $map;
-        $this->idsMapRead = array_flip($map);
+        $this->idsMapRead = $backward;
     }
 
     protected function getIdsMapRead() {
@@ -106,12 +107,7 @@ abstract class IntegrationChannel
         curl_setopt($this->curl, CURLOPT_POST, true);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $content);
-        curl_setopt($this->curl, CURLOPT_HTTPHEADER,
-            array_merge(
-                $this->getHeaders(),
-                preg_split('/[\r\n]+/i', $this->object_it->getHtmlDecoded('HttpHeaders'))
-            )
-        );
+
         return $this->parseJsonResult();
     }
 
@@ -141,7 +137,7 @@ abstract class IntegrationChannel
         $url = $this->object_it->get('URL').$url;
         $post = $this->buildPostFields($post);
 
-        $this->getLogger()->info('POST: '.$url);
+        $this->getLogger()->info('POST: '.$url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
         if ( $verbose ) {
             $this->getLogger()->debug('jsonPost data: '.var_export($post,true));
         }
@@ -151,6 +147,12 @@ abstract class IntegrationChannel
         curl_setopt($this->curl, CURLOPT_POST, true);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $post);
+        curl_setopt($this->curl, CURLOPT_HTTPHEADER,
+            array_merge(
+                $this->buildHeaders(),
+                $this->getPostHeaders($url)
+            )
+        );
 
         $data = $this->parseJsonResult();
         if ( $verbose ) {
@@ -158,6 +160,12 @@ abstract class IntegrationChannel
         }
 
         return $data;
+    }
+
+    protected function getPostHeaders( $url ) {
+        return array(
+            "Content-Type: application/json"
+        );
     }
 
     protected function buildPostFields( $post ) {
@@ -182,6 +190,12 @@ abstract class IntegrationChannel
         curl_setopt($this->curl, CURLOPT_POST, false);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $post);
+        curl_setopt($this->curl, CURLOPT_HTTPHEADER,
+            array_merge(
+                $this->buildHeaders(),
+                $this->getPutHeaders()
+            )
+        );
 
         $data = $this->parseJsonResult();
         if ( $verbose ) {
@@ -189,6 +203,84 @@ abstract class IntegrationChannel
         }
 
         return $data;
+    }
+
+    protected function getPutHeaders() {
+        return array(
+            "Content-Type: application/json"
+        );
+    }
+
+    protected function jsonPatch( $url, $post = array(), $parms = array(), $verbose = true )
+    {
+        if ( strpos($url, 'http') === false ) {
+            $url = $this->object_it->get('URL').$url;
+        }
+        $post = $this->buildPatchFields($post);
+
+        $this->getLogger()->info('PATCH: '.$url);
+        if ( $verbose ) {
+            $this->getLogger()->debug(var_export($post,true));
+        }
+
+        curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
+        curl_setopt($this->curl, CURLOPT_HTTPGET, false);
+        curl_setopt($this->curl, CURLOPT_POST, false);
+        curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+        curl_setopt($this->curl, CURLOPT_POSTFIELDS, $post);
+        curl_setopt($this->curl, CURLOPT_HTTPHEADER,
+            array_merge(
+                $this->buildHeaders(),
+                $this->getPatchHeaders()
+            )
+        );
+
+        $data = $this->parseJsonResult();
+        if ( $verbose ) {
+            $this->getLogger()->debug('jsonPatch result: ' . var_export($data, true));
+        }
+
+        return $data;
+    }
+
+    protected function getPatchHeaders() {
+        return array(
+            "Content-Type: application/json-patch+json"
+        );
+    }
+
+    private function getPatchOperations( $path, $array ) {
+        $data = array();
+        foreach( $array as $key => $value ) {
+            if ( is_array($value) ) {
+                $data = array_merge( $data,
+                    $this->getPatchOperations($path . '/' . $key, $value)
+                );
+            }
+            else {
+                if ( in_array($key, array('readonly','writeonly')) ) continue;
+                if ( $value == '' ) {
+                    $data[] = array(
+                        'op' => 'remove',
+                        'path' => $path . '/' . $key
+                    );
+                }
+                else {
+                    $data[] = array(
+                        'op' => 'add',
+                        'path' => $path . '/' . $key,
+                        'value' => $value
+                    );
+                }
+            }
+
+        }
+        return $data;
+    }
+
+    protected function buildPatchFields( $post ) {
+        $data = $this->getPatchOperations('', $post);
+        return json_encode($data);
     }
 
     protected function jsonDelete( $url, $parms = array() )
@@ -235,22 +327,22 @@ abstract class IntegrationChannel
     protected function buildCurl()
     {
         $curl = CurlBuilder::getCurl();
-
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_HEADER, false);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_TIMEOUT, 60);
         curl_setopt($curl, CURLOPT_REFERER, EnvironmentSettings::getServerUrl());
-        curl_setopt($curl, CURLOPT_HTTPHEADER,
-            array_merge(
-                $this->getHeaders(),
-                preg_split('/[\r\n]+/i', $this->object_it->getHtmlDecoded('HttpHeaders'))
-            )
-        );
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $this->buildHeaders());
         $this->buildAuthParms($curl);
-
         return $curl;
+    }
+
+    protected function buildHeaders()
+    {
+        return array_merge( $this->getHeaders(),
+            preg_split('/[\r\n]+/i', $this->object_it->getHtmlDecoded('HttpHeaders'))
+        );
     }
 
     protected function buildAuthParms( $curl )
@@ -261,29 +353,30 @@ abstract class IntegrationChannel
         }
     }
 
-    protected function mapToInternal( $source, $mapping, $getter )
+    protected function mapToInternal( $class, $id, $source, $mapping, $getter )
     {
         $data = array();
+        $object = getFactory()->getObject($class);
+
         foreach( $mapping as $attribute => $column )
         {
-            if ( in_array($attribute, array('url','link','url-append','originalUrl','originalAppendUrl')) ) continue;
+            if ( in_array($attribute, array('url','link','url-append','originalAppendUrl')) ) continue;
             if ( is_array($column) ) {
                 if ( $column['writeonly'] ) continue;
 
-                $value = $this->mapToInternal($source, $column, $getter);
+                $value = $this->mapToInternal($class, $id, $source, $column, $getter);
                 if ( $column['type'] != '' ) {
                     $value = $value['reference'];
                     $id = $value[$this->getKeyField()];
                     if ( $id == '' ) continue; // skip one-to-many reference
                     // process one-to-one reference
-                    $data[$attribute] = $this->idsMapRead[$id];
+                    $data[$attribute] = $this->idsMapRead[$column['type'].$id];
                     if ( $data[$attribute] == '' ) {
-                        $data[$attribute] = $this->idsMapRead[$value['key']];
+                        $data[$attribute] = $this->idsMapRead[$value[$this->getKeyField()]];
                     }
                 }
                 else {
-                    if ( is_array($column['mapping']) )
-                    {
+                    if ( is_array($column['mapping']) ) {
                         $mappingField = array_shift(array_keys($value));
                         $mapped = false;
                         foreach( $column['mapping'] as $field_mapping ) {
@@ -309,23 +402,55 @@ abstract class IntegrationChannel
                             );
                         }
                     }
+                    else {
+                        if ( $column == '{parentId}' && $value != '' ) {
+                            $value = array(
+                                'Id' => $value
+                            );
+                        }
+                        elseif ( $object->IsReference($attribute) ) {
+                            if ( is_numeric($value) && $value > 0 ) {
+                                $value = array(
+                                    $attribute => $this->idsMapRead[get_class($object->getAttributeObject($attribute)).$value]
+                                );
+                            }
+                        }
+                        elseif ( is_array($value) ) {
+                            $value = array_shift(array_values($value));
+                        }
+                    }
+
                     $data[$attribute] = $value;
                 }
             }
             else {
-                $data[$attribute] = call_user_func($getter, $source, trim(array_shift(preg_split('/,/',$column))));
+                $value = call_user_func($getter, $source, trim(array_shift(preg_split('/,/',$column))));
+
+                if ( $column == '{parentId}' && $value != '' ) {
+                    $value = array(
+                        'Id' => $value
+                    );
+                }
+                else if ( $object->IsReference($attribute) && $value != '' ) {
+                    $value = array(
+                        'Id' => $this->idsMapRead[get_class($object->getAttributeObject($attribute)).$value]
+                    );
+                }
+                $data[$attribute] = $value;
             }
         }
+
         return $data;
     }
 
-    protected function mapFromInternal( $source, $mapping, $setter )
+    protected function mapFromInternal( $class, $id, $source, $mapping, $setter )
     {
         $data = array();
+        $object = getFactory()->getObject($class);
 
         foreach( $mapping as $attribute => $column )
         {
-            if ( in_array($attribute, array('url','link','url-append','originalUrl','originalAppendUrl')) ) continue;
+            if ( in_array($attribute, array('url','link','url-append','originalAppendUrl')) ) continue;
             if ( in_array($column, array('{parent}','{parentId}')) ) continue;
             if ( is_array($column) )
             {
@@ -333,8 +458,10 @@ abstract class IntegrationChannel
                 if ( $column['type'] != '' )
                 {
                     if ( $column['reference'] == '' || $source[$attribute]['Id'] == '' ) continue;
+                    $idValue = $this->idsMapWrite[$column['type'].$source[$attribute]['Id']];
+                    if ( $idValue == '' ) continue;
                     $source[$attribute] = array (
-                        'key' => $this->idsMapWrite[$column['type'].$source[$attribute]['Id']]
+                        $this->getKeyField() => $idValue
                     );
                     $value = call_user_func($setter, $column['reference'], $source[$attribute]);
                 }
@@ -343,21 +470,27 @@ abstract class IntegrationChannel
                         $mappingField = array_shift(array_keys($column));
                         $nativeField = $column[$mappingField];
                         $mapped = false;
+
                         foreach( $column['mapping'] as $field_mapping ) {
                             $internal = array_pop(array_keys($field_mapping));
                             $native = array_pop($field_mapping);
 
+                            if ( $native == '*' ) {
+                                unset($source[$attribute]);
+                                $mapped = true;
+                                continue;
+                            }
                             if ( !$this->checkMappedValueExists($nativeField, $native) ) continue;
 
                             if ( $mappingField == "." ) {
-                                if ( $native == "*" || $internal == $source[$attribute] || is_array($source[$attribute]) && $internal == $source[$attribute]["Id"] ) {
+                                if ( $internal == $source[$attribute] || is_array($source[$attribute]) && $internal == $source[$attribute]["Id"] ) {
                                     $source[$attribute] = array ( $mappingField => $native );
                                     $mapped = true;
                                     break;
                                 }
                             }
                             else {
-                                if ( $internal == $source[$attribute][$mappingField] || $native == "*" ) {
+                                if ( $internal == $source[$attribute][$mappingField] ) {
                                     $source[$attribute][$mappingField] = $native;
                                     $mapped = true;
                                     break;
@@ -374,16 +507,36 @@ abstract class IntegrationChannel
                         }
                         unset($column['mapping']);
                     }
-                    $value = $this->mapFromInternal($source[$attribute], $column, $setter);
+
+                    $value = $this->mapFromInternal($class, $id, $source[$attribute], $column, $setter);
+
+                    if ( $object->IsReference($attribute) && $source[$attribute]['Id'] != '' ) {
+                        $columnKey = array_shift(array_keys($value));
+                        $idValue = $this->idsMapWrite[get_class($object->getAttributeObject($attribute)).$source[$attribute]['Id']];
+                        if ( $idValue != '' ) {
+                            $value[$columnKey][$this->getKeyField()] = $idValue;
+                        }
+                    }
                 }
             }
             else {
                 $value = array();
                 foreach( preg_split('/,/', $column) as $int_column ) {
-                    $value = array_merge_recursive($value, call_user_func($setter, trim($int_column), strval($source[$attribute])));
+                    $attributeType = $object->getAttributeType($attribute);
+                    $strValue = strval($source[$attribute]);
+                    if ( $strValue != '' ) {
+                        switch( $attributeType ) {
+                            case 'date':
+                            case 'datetime':
+                                $dt = new DateTime($strValue, new DateTimeZone('UTC'));
+                                $strValue = $dt->format(DateTime::ISO8601);
+                                break;
+                        }
+                    }
+                    $value = array_merge_recursive($value, call_user_func($setter, trim($int_column), $strValue));
                 }
             }
-                $data = array_merge_recursive($data, $value);
+            $data = array_merge_recursive($data, $value);
         }
         return $data;
     }
@@ -417,11 +570,9 @@ abstract class IntegrationChannel
             else {
                 // one-to-one
                 if ( !$this->checkNewItem($internalTimeStamp, $value) ) continue; // skip non-modified items
-                if ( $value['key'] != '' ) $value['id'] = $value['key'];
-                $id = $value[$this->getKeyField()];
-                $result[$id] = array (
+                $result[$value[$this->getKeyField()]] = array (
                     'class' => $column['type'],
-                    'id' => $id,
+                    'id' => $value[$this->getKeyField()],
                     'parentId' => $queueItem[$this->getKeyField()]
                 );
             }
@@ -445,6 +596,26 @@ abstract class IntegrationChannel
         return true;
     }
 
+    public function parseUrl( $url ) {
+        return str_replace('{project}', $this->getObjectIt()->get('ProjectKey'), $url);
+    }
+
+    public function buildIdUrl($url, $id)
+    {
+        if ( strpos($url, '{'.$this->getKeyField().'}') === false ) {
+            return $this->parseUrl($url) . '/' . $id;
+        }
+        return str_replace('{'.$this->getKeyField().'}', $id, $this->parseUrl($url));
+    }
+
+    public function setHtmlAllowed( $value = true ) {
+        $this->htmlAllowed = $value;
+    }
+
+    public function getHtmlAllowed() {
+        return $this->htmlAllowed;
+    }
+
     abstract public function buildDictionaries();
     abstract public function getItems( $timestamp, $limit );
     abstract public function readItem( $mapping, $class, $id, $parms = array() );
@@ -459,4 +630,5 @@ abstract class IntegrationChannel
     private $idsMapWrite = array();
     private $mapping = array();
     private $curlDelay = 0;
+    private $htmlAllowed = false;
 }

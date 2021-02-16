@@ -11,7 +11,8 @@ class ChangeLogWhatsNew extends ChangeLog
 
    		$visible_attributes = array (
             'Content',
-            'RecordModified'
+            'RecordModified',
+            'SystemUser'
 		);
 		foreach( array_keys($this->getAttributes()) as $attribute ) {
             $this->addAttributeGroup($attribute, 'nonbulk');

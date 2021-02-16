@@ -16,7 +16,7 @@ class FieldAttributeDictionary extends FieldDictionary
         $options = array();
  		foreach ( $object->getAttributes() as $key => $attribute )
  		{
- 			if ( $key == 'Project' || $key == 'RecordCreated' || $key == 'RecordModified' ) continue;
+ 			if ( $key == 'Project' ) continue;
  			if ( in_array($key, $system_attributes) && $key != 'State' ) continue;
  			
  			$title = translate($object->getAttributeUserName($key));

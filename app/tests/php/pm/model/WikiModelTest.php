@@ -17,9 +17,23 @@ class WikiModelTest extends DevpromDummyTestCase
         
         // entity mocks
         
-        $this->entity = $this->getMock('WikiPage', array('getExact', 'getByRefArray', 'getRegistry', 'createIterator'));
-        $this->registry = $this->getMock('ObjectRegistrySQL', array('Query'), array($this->entity));
-        $this->iterator = $this->getMock('WikiPageIterator', array('getTransitiveRootArray'), array($this->entity));
+        $this->entity =
+            $this->getMockBuilder(WikiPage::class)
+                ->setConstructorArgs(array())
+                ->setMethods(['getExact', 'getByRefArray', 'getRegistry', 'createIterator'])
+                ->getMock();
+
+        $this->registry =
+            $this->getMockBuilder(ObjectRegistrySQL::class)
+                ->setConstructorArgs(array($this->entity))
+                ->setMethods(["Query"])
+                ->getMock();
+
+        $this->iterator =
+            $this->getMockBuilder(WikiPageIterator::class)
+                ->setConstructorArgs(array($this->entity))
+                ->setMethods(["getTransitiveRootArray"])
+                ->getMock();
 
         $this->entity->expects($this->any())->method('getRegistry')->will( $this->returnValue(
                 $this->registry 

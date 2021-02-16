@@ -15,7 +15,7 @@
 </script>
 <?php } ?>
 
-<form id="<?=$form_id?>" action="<?=$form_processor_url?>" method="post" enctype="application/x-www-form-urlencoded" autocomplete="off" module="<?=$module?>">
+<form id="<?=$form_id?>" action="<?=$form_processor_url?>" method="post" enctype="application/x-www-form-urlencoded" autocomplete="off" module="<?=$module?>" style="margin-right: 15px;">
 	<fieldset>
 		<?php if ( !$formonly && $form_title != '' ) { ?>
 
@@ -28,7 +28,7 @@
                     <input type="submit" class="btn btn-primary" onclick="javascript: $('#action<?=$form_id?>').val(<?=$form_action?>);" value="<?=$button_text?>"/>
 
                     <?php if ( count($actions) > 1 ) { ?>
-                        <a class="btn btn-sm dropdown-toggle btn-secondary" href="#" data-toggle="dropdown">
+                        <a class="btn btn-sm dropdown-toggle btn-secondary" href="" data-toggle="dropdown">
                             <?=translate('Действия')?>
                             <span class="caret"></span>
                         </a>
@@ -67,41 +67,21 @@
 	
 		<input type="hidden" id="action<?=$form_id?>" name="action" value="<?=$form_action?>">
 		<input type="hidden" name="MAX_FILE_SIZE" value="<?=EnvironmentSettings::getMaxFileSize()?>">
-		<input type="hidden" name="object_id" value="<?=$object_id?>">
-		<input type="hidden" name="redirect" value="<?=$redirect_url?>">
-		<input type="hidden" name="form_url" value="<?=$form_url?>">
+		<input type="hidden" name="object_id" value="<?=htmlentities($object_id)?>">
+		<input type="hidden" name="redirect" value="<?=htmlentities($redirect_url)?>">
+		<input type="hidden" name="form_url" value="<?=htmlentities($form_url)?>">
 
         <?php foreach( $columns as $columnKey => $attributes ) { ?>
             <div class="form-col-<?=$columnKey?> pull-left">
             <?php foreach( $attributes as $key => $attribute ) { ?>
 
-                <?php if ( !$attribute['visible'] ) { ?>
-
-                    <input type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>">
-
-                <?php continue; } ?>
-
-                <?php if ( $attribute['type'] == 'char' ) { ?>
-
-                <label class="checkbox">
-                    <input type="checkbox" tabindex="<?=$attribute['index']?>" id="<?=$attribute['id']?>" name="<?=$attribute['id']?>" <?=($attribute['value'] == 'Y' ? 'checked' : '')?> > <?=$attribute['caption']?>
-                </label>
-
-                <?php } else if ( $attribute['type'] == 'custom' ) { ?>
-
-                <? echo $form->drawCustomAttribute($key, $attribute['value'], $attribute['index'], $view); ?>
-
-                <?php } else { ?>
-
-                <? if ( $attribute['caption'] != '' ) { ?>
+                <? if ( $attribute['caption'] != '' && $attribute['visible'] ) { ?>
                 <label><?=$attribute['caption']?></label>
                 <? } ?>
 
                 <? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
 
-                <?php } ?>
-
-                <?php if ( $attribute['description'] != '' ) { ?>
+                <?php if ( $attribute['description'] != '' && $attribute['visible'] ) { ?>
 
                 <span class="help-block"><?=$attribute['description']?></span>
                 <?=$fields_separator?>

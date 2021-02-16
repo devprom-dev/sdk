@@ -1,5 +1,4 @@
 <?php
-
 include "ProjectLogTable.php";
 include "ProjectLogPageSettingsBuilder.php";
 
@@ -8,10 +7,7 @@ class ProjectLogPage extends PMPage
     function __construct()
     {
         parent::__construct();
-        
         getSession()->addBuilder( new ProjectLogPageSettingsBuilder() );
-
-		$this->addInfoSection( new FullScreenSection() );
     }
     
 	function getObject()
@@ -26,7 +22,7 @@ class ProjectLogPage extends PMPage
  		return new ProjectLogTable( $this->getObject() );
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		return null;
  	}

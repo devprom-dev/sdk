@@ -13,7 +13,7 @@ public class NewAttachmentPage extends ServicedeskPage {
     }
 
     public NewAttachmentPage selectFileForUpload(String filePath) {
-        driver.findElement(By.id("attachment_file")).sendKeys(filePath);
+        driver.findElement(By.id("attachment_form_file")).sendKeys(filePath);
         return this;
     }
 

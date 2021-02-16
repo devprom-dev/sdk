@@ -1,23 +1,18 @@
 <?php
 
- class APIAccessPolicy extends AccessPolicy
- {
- 	function buildRoles()
- 	{
+class APIAccessPolicy extends AccessPolicy
+{
+ 	function buildRoles() {
  		return array (0);
  	}
- 	
- 	function getEntityAccess( $action_kind, &$object ) 
+
+ 	function getEntityAccess( $action_kind, &$object )
  	{
+        if ( $object->getEntityRefName() == 'pm_Project' ) return true;
+
  		$value = getFactory()->getEntityOriginationService()->getSelfOrigin($object);
- 		
- 		if ( $value == '' ) return true; 
+ 		if ( $value == '' ) return true;
 
  		return $value != DUMMY_PROJECT_VPD;
  	}
-	
- 	function getObjectAccess( $action_kind, &$object_it )
- 	{ 
-		return true;
- 	}
- }
+}

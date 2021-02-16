@@ -2,18 +2,15 @@
 
 class CacheableSet extends MetaobjectCacheable
 {
- 	function __construct( $registry = null )
- 	{
+ 	function __construct( $registry = null ) {
  		parent::__construct('entity', is_object($registry) ? $registry : new ObjectRegistrySQL($this) );
  	}
  	
- 	function getVpds()
- 	{
+ 	function getVpds() {
  		return array();
  	}
- 	
-	function getCacheCategory()
-	{
+
+	function getCacheCategory() {
 		// participant-wide cache
 	    return getSession()->getCacheKey($this->getVpdValue());
 	}

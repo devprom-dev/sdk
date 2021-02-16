@@ -52,32 +52,23 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		switch ( $object->getClassName() )
 		{
 		    case 'pm_Activity':
-		        
 		        if ( !$this->methodology_it->IsTimeTracking() ) return false;
-
-		        break;
-		        
+                break;
 		    case 'pm_Milestone':
-		        
 		        if ( !$this->methodology_it->HasMilestones() ) return false;
-		        
 		        break;
-		        
 		    case 'pm_Function':
-		        
 		        if ( !$this->methodology_it->HasFeatures() ) return false;
-		        
 		        break;
-		        
-		     case 'cms_User': return $action_kind == ACCESS_READ;
+		    case 'cms_User':
+		         return $action_kind == ACCESS_READ;
+            case 'pm_ProjectMetric':
+                return in_array($action_kind, array(ACCESS_READ, ACCESS_MODIFY));
 		}
 		
-		switch ( strtolower(get_class($object)) )
-		{
+		switch ( strtolower(get_class($object)) ) {
 		    case 'projectpage':
-		        
 		        if ( $this->methodology_it->get('IsKnowledgeUsed') != 'Y' ) return false;
-		        
 		        break;
 		}
 		
@@ -114,7 +105,7 @@ abstract class AccessPolicyBase extends COAccessPolicy
                 if ( $object_it->get('AccessEntityReferenceName') != '' ) {
          			$object = getFactory()->getObject($object_it->get('AccessEntityReferenceName'));
          			$access = $this->getEntityAccess(
-         			        $object_it->get('AccessType') != '' ? $object_it->get('AccessType') : $action_kind,
+         			        $object_it->get('AccessType') != '' ? $object_it->get('AccessType') : ACCESS_READ,
          			        $object
 					);
          			if ( is_bool($access) ) return $access;

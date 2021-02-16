@@ -13,7 +13,7 @@ class ShareModuleSettingsPage extends PMPage
  		return true;
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  	    return new ShareModuleSettingsForm($this->getObject());
  	}

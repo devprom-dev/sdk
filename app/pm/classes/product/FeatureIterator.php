@@ -36,6 +36,14 @@ class FeatureIterator extends OrderedIterator
         return $title;
     }
 
+
+    function getDisplayNameSearch( $prefix = '' ) {
+        if ( $this->get('RootCaption') != '' ) {
+            $prefix .= $this->getHtmlDecoded('RootCaption') . ' / ';
+        }
+        return parent::getDisplayNameSearch($prefix);
+    }
+
     function getParentsArray()
 	{
 		return array_filter(preg_split('/,/',$this->get('ParentPath')), function($value) {

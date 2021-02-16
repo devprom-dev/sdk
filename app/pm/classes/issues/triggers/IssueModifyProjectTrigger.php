@@ -43,13 +43,13 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
         parent::process($object_it, $kind, $content, $visibility);
     }
 
-    protected function & getObjectReferences( & $object_it )
+    static function getObjectReferences( $object_it )
 	{
  	    // prepare list of objects to be serilalized
  	    $references = array();
  	    $ids = $object_it->idsToArray();
         
- 	    $request = getFactory()->getObject('pm_ChangeRequest');
+ 	    $request = getFactory()->getObject(get_class($object_it->object));
 		$persisters = $request->getPersisters();
 		foreach( $persisters as $key => $persister ) {
 			if ( $persister instanceof IssueAuthorPersister ) {
@@ -58,37 +58,47 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
 		}
 		$request->setPersisters($persisters);
  	    $request->addFilter( new FilterInPredicate($ids) );
- 	    
+        $references[] = $request;
+
  	    $trace = getFactory()->getObject('pm_ChangeRequestTrace');
-		$trace->addFilter( new FilterAttributePredicate('ChangeRequest', $ids) ); 
- 	    
+		$trace->addFilter( new FilterAttributePredicate('ChangeRequest', $ids) );
+        $references[] = $trace;
+
  	    $link = getFactory()->getObject('pm_ChangeRequestLink');
- 	    $link->addFilter( new RequestLinkedFilter($ids) ); 
- 	    
+ 	    $link->addFilter( new RequestLinkedFilter($ids) );
+        $references[] = $link;
+
 		$attachment = getFactory()->getObject('pm_Attachment');
 		$attachment->addFilter( new AttachmentObjectPredicate($object_it) );
+        $references[] = $attachment;
 
-		$watcher = getFactory()->getObject2('pm_Watcher', $object_it);
-		
+
  	    $task = getFactory()->getObject('Task');
  	    $task->addFilter( new FilterAttributePredicate('ChangeRequest', $ids) );
- 	    
- 	    $activity = getFactory()->getObject('Activity');
- 	    $activity->addFilter( new ActivityRequestPredicate($ids) );
- 	    
+ 	    $taskIt = $task->getAll();
+        $references[] = $task;
+
+ 	    $activityRequest = getFactory()->getObject('Activity');
+ 	    $activityRequest->addFilter( new FilterAttributePredicate('Issue', $ids) );
+        $references[] = $activityRequest;
+
+ 	    if ( $taskIt->count() > 0 ) {
+ 	        $references = array_merge($references,
+                TaskModifyProjectTrigger::getObjectReferences($taskIt));
+        }
+
 		$comment = getFactory()->getObject('Comment');
 		$comment->addFilter( new CommentObjectFilter($object_it) );
 		$comment->addSort( new SortOrderedClause() );
-		
- 	    $references[] = $request;
-		$references[] = $trace;
- 	    $references[] = $link;
-		$references[] = $attachment;
- 	    $references[] = $task;
- 	    $references[] = $activity;
-		$references[] = $comment;
-		$references[] = $watcher;
- 	    
+        $references[] = $comment;
+
+        $watcher = getFactory()->getObject2('pm_Watcher', $object_it);
+        $references[] = $watcher;
+
+        $tag = getFactory()->getObject('pm_RequestTag');
+        $tag->addFilter( new FilterAttributePredicate('Request', $ids) );
+        $references[] = $tag;
+
 		return $references;
 	}
 }

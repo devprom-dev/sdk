@@ -18,7 +18,11 @@ class LastChangesSection extends InfoSection
  	{
  		return translate('Последние изменения');
  	}
- 	
+
+ 	function setObjectIt( $objectIt ) {
+ 	    $this->object = $objectIt;
+    }
+
  	function getIterator() 
  	{
  		if ( !is_a($this->object, 'OrderedIterator') ) throw new Exception('Iterator is required');
@@ -57,10 +61,14 @@ class LastChangesSection extends InfoSection
 		return 'core/PageSectionLastChanges.php';
 	}
 
+	function getContent( $objectIt ) {
+        return $objectIt->get('Content');
+    }
+
 	function getRenderParms()
 	{
 		$rows = array();
-		
+
 		$it = $this->getIterator();
 
 		for($i = 0; $i < min($it->count(), $this->items); $i++)
@@ -70,14 +78,14 @@ class LastChangesSection extends InfoSection
 				continue;
 			}
 
-			$content = $it->getHtmlDecoded('Content');
+			$content = $this->getContent($it);
             $anchor_it = $it->getObjectIt();
             if ( strpos($content, '[url') !== false && $anchor_it->object instanceof WikiPage ) {
                 $content = str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$it->getDateTimeFormat('RecordModified'), text(2319));
             }
 
 			$rows[] = array(
-				'author' => $it->get('UserName') != '' ? $it->getHtmlDecoded('UserName') : $it->getHtmlDecoded('AuthorName'),
+				'author' => $it->get('UserName') != '' ? $it->get('UserName') : $it->get('AuthorName'),
 			 	'datetime' => $it->getDateTimeFormat('RecordModified'),
 			    'caption' => $content,
 				'icon' => $it->get('ChangeKind') == 'added' ? 'icon-plus-sign' : 'icon-pencil'
@@ -92,7 +100,7 @@ class LastChangesSection extends InfoSection
 			'rows' => $rows,
             'moreUrl' => count($rows) >= 5
                 ? getFactory()->getObject('PMReport')->getExact('project-log')->getUrl(
-                        'entities='.$className.'&'.$className.'='.$this->object->getId().'&start='.$this->object->getDateFormat('RecordCreated')
+                        'entities='.$className.'&'.$className.'='.$this->object->getId().'&start='.$this->object->getDateFormatted('RecordCreated')
                     )
                 : ''
 		));

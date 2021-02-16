@@ -16,7 +16,11 @@ class MetricRegistry extends ObjectRegistrySQL
 	        if ( $title == '' ) continue;
             $data[] = array (
                 'entityId' => $attribute,
-                'Caption' => $title
+                'Caption' => $title,
+                'ReferenceName' => join(', ', array(
+                    $projectMetric->getAttributeType($attribute),
+                    join(',', $projectMetric->getAttributeGroups($attribute))
+                ))
             );
         }
 

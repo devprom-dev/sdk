@@ -27,6 +27,9 @@ class TransitionIterator extends OrderedIterator
 
         $foundRoles = array_keys($roles);
         $requiredRoles = $role_it->fieldToArray('ReferenceName');
+        if ( count($requiredRoles) < 1 ) {
+            return $this->checkDefaultAccess();
+        }
 
         if ( $this->get('ProjectRolesLogic') == 'all' ) {
             if ( count(array_intersect($requiredRoles, $foundRoles)) == count($requiredRoles) ) {
@@ -47,10 +50,8 @@ class TransitionIterator extends OrderedIterator
  		$this->nondoablereason = '';
         $checkResult = array();
 
-        if ( $object_it->get('LastTransition') == $this->getId()) return false;
         if ( !is_object($rules_it) ) {
-            $rules_it = WorkflowScheme::Instance()->getStatePredicateIt($object_it->object);
-            $rules_it = $rules_it->object->createCachedIterator($rules_it->getSubset('Transition', $this->getId()));
+            $rules_it = WorkflowScheme::Instance()->getTransitionPredicateIt($this);
         }
 
  		while ( !$rules_it->end() ) {

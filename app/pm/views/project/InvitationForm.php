@@ -7,6 +7,7 @@ class InvitationForm extends PMPageForm
         parent::extendModel();
         if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED ) {
             $this->getObject()->setAttributeVisible('ProjectRole', true);
+            $this->getObject()->setAttributeType('ProjectRole', 'REF_ProjectRoleInheritedId');
         }
     }
 

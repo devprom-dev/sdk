@@ -37,4 +37,32 @@ class SanitizeUrl
 		
 		return EnvironmentSettings::getServerUrl().$parts['path'];
 	}
+
+    static public function getSelfUrl()
+    {
+        $parts = array_map(
+            function($value) {
+                return \TextUtils::getAlphaNumericPunctuationString($value);
+            },
+            preg_split('/\&/', $_SERVER['QUERY_STRING'])
+        );
+
+        foreach ( array_keys($parts) as $key )
+        {
+            if ( strpos($parts[$key], 'project=') !== false ) {
+                unset($parts[$key]);
+            }
+            if ( strpos($parts[$key], 'offset') !== false ) {
+                unset($parts[$key]);
+            }
+            if ( strpos($parts[$key], 'namespace=') !== false ) {
+                unset($parts[$key]);
+            }
+            if ( strpos($parts[$key], 'module=') !== false ) {
+                unset($parts[$key]);
+            }
+        }
+
+        return '?'.join($parts, '&');
+    }
 }

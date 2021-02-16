@@ -82,7 +82,7 @@ public class AdminPageBase extends PageBase {
 	protected WebElement tasksLink;
 	
 	// Задания
-	@FindBy(xpath = "//ul[@id='menu_main']//a[@module='ldap']")
+	@FindBy(xpath = "//ul[@id='menu_main']//a[@uid='ldap']")
 	protected WebElement importFromLDAPLink;
 
 

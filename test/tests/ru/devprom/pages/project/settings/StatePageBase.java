@@ -32,14 +32,14 @@ public abstract class StatePageBase extends SDLCPojectPageBase {
 	
 
 	public TransitionEditPage clickChangeTransition(String stateName, String transitionName) {
-		WebElement element = driver.findElement(By.xpath("//td[@id='caption' and text()='"+stateName+"']/following-sibling::td[@id='transitions']//*[contains(@class,'title') and text()='"+transitionName+"']/../../following-sibling::div//ul[@role='menu']//a[text()='Изменить']"));
+		WebElement element = driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+stateName+"')]/following-sibling::td[@id='transitions']//*[contains(@class,'title') and text()='"+transitionName+"']/../following-sibling::ul[@role='menu']//a[text()='Изменить']"));
 		clickOnInvisibleElement(element);
 		waitForDialog();
 		return new TransitionEditPage(driver);
 	}
 	
 	public TransitionNewPage clickAddTransition(String stateName) {
-		WebElement element = driver.findElement(By.xpath("//td[@id='caption' and text()='"+stateName+"']/following-sibling::td//a[text()='Добавить переход']"));
+		WebElement element = driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+stateName+"')]/following-sibling::td//a[text()='Добавить переход']"));
 		clickOnInvisibleElement(element);
 		waitForDialog();
 		return new TransitionNewPage(driver);
@@ -52,8 +52,8 @@ public abstract class StatePageBase extends SDLCPojectPageBase {
 	}
 
 	public void selectState(String stateName){
-		Assert.assertTrue(driver.findElements(By.xpath("//td[@id='caption' and text()='"+stateName+"']/preceding-sibling::td/input[@class='checkbox']")).size()>0, "There is no state named "+stateName+" or it is in use and can't be edited");
-		driver.findElement(By.xpath("//td[@id='caption' and text()='"+stateName+"']/preceding-sibling::td/input[@class='checkbox']")).click();
+		Assert.assertTrue(driver.findElements(By.xpath("//td[@id='caption' and text()='"+stateName+"']/preceding-sibling::td/input[contains(@class,'checkbox')]")).size()>0, "There is no state named "+stateName+" or it is in use and can't be edited");
+		driver.findElement(By.xpath("//td[@id='caption' and text()='"+stateName+"']/preceding-sibling::td/input[contains(@class,'checkbox')]")).click();
 	}
     
 	public void deleteState(String stateName){

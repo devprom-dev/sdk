@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/ObjectFactoryNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/actions/BusinessActionIssueAutoActionShift.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/actions/BusinessActionIssueAutoActionWorkflow.php";
@@ -22,6 +21,9 @@ class AutoActionEventHandler extends ObjectFactoryNotificator
 		    if ( $anchorIt->object instanceof Request ) {
 		        $this->applyAutoActionsOnComment($anchorIt);
             }
+        }
+        if ( $object_it->object instanceof Request ) {
+            $this->applyAutoActionsOnCreated($object_it);
         }
     }
 
@@ -67,6 +69,24 @@ class AutoActionEventHandler extends ObjectFactoryNotificator
         $actionIt = getFactory()->getObject('IssueAutoAction')->getRegistry()->Query(
             array(
                 new FilterAttributePredicate('EventType', AutoActionEventRegistry::NewComment),
+                new FilterVpdPredicate($object_it->get('VPD'))
+            )
+        );
+        while( !$actionIt->end() ) {
+            $action = new BusinessActionIssueAutoActionWorkflow($actionIt);
+            $action->apply($object_it);
+            $actionIt->moveNext();
+        }
+    }
+
+    function applyAutoActionsOnCreated( $object_it )
+    {
+        $actionIt = getFactory()->getObject('IssueAutoAction')->getRegistry()->Query(
+            array(
+                new FilterAttributePredicate('EventType', array(
+                    AutoActionEventRegistry::CreateAndModify,
+                    AutoActionEventRegistry::CreateOnly
+                )),
                 new FilterVpdPredicate($object_it->get('VPD'))
             )
         );

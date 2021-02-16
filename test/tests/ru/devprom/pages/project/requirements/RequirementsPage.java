@@ -141,7 +141,7 @@ public class RequirementsPage extends SDLCPojectPageBase {
 	public void checkRequirement(String id) {
 		driver.findElement(
 				By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(.,'"
-						+ id + "')]/../preceding-sibling::td/input[@class='checkbox']"))
+						+ id + "')]/../preceding-sibling::td/input[contains(@class,'checkbox')]"))
 				.click();		
 	}
 	
@@ -156,49 +156,15 @@ public class RequirementsPage extends SDLCPojectPageBase {
 		}
 	}
 	
-	public void addColumn(String columnname) {
-		String code = "filterLocation.showColumn('" + columnname + "', 0)";
-		filterBtn.click();
-		((JavascriptExecutor) driver).executeScript(code);
-		filterBtn.click();
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void removeColumn(String columnname) {
-		String code = "filterLocation.hideColumn('" + columnname + "', 0)";
-		filterBtn.click();
-		((JavascriptExecutor) driver).executeScript(code);
-		filterBtn.click();
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public RequirementsPage showAll() {
-			return showAll("all");
-		}
-		
-		public RequirementsPage showAll( String exactRows ) {
-			driver.navigate().to(driver.getCurrentUrl()+"&state=all&rows="+exactRows);
-			return new RequirementsPage(driver);
-		}
-	
-		public Requirement[] exportToExcel(String[] moreFields) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException, InterruptedException{
+		public Requirement[] exportToExcel(String[] moreFields) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException, InterruptedException
+		{
 			Requirement[] r = null;
 			int attemptscount = 5;
-			FileOperations.removeExisted("Реестр требований.xls");
-			(new Actions(driver)).moveToElement(actionsBtn).perform();			
-			(new WebDriverWait(driver, 3)).until(ExpectedConditions.elementToBeClickable(actionsBtn));
-			actionsBtn.click();
+
+			FileOperations.removeExisted("Нереализованные требования.xls");
 			clickOnInvisibleElement(excelBtn);
 
-			File excelTable = FileOperations.downloadFile("Реестр требований.xls");
+			File excelTable = FileOperations.downloadFile("Нереализованные требования.xls");
 			while (true)
 				if (attemptscount == 0)
 					break;
@@ -298,4 +264,18 @@ public class RequirementsPage extends SDLCPojectPageBase {
         clickOnInvisibleElement(testDocsItem);
         return new TestScenariosPage(driver);
     }
+
+	public TestScenarioNewPage gotoCreateScenario(String idRequirement) {
+		WebElement invisElement = driver.findElement(By.xpath(".//*[@object-id='"+idRequirement
+				+"']//*[@id='operations']//a[contains(@class,'dropdown-toggle')]"));
+		clickOnInvisibleElement(invisElement);
+		clickOnInvisibleElement(
+			driver.findElement(By.xpath(".//*[@object-id='"+idRequirement+"']//*[@id='operations']//a[contains(.,'Создать')]"))
+		);
+		clickOnInvisibleElement(
+			driver.findElement(By.xpath(".//*[@object-id='"+idRequirement+"']//*[@id='operations']//a[contains(.,'Тестовый сценарий')]"))
+		);
+		waitForDialog();
+		return new TestScenarioNewPage(driver);
+	}
 }

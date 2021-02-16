@@ -11,7 +11,7 @@ abstract class NewDocumentTemplateWebMethod extends WebMethod
 			? $object_it : getFactory()->getObject('entity')->getEmptyIterator()
 		);
 		parent::__construct();
-		$this->setRedirectUrl('donothing');
+		$this->setRedirectUrl('devpromOpts.updateUI');
 	}
 
 	abstract public function getObject();

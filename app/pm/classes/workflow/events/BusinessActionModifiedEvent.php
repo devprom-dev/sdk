@@ -47,6 +47,8 @@ class BusinessActionModifiedEvent extends ObjectFactoryNotificator
             if ( is_object($rule_it) && $rule_it->checkType('BusinessActionShift') )
             {
                 $prev_object_it->object->removeNotificator(get_class($this));
+                Logger::getLogger('System')->info('Applying system action: '.$rule_it->getDisplayName());
+
                 $rule_it->getRule()->applyContent( $prev_object_it, $attributes, $action );
             }
             $action_it->moveNext();

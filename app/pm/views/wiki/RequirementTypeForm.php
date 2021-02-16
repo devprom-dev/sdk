@@ -3,14 +3,7 @@ include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorsDictionary.php";
 
 class RequirementTypeForm extends PMPageForm
 {
- 	function buildModelValidator()
- 	{
- 		$validator = parent::buildModelValidator();
- 		$validator->addValidator( new ModelValidatorUnique(array('ReferenceName')) );
- 		return $validator;
- 	}
-	
-	function createFieldObject( $attr_name ) 
+	function createFieldObject( $attr_name )
 	{
 		switch( $attr_name )
 		{

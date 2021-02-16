@@ -1,18 +1,17 @@
 <?php
-
-include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include_once SERVER_ROOT_PATH."pm/views/time/FieldSpentTimeRequest.php";
-include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
 include_once SERVER_ROOT_PATH."core/views/c_issue_type_view.php";
+include_once SERVER_ROOT_PATH.'pm/views/issues/RequestChart.php';
+include "RequestReleaseBurndownChart.php";
 
 class RequestList extends PMPageList
 {
 	private $estimation_field = null;
 	private $visible_columns = array();
-	private $type_it = null;
     private $strategy = null;
     private $velocity = 0;
     private $assigneeField = null;
+    private $typeField = null;
 
 	function RequestList( $object ) 
 	{
@@ -24,19 +23,27 @@ class RequestList extends PMPageList
 	function buildRelatedDataCache()
 	{
         $this->non_terminal_states = $this->getObject()->getNonTerminalStates();
-		$this->estimation_field = new FieldIssueEstimation();
-		$this->type_it = getFactory()->getObject('RequestType')->getAll();
+		$this->estimation_field = new FieldIssueEstimation($this->getObject()->getEmptyIterator());
         $this->strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
         $this->velocity = getSession()->getProjectIt()->getVelocityDevider();
 
         if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Owner') ) {
-            $this->assigneeField = new FieldReferenceAttribute($this->getObject()->getEmptyIterator(), 'Owner');
+            $this->assigneeField = new FieldReferenceAttribute(
+                $this->getObject()->getEmptyIterator(),
+                'Owner',
+                getFactory()->getObject('ProjectUser')
+            );
         }
-	}
-	
- 	function IsNeedToSelect()
-	{
-		return true;
+
+        if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Type') ) {
+            $this->typeField = new FieldReferenceAttribute(
+                $this->getObject()->getEmptyIterator(),
+                'Type',
+                getFactory()->getObject('RequestType')
+            );
+        }
+
+        $this->getTable()->buildRelatedDataCache();
 	}
 	
  	function IsNeedToSelectRow( $object_it )
@@ -49,18 +56,9 @@ class RequestList extends PMPageList
 	    return false; 
 	}
 
-	function getGroupFields() 
-	{
-		return array_merge(
-            parent::getGroupFields(),
-            array(
-                'Tags',
-                'ClosedInVersion',
-                'SubmittedVersion',
-                'Links'
-            )
-        );
-	}
+    function getGroupFields() {
+        return $this->getTable()->getGroupFields(parent::getGroupFields());
+    }
 
 	function getGroup() 
 	{
@@ -86,16 +84,6 @@ class RequestList extends PMPageList
 				}
 				else {
 					echo $title;
-				}
-				break;
-			case 'Owner':
-				$workload = $this->getTable()->getAssigneeWorkload();
-				if ( count($workload) > 0 )
-				{
-					echo $this->getRenderView()->render('pm/UserWorkload.php', array (
-							'user' => $object_it->getRef('Owner')->getDisplayName(),
-							'data' => $workload[$object_it->get($group_field)]
-					));
 				}
 				break;
 			default:
@@ -162,11 +150,17 @@ class RequestList extends PMPageList
                 break;
 
             case 'Type':
-                if ( $object_it->get($attr) != '' ) {
-                    parent::drawRefCell( $entity_it, $object_it, $attr );
+                if ( is_object($this->typeField) ) {
+                    $this->typeField->setObjectIt($object_it);
+                    $this->typeField->draw($this->getRenderView());
                 }
                 else {
-                    echo $object_it->getObjectDisplayName();
+                    if ( $object_it->get($attr) != '' ) {
+                        parent::drawRefCell( $entity_it, $object_it, $attr );
+                    }
+                    else {
+                        echo $object_it->getObjectDisplayName();
+                    }
                 }
                 break;
 
@@ -180,10 +174,18 @@ class RequestList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Caption':
-    		    if ( !$this->visible_columns['Type'] && $this->type_it->count() > 0 ) {
-    		    	$this->type_it->moveToId($object_it->get('Type'));
-					echo '<img src="/images/'.IssueTypeFrame::getIcon($this->type_it).'">&nbsp;';
-                    echo $object_it->getDisplayName();
+    		    if ( !$this->visible_columns['Type'] ) {
+                    $iconName = IssueTypeFrame::getIconByRefName($object_it->get('TypeReferenceName'));
+                    if ( $iconName != '' ) {
+                        echo '<img src="/images/'.$iconName.'">&nbsp;';
+                    }
+                    if ( $object_it->get('TypeName') != '' ) {
+                        echo $object_it->get('TypeName') . ': ';
+                    }
+                    else {
+                        echo $this->getObject()->getDisplayName() . ': ';
+                    }
+                    parent::drawCell($object_it, $attr);
     		    }
     		    else {
                     parent::drawCell($object_it, $attr);
@@ -267,84 +269,6 @@ class RequestList extends PMPageList
 	    }
 	}
 
-	function getUrl() 
-	{
-		global $_SERVER;
-		
-		$parts = preg_split('/\&/', $_SERVER['QUERY_STRING']);
-		
-		foreach ( array_keys($parts) as $key )
-		{ 
-			if ( strpos($parts[$key], 'project=') !== false )
-			{
-				unset($parts[$key]);
-			}
-
-			if ( strpos($parts[$key], 'offset') !== false )
-			{
-				unset($parts[$key]);
-			}
-
-			if ( strpos($parts[$key], 'namespace=') !== false )
-			{
-				unset($parts[$key]);
-			}
-
-			if ( strpos($parts[$key], 'module=') !== false )
-			{
-				unset($parts[$key]);
-			}
-		}
-		
-		return '?'.join($parts, '&');
-	}
-	
-	function getColumnFields()
-	{
-		$cols = parent::getColumnFields();
-		
-		$cols[] = 'OrderNum';
-		
-		foreach ( $cols as $key => $col )
-		{
-			if ( $col == 'UID' || $col == 'Transition' || $col == 'Spent' )
-			{
-				continue;
-			}
-
-			if ( $this->object->getAttributeDbType($col) == '' )
-			{
-				unset( $cols[$key] );
-			}
-			
-			if ( $col == 'Function' && !getSession()->getProjectIt()->getMethodologyIt()->HasFeatures() )
-			{
-				unset( $cols[$key] );
-			}
-
-			if ( $col == 'EstimationLeft' )
-			{
-				unset( $cols[$key] );
-			}
-		}
-		
-		return $cols;
-	}
-	
- 	function getNoItemsMessage()
-	{
-	    $module_it = getFactory()->getObject('Module')->getExact('issues-import');
-	    
-	    if ( getFactory()->getAccessPolicy()->can_read($module_it) && !getSession()->getProjectIt()->IsPortfolio() )
-	    {
-	        $item = $module_it->buildMenuItem('?view=import&mode=xml&object=request');
-	        
-    		return str_replace('%1', $item['url'], text(1312));
-	    }
-	    
-	    return parent::getNoItemsMessage();
-	}
-	
 	function getRenderParms()
 	{
 		$this->buildRelatedDataCache();
@@ -357,4 +281,21 @@ class RequestList extends PMPageList
 				
 		return $parms; 
 	}
+
+    function render($view, $parms)
+    {
+        switch( $this->getTable()->getReportBase() ) {
+            case 'releaseburndown':
+                $chart = new RequestReleaseBurndownChart( $this->getObject() );
+                break;
+            default:
+        }
+        if ( is_object($chart) ) {
+            $chart->setTable($this->getTable());
+            $chart->retrieve();
+            $chart->render($view, $parms);
+        }
+
+        parent::render($view, $parms);
+    }
 }

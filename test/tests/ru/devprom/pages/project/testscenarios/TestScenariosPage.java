@@ -29,10 +29,14 @@ public class TestScenariosPage extends SDLCPojectPageBase {
 	
 	@FindBy(xpath = "//a[text()='Включить в тест-план']")
 	protected WebElement includeToTestPlanItem;
+
+	@FindBy(xpath = "//a[@uid='state']")
+	protected WebElement statusFilterBtn;
         
         //чекбокс выделить все
-        @FindBy(xpath = "//*[@class='wishes']//*[@class='for-chk visible']/input")
+        @FindBy(xpath = "//div[contains(@class,'wishes')]//*[@class='for-chk visible']/input")
 	protected WebElement checkAllChBx;
+
 
 	public TestScenariosPage(WebDriver driver) {
 		super(driver);
@@ -54,7 +58,7 @@ public class TestScenariosPage extends SDLCPojectPageBase {
 
 	public void checkTestScenario(String id){
 		driver.findElement(By.xpath("//tr[contains(@id,'testingdocslist1_row_')]/td[@id='uid']/a[contains(@href,'"
-						+ id + "')]/../preceding-sibling::td/input[@class='checkbox']")).click();
+						+ id + "')]/../preceding-sibling::td/input[contains(@class,'checkbox')]")).click();
 	}
 
 	public TestScenarioViewPage clickToTestScenario(String id) {
@@ -105,4 +109,11 @@ public class TestScenariosPage extends SDLCPojectPageBase {
         return id; 
     }
 
+	public boolean isScenariosPresent(String name) {
+		return !driver.findElements(By.xpath("//td[@id='content']//div[contains(.,'"+name+"')]")).isEmpty();
+	}
+
+	public boolean isScenarioPresent(String name) {
+		return driver.findElements(By.xpath("//*[@id='tablePlaceholder']//div[contains(.,'"+name+"')]")).size() > 0;
+	}
 }

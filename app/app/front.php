@@ -20,6 +20,15 @@ try
 }
 catch( \LogicException $e )
 {
+    try {
+        $message = $e->getMessage().PHP_EOL.$e->getTraceAsString();
+        Logger::getLogger('System')->error($message);
+    }
+    catch( Exception $e ) {
+        error_log($message);
+    }
+    header($_SERVER["SERVER_PROTOCOL"]." 302 Found");
+    exit(header('Location: /logoff'));
 }
 catch( \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e )
 {
@@ -30,9 +39,6 @@ catch( \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e )
 	catch( Exception $e ) {
 		error_log($message);
 	}
-
-	header($_SERVER["SERVER_PROTOCOL"]." 301 Moved Permanently");
-	exit(header('Location: /'));
+    header($_SERVER["SERVER_PROTOCOL"]." 302 Found");
+    exit(header('Location: /logoff'));
 }
-
-exit(header('Location: /'));

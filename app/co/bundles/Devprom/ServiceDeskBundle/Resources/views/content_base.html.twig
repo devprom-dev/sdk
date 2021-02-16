@@ -1,4 +1,4 @@
-{% extends '::base.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block body -%}
     <header class="overlay {% block header_class %}{% endblock %}">
@@ -11,17 +11,15 @@
                         <span class="fa fa-bars"></span>
                     </button>
                     <h2>
-                        <img src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/images/icon1.png') }}" alt="">
+                        <img src="//{{ app.request.getHttpHost() ~ '/co/bundles/Devprom/ServiceDeskBundle/public/images/icon1.png' }}" alt="">
                         {{ client_name }}
                     </h2>
                 </div>
                 <div class="navbar-collapse collapse" id="navbar-collapse">
                     <ul class="nav navbar-nav navbar-right">
-                        {% if use_knowledgebase %}
                         <li>
                             <a href="{{ path('docs_list') }}"><i class="icon-home"></i> <span class="name">{{ 'kb.title'|trans }}</span></a>
                         </li>
-                        {% endif %}
                         <li>
                             <a id="home-link" href="{{ path('issue_list') }}"><i class="icon-home"></i>
                                 <span class="name">{{ 'index.title'|trans }}</span>
@@ -41,9 +39,9 @@
                             </li>
                         {% endif %}
                         <li>
-                            <a href="{{ url('issue_new') }}" class="btn nav-btn"><i class="icon-plus-sign-alt"></i> <span class="name">{{ 'issue.add'|trans }}</span></a>
+                            <a href="{{ path('issue_new') }}" class="btn nav-btn"><i class="icon-plus-sign-alt"></i> <span class="name">{{ 'issue.add'|trans }}</span></a>
                         </li>
-                        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                        {% if app.user %}
                         <li>
                             <a id="logout-link" href="{{ path('fos_user_security_logout') }}">
                                 <i class="icon-signout"></i> <span class="name">{{ 'layout.logout'|trans({}, 'FOSUserBundle') }}</span>

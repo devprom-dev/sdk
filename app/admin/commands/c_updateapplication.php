@@ -14,31 +14,37 @@ class UpdateApplication extends MaintenanceCommand
 	function create()
 	{
 		$strategy = new StrategyUpdate($_REQUEST['parms']);
-		
-	    $this->updateCode($strategy);
-	    $this->updateDatabase($strategy);
-	    
-		$strategy->getUpdate()->update_clean();
 
-        if ( function_exists('opcache_reset') ) opcache_reset();
+		try {
+            $this->updateCode($strategy);
 
-	    // clear old cache
-	    InstallationFactory::getFactory();
-        foreach( array(new ClearCache(), new CacheParameters()) as $command ) {
-            $command->install();
+            if ( function_exists('opcache_reset') ) opcache_reset();
+
+            // clear old cache
+            InstallationFactory::getFactory();
+            foreach( array(new ClearCache(), new CacheParameters()) as $command ) {
+                $command->install();
+            }
+
+            // rebuild cached list of plugins
+            getFactory()->getPluginsManager()->buildPluginsList();
+
+            if ( function_exists('opcache_reset') ) opcache_reset();
+
+            $this->updateDatabase($strategy);
+
+            $strategy->getUpdate()->update_clean();
+
+            // go to the next step
+            $strategy->release();
+
+            DAL::Instance()->Reconnect();
+
+            $this->replyRedirect( '?action=updatesystem&parms='.SanitizeUrl::parseUrl($_REQUEST['parms']) );
         }
-
-		// rebuild cached list of plugins
-		getFactory()->getPluginsManager()->buildPluginsList();
-
-        if ( function_exists('opcache_reset') ) opcache_reset();
-
-	    // go to the next step
-	    $strategy->release();
-
-	    DAL::Instance()->Reconnect();
-
-		$this->replyRedirect( '?action=updatesystem&parms='.SanitizeUrl::parseUrl($_REQUEST['parms']) );
+        catch( \Exception $e ) {
+		    $this->replyError($e->getMessage());
+        }
 	}
 	
 	private function updateCode( & $strategy )
@@ -60,37 +66,27 @@ class UpdateApplication extends MaintenanceCommand
 	    
 	    $update_cls = getFactory()->getObject('cms_Update');
 	    
-	    if ( $update_version == "" )
-	    {
+	    if ( $update_version == "" ) {
 	        $update_it = $update_cls->getLatest();
-	        
 	        $update_version = $update_it->getDisplayName();
 	    }
 	    
-	    $result = $update->update_database();
+	    $update->update_database();
 
-	    if( preg_match('/error\s+\d+/i', $result) ) $this->replyError(str_replace('%1', nl2br($result), text(1113)));
-	    
 	    $update_it = $update_cls->getByRef('Caption', trim($update_version));
 	    
-	    if ( $update_it->getId() != '' )
-	    {
+	    if ( $update_it->getId() != '' ) {
     	    $parms = array();
-    
     	    $parms['FileName'] = $update_file_name;
     	    $parms['LogFileName'] = $update_file_name.'.log';
-    	    
-    	    $update_cls->modify_parms($update_it->getId(),$parms); 
+    	    $update_cls->modify_parms($update_it->getId(),$parms);
 	    }
 	    
 	    $update->writeLog( "INSTALLED UPDATES:" );
 	    	
 	    $update_it = $update_cls->getAll();
-	    	
-	    while( !$update_it->end() )
-	    {
+	    while( !$update_it->end() ) {
 	        $update->writeLog( $update_it->get('Caption') );
-	        
 	        $update_it->moveNext();
 	    }		
 	}

@@ -14,7 +14,7 @@ class SystemCheckPage extends AdminPage
 		return new SystemCheckTable( $this->getObject() );
 	}
 
-	function getForm()
+	function getEntityForm()
 	{
 		return null;
 	}

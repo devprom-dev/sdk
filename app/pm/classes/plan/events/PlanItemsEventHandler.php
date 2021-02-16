@@ -18,16 +18,12 @@ class PlanItemsEventHandler extends SystemTriggersBase
         if ( getSession()->getUserIt()->getId() < 1 ) return;
 
         $projectId = getSession()->getProjectIt();
-        getSession()->addCallbackDelayed(
-            array(
-                'ProjectMetrics' => $projectId
-            ),
-            function() use ( $projectId, $object_it ) {
-                $service = new StoreMetricsService();
+        register_shutdown_function( function() use ( $projectId, $object_it ) {
+                $service = new \Devprom\ProjectBundle\Service\Project\StoreMetricsService();
                 $service->storeProjectMetrics(
                     $projectId,
-                    $object_it instanceof ReleaseIterator ? $object_it : null,
-                    $object_it instanceof IterationIterator ? $object_it : null
+                    $object_it instanceof \ReleaseIterator ? $object_it : null,
+                    $object_it instanceof \IterationIterator ? $object_it : null
                 );
             }
         );

@@ -35,3 +35,9 @@ ins
 {
     background: #90EC90;
 }
+
+img {
+    max-width: 100%; !important;
+    height: 100%; !important;
+}
+

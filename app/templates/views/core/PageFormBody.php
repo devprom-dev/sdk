@@ -21,7 +21,7 @@ if ( array_key_exists('Conditions', $attributes) && count($shortAttributes) > 0 
 }
 
 $invisible = array_filter( $attributes, function(&$value) {
-		return !$value['visible']; 
+    return !$value['visible'];
 });
 
 $colspan_visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
@@ -36,9 +36,22 @@ foreach( $attributes as $key => $attribute ) {
 	unset($attributes[$key]);
 }
 $shortVisible = array_chunk(
-        $shortVisible,
-        ceil(count($shortVisible) / ($_REQUEST['screenWidth'] >= 1400 && count($source_parms) < 1 ? 4 : 2)),
-        true
+    $shortVisible,
+    ceil(count($shortVisible) / ($_REQUEST['screenWidth'] >= 1400 && count($source_parms) < 1 ? 4 : 2)),
+    true
+);
+
+$singleRow1 = array();
+foreach( $attributes as $key => $attribute ) {
+    if ( !in_array('single-row-bottom', $attribute['groups']) ) continue;
+    if ( !$attribute['visible'] ) continue;
+    $singleRow1[$key] = $attribute;
+    unset($attributes[$key]);
+}
+$singleRow1= array_chunk(
+    $singleRow1,
+    ceil(count($singleRow1) / ($_REQUEST['screenWidth'] >= 1400 && count($source_parms) < 1 ? 4 : 2)),
+    true
 );
 
 $visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
@@ -118,6 +131,7 @@ foreach( $attributes as $key => $attribute ) {
 		</div>
 	<?php } ?>
 </div>
+
 <div class="control-set">
 	<?php foreach( $chunked_attributes as $index => $attributes ) { ?>
 
@@ -143,7 +157,7 @@ foreach( $attributes as $key => $attribute ) {
 		<?php } else if ( is_object($attribute['field']) || $attribute['html'] != '' ) { ?>
 		    
 			  <div class="control-group row-fluid" id="fieldRow<?=$key?>">
-			    <label class="control-label <?=(count(explode(' ', $attribute['name']))>1?'label-long':'')?>" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
+			    <label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
 			    <div class="controls">
 					<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
 			      
@@ -162,6 +176,25 @@ foreach( $attributes as $key => $attribute ) {
 <?php } ?>	
 
 </div>
+
+<div class="control-set">
+    <?php foreach( $singleRow1 as $index => $attributes ) { ?>
+        <div class="control-column">
+            <?php foreach( $attributes as $key => $attribute ) { ?>
+                <div class="control-group row-fluid" id="fieldRow<?=$key?>">
+                    <label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
+                    <div class="controls">
+                        <? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
+                        <?php if ( $attribute['description'] != '' ) { ?>
+                            <span class="help-block"><?=$attribute['description']?></span>
+                        <?php } ?>
+                    </div>
+                </div>
+            <?php } ?>
+        </div>
+    <?php } ?>
+</div>
+
 
 <?php foreach( $invisible as $key => $attribute ) { ?>
 	<?php if ( !$attribute['required'] ) continue; ?>

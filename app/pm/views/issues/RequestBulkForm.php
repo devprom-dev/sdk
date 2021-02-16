@@ -1,6 +1,6 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/views/ui/BulkForm.php';
+include_once SERVER_ROOT_PATH.'pm/views/issues/FieldMergeStrategyDictionary.php';
 
 class RequestBulkForm extends BulkForm
 {
@@ -18,6 +18,8 @@ class RequestBulkForm extends BulkForm
 
 		$object->addAttribute('TransitionComment', 'WYSIWYG', translate('Комментарий'), false);
         $object->addAttribute('SourceIssue', 'REF_RequestId', translate('Пожелание'), false);
+        $object->addAttribute('MergeType', 'REF_RequestId', text(2819), false);
+        $object->addAttribute('MasterIssue', 'REF_RequestId', text(2820), false);
 
         $class_name = $this->formClass;
  		return new $class_name($object);
@@ -44,25 +46,36 @@ class RequestBulkForm extends BulkForm
  			case 'Project':
  			case 'Iteration':
  			case 'LinkType':
-			case 'Comment':
             case 'CreateLinked':
  				return 'custom';
- 				
+            case 'IncrementType':
+                return 'object';
  			default:
  				return parent::getAttributeType( $attr );
  		}
  	}
- 	
- 	function getName( $attr )
+
+ 	function getAttributeClass($attribute)
+    {
+        switch ( $attribute )
+        {
+            case 'IncrementType':
+                return getFactory()->getObject('RequestType');
+            default:
+                return parent::getAttributeClass($attribute);
+        }
+    }
+
+    function getName( $attr )
  	{
  		switch ( $attr )
  		{
- 			case 'Tag':
- 				return translate('Тэг');
- 				
+            case 'Watchers':
+                return '';
  			case 'LinkType':
  				return translate('Тип связи');
- 				
+            case 'IncrementType':
+                return translate('Тип');
  			default:
  				return parent::getName( $attr );
  		}
@@ -82,6 +95,17 @@ class RequestBulkForm extends BulkForm
 		    	return parent::IsAttributeVisible( $attribute );
 		}
 	}
+
+    function IsAttributeRequired( $attribute )
+    {
+        switch ( $attribute )
+        {
+            case 'IncrementType':
+                return true;
+            default:
+                return parent::IsAttributeRequired( $attribute );
+        }
+    }
 
  	function IsAttributeModifiable( $attr )
 	{
@@ -106,25 +130,17 @@ class RequestBulkForm extends BulkForm
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
 				$field->SetRequired(true);
-				
- 				if ( $this->showAttributeCaption() ) {
-					echo $this->getObject()->getAttributeUserName($attribute);
-				}
 				$field->draw();
 				break;
 
  			case 'Iteration':
- 			    $iteration = getFactory()->getObject('Iteration');
+ 			    $iteration = getFactory()->getObject('IterationRecent');
  			    $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
  			    $field = new FieldAutoCompleteObject( $iteration );
 				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-				
- 				if ( $this->showAttributeCaption() ) {
-					echo $this->getName($attribute);
-				}
 				$field->draw();
 				break;
 				
@@ -135,63 +151,31 @@ class RequestBulkForm extends BulkForm
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
 				$field->setAppendable();
-				
- 				if ( $this->showAttributeCaption() ) {
-					echo $this->getName($attribute);
-				}
 				$field->draw();
 				break;
 
             case 'Watchers':
-                $field = new FieldAutoCompleteObject( getFactory()->getObject2('IssueAuthor') );
+                $field = new FieldAutoCompleteObject( getFactory()->getObject('IssueAuthor') );
                 $field->SetId($attribute);
                 $field->SetName('value');
                 $field->SetValue($value);
                 $field->SetTabIndex($tab_index);
                 $field->setAppendable();
-
-                if ( $this->showAttributeCaption() ) {
-                    echo $this->getName($attribute);
-                }
                 $field->draw();
                 break;
 
  			case 'LinkType':
  				$type = getFactory()->getObject('RequestLinkType');
- 				
 				$field = new FieldAutoCompleteObject($type);
 				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($type->getByRef('ReferenceName', 'implemented')->getId());
 				$field->SetTabIndex($tab_index);
-				
-				echo $this->getName($attribute);
-				$field->draw();
-				break;
-
-			case 'Comment':
-				$field = new FieldWYSIWYG();
-
-				is_object($this->getObjectIt())
-					? $field->setObjectIt( $this->getObjectIt() ) : $field->setObject( $this->getObject() );
-
-				$editor = $field->getEditor();
-				$editor->setMode( WIKI_MODE_MINIMAL );
-
-				$field->setHasBorder( false );
-				$field->setName($attribute);
-				$field->SetId($attribute);
-				$field->SetName($attribute);
-				$field->SetValue($value);
-				$field->SetTabIndex($tab_index);
-
-				echo $this->getName($attribute);
 				$field->draw();
 				break;
 
             case 'CreateLinked':
                 $method = new ObjectCreateNewWebMethod($this->getObject());
-                $method->setRedirectUrl('donothing');
                 $url = $method->getJSCall(
                     array(
                         'IssueLinked' => array_shift($this->getIds()),
@@ -203,6 +187,31 @@ class RequestBulkForm extends BulkForm
                         echo '<i class="icon-plus icon-white"></i> '.$this->getObject()->getDisplayName();
                     echo '</a>';
                 echo '</div>';
+                echo '<div class="clearfix"></div>';
+                echo '<br/>';
+                break;
+
+            case 'MergeType':
+                $field = new FieldMergeStrategyDictionary();
+                $field->SetId($attribute);
+                $field->SetName($attribute);
+                $field->SetValue('1');
+                $field->setDefault('1');
+                $field->setNullOption(false);
+                $field->SetTabIndex($tab_index);
+                $field->SetRequired(true);
+                $field->draw();
+                break;
+
+            case 'MasterIssue':
+                $field = new FieldDictionary($this->getIt());
+                $field->SetId($attribute);
+                $field->SetName($attribute);
+                $field->SetValue($this->getIt()->getId());
+                $field->SetTabIndex($tab_index);
+                $field->setNullOption(false);
+                $field->SetRequired(true);
+                $field->draw();
                 break;
 
 			default:

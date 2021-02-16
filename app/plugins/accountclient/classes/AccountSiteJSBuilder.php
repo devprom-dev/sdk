@@ -38,7 +38,7 @@ class AccountSiteJSBuilder extends ScriptBuilder
                 'LicenseScheme' => $license_it->getScheme(),
                 'InstallationUID' => INSTALLATION_UID,
                 'Email' => getSession()->getUserIt()->get('Email'),
-                'UserName' => IteratorBase::wintoutf8(getSession()->getUserIt()->get('Caption')),
+                'UserName' => getSession()->getUserIt()->get('Caption'),
                 'Language' => getSession()->getUserIt()->get('Language'),
                 "Redirect" => urlencode(EnvironmentSettings::getServerUrl().$_SERVER['REQUEST_URI']),
                 "token1" => $authToken,

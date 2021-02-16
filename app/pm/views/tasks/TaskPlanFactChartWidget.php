@@ -13,7 +13,6 @@ class TaskPlanFactChartWidget extends FlotChartBarWidget
     function getValues()
     {
     	$data = $this->getData();
-
     	$positive_data = array();
 		$negative_data = array();
     	$x_values = array();
@@ -21,10 +20,9 @@ class TaskPlanFactChartWidget extends FlotChartBarWidget
     	$urls = array();
 
     	$index = 0;
+    	$task = getFactory()->getObject('Task');
 		foreach ( $data as $key => $item )
 		{
-			if ( !is_numeric($key) ) continue;
-
 			if ( $item['data'] >= 0 ) {
 				$positive_data[] = array( $index, 0 );
 				$positive_data[] = array( $index, round($item['data'],0) );
@@ -34,11 +32,13 @@ class TaskPlanFactChartWidget extends FlotChartBarWidget
 				$negative_data[] = array( $index, round($item['data'],0) );
 			}
 
-		    $x_values[] = 'T-'.$this->iterator->getId().' '.IteratorBase::wintoutf8($this->iterator->get('Caption'));
-            $labels[] = array($index, '');
-		    $urls[] = $this->iterator->getViewUrl();
+			list($finishDate, $taskId) = preg_split('/:/', $key);
+			$taskIt = $task->getExact($taskId);
 
-		    $this->iterator->moveNext();
+			$x_values[] = 'T-'.$taskIt->getId().' '.$taskIt->get('Caption');
+            $labels[] = array($index, '');
+		    $urls[] = $taskIt->getViewUrl();
+
 		    $index++;
 		}
 		return array( $positive_data, $negative_data, $x_values, $urls, $labels );

@@ -91,7 +91,7 @@ class RequestPlanningForm extends RequestForm
                     : $value;
 
     		case 'PlannedRelease':
-		    	return $value == '' 
+		    	return $value == '' && $this->getObject()->hasAttribute($attr)
 		    			? $this->createFieldObject($attr)->getObject()->getFirst()->getId()
 		    			: $value;
 		}

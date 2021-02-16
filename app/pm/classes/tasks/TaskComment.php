@@ -7,7 +7,6 @@ class TaskComment extends Comment
         parent::__construct(new TaskCommentRegistry($this));
         $this->setAttributeType('ObjectId', 'REF_TaskId');
         $this->setAttributeGroups('ObjectId', array());
-        $this->setAttributeRequired('AuthorId', false);
     }
 
     function getDefaultAttributeValue($name) {

@@ -13,7 +13,7 @@ class WatcherIterator extends OrderedIterator
 				return $this->get('SystemUser');
 			}
 			else {
-				$user_it = $this->getRef('SystemUser');
+				$user_it = $this->getRef('SystemUser', $this->get('SystemUser') > 1000000 ? getFactory()->getObject('IssueAuthor') : null);
 				return $user_it->getDisplayName();
 			}
  		}

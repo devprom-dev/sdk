@@ -34,33 +34,35 @@ class ReportsKanbanBuilder extends ReportsBuilder
 	        'name' => 'avgleadtime',
 			'title' => text('kanban19'),
 			'category' => FUNC_AREA_MANAGEMENT,
-		    'query' => 'type=all&priority=all&chartdata=hide&chartlegend=hide&aggregator=AVG&group=FinishDate&aggby=LifecycleDuration&state='.
+		    'query' => 'modifiedafter=last-month&type=all&priority=all&chartdata=hide&chartlegend=hide&aggregator=AVG&group=FinishDate&aggby=LifecycleDuration&state='.
 		        join(',',getFactory()->getObject('Request')->getTerminalStates()).'&modifiedafter=last-month',
 	        'type' => 'chart',
 			'description' => $module_it->get('Description'),
 	        'module' => $module_it->getId() 
 		));
 
-     	if ( $project_it->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) return;
+        $module_it = $module->getExact('issues-chart');
+        $object->addReport( array (
+            'name' => 'blockreasonschart',
+            'title' => text('kanban32'),
+            'category' => FUNC_AREA_MANAGEMENT,
+            'query' => 'group=BlockReason&state=all&modifiedafter=last-month',
+            'type' => 'chart',
+            'description' => text('kanban33'),
+            'module' => $module_it->getId()
+        ));
 
-     	$module_it = $module->getExact('kanban/requests');
-		$object->addReport( array (
-            'name' => 'kanbanboard',
-			'title' => text('kanban17'),
-			'description' => $module_it->get('Description'),
-			'category' => FUNC_AREA_MANAGEMENT,
-	        'module' => $module_it->getId() 
-		));
-
-		$module_it = $module->getExact('issues-chart');
-		$object->addReport( array (
-			'name' => 'blockreasonschart',
-			'title' => text('kanban32'),
-			'category' => FUNC_AREA_MANAGEMENT,
-			'query' => 'group=BlockReason&state=all&modifiedafter=last-month',
-			'type' => 'chart',
-			'description' => text('kanban33'),
-			'module' => $module_it->getId()
-		));
+     	if ( $project_it->getMethodologyIt()->get('IsKanbanUsed') == 'Y' ) {
+            $module_it = $module->getExact('kanban/requests');
+            if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
+                $object->addReport( array (
+                    'name' => 'kanbanboard',
+                    'title' => text('kanban17'),
+                    'description' => $module_it->get('Description'),
+                    'category' => FUNC_AREA_MANAGEMENT,
+                    'module' => $module_it->getId()
+                ));
+            }
+        }
 	}
 }

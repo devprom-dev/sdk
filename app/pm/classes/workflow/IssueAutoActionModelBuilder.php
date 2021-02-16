@@ -10,10 +10,12 @@ class IssueAutoActionModelBuilder extends ObjectModelBuilder
         $importantAttributes = array('State', 'Project');
         $this->subject = getFactory()->getObject($object->getSubjectClassName());
 
-        foreach( $object->getActionAttributes() as $attribute )
-        {
+        foreach( $object->getActionAttributes() as $attribute ) {
+            $groups = $this->subject->getAttributeGroups($attribute);
+
             if ( $this->subject->getAttributeType($attribute) == '' ) continue;
             if ( !$this->subject->IsAttributeVisible($attribute) && !in_array($attribute, $importantAttributes) ) continue;
+            if ( in_array('computed', $groups) ) continue;
 
             $object->addAttribute(
                 $attribute,
@@ -24,7 +26,6 @@ class IssueAutoActionModelBuilder extends ObjectModelBuilder
                 true,
                 false
             );
-            $groups = $this->subject->getAttributeGroups($attribute);
             if ( is_array($groups) ) {
                 $object->setAttributeGroups($attribute, array_filter($groups, function($group) {
                     return !in_array($group, array('workflow'));
@@ -32,7 +33,9 @@ class IssueAutoActionModelBuilder extends ObjectModelBuilder
             }
             $object->setAttributeOrigin($attribute, $object->getAttributeOrigin($attribute));
             $object->addAttributeGroup($attribute, 'actions');
-            $object->addAttributeGroup($attribute, 'system');
         }
+
+        $object->setAttributeVisible('ResetAttributes', true);
+        $object->addAttributeGroup('ResetAttributes', 'actions');
     }
 }

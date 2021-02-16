@@ -21,7 +21,7 @@ public class LinkProjectsPage extends SDLCPojectPageBase {
 	protected WebElement releasesOption;
 	
 	@FindBy(id = "pm_ProjectLinkTasks")
-	protected WebElement iterationsOption;
+	protected WebElement tasksOption;
 	
 	@FindBy(id = "pm_ProjectLinkKnowledgeBase")
 	protected WebElement kbOption;
@@ -54,6 +54,10 @@ public class LinkProjectsPage extends SDLCPojectPageBase {
 	
 	public LinkedProjectsPage linkProject(String projectName){
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(projectSelect));
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+		}
 		projectSelect.sendKeys(projectName);
 		autocompleteSelect(projectName);
 		submitDialog(saveBtn);
@@ -76,8 +80,8 @@ public class LinkProjectsPage extends SDLCPojectPageBase {
 		(new Select(releasesOption)).selectByValue(releasesOptions);
 	}
 
-	public void setIterationOptions(String iterationsOptions){
-		(new Select(iterationsOption)).selectByVisibleText(iterationsOptions);
+	public void setTasksOptions(String tasksOptions){
+		(new Select(tasksOption)).selectByValue(tasksOptions);
 	}
 	
 	public void setKBOptions(String kbOptions){

@@ -10,8 +10,7 @@
             <div class="col-lg-8 col-lg-offset-2">
                 <div class="card text-center">
                     <div class="body">
-                        <form role="form" class="form-horizontal" id="attachment" action="{{ path('attachment_upload', { 'issueId' : issue.id }) }}" method="post" {{ form_enctype(form) }}>
-
+                        {{ form_start(form, {"attr": {"id":"attachment","class":"form-horizontal","action":path('attachment_upload', { 'issueId' : issue.id })}}) }}
                             <div class="row">
                                 {{ form_widget(form) }}
                             </div>
@@ -20,7 +19,7 @@
                                     <button type="submit" class="btn btn-primary">{{ 'attachment.upload'|trans }}</button>
                                 </p>
                             </div>
-                        </form>
+                        {{ form_end(form) }}
                     </div>
                 </div>
             </div>

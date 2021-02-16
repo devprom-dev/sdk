@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
 
 class DuplicateWebMethod extends WebMethod
@@ -14,12 +13,12 @@ class DuplicateWebMethod extends WebMethod
 		);
 		
 		parent::__construct();
-		$this->setRedirectUrl('function(){window.location.reload();}');
+		$this->setRedirectUrl('devpromOpts.updateUI');
 	}
 	
 	protected function buildContext()
 	{
-		return new CloneContext(); 
+		return new CloneContext();
 	}
 	
 	public function & getObjectIt()
@@ -33,6 +32,22 @@ class DuplicateWebMethod extends WebMethod
 	{
 		$this->object_it = $object_it;
 	}
+
+	public function setObjectIds( $ids )
+    {
+        if ( count($ids) < 1 ) {
+            $this->setObjectIt($this->getObject()->getEmptyIterator());
+        }
+        else {
+            $this->setObjectIt(
+                $this->getObject()->getRegistry()->Query(
+                    array(
+                        new FilterInPredicate($ids)
+                    )
+                )
+            );
+        }
+    }
 
 	public function setResult( $result_it ) {
 		$this->result_it = $result_it;
@@ -63,10 +78,17 @@ class DuplicateWebMethod extends WebMethod
  		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&".http_build_query($parms)."', ".$id.", ".$this->getRedirectUrl().")";
 	}
 	
-	function getReferences()
-	{
+	function getReferences() {
 		return array();
 	}
+
+	function getAttributesToReset() {
+	    return array();
+    }
+
+    function getAttributesDefaults( $iterator ) {
+	    return array();
+    }
 
 	function getObject()
 	{
@@ -90,24 +112,22 @@ class DuplicateWebMethod extends WebMethod
     {
         $project = getFactory()->getObject('Project');
 
-        $target_it = $parms['Project'] > 0 ? $project->getExact( $parms['Project'] ) : $project->getEmptyIterator();
-
-        if ( $target_it->getId() < 1 ) $target_it = getSession()->getProjectIt();
+        $target_it = $parms['Project'] > 0
+            ? $project->getExact( $parms['Project'] )
+            : $project->getEmptyIterator();
 
         return $target_it;
     }
 
  	function execute( $parms )
     {
-        if ( $this->object_it->getId() == '' )
-        {
+        if ( $this->object_it->getId() == '' ) {
             $ids = \TextUtils::parseIds($parms['objects']);
-            $this->setObjectIt(
-                count($ids) > 0
-                    ? $this->getObject()->getExact($ids)
-                    : $this->getObject()->getEmptyIterator()
-            );
         }
+        else {
+            $ids = $this->object_it->idsToArray();
+        }
+        $this->setObjectIds($ids);
 
         $target_it = $this->getTargetIt($parms);
 
@@ -136,18 +156,18 @@ class DuplicateWebMethod extends WebMethod
 
             if ( $parms['OpenList'] != '' && $duplicate_it->count() > 0 ) {
                 if ( $duplicate_it->count() == 1 ) {
-                    $this->setRedirectUrl($duplicate_it->getViewUrl());
+                    $this->setRedirectUrl($duplicate_it->getUidUrl());
                 }
                 else {
                     $this->setRedirectUrl(
                         getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
-                            'request='.\TextUtils::buildIds($duplicate_it->idsToArray())
+                            'ids='.\TextUtils::buildIds($duplicate_it->idsToArray())
                         )
                     );
                 }
             }
             elseif( $duplicate_it->count() == 1 ) {
-                $this->setRedirectUrl($duplicate_it->getViewUrl());
+                $this->setRedirectUrl($duplicate_it->getUidUrl());
             }
         }
     }
@@ -155,7 +175,7 @@ class DuplicateWebMethod extends WebMethod
  	function duplicate( $project_it, $parms )
  	{
  	    global $session;
- 	    
+
  	    // prepare list of objects to be serilalized
  	    $references = $this->getReferences();
         $ids_map = array();
@@ -171,33 +191,37 @@ class DuplicateWebMethod extends WebMethod
 
  	    $context = $this->buildContext();
  	    $context->setIdsMap( $ids_map );
+        $context->setUseExistingReferences( true );
+        $context->setRestoreFromTemplate(false);
 
- 	    if ( getSession()->getProjectIt()->getId() == $project_it->getId() ) {
+ 	    if ( $project_it->getId() == '' ) {
             // bind data to existing objects if any
-            $context->setUseExistingReferences( true );
+            $context->setReuseProject(true);
         }
-		if ( $_REQUEST['Owner'] == '' ) {
-			$context->setResetAssignments();
-		}
-
-        // duplicate serialized data in the target project
-        $session = new PMSession( $project_it );
+        else {
+            $session = new PMSession( $project_it );
+        }
 
  	    foreach( $references as $object )
  	    {
  	        $object = getFactory()->getObject( get_class($object) );
  	        $iterator = $object->createXMLIterator($xml);
- 	        
+
  	        if ( get_class($object_it->object) == get_class($object) )
  	        {
- 	        	// override entity values with user ones
- 	        	$defaults = array();
- 	        	foreach( $object->getAttributes() as $attribute => $info ) {
- 	        		if ( $_REQUEST[$attribute] != '' || $attribute == 'Description' ) {
- 	        			$defaults[$attribute] = $_REQUEST[$attribute]; 
- 	        		}
- 	        	}
- 	        	$iterator->setData(array_merge($iterator->getData(), $defaults));
+ 	            $rowset = array();
+                $toReset = array_merge($this->getAttributesToReset(), array_keys($parms));
+ 	            while( !$iterator->end() ) {
+                    $defaults = $this->getAttributesDefaults($iterator);
+                    foreach( $object->getAttributes() as $attribute => $info ) {
+                        if ( in_array($attribute, $toReset) ) {
+                            $defaults[$attribute] = $parms[$attribute];
+                        }
+                    }
+                    $rowset[] = array_merge($iterator->getData(), $defaults);
+                    $iterator->moveNext();
+                }
+ 	        	$iterator = $object->createCachedIterator($rowset);
  	        }
 
      	    CloneLogic::Run( $context, $object, $iterator, $project_it);

@@ -74,8 +74,7 @@ public class SCMTest extends ProjectTestBase {
 		   FILELOG.debug("Files obtained from SVN:");
 		   FILELOG.debug(s);
 		}
-		RepositoryFilesPage rfp = rcp.gotoRepositoryFilesPage();
-		rfp = rfp.selectConnection(repositoryName);
+		RepositoryFilesPage rfp = rcp.gotoFiles(repositoryName);
 		List<String> filesFromDevprom = rfp.getTestFilesList();
 		for (String s:filesFromDevprom){
 			FILELOG.debug("Files obtained from DEVPROM page:");
@@ -181,8 +180,7 @@ public class SCMTest extends ProjectTestBase {
 		   FILELOG.debug("Files obtained from SVN:");
 		   FILELOG.debug(s);
 		}
-		RepositoryFilesPage rfp = rcp.gotoRepositoryFilesPage();
-		rfp = rfp.selectConnection(repositoryName);
+		RepositoryFilesPage rfp = rcp.gotoFiles(repositoryName);
 		List<String> filesFromDevprom = rfp.getTestFilesList();
 		for (String s:filesFromDevprom){
 			FILELOG.debug("Files obtained from DEVPROM page:");
@@ -301,6 +299,8 @@ public class SCMTest extends ProjectTestBase {
 		SCMHelper.commitFile(phpFile.getAbsolutePath(), textComment, repositoryUserName, repositoryUserPassword);
 		
 		//Run synchronization task
+		apb =  (new SDLCPojectPageBase(driver)).goToAdminTools();
+		stp = apb.gotoSystemTasks();
 		stp = stp.runSystemTask("Синхронизация с системой контроля версий");
 		
 		favspage = (SDLCPojectPageBase) stp.gotoProject(webTest);

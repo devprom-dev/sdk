@@ -11,7 +11,7 @@ class ModelValidatorTypeNumeric extends ModelValidatorType
 	
 	public function validate( & $value )
 	{
-		if ( $value == '' ) return true;
+		if ( in_array($value, array('','NULL')) ) return true;
 		
 		$values = preg_split('/,/', $value);
 		foreach( $values as $value ) {

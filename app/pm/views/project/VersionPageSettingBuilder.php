@@ -5,9 +5,9 @@ class VersionPageSettingBuilder extends PageSettingBuilder
 {
     function build( PageSettingSet & $settings )
     {
-        $setting = new PageListSetting('VersionList');
+        $setting = new PageListSetting('VersionTree');
         $setting->setGroup( 'none' );
-        //$setting->setVisibleColumns( array('UID', 'Caption', 'State', 'Priority') );
+        $setting->setVisibleColumns( array('Caption', 'RecentComment','Planned', 'Fact', 'Progress') );
         $settings->add( $setting );
 
         $setting = new PageTableSetting('VersionTable');

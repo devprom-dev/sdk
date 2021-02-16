@@ -13,7 +13,6 @@ class IntegrationTable extends SettingsTableBase
 
         $method = new ObjectCreateNewWebMethod($this->getObject());
         if ( !$method->hasAccess() ) return $actions;
-        $method->setRedirectUrl('donothing');
 
         $app_it = getFactory()->getObject('IntegrationApplication')->getAll();
         while( !$app_it->end() )

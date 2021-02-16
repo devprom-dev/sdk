@@ -25,16 +25,7 @@ class DictionaryItemsTable extends SettingsTableBase
 			    $filter = new FilterObjectMethod(getFactory()->getObject('CustomizableObjectSet'), translate('Сущность'), 'customattributeentity');
 			    $filter->setHasNone(false);
 			    $filter->setIdFieldName('ReferenceName');
-			    
-				return array ( $filter ); 
-
-            case 'pm_Environment':
-                return array_merge(
-                    parent::getFilters(),
-                    array(
-                        new FilterTextWebMethod(text(2484), 'search')
-                    )
-                );
+				return array ( $filter );
 
 			default:
 				return parent::getFilters();
@@ -44,7 +35,7 @@ class DictionaryItemsTable extends SettingsTableBase
 	function getNewActions()
 	{
 		$actions = array();
-		
+
 		switch ( $this->getObject()->getClassName() )
 		{
 			case 'pm_CustomAttribute':
@@ -53,12 +44,19 @@ class DictionaryItemsTable extends SettingsTableBase
 				$items = preg_split('/,/',$values['customattributeentity']);
 				$entity_ref_name = array_shift($items); 				
 
-				$actions[] = array ( 
+				$parms = array(
+                    'area' => $this->getPage()->getArea(),
+                    'redirect' => $_SERVER['REQUEST_URI']
+                );
+				if ( $entity_ref_name != '' ) {
+				    $parms['EntityReferenceName'] = $entity_ref_name;
+                }
+
+				$actions[] = array (
 						'name' => translate('Добавить'),
-						'url' => $this->getObject()->getPageName().'&EntityReferenceName='.$entity_ref_name.
-										'&area='.$this->getPage()->getArea().'&redirect='.$_SERVER['REQUEST_URI']
+						'url' => $this->getObject()->getPageName().'&'.http_build_query($parms)
 				);
-				
+
 				return $actions;
 				
 			default:
@@ -66,31 +64,25 @@ class DictionaryItemsTable extends SettingsTableBase
 		}
 	}
 	
- 	function getFilterPredicates()
+ 	function getFilterPredicates( $values )
  	{
- 	    $values = $this->getFilterValues();
- 	    
 		switch ( $this->getObject()->getClassName() )
 		{
 			case 'pm_CustomAttribute':
-				return array_merge( parent::getFilterPredicates(), array (
-						new CustomAttributeEntityPredicate( $values['customattributeentity'] )
-				));
-
-			case 'pm_Environment':
 				return array_merge(
-				    parent::getFilterPredicates(),
-                    array(
-                        new FilterSearchAttributesPredicate($values['search'], array('Caption','Description','ServerAddress'))
-                    )
+				    parent::getFilterPredicates( $values ),
+                    array (
+                        new CustomAttributeEntityPredicate( $values['customattributeentity'] ),
+                        new FilterBaseVpdPredicate()
+				    )
                 );
-		}		
+		}
 		
 		return array_merge( 
-				parent::getFilterPredicates(),
-				array (
-						new FilterBaseVpdPredicate()
-				)
+            parent::getFilterPredicates( $values ),
+            array (
+                new FilterBaseVpdPredicate()
+            )
 		);
  	}
 
@@ -106,6 +98,11 @@ class DictionaryItemsTable extends SettingsTableBase
             );
         }
         return $actions;
+    }
+
+    function getImportActions() {
+	    if ( $this->getObject() instanceof PMCustomAttribute ) return array();
+	    return parent::getImportActions();
     }
 
     protected function buildProjectFilter() {

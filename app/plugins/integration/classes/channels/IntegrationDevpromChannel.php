@@ -19,10 +19,15 @@ class IntegrationDevpromChannel extends IntegrationChannel
             true
         );
         $this->model->setSkipFields(array('VPD','RecordVersion'));
+        $this->issueClassName = getSession()->IsRDD() ? 'Increment' : 'Request';
     }
 
     public function getKeyField() {
         return 'Id';
+    }
+
+    function getTimestamp() {
+        return SystemDateTime::date();
     }
 
     public function getItems( $timestamp, $limit )
@@ -32,7 +37,7 @@ class IntegrationDevpromChannel extends IntegrationChannel
         $registry->setLimit($limit);
 
         if ( $timestamp == '' ) {
-            $timestamp = strftime('%Y-%m-%d %H:%M:%S', strtotime('-1 day', strtotime(SystemDateTime::date())));
+            $timestamp = strftime('%Y-%m-%d %H:%M:%S', strtotime('-1 day', strtotime($this->getTimestamp())));
         }
         $this->getLogger()->info('Looking for changes since '.$timestamp);
 
@@ -98,15 +103,17 @@ class IntegrationDevpromChannel extends IntegrationChannel
                 continue;
             }
 
-            $items[$key] = array (
-                'class' => $class,
-                'id' => $log_it->get('ObjectId'),
-                'action' => $log_it->get('ChangeKind') == 'deleted'
-                                ? 'delete'
-                                : ($log_it->get('ChangeKind') == 'added' ? 'add' : 'update'),
-                'attributes' => preg_split('/,/',$log_it->get('Attributes')),
-                'author' => $log_it->getRef('SystemUser')->get('Email')
-            );
+            if ( !array_key_exists($key, $items) ) {
+                $items[$key] = array (
+                    'class' => $class,
+                    'id' => $log_it->get('ObjectId'),
+                    'action' => $log_it->get('ChangeKind') == 'deleted'
+                        ? 'delete'
+                        : ($log_it->get('ChangeKind') == 'added' ? 'add' : 'update'),
+                    'attributes' => preg_split('/,/',$log_it->get('Attributes')),
+                    'author' => $log_it->getRef('SystemUser')->get('Email')
+                );
+            }
 
             if ( $items[$key]['id'] < 1 ) {
                 $log_it->moveNext();
@@ -187,9 +194,7 @@ class IntegrationDevpromChannel extends IntegrationChannel
     public function readItem($mapping, $class, $id, $parms = array())
     {
         try {
-            $result = $this->model->get($class, $id, 'text');
-            $result['SourceId'] = $class.$id;
-            return $result;
+            return $this->model->get($class, $id, $this->getHtmlAllowed() ? 'html' : 'text');
         }
         catch (\Exception $e) {
             $this->getLogger()->error($e->getMessage().PHP_EOL.$e->getTraceAsString());
@@ -203,7 +208,9 @@ class IntegrationDevpromChannel extends IntegrationChannel
     {
         $this->getLogger()->debug('Devprom writeItem: '.var_export($data,true));
 
+        if ( $class == 'Request' ) $class = $this->issueClassName;
         $result = $this->model->set($class, $data, $id);
+
         if ( $id == $result['Id'] ) {
             $this->getLogger()->info('Item has been updated: '.$result['Id']);
         }
@@ -227,4 +234,5 @@ class IntegrationDevpromChannel extends IntegrationChannel
     }
 
     private $model = null;
+    private $issueClassName = '';
 }

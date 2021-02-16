@@ -15,7 +15,8 @@
 		$mydir = dir($path);
 		
 		if ( !is_object($mydir) ) return;
-		
+
+		$index = 1;
    		while( ($file = $mydir->read()) !== false ) 
    		{
    			if ( $file == '.' || $file == '..' ) continue;
@@ -30,18 +31,19 @@
    				
    				$stat = stat($path.'/'.$file);
    				
-   				$db_format = str_replace('%', '', getSession()->getLanguage()->getDateFormat().' %H:%i');
+   				$createddate = date('Y-m-d H:i:s', $stat['mtime']);
 
-   				$createddate = date($db_format, $stat['mtime']);
+                $time = new DateTime($createddate, new DateTimeZone("UTC"));
+                $time->add(DateInterval::createFromDateString(\EnvironmentSettings::getUTCOffset()." hours"));
 
    				array_push( $files,  array( 
    				    'created' => $createddate, 
-   				    'RecordCreated' => $createddate,
+   				    'RecordCreated' => $time->format('Y-m-d H:i:s'),
    				    'name' => $file, 
    				    'Caption' => $file, 
    				    'size' => $stat['size'], 
 					'ctime' => $stat['mtime'],
-                    (is_a($object, 'Metaobject') ? $object->getClassName().'Id' : 'id') => abs(crc32($file))
+                    (is_a($object, 'Metaobject') ? $object->getClassName().'Id' : 'id') => $index++
    				));
    			}
    		}
@@ -81,5 +83,3 @@
  {
  	return intval($left['ctime']) < intval($right['ctime']) ? 1 : -1;
  }
- 
-?>

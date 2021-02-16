@@ -5,20 +5,19 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 .wysiwyg
 {
-	line-height: 1.6em;
 	padding: 0 0 10px 0;
 	width: 100%;
 	outline: none;
-	overflow-x: auto;
-	overflow-y: hidden;
+	overflow: hidden;
+	word-break: break-word;
 }
 
-.wysiwyg-text[contenteditable=true]
+.wysiwyg-text_[contenteditable=true]
 {
 	padding: 2px 0px 2px 1px;
 }
 
-.wysiwyg-input[contenteditable=true]
+.wysiwyg-input_[contenteditable=true]
 {
     padding: 2px 0px 2px 1px;
 	overflow: hidden;
@@ -44,18 +43,9 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 }
 
 .editor-area {
-	padding: 2px;
+	word-break: break-word;
 }
-#modal-form .editor-area {
-	padding: 0;
-}
-
-.wysiwyg-hover
-{
-    position: relative;
-	margin:-2px -2px -2px -2px;
-	padding: 2px;
-	border: 2px solid #f0f0f5;
+.wysiwyg-hover {
 }
 
 .wysiwyg p
@@ -194,6 +184,9 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	font-size: inherit;
 	font-family: monospace;
 	font-weight: inherit;
+	padding: 0;
+	border: none;
+	margin: 0;
 }
 
 .wysiwyg a[href]
@@ -208,6 +201,11 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 .documentToolbar {
 	background-image: url('/images/toolbar.png');
+	min-height: 43px;
+}
+
+.left .documentToolbar,
+.right .documentToolbar {
 	min-height: 76px;
 }
 
@@ -215,19 +213,13 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	border: 1px solid #dddddd;
 	border-bottom: none;
 }
+
 .details-visible .documentToolbar .cke_shared {
 	border-right: none;
 }
 
 .documentToolbar + div .table-document th {
 	border-top: none;
-}
-
-.wiki-page.left .documentToolbar {
-	margin-left: -9px;
-}
-.wiki-page.left .table-master:not(.details-visible) .documentToolbar {
-	margin-right: -15px;
 }
 
 .wysiwyg iframe {

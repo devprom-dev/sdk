@@ -24,8 +24,6 @@ class FieldTask extends Field
  	{
  		$taskboxes = 0;
  		
- 		$transition = $_REQUEST['Transition'];
-
         $task = getFactory()->getObject( 'pm_Task' );
         $builder = new TaskModelExtendedBuilder();
         $builder->build($task);
@@ -57,8 +55,6 @@ class FieldTask extends Field
 			$taskboxes++;
 		}
 
- 		$_REQUEST['Transition'] = $transition;
-		
 		echo '<div style="float:left;padding-bottom:8px;">';
 			echo '<a id="btn-more-tasks" class="btn btn-success btn-sm" onclick="taskboxShow();"><i class="icon-plus icon-white"></i> ' .translate('Еще задачу').'</a>';
 		echo '</div>';
@@ -101,7 +97,8 @@ class FieldTask extends Field
  	
  	function drawByTypes( $task, & $taskboxes, $skipTypes )
  	{
-		$target_it = getFactory()->getObject('Transition')->getExact($_REQUEST['Transition'])->getRef('TargetState');
+		$target_it = getFactory()->getObject('Transition')
+            ->getExact($_REQUEST['Transition'])->getRef('TargetState');
 
  		$filters = array (
  				new FilterBaseVpdPredicate(),
@@ -135,7 +132,9 @@ class FieldTask extends Field
  	
  	function drawForm( $ref, $taskbox, $style = '', $parms )
  	{
-	 	$form = new FormTaskEmbedded( is_a($ref, 'Task') ? $ref : $ref->object, 'ChangeRequest' );
+	 	$form = new FormTaskEmbedded( is_a($ref, 'Task') ? $ref : $ref->object,
+            'ChangeRequest', '', $parms );
+
  		$form->setSingleton( true );
  		$form->setReadonly( false );
  		
@@ -145,19 +144,10 @@ class FieldTask extends Field
  		 
  		echo '<div id="tb'.$form->getFormId().'" form-id="'.$form->getFormId().'" class="taskbox span4" style="'.$style.'">';
 	 		echo '<span class="input-block-level well well-text">'; 		
-
-	 	 		foreach( $parms as $key => $value )
-		 		{
-		 			$_REQUEST[$form->getFieldName($key)] = $value;
-		 		}
-	 		
 		 		$form->draw();
-			 	
-			 	if ( !is_a($ref, 'TaskIterator') )
-			 	{
+			 	if ( !is_a($ref, 'TaskIterator') ) {
 			 		echo '<i class="icon-remove"></i> <a class="dashed" onclick="taskboxClose(' .$form->getFormId().');">'.translate('Скрыть').'</a>';
 			 	}
-			
 			echo '</span>';
 		echo '</div>';
  	}

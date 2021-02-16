@@ -1,7 +1,7 @@
 <?php
 include_once SERVER_ROOT_PATH.'cms/c_mail.php';
 
-class MailBoxTest extends PHPUnit_Framework_TestCase
+class MailBoxTest extends \PHPUnit\Framework\TestCase
 {
     public function testEqualDomains() {
         $this->assertTrue(

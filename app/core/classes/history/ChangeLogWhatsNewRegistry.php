@@ -13,7 +13,8 @@ class ChangeLogWhatsNewRegistry extends ChangeLogRegistry
 	public function getGroups()
 	{
 		return array (
-            new GroupAttributeClause('Caption'),
+            new GroupAttributeClause('Author'),
+            new GroupAttributeClause('SystemUser'),
 			new GroupAttributeClause('ObjectId'),
 			new GroupAttributeClause('ClassName'),
 			new GroupAttributeClause('VPD')

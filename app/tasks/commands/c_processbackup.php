@@ -58,11 +58,16 @@ class ProcessBackup extends TaskCommand
 			}
 		}
 
-		$backup->backup_database();
-		$backup->backup_htdocs();
+        try {
+            $backup->backup_database();
+            $backup->backup_htdocs();
 
-		$backup->zip();
-		$backup->backup_files();
+            $backup->zip();
+            $backup->backup_files();
+        }
+        catch( \Exception $e ) {
+            $this->replyError($e->getMessage());
+        }
 
 		$backup_cls = $model_factory->getObject('cms_Backup');
 		$backup_cls->add_parms( array (
@@ -98,7 +103,7 @@ class ProcessBackup extends TaskCommand
 
 	function shrinkTests()
     {
-        $lastDate = date("Y-m-d", strtotime(defined('OLDEST_TEST_RUNS') ? OLDEST_TEST_RUNS : "-1 month"));
+        $lastDate = date("Y-m-d", strtotime(defined('OLDEST_TEST_RUNS') ? OLDEST_TEST_RUNS : "-12 month"));
 
         DAL::Instance()->Query("
           DELETE FROM pm_TestCaseExecution WHERE RecordCreated < '".$lastDate."'

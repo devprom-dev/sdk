@@ -1,5 +1,4 @@
 <?php
-
 include_once "FormTaskEmbedded.php";
 
 class FormRequestTasksEmbedded extends FormTaskEmbedded
@@ -23,8 +22,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
  	function getItemDisplayName( $object_it )
  	{
  		$uid = new ObjectUID;
-		$text = $uid->getUidIcon( $object_it );
-		$text .= ' '.$object_it->getDisplayNameNative();
+		$text = $uid->getUidWithCaption( $object_it );
  		return $text;
  	}
  	
@@ -107,10 +105,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
             return $actions;
         }
 
-		$todo = ($_REQUEST['formonly'] != '' ? 'donothing' : 'function() { window.location.reload(); }');
-
 		$method = new ObjectModifyWebMethod($object_it);
-		$method->setRedirectUrl($todo);
 		$actions[] = array (
 				'name' => $method->getCaption(),
 				'url' => $method->getJSCall()
@@ -123,29 +118,20 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 		while ( !$transition_it->end() )
 		{
 			$method = new TransitionStateMethod( $transition_it, $object_it );
-			
-			if ( $method->hasAccess() )
-			{
-				if ( $need_separator )
-				{
+			if ( $method->hasAccess() ) {
+				if ( $need_separator ) {
 					$actions[] = array();
-					
 					$need_separator = false;
 				}
-
-				$method->setRedirectUrl($todo);
-				
-				$actions[] = array( 
+				$actions[] = array(
 					'url' => $method->getJSCall(),
 					'name' => $method->getCaption()
 				);
 			}
-			
 			$transition_it->moveNext();
 		}
 		
 		$actions[] = array();
-		
 		return $actions;
 	}
 
@@ -157,6 +143,19 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 		}
 	}
 
+    function getAddButtonUrl()
+    {
+        if ( $_REQUEST['formonly'] != '' ) return parent::getAddButtonUrl();
+        if ( !is_object($this->getObjectIt()) ) return parent::getAddButtonUrl();
+
+        $method = new ObjectCreateNewWebMethod($this->getObject());
+        return $method->getJSCall(
+            array(
+                'ChangeRequest' => $this->getObjectIt()->getId()
+            )
+        );
+    }
+
     function drawAddButton( $view, $tabindex )
     {
         parent::drawAddButton( $view, $tabindex );
@@ -164,9 +163,35 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
         if( $this->getIteratorRef()->count() > 0 ) {
             $boardIt = getFactory()->getObject('Module')->getExact('tasks-board');
             if ( $boardIt->getId() != '' ) {
-                echo '<a class="dashed embedded-add-button" target="_blank" href="'.$boardIt->getUrl().'" tabindex="-1">';
+                echo '<a class="dashed embedded-add-button tasks-board" target="_blank" href="'.$boardIt->getUrl('issue='.$this->getObjectIt()->getId()).'" tabindex="-1">';
                 echo mb_strtolower($boardIt->getDisplayName());
                 echo '</a>';
+            }
+
+            if ( getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed() ) {
+                $reportIt = getFactory()->getObject('PMReport')->getExact('tasksefforts');
+                if ( $reportIt->getId() != '' ) {
+                    $taskIt = $this->getIteratorRef();
+                    $planned = 0;
+                    $resolved = 0;
+                    $actual = 0;
+                    $taskIt->moveFirst();
+                    while( !$taskIt->end() ) {
+                        $planned += $taskIt->get('Planned');
+                        if ( $taskIt->get('FinishDate') != '' ) {
+                            $resolved++;
+                        }
+                        $actual += $taskIt->get('Fact');
+                        $taskIt->moveNext();
+                    }
+                    $progress = $planned == 0 ? 0 : (round($resolved / $taskIt->count() * 100, 0));
+                    $strategy = new EstimationHoursStrategy();
+                    $ids = $this->getIteratorRef()->idsToArray();
+                    echo '<a class="dashed embedded-add-button tasksefforts" target="_blank" href="'.$reportIt->getUrl('ids=' . \TextUtils::buildIds($ids)).'" tabindex="-1">';
+                        echo $strategy->getDimensionText(round($actual, 0)) . ' / ' .
+                            $strategy->getDimensionText(round($planned, 0)) . ' (' . $progress . '%)';
+                    echo '</a>';
+                }
             }
         }
     }

@@ -23,21 +23,15 @@ class WikiImporterEnginePanDoc extends WikiImporterEngine
             $requiredParms .= ' --extract-media="'.rtrim(SERVER_FILES_PATH,'\\/').'" ';
         }
 
-        $command = 'pandoc '.$requiredParms.' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$outputPath.'" "'.$filePath.'" 2>&1';
+        $command = $requiredParms.' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$outputPath.'" "'.$filePath.'"';
         Logger::getLogger('Commands')->info(get_class($this).': '.$command);
 
-        putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
-        $result = shell_exec($command);
-
-        $lines = explode(PHP_EOL, $result);
-        foreach( $lines as $key => $line ) {
-            if ( strpos($line, 'extracting') ) unset($lines[$key]);
+        try {
+            \FileSystem::execPanDoc($command);
         }
-        $result =join(PHP_EOL, $lines);
-
-        if ( $result != "" ) {
-            Logger::getLogger('Commands')->error(get_class($this).': '.$result);
-            throw new Exception($result);
+        catch( \Exception $e ) {
+            Logger::getLogger('Commands')->error(get_class($this).': '.$e->getMessage());
+            throw $e;
         }
 
         $content = file_get_contents($outputPath);
@@ -51,21 +45,16 @@ class WikiImporterEnginePanDoc extends WikiImporterEngine
         @unlink($outputPath);
         FileSystem::rmdirr(SERVER_FILES_PATH.'media');
 
-        return $content;
+        return \TextUtils::getUnstyledHtml($content);
     }
 
     protected function getVersion() {
-        putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
-        $command = 'pandoc -v 2>&1';
-        Logger::getLogger('Commands')->info(get_class($this).': '.$command);
-        $result = shell_exec($command);
-        Logger::getLogger('Commands')->info($result);
-        return array_pop(
-            preg_split('/\s+/',
-                array_shift(
-                    preg_split('/[\r\n]+/', $result)
-                )
-            )
-        );
+        try {
+            return \FileSystem::execPanDoc();
+        }
+        catch( \Exception $e ) {
+            \Logger::getLogger('System')->error($e->getMessage());
+            return '0';
+        }
     }
 }

@@ -32,7 +32,7 @@ class LicensePage extends AdminPage
         }
     }
 
-    function getForm()
+    function getEntityForm()
     {
         return null;
     }

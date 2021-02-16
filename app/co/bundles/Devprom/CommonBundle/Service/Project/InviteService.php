@@ -1,7 +1,7 @@
 <?php
-
 namespace Devprom\CommonBundle\Service\Project;
 use \Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Devprom\CommonBundle\Service\Emails\RenderService;
 
 include_once SERVER_ROOT_PATH."pm/classes/participants/Participant.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/ParticipantRole.php";
@@ -14,9 +14,7 @@ class InviteService
 	{
 		$this->controller = $controller;
 		$this->session = $session;
-		
-		$lang = strtolower($this->session->getLanguageUid());
-		$this->email_template = 'CommonBundle:Emails/'.$lang.':invite.html.twig';
+		$this->email_template = 'invite.html.twig';
 	}
 	
 	public function inviteByEmails( $emails, $projectRoleId = '' )
@@ -37,13 +35,12 @@ class InviteService
 			$email = trim(strtolower($email));
 			
 			$user_it = getFactory()->getObject('User')->getRegistry()->Query(
-					array (
-							new \FilterAttributePredicate('Email', $email)
-					)
+                array (
+                    new \FilterAttributePredicate('Email', $email)
+                )
 			);
 			
-			if ( $user_it->getId() > 0 )
-			{
+			if ( $user_it->getId() > 0 ) {
 				$this->addParticipant(
 				    $this->session->getProjectIt(),
                     $user_it,
@@ -54,8 +51,7 @@ class InviteService
                     )
                 );
 			}
-			else
-			{
+			else {
 				getFactory()->getObject('Invitation')->add_parms(
                     array (
                         'Project' => $this->session->getProjectIt()->getId(),
@@ -95,9 +91,9 @@ class InviteService
 		$login = $parts[0];
 
 		$user_it = $user->getRegistry()->Query(
-				array (
-						new \FilterAttributePredicate('Login', $login)
-				)
+            array (
+                new \FilterAttributePredicate('Login', $login)
+            )
 		);
 		
 		if ( $user_it->getId() > 0 ) $login = $email;
@@ -111,7 +107,8 @@ class InviteService
                     'Login' => $login,
                     'Email' => $email,
                     'Password' => $login,
-                    'Language' => getFactory()->getObject('cms_SystemSettings')->getAll()->get('Language')
+                    'Language' => getFactory()->getObject('cms_SystemSettings')->getAll()->get('Language'),
+                    'IsReadonly' => 'Y'
                 )
             )
 		);
@@ -134,10 +131,10 @@ class InviteService
 	public function addParticipant( $project_it, $user_it, $role_it = null )
 	{
 		$it = getFactory()->getObject('Participant')->getRegistry()->Query(
-				array(
-						new \FilterAttributePredicate('SystemUser', $user_it->getId()),
-						new \FilterAttributePredicate('Project', $project_it->getId())
-				)
+            array(
+                new \FilterAttributePredicate('SystemUser', $user_it->getId()),
+                new \FilterAttributePredicate('Project', $project_it->getId())
+            )
 		);
 		
 		if ( $it->getId() == '' ) {
@@ -158,7 +155,6 @@ class InviteService
             $participant_it = $it;
         }
 		
-
 		if ( !is_object($role_it) || $role_it->getId() == '' ) {
             $role_it = getFactory()->getObject('ProjectRole')->getRegistry()->Query(
                 array(
@@ -184,21 +180,24 @@ class InviteService
 	
 	protected function sendEmail( $email )
 	{
-    	$content = $this->controller->render( $this->email_template, 
-	    			array (
-		    			'sender' => $this->session->getUserIt()->getHtmlDecoded('Caption'),
-		    			'project' => $this->session->getProjectIt()->getHtmlDecoded('Caption'),
-		    			'url' => \EnvironmentSettings::getServerUrl().'/join-project?email='.$email
-	    			)
-    		)->getContent();
+        $lang = strtolower($this->session->getLanguageUid());
+        $renderService = new RenderService(
+            $this->session, SERVER_ROOT_PATH."co/bundles/Devprom/CommonBundle/Resources/views/Emails/".$lang
+        );
+
+    	$content = $renderService->getContent(
+    	    $this->email_template,
+            array (
+                'sender' => $this->session->getUserIt()->getHtmlDecoded('Caption'),
+                'project' => $this->session->getProjectIt()->getHtmlDecoded('Caption'),
+                'url' => \EnvironmentSettings::getServerUrl().'/join-project?email='.$email
+            )
+        );
     	
    		$mail = new \HtmlMailbox;
-   		
    		$mail->appendAddress($email);
    		$mail->setBody($content);
    		$mail->setSubject( text(1863) );
-   		$mail->setFromUser($this->session->getUserIt());
-
    		$mail->send();
 	}
 	

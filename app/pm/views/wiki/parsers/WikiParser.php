@@ -1,5 +1,6 @@
 <?php
-define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9{])\[?([A-Z]{1}-[0-9]+)([\]<\s\r\n\.,;:\!\?]+|$)/mi' );
+use Devprom\ProjectBundle\Service\Wiki\WikiBaselineService;
+define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9{])\[?([A-Z]{1}-[0-9]+)/mi' );
 define( 'REGEX_INCLUDE_PAGE', '/\{\{([^}]+)\}\}/si' );
 define( 'REGEX_INCLUDE_REVISION', '/\{\{([^}]+):([\d-]+)\}\}/si' );
 define( 'REGEX_UPDATE_UID', '/(http|https):\/\/[^\/]+\/pm\/[^\/]+\/[A-Z]{1}-[0-9]+/i' );
@@ -18,8 +19,9 @@ class WikiParser
 	private $display_hints = false;
     private $maxIncludePageDepth = 4;
     private $includePageDepth = 0;
+    private $inlineSectionNumbering = false;
  	
-	function __construct( $wiki_it ) 
+	function __construct( $wiki_it )
 	{
  		global $was_table, $header_row;
 
@@ -37,7 +39,7 @@ class WikiParser
      		else {
     			$text = '['.$info['uid'].']';
      		}
-     	 	return $text.' '.$info['caption'];
+     	 	return $text.' '.$info['native'];
 		};
 
 		$was_table = false;
@@ -124,7 +126,6 @@ class WikiParser
 		$result = preg_replace('/^h(\d)\s*([^\r\n]+)/mi', '<h\\1>\\2</h\\1>', $result);
 
 		// выполняем пустые строки
-		$result = preg_replace('/^[\r\n]*$/im', '<p>&nbsp;</p>', $result);
 		$result = preg_replace('/^([^<\[].+)[\r\n]*$/im', '<p>\\1</p>', $result);
 		$result = preg_replace('/^(.+[^>\]])[\r\n]*$/im', '<p>\\1</p>', $result);
 		
@@ -267,19 +268,7 @@ class WikiParser
 		return $result;
 	}
 	
-	function parse_text_substr( $width ) 
-	{
-		$html2text = new \Html2Text\Html2Text( $this->parse(), array('width'=>0) );
-		return substr($html2text->getText(), 0, $width).'...';
-	}
-
-	function parse_text( $width ) 
-	{
-		$html2text = new \Html2Text\Html2Text( $this->parse(), array('width'=>0) );
-		return $html2text->getText();
-	}
-
-	function getFileByName( $caption ) 
+	function getFileByName( $caption )
 	{
 		global $model_factory;
 
@@ -402,9 +391,6 @@ class WikiParser
 	function _getFileUrl( $file_it ) 
 	{
 	    $url = $this->getFileUrl( $file_it );
-		
-		$url .= strpos($url, '?') === false ? '?&.png' : '&.png';
-		
 		return $url;
 	}
 	
@@ -487,6 +473,10 @@ class WikiParser
 	    return $this->require_external_access;
 	}
 
+	function setInlineSectionNumbering( $flag ) {
+	    $this->inlineSectionNumbering = $flag;
+    }
+
 	// set if user should manualy authorize to download the file, eg. via basic http authorization
 	function setExternalAccessUserAuthorization( $flag = true )
 	{
@@ -504,28 +494,24 @@ class WikiParser
 		    new FilterVpdPredicate()
         );
 
-        $documentVersion = '';
-		if ( is_object($this->getObjectIt()) ) {
-			$documentVersion = $this->getObjectIt()->get('DocumentVersion');
-			if ( $documentVersion != '' ) {
-				$parms[] = new WikiPageBranchFilter($documentVersion);
-			}
-		}
-
 	    $uid_resolver = new ObjectUID;
      	$object_it = $uid_resolver->getObjectIt($uid);
 
-        if ( $documentVersion != '' && $object_it->object->IsAttributeStored('UID') ) {
-            if ( $object_it->get('UID') == '' ) {
-                return array();
-            }
-            // remap references inside baseline
-            $registry = $object_it->object->getRegistry();
-            $registry->setPersisters(array(new EntityProjectPersister()));
+     	$remapUidForBaseline = is_object($this->getObjectIt())
+            && $object_it->object->IsAttributeStored('UID') && $object_it->get('UID') != '';
 
-            $parms[] = new FilterTextExactPredicate('UID', $object_it->get('UID'));
-            $result_it = $registry->Query($parms);
-            if ( $result_it->getId() > 0 ) $object_it = $result_it;
+        if ( $remapUidForBaseline ) {
+            $documentVersion = $this->getObjectIt()->get('DocumentVersion');
+            if ( $documentVersion != '' ) {
+                $registry = $object_it->object->getRegistry();
+                $registry->setPersisters(array(new EntityProjectPersister()));
+
+                $parms[] = new WikiPageBranchFilter($documentVersion);
+                $parms[] = new FilterTextExactPredicate('UID', $object_it->get('UID'));
+
+                $result_it = $registry->Query($parms);
+                if ( $result_it->getId() > 0 ) $object_it = $result_it;
+            }
         }
 
 		if ( $object_it->getId() > 0 ) {
@@ -585,8 +571,6 @@ class WikiParser
 
     function parseIncludePageCallbackInt( $match )
     {
-        $matches = array();
-
         $info = $this->getUidInfo(trim($match[1], '[]'));
         $object_it = $info['object_it'];
 
@@ -606,28 +590,95 @@ class WikiParser
         $count = 0;
         $content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $object_it->getHtmlDecoded($contentAttribute), -1, $count);
 
-        if ( $object_it->object instanceof Requirement ) {
-            $registry = $object_it->object->getRegistry();
+        if ( $object_it->object instanceof WikiPage )
+        {
+            $containerIt = $this->getObjectIt();
+            $registry = new WikiPageRegistryContent($object_it->object);
+
             $registry->setPersisters(array());
             $pageIt = $registry->Query(
                 array(
-                    new ParentTransitiveFilter($object_it->getId()),
+                    $object_it->object instanceof \TestScenario
+                        ? new FilterInPredicate($object_it->getId())
+                        : new ParentTransitiveFilter($object_it->getId()),
+                    new FilterAttributePredicate('DocumentId', $object_it->get('DocumentId')),
                     new FilterNotInPredicate($object_it->getId()),
                     new SortDocumentClause()
                 )
             );
+
+            $removeSectionNumberHead = $object_it->get('SectionNumber');
+            if ( $removeSectionNumberHead != '' ) $removeSectionNumberHead .= '.';
+
             while ( !$pageIt->end() ) {
-                $itemCount = 0;
-                $content .= '<h4>' . $pageIt->get('SectionNumber') . ' &nbsp; ' . $pageIt->get('Caption') . '</h4>';
-                $content .= preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $pageIt->getHtmlDecoded($contentAttribute), -1, $itemCount);
+                $content .= $this->buildDocumentStructure($removeSectionNumberHead, $pageIt, $contentAttribute);
                 $pageIt->moveNext();
+            }
+
+            if ( $containerIt instanceof RequestIterator && class_exists('RequestTraceRequirement') ) {
+                $traceIt = getFactory()->getObject('RequestTraceRequirement')->getRegistry()->Query(
+                    array(
+                        new RequestTraceObjectPredicate($object_it),
+                        new FilterAttributePredicate('Type', REQUEST_TRACE_PRODUCT),
+                        new FilterAttributeNotNullPredicate('Baseline'),
+                        new SortAttributeClause('Baseline.D')
+                    )
+                );
+                if ( $traceIt->get('Baseline') != '' ) {
+                    $baselineService = new WikiBaselineService(getFactory(), getSession());
+                    $baselineIt = $baselineService->getComparableBaselineIt($object_it->getRef('DocumentId'), $traceIt->get('Baseline'));
+
+                    $compareToPageIt = $baselineService->getComparedPageIt($object_it, $baselineIt);
+                    $baselineContent = $compareToPageIt->getHtmlDecoded('Content');
+
+                    $pageIt->moveFirst();
+                    while ( !$pageIt->end() ) {
+                        $compareToPageIt = $baselineService->getComparedPageIt($pageIt, $baselineIt);
+                        $baselineContent .= $this->buildDocumentStructure($removeSectionNumberHead, $compareToPageIt, $contentAttribute);
+                        $pageIt->moveNext();
+                    }
+
+                    $diffBuilder = new WikiHtmlDiff($baselineContent,$content);
+                    $content = $diffBuilder->build();
+                }
             }
         }
 
         if ( $count > 0 || !$this->display_hints ) return $content;
-        if ( $content != '' ) {
-            $content .= '<div class="wiki-page-help">'.str_replace('%1', '<a target="_blank" href="'.$info['url'].'">'.$info['uid'].'</a>', text(2114)).'</div>';
+        if ( $content != '' && $this->getObjectIt()->get('Includes') == '' ) {
+            $uid = new ObjectUID();
+            $content =
+                '<div class="wiki-page-help">'.
+                    str_replace('%1', $uid->getUidWithCaption($object_it), text(2114)).
+                '</div>' . $content;
         }
+        return '<div class="inline-page">' . $content . '</div>';
+    }
+
+    function buildDocumentStructure( $removeSectionNumberHead, $pageIt, $contentAttribute )
+    {
+        $content = '';
+        $itemCount = 0;
+
+        if ( $this->inlineSectionNumbering ) {
+            $sectionNumber = substr_replace(
+                    $pageIt->get('SectionNumber'),
+                    '', 0,
+                    strlen($removeSectionNumberHead)
+                );
+            $sectionNumber =
+                trim($this->getObjectIt()->get('SectionNumber') . '.' . $sectionNumber, '.')
+                . ' &nbsp; ';
+        }
+        $content .= '<h4>' . $sectionNumber . $pageIt->get('Caption') . '</h4>';
+        $content .= preg_replace_callback(
+                        REGEX_INCLUDE_PAGE,
+                        array($this, 'parseIncludePageCallback'),
+                        $pageIt->getHtmlDecoded($contentAttribute),
+                        -1,
+                        $itemCount
+                    );
+
         return $content;
     }
 
@@ -673,7 +724,7 @@ class WikiParser
 			
 	 		if ( $this->hasUrlOnImage() && $image_width != '' )
 	 		{
-	 			$result .= '<a class="preview" href="'.$url.'&.png" title="'.$image_caption.'">';
+	 			$result .= '<a class="preview" href="'.$url.'" title="'.$image_caption.'">';
 	 		}
 	
 	 		$result .= '<center><img class="wiki_page_image" alt="'.$image_caption.'" src="'.$url.'" '.$image_width.'></center>';
@@ -954,7 +1005,7 @@ class WikiParser
  {
  	global $wiki_parser;
  	
- 	return '[uml]'.array_push($wiki_parser->uml_array, IteratorBase::wintoutf8($match[1])).'[/uml]';
+ 	return '[uml]'.array_push($wiki_parser->uml_array, $match[1]).'[/uml]';
  }
 
  function preg_uml_callback_restore( $match )

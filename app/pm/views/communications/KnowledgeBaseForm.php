@@ -1,5 +1,5 @@
 <?php
-
+include_once SERVER_ROOT_PATH.'pm/methods/WikiExportOptionsWebMethod.php';
 include_once SERVER_ROOT_PATH."pm/views/wiki/PMWikiForm.php";
 
 class KnowledgeBaseForm extends PMWikiForm
@@ -41,7 +41,24 @@ class KnowledgeBaseForm extends PMWikiForm
 		return parent::IsAttributeEditable($attr_name);
 	}
 
-	function getFieldValue($field)
+	function getNewRelatedActions()
+    {
+        $actions = parent::getNewRelatedActions();
+
+        $method = new ObjectCreateNewWebMethod($this->getObject());
+        if ( $method->hasAccess() ) {
+            $method->setVpd($this->getObjectIt()->get('VPD'));
+            $actions['import'] = array(
+                'name' => translate('Импортировать'),
+                'url' => $method->getJSCall(array('view' => 'importdoc', 'ParentPage' => $this->getObjectIt()->getId()), translate('Импорт'))
+            );
+            $actions[] = array();
+        }
+
+        return $actions;
+    }
+
+    function getFieldValue($field)
     {
         switch( $field ) {
             case 'Content':
@@ -97,5 +114,9 @@ class KnowledgeBaseForm extends PMWikiForm
             }
         }
         return $html;
+    }
+
+    protected function buildExportWebMethod() {
+        return new WikiExportOptionsWebMethod();
     }
 }

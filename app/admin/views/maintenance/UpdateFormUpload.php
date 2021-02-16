@@ -45,7 +45,7 @@ class UpdateUploadForm extends AdminForm
 		return true; 	
 	}
 	
-	function IsAttributeModifable( $attribute )
+	function IsAttributeModifiable( $attribute )
 	{
 		return true;
 	}

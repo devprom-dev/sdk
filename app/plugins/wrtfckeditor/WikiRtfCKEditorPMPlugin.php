@@ -1,6 +1,8 @@
 <?php
 define( 'CODE_ISOLATE', '/<code([^>]*)>([\S\s]+)<\/code>/i' );
 define( 'CODE_RESTORE', '/<code([^>]*)>([0-9]+)<\/code>/i' );
+define( 'IMAGE_ISOLATE', '/<img([^>]+)\/?>/i' );
+define( 'IMAGE_RESTORE', '/<img([0-9]+)\/?>/i' );
 define( 'REGEX_COMMENTS', '/<span\s+comment-id="(\d+)"\s*>([^<]+)<\/span>/i' );
 
 include "classes/notificators/WrtfCKEditorChangeNotificator.php";
@@ -9,7 +11,7 @@ include "classes/ScriptWrtfCKEditorBuilder.php";
 include "classes/StylesheetWrtfCKEditorBuilder.php";
 include "model/WysiwygMetadataBuilder.php";
 include "classes/WikiConverterBuilderWYSIWYG.php";
-include "classes/WikiImporterBuilderPanDoc.php";
+include "classes/WikiImporterBuilderEditor.php";
 
 class WikiRtfCKEditorPMPlugin extends PluginPMBase
 {
@@ -30,7 +32,7 @@ class WikiRtfCKEditorPMPlugin extends PluginPMBase
  	    return array_merge($builders,
             array (
                 new WikiConverterBuilderWYSIWYG(),
-                new WikiImporterBuilderPanDoc()
+                new WikiImporterBuilderEditor()
             )
  	    );
  	}
@@ -46,6 +48,13 @@ class WikiRtfCKEditorPMPlugin extends PluginPMBase
                     'classname' => 'SearchArtifactsPage',
                     'title' => text('wrtfckeditor7'),
                     'AccessEntityReferenceName' => 'pm_ChangeRequest'
+                ),
+            'includeartifacts' =>
+                array (
+                    'includes' => array( 'wrtfckeditor/views/IncludeArtifactsPage.php' ),
+                    'classname' => 'IncludeArtifactsPage',
+                    'title' => text('wrtfckeditor11'),
+                    'AccessEntityReferenceName' => 'WikiPage'
                 ),
             'searchtexttemplate' =>
                 array (

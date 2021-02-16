@@ -1,5 +1,4 @@
 <?php
-
 include_once "ModelValidatorInstance.php";
 
 class ModelValidatorEmbeddedForm extends ModelValidatorInstance
@@ -15,7 +14,6 @@ class ModelValidatorEmbeddedForm extends ModelValidatorInstance
 		$rows = array();
 
 		if ( !$object->IsAttributeRequired($this->validate_field) ) return "";
-		if ( $parms[$this->validate_field] != '' ) return "";
 
 		$embeddedFormId = '';
         foreach( array_keys($parms) as $field ) {

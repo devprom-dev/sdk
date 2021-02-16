@@ -15,16 +15,29 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
 
         parent::setUp();
 
-        $this->workflowMock = $this->getMock('WorkflowScheme', array('buildScheme','getStates'), array(), '', false);
+        $this->workflowMock =
+            $this->getMockBuilder(WorkflowScheme::class)
+                ->disableOriginalConstructor()
+                ->setMethods(["buildScheme","getStates"])
+                ->getMock();
+
         $ref = new \ReflectionProperty('WorkflowScheme', 'singleInstance');
         $ref->setAccessible(true);
         $ref->setValue(null, $this->workflowMock);
 
         // project mock
-        $this->project_mock = $this->getMock('Project', array('createIterator'), array(), '', false);
-        
-        $project_iterator = $this->getMock('ProjectIterator', array('getMethodologyIt'), array($this->project_mock));
-         
+        $this->project_mock =
+            $this->getMockBuilder(Project::class)
+                ->disableOriginalConstructor()
+                ->setMethods(["createIterator"])
+                ->getMock();
+
+        $project_iterator =
+            $this->getMockBuilder(ProjectIterator::class)
+                ->setConstructorArgs(array($this->project_mock))
+                ->setMethods(["getMethodologyIt"])
+                ->getMock();
+
         $project_iterator->expects($this->any())->method('getMethodologyIt')->will( 
                 $this->returnValue( $this->getMethodologyIt() 
                 ));
@@ -34,17 +47,25 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
                 ));
 
         // participant mock
-        $this->participant_mock = $this->getMock('Participant', array('createIterator') ); 
+        $this->participant_mock =
+            $this->getMockBuilder(Participant::class)
+                ->disableOriginalConstructor()
+                ->setMethods(["createIterator"])
+                ->getMock();
 
         $this->participant_mock->expects($this->any())->method('createIterator')->will( 
                 $this->returnValue( new ParticipantIterator($this->participant_mock) 
                 ));
 
         // other mocks
-        $auth_factory_mock = $this->getMock('AuthenticationFactory', array('authorize'));
+        $auth_factory_mock =
+            $this->getMockBuilder(AuthenticationFactory::class)
+                ->disableOriginalConstructor()
+                ->setMethods(["authorize"])
+                ->getMock();
 
         $user = new User();
-        
+
         $auth_factory_mock->expects($this->any())->method('authorize')
             ->will($this->returnValue( $user->createCachedIterator( array( array(
         			'cms_UserId' => 1,
@@ -52,13 +73,11 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
         		)))
             ));
 
-        $session_mock = $this->getMock('PMSession',
-            array('configure','getBuilders','getProjectIt','getUserIt','getParticipantIt'),
-            array(
-                $this->getProjectIt(),
-                $auth_factory_mock
-            )
-        );
+        $session_mock =
+            $this->getMockBuilder(PMSession::class)
+                ->setConstructorArgs(array($this->getProjectIt(), $auth_factory_mock))
+                ->setMethods(['configure','getBuilders','getProjectIt','getUserIt','getParticipantIt'])
+                ->getMock();
 
         $session_mock->expects($this->any())->method('getBuilders')
             ->will( $this->returnValueMap( $this->getBuilders() ));

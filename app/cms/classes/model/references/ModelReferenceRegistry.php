@@ -1,13 +1,12 @@
 <?php
 
-define(MODEL_REFERENCES_CACHE_KEY, 'model-references');
-
 class ModelReferenceRegistry extends ObjectRegistrySQL
 {
 	private $reference_forward = array();
 	private $reference_backward = array();
 	private $cache_service = null;
     private $cache_key = '';
+    const MODEL_REFERENCES_CACHE_KEY = 'model-references';
 	
 	public function __construct( $cache_service, $cache_key = 'global' )
 	{
@@ -15,7 +14,7 @@ class ModelReferenceRegistry extends ObjectRegistrySQL
         $this->cache_key = $cache_key;
 		
 		list($this->reference_forward, $this->reference_backward) = 
-				$this->cache_service->get(MODEL_REFERENCES_CACHE_KEY, $this->cache_key);
+				$this->cache_service->get(self::MODEL_REFERENCES_CACHE_KEY, $this->cache_key);
 		
 		if ( !$this->reference_forward ) {
 			$this->buildStaticReferences();
@@ -24,7 +23,7 @@ class ModelReferenceRegistry extends ObjectRegistrySQL
 	
 	function __destruct()
 	{
-		$this->cache_service->set(MODEL_REFERENCES_CACHE_KEY, 
+		$this->cache_service->set(self::MODEL_REFERENCES_CACHE_KEY,
             array (
                 $this->reference_forward,
                 $this->reference_backward

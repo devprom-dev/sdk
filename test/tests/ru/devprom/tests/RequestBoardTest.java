@@ -92,6 +92,7 @@ public class RequestBoardTest extends ProjectTestBase {
 	@Test(description="S-1967")
 	public void createTask() throws InterruptedException {
 		RTask task = new RTask("Задача-1", user, "Анализ", 6.0);
+		task.setIteration("0.1");
 		task.setPriority("Высокий");
 		RequestsBoardPage rbp = (new SDLCPojectPageBase(driver)).gotoRequestsBoard();
 		rbp = rbp.addTask(requests.get(0).getNumericId(), task);
@@ -230,25 +231,27 @@ public class RequestBoardTest extends ProjectTestBase {
 	public void dateAttributes() throws InterruptedException {
 		Request request = requests.get(1);
 		RequestsBoardPage rbp = (new SDLCPojectPageBase(driver)).gotoRequestsBoard();
-		  rbp = rbp.showSpecificAttributes("RecordModified", "StartDate", "FinishDate", "RecordCreated", "IterationStartDate", "IterationFinishDate", "IterationEstimatedStart", "IterationEstimatedFinish", "ReleaseStartDate", "ReleaseFinishDate" , "ReleaseEstimatedStart" , "ReleaseEstimatedFinish" , "DeliveryDate");
+		  rbp = rbp.showSpecificAttributes("RecordModified", "StartDate", "FinishDate", "RecordCreated", "DeliveryDate");
           List<String> datesStepOne = rbp.readDatesTitles(request.getNumericId());
 	      Assert.assertEquals(datesStepOne.size(), 2, "На данном этапе ожидается 2 записи типа Дата");
 	      Assert.assertTrue(datesStepOne.contains("Дата создания"), "Отсутствует Дата создания");
 	      Assert.assertTrue(datesStepOne.contains("Дата изменения"), "Отсутствует Дата изменения");
           
 	      rbp = rbp.moveToAnotherSection(request.getNumericId(), "0", "В релизе");
+	      driver.navigate().refresh();
+
 	      List<String> datesStepTwo = rbp.readDatesTitles(request.getNumericId());
 	      Assert.assertEquals(datesStepTwo.size(), 4, "На данном этапе ожидается 4 записей типа Дата");
 	      Assert.assertTrue(datesStepTwo.contains("Дата создания"), "Отсутствует Дата создания");
 	      Assert.assertTrue(datesStepTwo.contains("Дата изменения"), "Отсутствует Дата изменения");
 	      Assert.assertTrue(datesStepTwo.contains("Дата начала"), "Отсутствует Дата начала");
 	      
-	      RTask task = new RTask("Задача", user, "Разработка", 2.0);
 	      RequestPlanningPage rpp = rbp.moveToPlanned(request.getNumericId());
-      
+	      RTask task = new RTask("Задача", user, "Разработка", 2.0);
 	      rpp.fillTask(1, task.getName(), task.getType(), task.getExecutor(), task.getEstimation());
 	      rbp = rpp.savePlannedOnBoard();
-	      
+		  driver.navigate().refresh();
+
 	      List<String> datesStepThree = rbp.readDatesTitles(request.getNumericId());
 	      Assert.assertEquals(datesStepThree.size(), 4, "На данном этапе ожидается 4 записи типа Дата");
 	      Assert.assertTrue(datesStepThree.contains("Дата создания"), "Отсутствует Дата создания");
@@ -260,11 +263,9 @@ public class RequestBoardTest extends ProjectTestBase {
 	      RequestEditPage rep =  rbp.editRequest(request.getNumericId());
 	      rep.addNewDeadline(milestone, spent);
 	      rep.saveEditedFromBoard();
-	      
-	      rbp = new RequestsBoardPage(driver);
-	      rbp.showAll();
-	      
-	      List<String> datesStepFour = rbp.readDatesTitles(request.getNumericId());
+		  driver.navigate().refresh();
+
+		  List<String> datesStepFour = rbp.readDatesTitles(request.getNumericId());
 	      Assert.assertEquals(datesStepFour.size(), 4, "На данном этапе ожидается 4 записи типа Дата");
 	      Assert.assertTrue(datesStepFour.contains("Дата создания"), "Отсутствует Дата создания");
 	      Assert.assertTrue(datesStepFour.contains("Дата изменения"), "Отсутствует Дата изменения");
@@ -272,7 +273,9 @@ public class RequestBoardTest extends ProjectTestBase {
 	      Assert.assertTrue(datesStepFour.contains("Оценка завершения"), "Отсутствует Оценка завершения");
 	      
 	      rbp = rbp.moveToCompleted(request.getNumericId(), "", null, "Релиз: 0");
-	      List<String> datesStepFive = rbp.readDatesTitles(request.getNumericId());
+		  driver.navigate().refresh();
+
+		  List<String> datesStepFive = rbp.readDatesTitles(request.getNumericId());
 	      Assert.assertEquals(datesStepFive.size(), 5, "На данном этапе ожидается тринадцать записей типа Дата");
 	      Assert.assertTrue(datesStepFive.contains("Дата создания"), "Отсутствует Дата создания");
 	      Assert.assertTrue(datesStepFive.contains("Дата изменения"), "Отсутствует Дата изменения");
@@ -305,7 +308,7 @@ public class RequestBoardTest extends ProjectTestBase {
 		      rbp = new RequestsBoardPage(driver);
 		      double readEst = rbp.readEstimation(request.getNumericId());
 		      Assert.assertEquals(readEst, 22.0, "Неправильное значение атрибута Трудоемкость");
-		      String est = rbp.readAttributeByName(request.getNumericId(), "Оставшаяся трудоемкость");
+		      String est = rbp.readAttributeByName(request.getNumericId(), "Осталось, ч.");
 		      est = est.replace(",",".").replace("ч", "");
 		      double readEstLeft = Double.parseDouble(est);
 		      Assert.assertEquals(readEstLeft, 22.0, "Неправильное значение атрибута Оставшаяся трудоемкость");
@@ -317,7 +320,7 @@ public class RequestBoardTest extends ProjectTestBase {
 		      List<String> spents = rbp.readSpentLinks(request.getNumericId());
 		      Assert.assertTrue(spents.contains("5.0"), "Не найдена ссылка на списанное время");	
 		      
-		      rbp = rbp.setupGrouping("Priority");
+		      rbp.setupGrouping("Priority");
 		      Assert.assertTrue(rbp.isRequestInSection(request.getNumericId(), "Обычный", "Добавлено"), "Пожелание не было перемещено строку Приоритет: обычный");
 		      
 		      rbp = rbp.changePriorityInContextMenu(request2.getNumericId(), "Низкий");
@@ -354,20 +357,8 @@ public class RequestBoardTest extends ProjectTestBase {
 		Assert.assertTrue(rbp.readAllCardAttributesAsString(request.getNumericId()).contains("Добавлено"), "Не отображается состояние Пожеланий");
 		
 		rbp = rbp.moveToCompletedUsingMenu(request.getNumericId(), "0.1", comment, null);
+		driver.navigate().refresh();
 		Assert.assertTrue(rbp.readAllCardAttributesAsString(request.getNumericId()).contains("Выполнено"), "Не отображается состояние выполннных Пожеланий");
-/*		
-		rbp = rbp.setupGrouping("ClosedInVersion");
-		rbp = rbp.turnOffFilter("state");
-		   
-		List<String> groups = rbp.getAllGroupingSections();
-		Assert.assertTrue(groups.contains("Выполнено в версии: 0.1"), "Нет группы с именем 'Выполнено в версии: 0.1'");
-		
-		Date date1 = new Date();
-		rbp  = rbp.moveToAnotherSection(request2.getNumericId(), "Выполнено в версии: 0.1", "Добавлено");
-		Date date2 = new Date();
-		int seconds = (int)((date1.getTime()-date2.getTime())/1000);
-		Assert.assertTrue(seconds<moveCardLimitInSeconds, "Пожелание не обнаружено в группе 'Выполнено в версии: 0.1'");
-*/		
 	}
 	
 	

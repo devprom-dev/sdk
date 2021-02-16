@@ -3,6 +3,10 @@ _admin_entry:
     defaults: { _controller: AdministrativeBundle:Main:index }
 
 _admin_install:
+    path:  /install
+    defaults: { _controller: AdministrativeBundle:Install:index }
+
+_admin_install_slash:
     path:  /install/
     defaults: { _controller: AdministrativeBundle:Install:index }
 
@@ -32,6 +36,10 @@ _admin_systemplates:
     path:  /admin/systemtemplates/
     defaults: { _controller: AdministrativeBundle:SystemTemplate:index }
     
+_admin_ldap:
+    path:  /admin/ldap/
+    defaults: { _controller: AdministrativeBundle:Ldap:index }
+
 _admin_scripts:
     path:  /admin/scripts/javascript/
     defaults: { _controller: CommonBundle:Scripts:js }

@@ -53,7 +53,9 @@ class IssueAutoAction extends AutoAction
 					'Company',
 					'TimesRepeated',
 					'SupportChannelEmail',
-					'SupportChannelName'
+					'SupportChannelName',
+                    'SubmittedVersion',
+                    'ClosedInVersion'
  				)
  		);
  	}

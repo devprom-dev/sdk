@@ -1,7 +1,5 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
-
 include_once SERVER_ROOT_PATH."pm/classes/time/Activity.php";
 
 class ActivityRequest extends Activity
@@ -13,6 +11,7 @@ class ActivityRequest extends Activity
 		$strategy = new EstimationHoursStrategy();
 		$this->addAttribute('LeftWork', 'INTEGER', $strategy->getDimensionText(text(1161)), true, false, '', 15);
 		$this->setAttributeRequired('Issue', true);
+        $this->setAttributeRequired('Task', false);
  	}
  	
 	function getTaskIt( $fact, $request_it, $user_id, $task_type )
@@ -74,7 +73,6 @@ class ActivityRequest extends Activity
 	 				'Assignee' => $user_id,
 	 				'Planned' => $request_it->get('Estimation') > 0 ? $request_it->get('Estimation') : $fact,
 	 				'LeftWork' => $request_it->get('EstimationLeft'),
-	 				'Fact' => $fact,
 					'TaskType' => $task_type != '' ? $task_type : $default_task_type,
 	 				'ChangeRequest' => $request_it->getId(),
 					'State' => array_pop($task->getTerminalStates())
@@ -91,13 +89,13 @@ class ActivityRequest extends Activity
 	{
 	    $issueId = $parms['Task'] > 0 ? $parms['Task'] : $parms['Issue'];
 		$request_it = getFactory()->getObject('pm_ChangeRequest')->getRegistry()->Query(
-				array (
-						new RequestTasksPersister(),
-						new FilterInPredicate($issueId > 0 ? $issueId : '-1')
-				)
+            array (
+                new RequestTasksPersister(),
+                new FilterInPredicate($issueId > 0 ? $issueId : '-1')
+            )
 		);
 		if ( $request_it->getId() < 1 ) throw new Exception('Request identifier should be passed');
-		$parms['Issue'] = $parms['Task'] = $issueId;
+		$parms['Issue'] = $parms['Task'] = $request_it->getId();
 
 		$this->setVpdContext($request_it);
 		
@@ -109,7 +107,7 @@ class ActivityRequest extends Activity
 		$result = parent::add_parms( $parms );
 		if ( $result < 1 ) return $result;
 
-		if ( $request_it->get('EstimationLeft' != $parms['LeftWork'] ) ) {
+		if ( $parms['LeftWork'] != '' ) {
             $request_it->object->removeNotificator( 'EmailNotificator' );
             $request_it->object->modify_parms($request_it->getId(), array(
                 'EstimationLeft' => $parms['LeftWork']

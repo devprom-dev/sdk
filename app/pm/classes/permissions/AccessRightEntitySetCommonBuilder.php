@@ -10,21 +10,13 @@ class AccessRightEntitySetCommonBuilder extends AccessRightEntitySetBuilder
 			'pm_Participant', 'BlogPost',
 			'pm_Milestone', 'pm_Function', 'pm_AccessRight', 
      		'pm_CustomReport', 'pm_Question', 'pm_Activity', 'pm_ProjectRole',
-            'AutoAction', 'Snapshot', 'pm_Environment', 'Comment', 'pm_Invitation'
+            'AutoAction', 'Snapshot', 'pm_Environment', 'Comment', 'pm_Invitation', 'Tag'
  		);
 
-        if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
-            if ( class_exists('Issue') ) {
-                $entities[] = 'Issue';
-            }
-            if ( class_exists('Increment') ) {
-                $entities[] = 'Increment';
-            }
-        }
-        else {
+        if ( !getSession()->IsRDD() ) {
             $entities[] = 'pm_ChangeRequest';
         }
- 		
+
  		foreach( $entities as $entity ) {
  			$set->addObject(getFactory()->getObject($entity));
  		}

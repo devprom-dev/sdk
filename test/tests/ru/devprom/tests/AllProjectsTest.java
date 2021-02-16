@@ -89,13 +89,13 @@ public class AllProjectsTest extends AdminTestBase {
 		MyProjectsPageBase mppb = (new AdminPageBase(driver)).gotoMyProjects();
 		MyReportsPageBase mrpb = mppb.gotoMyReports();
 		List<AllReportsPage.Report> reports = mrpb.getAllReportsList();
+		String reportsUrl = driver.getCurrentUrl();
 		int failedCount = 0;
 		for (AllReportsPage.Report report:reports){
-			
 			mrpb.checkReport(report);
 			FILELOG.debug("Checked report <"+report.name + "> STATUS: " +report.status);
 		    if (!report.status.equals("verified")) failedCount++;
-			driver.navigate().back();
+			driver.navigate().to(reportsUrl);
 		
 		}
 		if (failedCount>0) {

@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Wiki\WikiBaselineService;
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/converters/WikiImporter.php";
 
 class ImportDocumentForm extends PMPageForm
@@ -8,32 +9,45 @@ class ImportDocumentForm extends PMPageForm
     	parent::extendModel();
 
 		$visible = array();
-        $system = $this->getObject()->getAttributesByGroup('system');
+		$object = $this->getObject();
+        $system = $object->getAttributesByGroup('system');
 
-		foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
+        $object->setAttributeRequired('Caption', false);
+		foreach( $object->getAttributes() as $attribute => $info ) {
 			if ( in_array($attribute, $visible) ) continue;
             if ( in_array($attribute, $system) ) continue;
-            $this->getObject()->setAttributeVisible($attribute, false);
-			$this->getObject()->setAttributeRequired($attribute, false);
+            if ( $object->IsAttributeRequired($attribute) ) continue;
+            $object->setAttributeVisible($attribute, false);
 		}
 
 		if ( $_REQUEST['ParentPage'] != '' ) {
-            $this->getObject()->setAttributeVisible('ParentPage', true);
+            $object->setAttributeVisible('ParentPage', true);
+            $parentPageIt = $object->getExact($_REQUEST['ParentPage']);
+            if ( $parentPageIt->get('ParentPage') == '' ) {
+                $object->addAttributeGroup('PageType', 'system');
+            }
         }
-		$this->getObject()->addAttribute('DocumentFile', 'FILE', translate('Файл'), true, false, text(2218), 1);
-        $this->getObject()->addAttribute('Format', 'VARCHAR', '', false, false);
 
-        $typeObject = $this->getObject()->getAttributeObject('PageType');
-        $typeIt = $typeObject->getAll();
-        if ( $typeIt->count() > 0 ) {
-            $this->getObject()->setAttributeVisible('PageType', true);
+		$object->addAttribute('DocumentFile', 'FILE', translate('Файл'), true, false, text(2218), 1);
+        $object->addAttribute('Format', 'VARCHAR', '', false, false);
+
+        if ( !in_array('PageType', $system) ) {
+            $typeIt = $object->getAttributeObject('PageType')->getAll();
+            if ( $typeIt->count() > 0 ) {
+                $object->setAttributeVisible('PageType', true);
+            }
         }
     }
     
 	function createFieldObject( $name )
 	{
 		switch ( $name )
-		{		
+		{
+            case 'DocumentVersion':
+                $field = new FieldAutoCompleteObject( getFactory()->getObject('Baseline') );
+                $field->setAppendable();
+                return $field;
+
 			default:
 				return parent::createFieldObject( $name );
 		}
@@ -62,8 +76,10 @@ class ImportDocumentForm extends PMPageForm
 
             $options = array (
                 'PageType' => $_REQUEST['PageType'],
-                'State' => $_REQUEST['State']
+                'State' => $_REQUEST['State'],
+                'DocumentVersion'  => $_REQUEST['DocumentVersion'],
             );
+
 			$importObject = getFactory()->getObject(get_class($this->getObject()));
 			if ( $_REQUEST['Format'] == 'list' ) {
                 $builder = new WikiImporterListBuilder($importObject);
@@ -81,8 +97,14 @@ class ImportDocumentForm extends PMPageForm
                 if ( class_exists($engineClass) ) {
                     $engine = new $engineClass;
                     $engine->setOptions($options);
-                    if ( $engine->import($builder, $fileName, $fileContent, $parent_it) ) {
-                        $this->redirectOnAdded($engine->getDocumentIt());
+                    if ( $engine->import($builder, $fileName, $fileContent, $parent_it) )
+                    {
+                        $documentIt = $engine->getDocumentIt();
+                        if ( $_REQUEST['DocumentVersion'] != ''  ) {
+                            $service = new WikiBaselineService(getFactory(), getSession());
+                            $service->storeInitialBaseline($documentIt);
+                        }
+                        $this->redirectOnAdded($documentIt);
                     }
                 }
                 $importer_it->moveNext();

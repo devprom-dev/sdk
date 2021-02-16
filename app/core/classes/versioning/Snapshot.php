@@ -1,5 +1,4 @@
 <?php
-
 include "SnapshotIterator.php";
 include "predicates/SnapshotBeforeDatePredicate.php";
 include "predicates/SnapshotsByObjectPredicate.php";
@@ -7,14 +6,13 @@ include "persisters/SnapshotItemValuePersister.php";
 
 class Snapshot extends Metaobject
 {
- 	function Snapshot() 
+ 	function Snapshot()
  	{
 		parent::Metaobject('cms_Snapshot');
  		$this->defaultsort = 'RecordCreated DESC';
 	}
 	
-	function createIterator() 
-	{
+	function createIterator() {
 		return new SnapshotIterator( $this );
 	}
 	
@@ -87,7 +85,7 @@ class Snapshot extends Metaobject
 	
 	function getPage()
 	{
-		return getSession()->getApplicationUrl().'versioning/revisions?';
+		return getSession()->getApplicationUrl($this).'versioning/revisions?';
 	}
 	
 	function getMakePage( $anchor_it, $iterator, $list_name = '', $url = '' )

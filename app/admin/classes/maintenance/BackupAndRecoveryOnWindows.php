@@ -1,5 +1,4 @@
 <?php
-
 include "BackupAndRecoveryStrategy.php";
 
 class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
@@ -21,10 +20,15 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
 			chdir(SERVER_BACKUP_PATH);
 
 			$command = $archiver_path.' a -r -tzip '.$this->getBackupFileName().' devprom/* htdocs/*';
-			
 			$this->writeLog("Zip: ".$command);
-			
-			$this->writeLog("Zip: ".shell_exec($command));
+
+            try {
+                $this->writeLog('Zip: ' . \FileSystem::execAndSendResponse($command));
+            }
+            catch( \Exception $e ) {
+                $this->errorLog("Zip: ".$e->getMessage());
+                throw $e;
+            }
 		}
 		else
 		{
@@ -54,9 +58,14 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
 			chdir($zip_file_directory);
 			$command = $archiver_path.' x -tzip -y '.$zip_file_directory.$zip_file_name;
 			
-			$this->writeLog($command."\n");
-			
-			shell_exec($command);
+			$this->writeLog($command);
+            try {
+                $this->writeLog('Unzip: ' . \FileSystem::execAndSendResponse($command));
+            }
+            catch( \Exception $e ) {
+                $this->errorLog("Unzip: ".$e->getMessage());
+                throw $e;
+            }
 		}
 		else
 		{
@@ -130,6 +139,7 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
 		
  		chdir(SERVER_ROOT.'/mysql/bin');
 		$host_parts = preg_split('/:/', DB_HOST);
+		if ( $host_parts[1] == '' ) $host_parts[1] = '3306';
 		
 		$command = 'mysqldump.exe --host='.$host_parts[0].' --port='.$host_parts[1].
 			' --user='.DB_USER.' --password='.DB_PASS.' --add-drop-table --set-charset --force' .
@@ -138,11 +148,15 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
 		    SERVER_ROOT.'/mysql/share/charsets" '.DB_NAME;
 		
 		$this->writeLog("Backup: ".$command);
-		
-		$result = shell_exec($command);
-		
-		$this->writeLog("Backup: ".$result);
-				
+
+		try {
+            $this->writeLog("Backup: ".\FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog("Backup: ".$e->getMessage());
+            throw $e;
+        }
+
 		$this->configure_database_file( $sql_path.'devprom.sql' );
 		
 		return true;
@@ -154,13 +168,17 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
  		
  		chdir(SERVER_ROOT.'/mysql/bin');
  		$host_parts = preg_split('/:/', DB_HOST);
- 		
-		$result = shell_exec('mysql.exe --host='.$host_parts[0].' --port='.$host_parts[1].' --user='.DB_USER.' --password='.DB_PASS.
-			' --database='.DB_NAME.' -e "source '.$sql_path.'" ');
 
-		$this->writeLog($result);
-   	    
-   	    return $result;
+        $command = 'mysql.exe --host='.$host_parts[0].' --port='.$host_parts[1].' --user='.DB_USER.' --password='.DB_PASS.
+            ' --database='.DB_NAME.' -e "source '.$sql_path.'" ';
+
+        try {
+            $this->writeLog('Recovery: ' . \FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog("Recovery: ".$e->getMessage());
+            throw $e;
+        }
 	}
 
 	function update_database() 
@@ -169,19 +187,7 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
 
  		$this->writeLog("UPDATE database\n");
 
-		// setup specific statements in the update script 		
-		$f = fopen($sql_path, 'r', 1);
-		
-		if($f === false) {
-			$this->writeLog(text(1031).': '.$sql_path."\n");
-			return;
-		}
-		
-		$file_content = fread($f, filesize($sql_path));
-		fclose($f);
-
 		list($host, $port) = preg_split('/:/', DB_HOST);
-		
 		if ( $port == '' ) $port = '3306';
 		
 		if ( defined('MYSQL_UPDATE_COMMAND') )
@@ -196,17 +202,18 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
 		else
 		{
 		    $command = 'mysql --host='.$host.' --port='.$port.' --user='.DB_USER.' --password='.DB_PASS.
-		        ' --database='.DB_NAME.' -e "source '.$sql_path.'" 2>&1';
+		        ' --database='.DB_NAME.' -e "source '.$sql_path.'"';
 		}
 		
 		$command = preg_replace('/mysql/i', 'call "'.SERVER_CORPMYSQL_PATH.'"', $command);
 
-		$this->writeLog($command);
-
-		$result = shell_exec($command);
-
-		$this->writeLog($result);
-   	    
-   	    return $result;
+        $this->writeLog($command);
+        try {
+            $this->writeLog('Update: ' . \FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog("Update: ".$e->getMessage());
+            throw $e;
+        }
 	}
 }

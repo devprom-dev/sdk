@@ -2,6 +2,7 @@
 include_once SERVER_ROOT_PATH."core/classes/widgets/BulkActionBuilder.php";
 include_once SERVER_ROOT_PATH."pm/methods/CreateIssueBasedOnWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/BindIssuesWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/MergeIssuesWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/DuplicateIssuesWebMethod.php";
 
 class BulkActionBuilderIssues extends BulkActionBuilder
@@ -14,6 +15,10 @@ class BulkActionBuilderIssues extends BulkActionBuilder
             $method = new CreateIssueBasedOnWebMethod($object);
             if ( $method->hasAccess() ) {
                 $registry->addActionUrl($method->getCaption(), $method->url(array('getCheckedRows')));
+            }
+            $method = new MergeIssuesWebMethod();
+            if ($method->hasAccess()) {
+                $registry->addCustomAction($method->getCaption(), $method->getMethodName());
             }
         }
 
@@ -33,7 +38,7 @@ class BulkActionBuilderIssues extends BulkActionBuilder
         $registry->addCustomAction(text(2633), 'Method:SetWatchersWebMethod:RemoveWatchers');
 
 		$method = new DuplicateIssuesWebMethod();
-		if ( $method->hasAccess() ) $registry->addCustomAction(text(867), $method->getMethodName());
+		if ( $method->hasAccess() ) $registry->addCustomAction($method->getCaption(), $method->getMethodName());
 
 		$reportIt = getFactory()->getObject('PMReport')->getExact('workflowanalysis');
         $registry->addActionUrl($reportIt->getDisplayName(),

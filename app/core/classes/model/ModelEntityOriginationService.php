@@ -10,7 +10,9 @@ class ModelEntityOriginationService
 	{
         $this->cache_key = $cache_key;
 		$this->setCacheService($cache_service);
+
 		$this->data = $this->getCacheService()->get($this->getCacheName(), $this->cache_key);
+		if ( !is_array($this->data) ) $this->data = array();
 	}
 
 	public function __destruct()
@@ -87,6 +89,8 @@ class ModelEntityOriginationService
             case 'Module':
             case 'Report':
             case 'PMReport':
+            case 'Portfolio':
+            case 'Program':
 		    	return '';
 		}
 		
@@ -98,7 +102,6 @@ class ModelEntityOriginationService
 			case 'EmailQueueAddress':
 			case 'ObjectEmailNotification':
 			case 'ObjectEmailNotificationLink':
-			case 'pm_Project':
 			case 'pm_ProjectUse':
 			case 'pm_ProjectCreation':
 			case 'Priority':
@@ -116,8 +119,6 @@ class ModelEntityOriginationService
 			case 'pm_ProjectTag':
 			case 'cms_SystemSettings':
 			case 'pm_Invitation':
-			case 'pm_DownloadAction':
-			case 'pm_DownloadActor':
 			case 'cms_BlackList':
 			case 'cms_LoginRetry':
 			case 'cms_CheckQuestion':
@@ -129,6 +130,8 @@ class ModelEntityOriginationService
 			case 'cms_NotificationSubscription':
 			case 'co_RemoteMailbox':
 			case 'co_Company':
+            case 'co_CompanyProject':
+            case 'co_CompanyProduct':
 			case 'co_ScheduledJob':
 			case 'co_JobRun':
 			case 'pm_Importance':

@@ -26,10 +26,7 @@ class FieldHours extends Field
     function draw( $view = null )
 	{
 		if ( $this->readOnly() ) {
-		    echo '<span id="'.$this->getId().'" class="input-block-level well well-text" style="width:90px;min-width:90px;">';
-		        echo $this->getValue();
-		    echo '</span>';
-			echo '<input name="'.$this->getName().'" type="hidden" value="'.$this->getValue().'">';
+            echo '<input class="input-medium" type="text" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'" readonly>';
 		}
 		else {
 		    echo '<span class="pull-left" style="min-width:210px;">';

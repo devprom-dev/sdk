@@ -42,7 +42,7 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 		// when the state is changed
 		if ( array_key_exists('State', $content) )
 		{
-		    $stateIt = \WorkflowScheme::Instance()->getStateIt($object_it->object);
+		    $stateIt = \WorkflowScheme::Instance()->getStateIt($object_it);
             while( !$stateIt->end() ) {
                 if ( $object_it->get('State') == $stateIt->get('ReferenceName') ) {
                     if ( $stateIt->get('IsTerminal') == 'N' ) {

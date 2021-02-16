@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Form\Extension\Core\Type\UrlType;
 
 
 /**
@@ -47,8 +48,7 @@ class SettingsController extends Controller {
     public function saveAction(Request $request) {
 
         $form = $this->createSettingsForm(array());
-
-        $form->bind($request);
+        $form->handleRequest($request);
 
         if ($form->isValid()) {
             $savedSettings = $this->getSettingsService()->load();
@@ -81,7 +81,7 @@ class SettingsController extends Controller {
     protected function createSettingsForm($settings)
     {
         return $this->createFormBuilder($settings)
-            ->add("appUrl", "url", array(
+            ->add("appUrl", UrlType::class, array(
                 'label' => 'settings.appUrl.title',
                 'required' => false,
                 'translation_domain' => 'settings'

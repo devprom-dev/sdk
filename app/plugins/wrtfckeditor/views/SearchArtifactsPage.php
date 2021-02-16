@@ -7,7 +7,7 @@ class SearchArtifactsPage extends PMPage
         return getFactory()->getObject('Request');
     }
 
-    function getForm() {
+    function getEntityForm() {
         return new SearchArtifactsForm( $this->getObject() );
     }
 

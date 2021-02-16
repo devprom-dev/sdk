@@ -16,9 +16,13 @@ class RequestLinkIterator extends OrderedIterator
 			)
 		);
 		$target_it = $target_it->getSpecifiedIt();
+        $targetStateIt = $target_it->getStateIt();
 
-        return $link_type_it->getDisplayName().': '.
-			$uid->getUidIconGlobal($target_it).' '.$target_it->getDisplayName().' ('.$target_it->get('StateName').')';
+		$title = $uid->getUidIconGlobal($target_it).' '.$target_it->getDisplayName().' ('.$targetStateIt->get('Caption').')';
+		if ( $link_type_it->getDisplayName() != '' ) {
+            $title = $link_type_it->getDisplayName().': ' . $title;
+        }
+        return $title;
  	}
  	
  	function getTraceDisplayName() 
@@ -28,6 +32,11 @@ class RequestLinkIterator extends OrderedIterator
 		$link_type_it = $this->getRef('LinkType');
 		$target_it = $this->getRef('TargetRequest')->getSpecifiedIt();
 
-		return $link_type_it->getDisplayName().': '.$uid->getObjectUid($target_it).' '.$target_it->getDisplayName();
+		$title = $uid->getObjectUid($target_it).' '.$target_it->getDisplayName();
+        if ( $link_type_it->getDisplayName() != '' ) {
+            $title = $link_type_it->getDisplayName().': ' . $title;
+        }
+
+		return $title;
  	}
 }

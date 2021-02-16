@@ -4,11 +4,8 @@ class MilestoneRequestPersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 		global $model_factory;
- 		
- 		$trace = $model_factory->getObject('RequestTraceMilestone');
- 		
- 		return array( 
+ 		$trace = getFactory()->getObject('RequestTraceMilestone');
+ 		return array(
  			" ( SELECT GROUP_CONCAT(CAST(l.ChangeRequest AS CHAR)) " .
 			"     FROM pm_ChangeRequestTrace l " .
 			"    WHERE l.ObjectId = " .$this->getPK($alias).

@@ -40,7 +40,7 @@ class AutoSaveFieldWebMethod extends AutoSaveTextWebMethod
  		return true; 
  	}
  	
- 	function draw()
+ 	function draw( $parms = array(), $default_value = '' )
  	{
  		parent::draw( 
  			array( 'class' => get_class($this->object_it->object),

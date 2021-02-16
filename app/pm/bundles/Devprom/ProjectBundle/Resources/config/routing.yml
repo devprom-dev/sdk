@@ -18,6 +18,10 @@ _project_autoactions:
     path: /pm/{project}/autoactions
     defaults: { _controller: ProjectBundle:Workflow:autoaction }
 
+_dashboard:
+    path: /pm/{project}/dashboard
+    defaults: { _controller: ProjectBundle:Dashboard:index }
+
 settings:
     path: /pm/{project}/settings/{area}/{action}
     defaults: { _controller: ProjectBundle:Settings:index }
@@ -62,6 +66,18 @@ _projectlist:
     path:  /pm/{project}/projects
     defaults: { _controller: ProjectBundle:Project:list }
 
+_planreleases:
+    path:  /pm/{project}/releases
+    defaults: { _controller: ProjectBundle:Release:list }
+
+_planiterations:
+    path:  /pm/{project}/iterations
+    defaults: { _controller: ProjectBundle:Iteration:list }
+
+_roadmap:
+    path:  /pm/{project}/roadmap
+    defaults: { _controller: ProjectBundle:Project:roadmap }
+
 _whatsnew:
     path:  /pm/{project}/whatsnew
     defaults: { _controller: ProjectBundle:Project:whatsnew }
@@ -88,6 +104,9 @@ _details_log:
 _details_workload:
     path:  /pm/{project}/details/workload
     defaults: { _controller: ProjectBundle:Details:workload }
+_details_comment:
+    path:  /pm/{project}/details/comments/{objectclass}/{objectid}
+    defaults: { _controller: ProjectBundle:Details:comment }
 
 bulk:
     path:  /pm/{project}/bulk
@@ -149,6 +168,10 @@ api_writeonly:
     path:  /pm/{project}/api/key-writeonly
     defaults: { _controller: ProjectBundle:Apikey:writeonly }
 
+view_form:
+    path:  /pm/{project}/form/{classname}/{objectid}
+    defaults: { _controller: ProjectBundle:View:form }
+
 pages:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\PagesController
@@ -186,6 +209,11 @@ rest_build:
 rest_requirement:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\RequirementController
+    prefix:   /pm/{project}/api/{version}
+
+rest_feature:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\FeatureController
     prefix:   /pm/{project}/api/{version}
 
 rest_testplan:

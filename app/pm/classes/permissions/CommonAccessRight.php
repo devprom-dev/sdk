@@ -11,13 +11,11 @@ class CommonAccessRight extends Metaobject
  	
  	function CommonAccessRight()
  	{
- 		global $model_factory;
- 		
  		$this->objects = array();
  		
  		parent::Metaobject('pm_AccessRight');
  		
- 		$this->addObject( $model_factory->getObject('ProjectPage') );
+ 		$this->addObject( getFactory()->getObject('ProjectPage') );
  	}
  	
 	function createIterator()
@@ -27,7 +25,7 @@ class CommonAccessRight extends Metaobject
 
 	function addObject( & $object )
 	{
-		$this->objects[] = $object;
+		$this->objects[strtolower(get_class($object))] = $object;
 	}
 	
 	function getFilterValue( $filter_class )
@@ -56,9 +54,9 @@ class CommonAccessRight extends Metaobject
 	        $builder->build( $this );
 	    }
 
- 		foreach( $this->objects as $object )
+ 		foreach( $this->objects as $className => $object )
  		{
- 		    $className = get_class($object) == 'Metaobject' ? $object->getClassName() : strtolower(get_class($object));
+ 		    $className = in_array(get_class($object), array('Metaobject','Increment')) ? strtolower($object->getClassName()) : $className;
  		    if ( count($entities) > 0 && !in_array($className, $entities) ) continue;
 
  			$data[] = array (

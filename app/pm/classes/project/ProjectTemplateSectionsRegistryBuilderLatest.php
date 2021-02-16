@@ -1,5 +1,4 @@
 <?php
-
 include_once "ProjectTemplateSectionsRegistryBuilder.php";
 
 class ProjectTemplateSectionsRegistryBuilderLatest extends ProjectTemplateSectionsRegistryBuilder

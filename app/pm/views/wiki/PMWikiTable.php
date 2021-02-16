@@ -1,6 +1,7 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/methods/FilterStateTransitionMethod.php";
-include_once SERVER_ROOT_PATH."pm/methods/FilterStateMethod.php";
+include_once SERVER_ROOT_PATH . "pm/methods/FilterStateTransitionMethod.php";
+include_once SERVER_ROOT_PATH . "pm/methods/FilterStateMethod.php";
+include_once SERVER_ROOT_PATH . "pm/methods/WikiFilterActualLinkWebMethod.php";
 include "PMWikiList.php";
 include "PMWikiChart.php";
 
@@ -18,22 +19,28 @@ class PMWikiTable extends PMPageTable
 
  	    parent::__construct( $object );
  	}
- 	
+
  	function getForm()
  	{
  	    return $this->form;
  	}
  	
-	function getStateObject()
-	{
+	function getStateObject() {
 	    return $this->state_object;
 	}
+
+	function getDocumentObject() {
+        return getFactory()->getObject('WikiDocument');
+    }
 	
  	function getSortAttributeClause( $field )
 	{
 		$parts = preg_split('/\./', $field);
 		
 		if ( $parts[0] == 'DocumentId' ) return new SortDocumentClause();
+        if ( $parts[0] == 'SectionNumber' ) {
+            return $parts[1] == 'D' ? new SortDocumentDescClause() : new SortDocumentClause();
+        }
 		
 		return parent::getSortAttributeClause( $field );
 	}
@@ -76,6 +83,7 @@ class PMWikiTable extends PMPageTable
 			getFactory()->getObject('ProjectUser'), translate($this->getObject()->getAttributeUserName('Author')), 'author'
 		);
         $filters[] = $this->buildFunctionFilter();
+        $filters[] = $this->buildAffirmationFilter();
 
 		return $filters;
 	}
@@ -103,8 +111,7 @@ class PMWikiTable extends PMPageTable
 		$filters[] = new ViewModifiedAfterDateWebMethod();
         $filters[] = new ViewModifiedBeforeDateWebMethod();
 
-		$parent_filter = new FilterAutoCompleteWebMethod($object, translate('Входит в'));
-		$parent_filter->setValueParm( 'parentpage' );
+		$parent_filter = new FilterReferenceWebMethod($object, translate('Входит в'), 'parent');
 		$filters[] = $parent_filter;
 
 		$type_it = $this->object->getTypeIt();
@@ -131,24 +138,34 @@ class PMWikiTable extends PMPageTable
 			parent::getFilters()
 		);
 	}
-	
-	function getFilterPredicates()
-	{
-		$values = $this->getFilterValues();
 
-		$predicates = array (
-		    new WikiPageFeaturePredicate($values['feature']),
-			new PMWikiStageFilter( $values['version'] ),
-			new StatePredicate( $values['state'] ),
-			new FilterAttributePredicate( 'PageType', $values['type'] ),
-			new WikiTypePlusChildren($values['typepluschildren']),
-			new FilterAttributePredicate( 'Author', $values['author'] ),
-			new ParentTransitiveFilter( $values['parentpage'] ),
-			new WikiTagFilter( $values['tag'] ),
-			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
-			new FilterSearchAttributesPredicate($values['search'], array('Caption','Content')),
-            $this->buildLinkStateFilter($values)
-		);
+	function getCommonPredicates( $values )
+    {
+        return array (
+            new AffirmationStateFilter($values['affirmation']),
+            new WikiPageFeaturePredicate($values['feature']),
+            new PMWikiStageFilter( $values['version'] ),
+            new StatePredicate( $values['state'] ),
+            new FilterAttributePredicate( 'Author', $values['author'] ),
+            new ParentTransitiveFilter( $values['parent'] ),
+            new WikiTagFilter( $values['tag'] ),
+            new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
+            $this->buildLinkStateFilter($values),
+            new WikiPageBranchFilter($values['branch']),
+            new WikiPageBaselineFilter($values['baseline'])
+        );
+    }
+
+	function getFilterPredicates( $values )
+	{
+		$predicates = array_merge(
+		    $this->getCommonPredicates($values),
+            array(
+                new FilterAttributePredicate( 'PageType', $values['type'] ),
+                new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
+                $this->buildLinkStateFilter($values)
+            )
+        );
 
 		if ( $this->Statable($this->getObject()) ) {
 		    $predicates[] = new TransitionObjectPredicate($this->getObject(), $values['transition']);
@@ -161,7 +178,7 @@ class PMWikiTable extends PMPageTable
 			$predicates[] = new FilterSubmittedBeforePredicate($values['bydate']);
 		}
 
-		return array_merge(parent::getFilterPredicates(), $predicates);
+		return array_merge(parent::getFilterPredicates( $values ), $predicates);
 	}
 
 	function buildLinkStateFilter( $values ) {
@@ -179,7 +196,6 @@ class PMWikiTable extends PMPageTable
 
 		$method = new ObjectCreateNewWebMethod($this->getObject());
 		if ( !$method->hasAccess() ) return $actions;
-		$method->setRedirectUrl('donothing');
 
 		$actions['create'] = array( 
 	        'name' => $this->getNewPageTitle(),
@@ -194,18 +210,27 @@ class PMWikiTable extends PMPageTable
 	{
 	    $actions = $this->getForm()->getExportActions( $this->getExportPageIt() );
 
+	    $parms = array(
+            'options' => 'selected'
+        );
+
+	    if ( $this->getReportBase() != 'requirementsmatrix' ) {
+	        $extraFields = array(
+                'ParentPage',
+                'Caption',
+                'Content',
+                'SectionNumber'
+            );
+            $parms['options'] .= '-extraFields:' . join(':', $extraFields);
+        }
+
 		$method = new ExcelExportWebMethod();
 		$actions[] = array(
 			'uid' => 'export-excel-text',
-			'name' => 'Excel ('.translate('Текст').')',
-			'url' => $method->url( $this->getCaption(), 'WikiIteratorExportExcelText' )
+			'name' => 'Excel',
+			'url' => $method->url( $this->getCaption(), 'IteratorExportExcel', $parms)
 		);
-		$actions[] = array(
-			'uid' => 'export-excel-html',
-			'name' => 'Excel ('.translate('HTML').')',
-			'url' => $method->url( $this->getCaption(), 'WikiIteratorExportExcelHtml' )
-		);
-		
+
 		return $actions;
 	}
 
@@ -232,34 +257,13 @@ class PMWikiTable extends PMPageTable
 		return array_merge($actions, parent::getActions());
 	}
 
-	function getMethodTitle( $left_part, $right_part )
-	{
-		if ( function_exists('mb_strtolower') )
-		{
-			$right_part[0] = mb_strtolower( $right_part[0] );
-		}
-		else
-		{
-			$right_part[0] = strtolower( $right_part[0] );
-		}
-		
-		return $left_part.': '.$right_part;
-	}
-	
 	function buildFilterDocument()
 	{
-		$document_filter = new FilterObjectMethod(
-            getFactory()->getObject('WikiDocument')->getRegistry()->Query(
-		        array(
-		            new FilterAttributePredicate('ReferenceName', $this->getObject()->getReferenceName()),
-                    new FilterVpdPredicate()
-                )
-            ),
-            $this->getObject()->getDocumentName(), 'document'
-        );
-		$document_filter->setType( 'singlevalue' );
-		$document_filter->setHasNone( false );
-		return $document_filter;
+	    $docObject = $this->getDocumentObject();
+        $document_filter = new FilterObjectMethod( $docObject, $docObject->getDisplayName(),'document' );
+        $document_filter->setLazyLoad(true);
+        $document_filter->setHasNone(false);
+        return $document_filter;
 	}
 
 	function buildByDateFilter()
@@ -279,16 +283,41 @@ class PMWikiTable extends PMPageTable
 
     function buildFunctionFilter() {
  	    $filter = new FilterObjectMethod(getFactory()->getObject('Feature'));
+        $filter->setLazyLoad(true);
+        return $filter;
+    }
+
+    function buildAffirmationFilter() {
+        $filter = new FilterObjectMethod(getFactory()->getObject('AffirmationState'), translate('Согласование'), 'affirmation');
+        $filter->setIdFieldName('ReferenceName');
         $filter->setHasNone(false);
+        $filter->setHasAny(false);
+        $filter->setType('singlevalue');
         return $filter;
     }
 
     function buildCompareBaselineFilter() {
-        $filter = new FilterObjectMethod(getFactory()->getObject('Baseline'), text(1566), 'compareto');
-        $filter->setHasNone(false);
+        $filter = new FilterObjectMethod($this->getBaselineObject(), text(1566), 'compareto');
+        $filter->setHasAny(false);
+        $filter->setHasAll(false);
         $filter->setIdFieldName('Caption');
         $filter->setType( 'singlevalue' );
+        $filter->setLazyLoad(true);
         return $filter;
+    }
+
+    function buildBranchFilter()
+    {
+        $object = $this->getBaselineObject()->getRegistry()->Query(
+            array(
+                new FilterAttributePredicate('Type', 'branch')
+            )
+        );
+        return new FilterObjectMethod($object, translate('Ветка'), 'branch');
+    }
+
+    function buildBaselineFilter() {
+        return new FilterObjectMethod($this->getBaselineObject(), '', 'baseline');
     }
 
     function getSortFields()
@@ -297,4 +326,65 @@ class PMWikiTable extends PMPageTable
 		$fields[] = 'SectionNumber';
 		return $fields;
 	}
+
+	function getBaselineObject() {
+        return getFactory()->getObject('WikiPageBaseline');
+    }
+
+    function addRootTreePredicates( &$predicates, $values )
+    {
+        if ( $_REQUEST['export'] != '' ) return;
+        if ( count(\TextUtils::parseFilterItems($_REQUEST['search'])) > 0 ) return;
+        if ( count(\TextUtils::parseFilterItems($values['branch'])) > 0 && $_REQUEST['roots'] == '0' ) return;
+
+        if ($_REQUEST['roots'] == '0' ) {
+            $predicates[] = new PMWikiSourceFilter('none');
+        }
+        else {
+            $predicates[] = new PMWikiSourceFilter($_REQUEST['roots']);
+        }
+    }
+
+    function addTreePredicates( &$predicates, $values )
+    {
+        if ( $_REQUEST['export'] != '' ) return;
+        if ( count(\TextUtils::parseFilterItems($_REQUEST['search'])) > 0 ) return;
+        if ( !array_key_exists('roots', $_REQUEST) ) return;
+
+        $registry = new \WikiPageRegistry($this->getObject());
+        $objectIt = $registry->Query(
+            array_merge(
+                $predicates,
+                array(
+                    new FilterVpdPredicate()
+                )
+            )
+        );
+        if ( $objectIt->count() < 1 ) {
+            $predicates = array(
+                new FilterInPredicate(array(0))
+            );
+            return;
+        }
+
+        $objectIt = $registry->Query(
+            array(
+                new FilterInPredicate(join(',',$objectIt->fieldToArray('ParentPath'))),
+                $_REQUEST['roots'] == '0'
+                    ? new WikiRootFilter()
+                    : new FilterAttributePredicate('ParentPage', $_REQUEST['roots']),
+                new SortDocumentClause()
+            )
+        );
+        if ( $objectIt->count() < 1 ) {
+            $predicates = array(
+                new FilterInPredicate(array(0))
+            );
+            return;
+        }
+
+        $predicates = array(
+            new FilterInPredicate($objectIt->idsToArray())
+        );
+    }
 }

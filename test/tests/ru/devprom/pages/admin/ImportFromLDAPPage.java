@@ -61,9 +61,7 @@ public class ImportFromLDAPPage extends AdminPageBase {
 	
 	
 	public ImportFromLDAPPage selectUserToImport(String item){
-		  (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//ul[@id='directory']//li[@id='"+item+"']//input[@class='checkbox']")));
-          if (!driver.findElement(By.xpath("//ul[@id='directory']//li[@id='"+item+"']//input[@class='checkbox']")).isSelected())
-		  driver.findElement(By.xpath("//ul[@id='directory']//li[@id='"+item+"']//input[@class='checkbox']")).click();	
+	  	driver.findElement(By.xpath("//span[contains(@class,'fancytree-title') and .='"+item+"']/preceding-sibling::span[@role='checkbox']")).click();
 		return new ImportFromLDAPPage(driver);
 	}
 	

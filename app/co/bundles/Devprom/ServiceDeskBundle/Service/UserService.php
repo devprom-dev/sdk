@@ -31,7 +31,7 @@ class UserService {
         $this->objectChangeLogger = $objectChangeLogger;
     }
 
-    public function registerUser($email, $name = null, $password = '')
+    public function registerUser($email, $name = null, $password = '', $sendRegistrationEmail = true)
     {
         $user = $this->userManager->createUser();
         $user->setEmail($email);
@@ -43,10 +43,13 @@ class UserService {
         $this->userManager->updatePassword($user);
         $this->userManager->updateUser($user);
 
-        $this->mailer->sendRegistrationEmailMessage($user, $plainPassword);
+        if ( $sendRegistrationEmail ) {
+            $this->mailer->sendRegistrationEmailMessage($user, $plainPassword);
+        }
         $this->objectChangeLogger->logExternalUserRegistered($user);
 
-        return $this->userManager->refreshUser($user);
+        $this->userManager->reloadUser($user);
+        return $user;
     }
 
     public function setPassword($email, $password)
@@ -59,8 +62,33 @@ class UserService {
         $this->userManager->updateUser($user);
     }
 
+    public function setPasswordByUserId($id, $password)
+    {
+        $user = $this->em->getRepository('DevpromServiceDeskBundle:User')->find($id);
+        if ( !is_object($user) ) throw new \Exception('There is no a user with id = ' . $id);
+
+        $user->setPlainPassword($password);
+        $this->userManager->updatePassword($user);
+        $this->userManager->updateUser($user);
+    }
+
     public function isCollegues( $email_left, $email_right )
     {
     	return $this->em->getRepository('DevpromServiceDeskBundle:User')->isCollegues($email_left,$email_right);
+    }
+
+    public function attachCompanyByDomain( $user )
+    {
+        list($account, $domain) = preg_split('/@/', $user->getEmail());
+        $domain = strtolower(trim($domain));
+
+        $qb = $this->em->getRepository('DevpromServiceDeskBundle:Company')
+            ->createQueryBuilder('c')->where('c.domains LIKE ?1')->setParameter(1, '%'.addcslashes($domain, '%_').'%');
+
+        $company = array_shift($qb->getQuery()->getResult());
+        if ( is_object($company) ) {
+            $user->setCompany($company);
+            $this->userManager->updateUser($user);
+        }
     }
 }

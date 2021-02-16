@@ -1,9 +1,9 @@
 <?php
-
 include "PMCustomAttributeIterator.php";
 include "predicates/CustomAttributeEntityPredicate.php";
 include "predicates/CustomAttributeValuePredicate.php";
 include "predicates/CustomAttributeObjectPredicate.php";
+include_once "persisters/CustomAttributesPersister.php";
 
 class PMCustomAttribute extends MetaobjectCacheable
 {
@@ -19,11 +19,14 @@ class PMCustomAttribute extends MetaobjectCacheable
  		$this->setAttributeType('AttributeType', 'REF_CustomAttributeTypeId');
         $this->setAttributeDescription('Groups', text(2645));
  		
- 		foreach( array('ValueRange', 'IsVisible', 'IsRequired', 'IsUnique', 'ObjectKind', 'AttributeTypeClassName', 'Capacity') as $field ) {
+ 		foreach( array('ObjectKind', 'AttributeTypeClassName', 'Capacity') as $field ) {
 			$this->addAttributeGroup($field, 'system');
 		}
-        foreach( array('AttributeType', 'EntityReferenceName','OrderNum', 'Groups') as $field ) {
+        foreach( array('AttributeType', 'EntityReferenceName','OrderNum', 'Groups', 'Description') as $field ) {
             $this->addAttributeGroup($field, 'additional');
+        }
+        foreach( array('ReferenceName') as $field ) {
+            $this->addAttributeGroup($field, 'alternative-key');
         }
  	}
  	
@@ -36,7 +39,12 @@ class PMCustomAttribute extends MetaobjectCacheable
  	{
  		return new PMCustomAttributeIterator( $this );
  	}
- 	
+
+    function getPage()
+    {
+        return getSession()->getApplicationUrl($this).'project/dicts/PMCustomAttribute?';
+    }
+
  	function getEntityDisplayName( $ref_name, $kind )
  	{
  		$class_name = getFactory()->getClass($ref_name);
@@ -71,11 +79,33 @@ class PMCustomAttribute extends MetaobjectCacheable
  			return $type_it->getDisplayName();
  		}
  	}
- 	
+
+ 	function getEntityClasses($object)
+    {
+        return array_merge(
+            array(
+                strtolower(get_class($object))
+            ),
+            array_values(
+                array_diff(
+                    array_map(
+                        function($class) {
+                            return strtolower($class);
+                        },
+                        class_parents($object)
+                    ),
+                    array(
+                        'metaobject', 'metaobjectstatable', 'storedobjectdb', 'abstractobject'
+                    )
+                )
+            )
+        );
+    }
+
  	function getByEntity( $object )
  	{
  		$settings = array (
-            new FilterAttributePredicate('EntityReferenceName', strtolower(get_class($object))),
+            new FilterAttributePredicate('EntityReferenceName', $this->getEntityClasses($object)),
             new FilterVpdPredicate()
 		);
  		return $this->getRegistry()->Query($settings);
@@ -84,7 +114,7 @@ class PMCustomAttribute extends MetaobjectCacheable
  	function getByAttribute( $object, $attribue )
  	{
         $settings = array (
-            new FilterAttributePredicate('EntityReferenceName', strtolower(get_class($object))),
+            new FilterAttributePredicate('EntityReferenceName', $this->getEntityClasses($object)),
             new FilterAttributePredicate('ReferenceName', $attribue),
             new FilterVpdPredicate()
         );

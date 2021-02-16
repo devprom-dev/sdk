@@ -14,16 +14,6 @@ class MilestoneForm extends PMPageForm
 		return parent::IsAttributeVisible( $attr_name );
 	}
 
-    function IsAttributeEditable( $attr_name )
-    {
-        switch($attr_name)
-        {
-            case 'Description':
-                return $this->getEditMode();
-        }
-        return parent::IsAttributeEditable( $attr_name );
-    }
-
 	function createFieldObject( $name )
 	{
 		switch ( $name )

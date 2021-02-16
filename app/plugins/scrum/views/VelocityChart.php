@@ -15,7 +15,7 @@ class VelocityChart extends PMPageChart
                 array(
                     new FilterVpdPredicate()
                 ),
-                $this->getTable()->getFilterPredicates(),
+                $this->getTable()->getFilterPredicates($this->getTable()->getFilterValues()),
                 array(
                     new SortAttributeClause('StartDate')
                 )

@@ -33,10 +33,12 @@ class UserReadonlyPersister extends ObjectSQLPersister
 	function getSelectColumns($alias)
     {
         $allPermissions = join(',',
-            array_map( function($row) {
-                return $row['IsGlobal'] == 'N' ? $row['entityId'] : '';
-            },
-            getFactory()->getObject('LicensePermission')->getAll()->getRowset()
+            array_unique(
+                array_map( function($row) {
+                    return $row['IsGlobal'] == 'N' ? $row['entityId'] : '';
+                },
+                getFactory()->getObject('LicensePermission')->getAll()->getRowset()
+            )
         ));
         return array (
             " IF(".$alias.".IsReadonly = 'N', '".$allPermissions."', ".$alias.".IsReadonly) IsReadonly "

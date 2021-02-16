@@ -9,6 +9,7 @@ use Symfony\Component\Templating\PhpEngine;
 include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersister.php";
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportExcel.php';
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportHtml.php';
+include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportPDF.php';
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportXml.php';
 include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 include SERVER_ROOT_PATH.'core/methods/ObjectModifyWebMethod.php';
@@ -23,27 +24,27 @@ include 'PageChart.php';
 include 'PageForm.php';
 include 'PageMenu.php';
 include_once 'PageSectionLastChanges.php';
-include "FullScreenSection.php";
 include "PageSectionAttributes.php";
 include "BulkFormBase.php";
 include "PageNavigation.php";
- 
+include "fields/FieldYesNo.php";
+include "fields/FieldReferenceAttribute.php";
+
 class Page
 {
  	var $infosections = array();
  	var $table;
  	var $form;
  	var $notfound;
- 	var $injections;
  	private $module = '';
     private $navigation_parms = null;
- 	
  	private $render_parms = array();
  	
  	function Page() 
  	{
  		global $plugins;
 
+        $this->identifyReport();
  	    $this->form = $this->buildForm();
  		
  		if ( is_a($this->form, 'MetaobjectForm') && $this->form->getAction() != '' ) {
@@ -96,27 +97,34 @@ class Page
  		return $this->table;
  	}
  	
-  	function getBulkForm()
- 	{
+  	function getBulkForm() {
  		return new BulkFormBase($this->getObject());
  	}
  	
  	function buildForm()
  	{
- 		if ( $_REQUEST['bulkmode'] != '' ) {
- 			return $this->getBulkForm();
- 		}
  		$form = $this->getForm();
  		if ( $form instanceof \PageForm) {
             $form->setPage($this);
             $form->buildForm();
         }
+        if ( $form instanceof \AjaxForm) {
+            $form->setPage($this);
+        }
         return $form;
  	}
- 	
+
+    function getEntityForm()
+    {
+        return null;
+    }
+
  	function getForm() 
  	{
- 		return null;
+        if ( $_REQUEST['bulkmode'] != '' ) {
+            return $this->getBulkForm();
+        }
+        return $this->getEntityForm();
  	}
  	
  	function getFormRef()
@@ -126,12 +134,12 @@ class Page
 
  	function needDisplayForm() 
  	{
- 		return $_REQUEST['entity'] != '' || $_REQUEST['action_mode'] == 'form' || $_REQUEST['bulkmode'] != '' || $_REQUEST['formonly'] != '';
+ 		return $_REQUEST['view'] == 'import' || $_REQUEST['entity'] != '' || $_REQUEST['action_mode'] == 'form' || $_REQUEST['bulkmode'] != '' || $_REQUEST['formonly'] != '' || $_REQUEST['attributesonly'] != '';
  	}
  	
  	function showFullPage()
  	{
- 		return $_REQUEST['tableonly'] == '' && $_REQUEST['formonly'] == ''; 
+ 		return $_REQUEST['tableonly'] == '' && $_REQUEST['formonly'] == '' && $_REQUEST['attributesonly'] == '' ;
  	}
  	
  	function getObjectIt()
@@ -233,10 +241,12 @@ class Page
 			throw new Exception('Given iterator "'.$_REQUEST['class'].'" cant be instantiated');
 		}
 
-        $_REQUEST['rows'] = 'all';
-        $object = $_REQUEST['entity'] == ''
-            ? $table->getObject() : getFactory()->getObject($_REQUEST['entity']);
+		$object = $this->getObject();
+        $object = $_REQUEST['entity'] == '' || is_a($object, $_REQUEST['entity'])
+            ? $object
+            : getFactory()->getObject($_REQUEST['entity']);
 
+        $_REQUEST['rows'] = 'all';
 		if ( $_REQUEST['objects'] == '' ) {
             $it = $table->getListIterator();
 			$it->moveFirst();
@@ -245,18 +255,17 @@ class Page
             $it = $this->getDemoDataIt($object);
         }
  		else {
+ 		    $queryParms = array();
  			if ( is_object($table) && is_a($table, 'PageTable') )
  			{
                 $table->getListIterator();
-                $list = $table->getListRef();
-
-                $sorts = $list->getSorts();
-                foreach ( $sorts as $sort ) {
-                    $object->addSort( $sort );
-                }
+                $queryParms = array_merge(
+                    $queryParms,
+                    $table->getListRef()->getSorts()
+                );
  			}
 			$it = $this->buildExportIterator(
-			    $object, \TextUtils::parseIds($_REQUEST['objects']), $_REQUEST['class']
+			    $object, \TextUtils::parseIds($_REQUEST['objects']), $_REQUEST['class'], $queryParms
             );
  		}
 
@@ -267,62 +276,70 @@ class Page
 		if ( is_a( $table, 'PageTable' ) )
 		{
 			$list = $table->getListRef();
-			if ( is_object($list) && !$list instanceof \PageChart )
+			if ( is_object($list) )
 			{
-    			$list->setupColumns();
-    				
-    			$columns = $list->getColumnsRef();
-                if ( $object instanceof MetaobjectStatable ) {
-                    $columns[] = 'State';
-                }
+                $columns = $list->getColumnsRef();
 
-                if ( array_key_exists('prepare-import', $_REQUEST) ) {
-                    $skip_fields = array_merge(
-                        $object->getAttributesByGroup('trace'),
-                        $object->getAttributesByGroup('system'),
-                        $object->getAttributesByGroup('dates'),
-                        $object->getAttributesByGroup('astronomic-time'),
-                        $object->getAttributesByGroup('working-time'),
-                        array(
-                            'Project',
-                            'UID',
-                            'RecordCreated',
-                            'RecordModified'
-                        )
-                    );
-                    foreach( array_keys($object->getAttributes()) as $attribute ) {
-                        if ( $object->IsAttributeStored($attribute) ) continue;
-                        $skip_fields[] = $attribute;
+			    if ( $list instanceof \PageChart ) {
+			        foreach( $columns as $column ) {
+                        $fields[$column] = $list->getObject()->getAttributeUserName($column);
                     }
                 }
-                else {
-                    $skip_fields = array();
-                    if ( $_REQUEST['show'] == 'all' ) {
-                        $skip_fields = $object->getAttributesByGroup('trace');
+			    else {
+                    if ( $object instanceof MetaobjectStatable ) {
+                        $columns[] = 'State';
+                    }
+
+                    if ( array_key_exists('prepare-import', $_REQUEST) ) {
+                        $skip_fields = array_merge(
+                            $object->getAttributesByGroup('trace'),
+                            $object->getAttributesByGroup('system'),
+                            $object->getAttributesByGroup('dates'),
+                            $object->getAttributesByGroup('astronomic-time'),
+                            $object->getAttributesByGroup('working-time'),
+                            array(
+                                'Project',
+                                'UID',
+                                'RecordCreated',
+                                'RecordModified'
+                            )
+                        );
+                        foreach( array_keys($object->getAttributes()) as $attribute ) {
+                            if ( $object->IsAttributeStored($attribute) ) continue;
+                            $skip_fields[] = $attribute;
+                        }
+                    }
+                    else {
+                        $skip_fields = array();
+                        if ( $_REQUEST['show'] == 'all' ) {
+                            $skip_fields = $object->getAttributesByGroup('trace');
+                        }
+                    }
+
+                    foreach( $columns as $column )
+                    {
+                        if ( !$list->getColumnVisibility($column) && $_REQUEST['show'] != 'all' ) continue;
+                        if ( trim($column) == '' ) continue;
+                        if ( in_array($column, $skip_fields) ) continue;
+
+                        if( $column == 'UID' )
+                        {
+                            $fields[$column] = translate('UID');
+                            continue;
+                        }
+
+                        $fields[$column] = translate($it->object->getAttributeUserName($column));
                     }
                 }
-
-    			foreach( $columns as $column )
-    			{
-    				if ( $column != 'Content' && !$list->getColumnVisibility($column) && $_REQUEST['show'] != 'all' ) continue;
-					if ( trim($column) == '' ) continue;
-					if ( in_array($column, $skip_fields) ) continue;
-    
-    				if( $column == 'UID' )
-    				{
-    					$fields[$column] = translate('UID');
-    					continue;
-    				}
-    					
-    				$fields[$column] = translate($it->object->getAttributeUserName($column));
-    			}
 			}
 			
 			if ( $_REQUEST['caption'] == '' ) $_REQUEST['caption'] = $table->getCaption();
 		}
 
 		$eit = new $_REQUEST['class']( $it );
-        $eit->setOptions(preg_split('/-/', $_REQUEST['options']));
+		if ( $_REQUEST['options'] != '' ) {
+            $eit->setOptions(preg_split('/-/', $_REQUEST['options']));
+        }
 		$eit->setTable($table);
 		$eit->setFields($fields);
 		$eit->setName($_REQUEST['caption']);
@@ -331,13 +348,21 @@ class Page
 		return true;
  	}
 
- 	function buildExportIterator( $object, $ids, $iteratorClassName )
+ 	function buildExportIterator( $object, $ids, $iteratorClassName, $queryParms )
     {
         $ids = array_filter($ids, function($value) {
             return $value != '';
         });
-        if ( count($ids) < 1 ) $ids = array(0);
-        return $object->getExact($ids);
+        if ( count($ids) < 1 ) return $object->getEmptyIterator();
+
+        return $object->getRegistry()->Query(
+            array_merge(
+                array(
+                    new FilterInPredicate($ids)
+                ),
+                $queryParms
+            )
+        );
     }
 
  	function exportSection()
@@ -471,28 +496,6 @@ class Page
 			}
 		}
 
-     	$bottom_sections = array();
-		$last_sections = array();
-        foreach( $sections as $key => $section ) { 
-            if ( $_REQUEST['formonly'] == '' && $section->getPlacement() == 'bottom' ) {
-				if ( $section instanceof PageSectionComments ) {
-					$bottom_sections = array_merge($bottom_sections, array($section->getId() => $section));
-				}
-				else {
-					$bottom_sections[$section->getId()] = $section;
-				}
-                unset($sections[$key]);
-            }
-        }
-		$bottom_sections = array_merge($bottom_sections, $last_sections);
-
-        if ( $_REQUEST['formonly'] == '' ) {
-            $active_url = str_replace(getSession()->getApplicationUrl(), '', array_shift(preg_split('/\?/', $this->getPageUrl())));
-            $tab_url = getSession()->getApplicationUrl().$active_url;
-        }
-        $module_it = getFactory()->getObject('Module')->getByRef('Url', $tab_url);
-        $this->setModule($module_it->getId());
-
  		$this->render_parms = array(
  			'current_version' => $_SERVER['APP_VERSION'],
  			'object_class' => get_class($this->getObject()),
@@ -505,7 +508,6 @@ class Page
  		    'application_url' => $this->getApplicationUrl(),
  		    'display_form' => $this->needDisplayForm(),
  			'sections' => $sections,
-        	'bottom_sections' => $bottom_sections,
             'module' => $this->getModule(),
             'uid' => $this->getModule()
         );
@@ -625,6 +627,13 @@ class Page
  	
  	function render( $view = null )
  	{
+        if ( !$this->hasAccess() ) {
+            if ( $_REQUEST['tour'] != '' && preg_match('/[a-zA-Z0-9]+/i', $_REQUEST['tour']) ) {
+                setcookie($_REQUEST['tour'].'Skip', "1", mktime(0, 0, 0, 1, 1, date('Y') + 1), '/');
+            }
+            exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+        }
+
 		$render_parms = $this->getRenderParms();
  	    if ( !is_object($view) ) $view = $this->getRenderView();
 
@@ -662,13 +671,13 @@ class Page
 				$waitSeconds = defined('PAGE_WAIT_SECONDS') ? PAGE_WAIT_SECONDS : 60;
 
                 $affected = getFactory()->getObject('AffectedObjects');
-		        $lock = new LockFileSystem(array_shift(array_values($classes)));
 
-		        $lock->LockAndWait($waitSeconds, function() use ($affected, $filters)
-		        {
+		        $lock = new LockFileSystem(array_shift(array_values($classes)));
+		        $lock->LockAndWait($waitSeconds, function() use ($affected, $filters) {
 		        	 getFactory()->resetCachedIterator($affected);
         	         return $affected->getRegistry()->Count($filters) > 0;
 		        });
+                $lock->Release();
 
 		        if ( connection_aborted() ) exit();
                 time_nanosleep(0, 500000000);
@@ -696,7 +705,7 @@ class Page
 			exit();
 		}
 
-		if ( $_REQUEST['formonly'] != '' && is_object($this->form) )
+		if ( ($_REQUEST['formonly'] != '' || $_REQUEST['attributesonly'] != '') && is_object($this->form) )
 		{
 			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
@@ -710,9 +719,12 @@ class Page
 				$this->form->showTitle( false );
 			}
 
-			$this->form->render( $view, array_merge( $render_parms, array (
-			    'formonly' => true    
-			)));
+			$this->form->render($view, array_merge(
+			    $render_parms,
+                array(
+                    'formonly' => true
+                )
+            ));
 
 			die();
 		}
@@ -725,13 +737,6 @@ class Page
 				setcookie($_REQUEST['tour'].'Skip', "1", mktime(0, 0, 0, 1, 1, date('Y') + 1), '/');
 			}
 			exit(header('Location: '.$redirect_url));
-		}
-
- 	 	if ( !$this->hasAccess() ) {
-			if ( $_REQUEST['tour'] != '' && preg_match('/[a-zA-Z0-9]+/i', $_REQUEST['tour']) ) {
-				setcookie($_REQUEST['tour'].'Skip', "1", mktime(0, 0, 0, 1, 1, date('Y') + 1), '/');
-			}
-		 	exit(header('Location: '.getSession()->getApplicationUrl()));
 		}
 
     	if( $this->needDisplayForm() && is_object($this->form) )
@@ -763,7 +768,7 @@ class Page
  	
  	function getArea()
  	{
- 	    return $_REQUEST['area'];
+ 	    return \SanitizeUrl::parseUrl($_REQUEST['area']);
  	}
  	
  	function getModule()
@@ -836,14 +841,27 @@ class Page
  	function getHint()
 	{
 		$resource = getFactory()->getObject('ContextResource');
-		
 		$resource_it = $resource->getExact($this->getModule());
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
-
 		return '';
 	}
 
 	function getDemoDataIt( $object ) {
         return $object->getEmptyIterator();
+    }
+
+    function getUrl() {
+        return \SanitizeUrl::getSelfUrl();
+    }
+
+    function identifyReport()
+    {
+        if ( $_REQUEST['formonly'] == '' ) {
+            $active_url = str_replace(getSession()->getApplicationUrl(), '', array_shift(preg_split('/\?/', $this->getPageUrl())));
+            $tab_url = getSession()->getApplicationUrl().$active_url;
+        }
+
+        $module_it = getFactory()->getObject('Module')->getByRef('Url', $tab_url);
+        $this->setModule($module_it->getId());
     }
 }

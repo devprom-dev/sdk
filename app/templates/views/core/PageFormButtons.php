@@ -1,4 +1,9 @@
 <?php
+$buttonSizeClass = 'btn-sm';
+if( $_REQUEST['attributesonly'] != '' ) {
+    $buttonSizeClass = 'btn-xs';
+}
+
 $buttons = array();
 foreach( $actions as $key => $action ) {
     if ( $action['view'] == 'button' ) {
@@ -27,7 +32,7 @@ foreach( $actions as $key => $action ) {
 <?php foreach( $buttons as $buttonClass => $buttonsForClass ) { ?>
 <div class="btn-group">
     <?php
-    $buttonsLimit = $buttonClass == 'btn-warning' ? 5 : 3;
+    $buttonsLimit = $buttonClass == 'btn-warning' && $_REQUEST['attributesonly'] == '' ? 5 : 3;
     $buttonsMenu = array_slice($buttonsForClass, $buttonsLimit);
     $buttonsFlat = array_slice($buttonsForClass, 0, $buttonsLimit);
     if ( count($buttonsMenu) < 2 ) {
@@ -36,7 +41,7 @@ foreach( $actions as $key => $action ) {
     }
 
     foreach( $buttonsFlat as $button ) { ?>
-        <a id="<?=$button['uid']?>" class="btn btn-sm <?=$button['button-class']?>" href="<?=$button['url']?>" onclick="<?=$button['click']?>" title="<?=$button['title']?>">
+        <a id="<?=$button['uid']?>" class="btn <?=$buttonSizeClass?> <?=$button['button-class']?>" href="<?=$button['url']?>" onclick="<?=$button['click']?>" title="<?=$button['title']?>">
             <?php if ( $button['icon'] != '' ) { ?> <i class="icon-white <?=$button['icon']?>"></i><?php } ?>
             <?=$button['name']?>
         </a>
@@ -44,7 +49,7 @@ foreach( $actions as $key => $action ) {
     }
     if ( count($buttonsMenu) > 0 ) {
         ?>
-        <a class="btn btn-sm dropdown-toggle <?= $buttonClass ?>" href="#" data-toggle="dropdown">
+        <a class="btn <?=$buttonSizeClass?> dropdown-toggle <?= $buttonClass ?>" href="" data-toggle="dropdown">
             <span class="caret"></span>
         </a>
         <? echo $view->render('core/PopupMenu.php', array('items' => $buttonsMenu)); ?>
@@ -61,7 +66,7 @@ foreach( $sections as $section ) {
     if ( $section instanceof PageSectionComments && $section->modifiable() ) {
         ?>
         <div class="btn-group">
-            <a id="comment-shortcut" class="btn btn-sm" href="javascript:clickAddCommentOnForm();">
+            <a id="comment-shortcut" class="btn <?=$buttonSizeClass?>" href="javascript:<?=$section->getNewCommentFormUrl()?>">
                 <i class="icon-comment"></i>
             </a>
         </div>
@@ -78,7 +83,7 @@ if ( count($realActions) > 0 ) {
     ?>
 
     <div class="btn-group operation last">
-        <a class="btn btn-sm dropdown-toggle btn-secondary" href="#" data-toggle="dropdown">
+        <a class="btn <?=$buttonSizeClass?> dropdown-toggle btn-secondary" href="" data-toggle="dropdown">
             <?= translate('Действия') ?>
             <span class="caret"></span>
         </a>

@@ -21,7 +21,7 @@ class AutoActionList extends PMPageList
                     if ( in_array('task', $object_it->object->getAttributeGroups($attribute)) ) {
                         $attributeTitle = translate('Задача').'.'.$attributeTitle;
                     }
-                    $lines[] = $attributeTitle.'='.urldecode($value);
+                    $lines[] = htmlentities($attributeTitle.'='.urldecode($value));
                 }
                 echo join('<br/>', $lines);
                 break;
@@ -29,5 +29,14 @@ class AutoActionList extends PMPageList
             default:
                 parent::drawCell($object_it, $attr);
         }
+    }
+
+    function getColumnFields()
+    {
+        return array_diff(
+            parent::getColumnFields(),
+            $this->getObject()->getAttributesByGroup('actions'),
+            $this->getObject()->getAttributesByGroup('task')
+        );
     }
 }

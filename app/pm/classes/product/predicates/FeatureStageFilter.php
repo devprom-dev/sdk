@@ -4,24 +4,31 @@ class FeatureStageFilter extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
- 		$stage = $model_factory->getObject('Stage');
- 		
- 		$stage_it = $stage->getExact($filter);
- 		
- 		if ( $stage_it->get('Release') > 0 )
- 		{
-			return " AND EXISTS (SELECT 1 FROM pm_ChangeRequest r, pm_Task s " .
-				   "			  WHERE r.Function = t.pm_FunctionId " .
-				   "				AND r.pm_ChangeRequestId = s.ChangeRequest" .
-				   "			    AND s.Release = ".$stage_it->get('Release').") ";
- 		}
- 		elseif ( $stage_it->get('Version') > 0 )
- 		{
-			return " AND EXISTS (SELECT 1 FROM pm_ChangeRequest r " .
-				   "			  WHERE r.Function = t.pm_FunctionId " .
-				   "				AND r.PlannedRelease = ".$stage_it->get('Version').") ";
- 		}
+ 	    $sqls = array();
+
+ 	    if ( $this->hasNone($filter) ) {
+            $sqls[] = " EXISTS (SELECT 1 FROM pm_ChangeRequest r, pm_Function u 
+                                 WHERE r.Function = u.pm_FunctionId 
+                                   AND u.ParentPath LIKE CONCAT('%,',t.pm_FunctionId,',%') 
+                                   AND r.PlannedRelease IS NULL AND r.Iteration IS NULL) ";
+        }
+
+        if ( $this->hasAny($filter) ) {
+            $sqls[] = " EXISTS (SELECT 1 FROM pm_ChangeRequest r, pm_Function u 
+                                 WHERE r.Function = u.pm_FunctionId 
+                                   AND u.ParentPath LIKE CONCAT('%,',t.pm_FunctionId,',%') 
+                                   AND (r.PlannedRelease IS NOT NULL OR r.Iteration IS NOT NULL)) ";
+        }
+
+        $ids = \TextUtils::parseIds($filter);
+        if ( count($ids) > 0 ) {
+            $sqls[] = " EXISTS (SELECT 1 FROM pm_ChangeRequest r, pm_Function u 
+                                 WHERE r.Function = u.pm_FunctionId 
+                                   AND u.ParentPath LIKE CONCAT('%,',t.pm_FunctionId,',%') 
+                                   AND (r.PlannedRelease IN (".join(',',$ids).") OR r.Iteration IN (".join(',',$ids)."))) ";
+        }
+
+ 	    if ( count($sqls) < 1 ) return " AND 1 = 2 ";
+ 	    return " AND (".join(" OR ", $sqls).") ";
  	}
 }

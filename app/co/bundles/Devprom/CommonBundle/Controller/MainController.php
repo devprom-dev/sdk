@@ -49,11 +49,11 @@ class MainController extends Controller
      	
  	    $auth_factory = getSession()->getAuthenticationFactory();
  	    if ( !is_object($auth_factory) ) {
- 	    	return new RedirectResponse( '/login?page='.$request->server->get('REQUEST_URI') );
+ 	    	return new RedirectResponse( '/logoff?redirect='.$request->server->get('REQUEST_URI') );
  	    }
 	
  	    return $auth_factory->credentialsRequired() 
- 	        ? new RedirectResponse( '/login?page='.$request->server->get('REQUEST_URI') )
+ 	        ? new RedirectResponse( '/logoff?redirect='.$request->server->get('REQUEST_URI') )
  	        : new RedirectResponse( '/404?redirect='.$request->server->get('REQUEST_URI') );
     }
 }

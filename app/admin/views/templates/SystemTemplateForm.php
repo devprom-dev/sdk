@@ -3,25 +3,28 @@ include SERVER_ROOT_PATH."admin/classes/templates/validators/SystemTemplateYamlV
 
 class SystemTemplateForm extends AdminPageForm
 {
-	function buildRelatedDataCache()
-	{
-		parent::buildRelatedDataCache();
-		
-		foreach( $this->getObject()->getAttributes() as $attribute => $data )
-		{
-			$this->getObject()->setAttributeVisible($attribute, false);
-		}
-		$this->getObject()->setAttributeVisible('Content', true);
-	}
+	function extendModel()
+    {
+        parent::extendModel();
 
-	function buildModelValidator()
-	{
-		$validator = parent::buildModelValidator();
-		$validator->addValidator( new SystemTemplateYamlValidator() );
-		return $validator;
-	}
+        $object = $this->getObject();
+        foreach( $object->getAttributes() as $attribute => $data ) {
+            $object->setAttributeVisible($attribute, false);
+        }
+        $object->setAttributeVisible('Content', true);
+    }
 
-	function createField( $attr )
+	function getValidators()
+    {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new SystemTemplateYamlValidator()
+            )
+        );
+    }
+
+    function createField( $attr )
 	{
 		$field = parent::createField($attr);
 		
@@ -36,17 +39,13 @@ class SystemTemplateForm extends AdminPageForm
 		return $field;
 	}
 	
-	function getDeleteActions()
+	function getDeleteActions($objectIt)
 	{
 	    $actions = array();
+	    if ( !is_object($objectIt) ) return $actions;
 	    
-	    $object_it = $this->getObjectIt();
-		if ( !is_object($object_it) ) return $actions;
-		
-		$method = new DeleteObjectWebMethod($object_it);
-		if ( $method->hasAccess() && file_exists($object_it->getFilePath()) )
-		{
-			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+		$method = new DeleteObjectWebMethod($objectIt);
+		if ( $method->hasAccess() && file_exists($objectIt->getFilePath()) ) {
 		    $actions[] = array(
 			    'name' => text(2039), 'url' => $method->getJSCall() 
 		    );
@@ -54,4 +53,19 @@ class SystemTemplateForm extends AdminPageForm
 		
 		return $actions;
 	}
+
+	function getFieldDescription($field_name)
+    {
+        switch( $field_name ) {
+            case 'Content':
+                $docsUrl = \EnvironmentSettings::getHelpDocsUrl();
+                if ( $docsUrl != '' ) {
+                    $docsUrl = str_replace(basename($docsUrl), '4651.html#4766', $docsUrl);
+                    return sprintf(text(3017), $docsUrl);
+                }
+                break;
+            default:
+                return parent::getFieldDescription($field_name);
+        }
+    }
 }

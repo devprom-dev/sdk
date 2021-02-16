@@ -22,7 +22,7 @@ class IterationTimelinePredicate extends FilterPredicate
                        "				     AND s.FinishDate IS NULL )";
 
  			case self::CURRENT:
-				return " AND ('".SystemDateTime::date('Y-m-d')."' BETWEEN DATE(t.StartDate) AND DATE(t.FinishDate) " .
+				return " AND t.IsClosed = 'N' AND ('".SystemDateTime::date('Y-m-d')."' BETWEEN DATE(t.StartDate) AND DATE(t.FinishDate) " .
 			   		   "      OR EXISTS ( SELECT 1 FROM pm_Task s, pm_Methodology m " .
 			   		   "			       WHERE s.Release = t.pm_ReleaseId" .
                        "                     AND m.VPD = t.VPD ".
@@ -33,7 +33,7 @@ class IterationTimelinePredicate extends FilterPredicate
                        "				     AND s.FinishDate IS NULL) )";
 
  			case self::NOTPASSED:
-				return " AND ('".SystemDateTime::date('Y-m-d')."' <= t.FinishDate " .
+				return " AND t.IsClosed = 'N' AND ('".SystemDateTime::date('Y-m-d')."' <= t.FinishDate " .
                        "      OR EXISTS ( SELECT 1 FROM pm_Task s, pm_Methodology m " .
                        "			       WHERE s.Release = t.pm_ReleaseId" .
                        "                     AND m.VPD = t.VPD ".
@@ -42,7 +42,9 @@ class IterationTimelinePredicate extends FilterPredicate
                        "      OR EXISTS ( SELECT 1 FROM pm_ChangeRequest s " .
                        "			       WHERE s.Iteration = t.pm_ReleaseId" .
                        "				     AND s.FinishDate IS NULL) )";
-				
+            case 'overdue':
+                return " AND t.FinishDate < DATE(NOW()) ";
+
 		    default:
 				return " AND 1 = 2 ";
  		}

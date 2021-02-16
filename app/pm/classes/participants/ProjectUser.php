@@ -3,6 +3,7 @@
 include_once SERVER_ROOT_PATH."core/classes/user/User.php";
 include "ProjectUserIterator.php";
 include "ProjectUserRegistry.php";
+include "WorkerUserRegistry.php";
 
 class ProjectUser extends User
 {
@@ -19,5 +20,9 @@ class ProjectUser extends User
 
     function createIterator() {
         return new ProjectUserIterator($this);
+    }
+
+    function IsDictionary() {
+        return true;
     }
 }

@@ -19,7 +19,7 @@ class TextChangesChartPage extends PMPage
 		return new TextChangesChartTable($this->getObject());
  	}
  	
- 	function getForm() 
+ 	function getEntityForm()
  	{
  		return null;
  	}

@@ -1,5 +1,6 @@
 <?php
 include_once "persisters/TransitionAttributesPersister.php";
+include_once "persisters/TransitionCommentPersister.php";
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
 
 class WorkflowMetadataBuilder extends ObjectMetadataEntityBuilder
@@ -25,6 +26,10 @@ class WorkflowMetadataBuilder extends ObjectMetadataEntityBuilder
         foreach ( $attributes as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'workflow');
         }
+        $attributes = array( 'State' );
+        foreach ( $attributes as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'permissions');
+        }
         foreach ( array( 'StateDuration', 'LeadTime' ) as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'skip-total');
             $metadata->addAttributeGroup($attribute, 'astronomic-time');
@@ -32,5 +37,6 @@ class WorkflowMetadataBuilder extends ObjectMetadataEntityBuilder
         foreach ( array( 'StateDuration' ) as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'tooltip');
         }
+        $metadata->addPersister(new TransitionCommentPersister());
     }
 }

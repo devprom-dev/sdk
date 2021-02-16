@@ -9,7 +9,7 @@ use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  */
-class SettingsServiceTest extends \PHPUnit_Framework_TestCase {
+class SettingsServiceTest extends \PHPUnit\Framework\TestCase {
 
     private $kernel;
 
@@ -24,8 +24,17 @@ class SettingsServiceTest extends \PHPUnit_Framework_TestCase {
     {
         $this->kernel = new ServiceDeskAppKernel('test', true);
         $this->kernel->boot();
-        $this->storage = $this->getMock("SettingsStorage", array("saveSettings", "loadSettings"));
-        $this->filter = $this->getMock("SettingsFilter", array("filter"));
+
+        $this->storage =
+            $this->getMockBuilder(SettingsStorage::class)
+                ->disableOriginalConstructor()
+                ->setMethods(["saveSettings", "loadSettings"])
+                ->getMock();
+        $this->filter =
+            $this->getMockBuilder(SettingsFilter::class)
+                ->disableOriginalConstructor()
+                ->setMethods(["filter"])
+                ->getMock();
 
         $dir = $this->kernel->locateResource("@DevpromServiceDeskBundle/Tests/Service/");
         $this->existingSettingsFile = $dir . "existing.yml";
@@ -50,21 +59,6 @@ class SettingsServiceTest extends \PHPUnit_Framework_TestCase {
         $service = new SettingsService($this->kernel, $this->storage, $this->filter, $bundleRelatedFilePath, array("setting"));
 
         $service->load();
-    }
-
-
-    /**
-     * @test
-     */
-    public function shouldResolveBundleRelatedNonExistinsFilePaths() {
-        $bundleRelatedFilePath = "@DevpromServiceDeskBundle/Tests/Service/not_existing.yml";
-
-        $this->storage->expects($this->once())->method("saveSettings")
-            ->with($this->anything(), $this->matchesRegularExpression("/^[^@].+/"));
-
-        $service = new SettingsService($this->kernel, $this->storage, $this->filter, $bundleRelatedFilePath, array("setting"));
-
-        $service->save(array("setting" => "new value"));
     }
 
     /**

@@ -31,16 +31,17 @@ class CheckpointPHPSetting extends CheckpointEntryDynamic
     	
     	foreach( $this->buildSettings() as $data )
     	{
-    			$check_callback = $data['check'];
-    			$show_callback = $data['display'];
-    			
-		    	array_walk( $data['items'], 
-		    			function( $value, $setting ) use (&$text, $check_callback, $show_callback) {
-		    					$line = $show_callback($setting, $value);
-		    					if ( !$check_callback($setting, $value) ) $line = "<b>".$line."</b>";
-		    					$text .= $line."<br/>";
-		    			}
-				);
+            $check_callback = $data['check'];
+            $show_callback = $data['display'];
+
+            array_walk( $data['items'],
+                function( $value, $setting ) use (&$text, $check_callback, $show_callback) {
+                    $line = $show_callback($setting, $value);
+                    if ( !$check_callback($setting, $value) ) {
+                        $text .= "<b>".$line."</b><br/>";
+                    }
+                }
+            );
     	}
     	
         return $text;
@@ -129,8 +130,8 @@ class CheckpointPHPSetting extends CheckpointEntryDynamic
    	function buildNoLessSettings()
    	{
    		$items = array (
-   				"upload_max_filesize" => 6 * 1024 * 1024,
-   				"post_max_size" => 6 * 1024 * 1024,
+   				"upload_max_filesize" => 200 * 1024 * 1024,
+   				"post_max_size" => 200 * 1024 * 1024,
    				"max_execution_time" => 600,
    				"max_input_time" => 600,
    				"memory_limit" => 128 * 1024 * 1024

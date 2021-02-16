@@ -1,6 +1,6 @@
 <?php
 
-class PMCustomAttributeIterator extends OrderedIterator
+class PMCustomAttributeIterator extends CacheableIterator
 {
  	function toReferenceNames()
  	{
@@ -79,7 +79,9 @@ class PMCustomAttributeIterator extends OrderedIterator
 
     function getGroups()
     {
-        $groups = array();
+        $groups = array(
+            'permissions'
+        );
 
         $type_it = $this->getRef('AttributeType');
         if ( $type_it->get('ReferenceName') == 'dictionary' ) {
@@ -88,10 +90,19 @@ class PMCustomAttributeIterator extends OrderedIterator
         if ( $type_it->get('ReferenceName') == 'computed' ) {
             $groups[] = 'computed';
         }
+
+        if ( $this->get('IsMultiple') == 'Y' ) {
+            $groups[] = 'multiselect';
+        }
+
         foreach( \TextUtils::parseItems($this->get('Groups')) as $group ) {
             if ( preg_match('/[0-9a-z\-_]+/i', $group) ) {
                 $groups[] = $group;
             }
+        }
+
+        if ( $this->get('ShowMainTab') != 'Y' && !in_array('trace', $groups) ) {
+            $groups[] = 'additional';
         }
         return $groups;
     }

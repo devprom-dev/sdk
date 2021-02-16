@@ -2,68 +2,13 @@
 
 class CommentBaseIterator extends OrderedIterator
 {
- 	function getPlainText( $attr )
- 	{
-		$totext = new \Html2Text\Html2Text( html_entity_decode($this->get_native($attr), ENT_QUOTES | ENT_HTML401, APP_ENCODING), array('width'=>0) );
-		return $totext->getText();
- 	}
- 	
- 	function getThreadCommentsIt() 
- 	{
- 		$this->object->defaultsort = 'RecordCreated ASC';
- 		return $this->object->getByRef2('ObjectId', $this->get('ObjectId'), 
-			'LCASE(ObjectClass)', strtolower($this->get('ObjectClass')) );
- 	}
- 
- 	function getThreadEmails( $emails = array() )
- 	{
-		$comment_it = $this->getRollupIt();
-		
-		while ( !$comment_it->end() ) 
-		{
-			if( $comment_it->get('AuthorEmail') != '' ) 
-			{
-				if(in_array($comment_it->get('AuthorEmail'), $emails) === false) 
-				{
-					array_push( $emails, $comment_it->get('AuthorEmail') );
-				}
-			}
-			
-			$comment_it->moveNext();
-		}
-		
-		return $emails;
- 	}
+    function getDisplayName()
+    {
+        if ( $this->get('AuthorName') == '' ) return parent::getDisplayName();
+        return $this->get('AuthorName') . ', ' . $this->getDateFormattedShort('RecordCreated');
+    }
 
- 	function getThreadExternalEmails()
- 	{
- 		global $model_factory, $project_it;
- 		
-		$comment_it = $this->getRollupIt();
-		$ids = $comment_it->idsToArray();
-		
-		$sql = " SELECT u.* " .
-			   "   FROM cms_User u, Comment c " .
-			   "  WHERE c.CommentId IN (".join(',', $ids).") " .
-			   "    AND u.cms_UserId = c.AuthorId ".
-			   "	AND NOT EXISTS (SELECT 1 FROM pm_Participant p " .
-			   "					 WHERE p.Project = ".$project_it->getId().
-			   "    				   AND p.SystemUser = c.AuthorId)";
-		
-		$user = $model_factory->getObject('cms_User');
-		$user_it = $user->createSQLIterator( $sql );
-		
-		if ( $user_it->count() < 1 )
-		{
-			return array();
-		}
-		else
-		{
-			return $user_it->fieldToArray('Email');
-		}
- 	}
-
-	function getLastCommentIt() 
+	function getLastCommentIt()
 	{
  		$this->object->defaultsort = 'RecordCreated DESC';
  		return $this->object->getByRefArray(
@@ -72,13 +17,17 @@ class CommentBaseIterator extends OrderedIterator
 			1 );
 	}
 	
-	function getThreadIt()
+	function getThreadIt( $limit =  0 )
 	{
-		return $this->object->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('PrevComment', $this->getId()),
-						new SortAttributeClause('RecordCreated')
-				)
+	    $registry = $this->object->getRegistry();
+	    if ( $limit > 0 ) {
+            $registry->setLimit($limit);
+        }
+		return $registry->Query(
+            array (
+                new FilterAttributePredicate('PrevComment', $this->getId()),
+                new SortAttributeClause('RecordCreated')
+            )
 		);
 	}
 	
@@ -97,7 +46,7 @@ class CommentBaseIterator extends OrderedIterator
 			);
 		}
 		
-		return $this->object->createCachedIterator($comment_array);
+		return $this->object->createCachedIterator(array_reverse($comment_array));
 	}
 	
 	function getAnchorIt()

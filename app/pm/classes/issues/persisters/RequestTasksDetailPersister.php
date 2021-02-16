@@ -2,8 +2,7 @@
 
 class RequestTasksDetailPersister extends ObjectSQLPersister
 {
-    function getAttributes()
-    {
+    function getAttributes() {
         return array(
             'TasksPlanned'
         );
@@ -11,12 +10,9 @@ class RequestTasksDetailPersister extends ObjectSQLPersister
 
     function getSelectColumns( $alias )
  	{
- 		$columns = array();
- 		
- 		$columns[] =
- 	 		"(SELECT SUM(s.Planned) FROM pm_Task s " .
-			"  WHERE s.ChangeRequest = ".$this->getPK($alias)." ) TasksPlanned ";
-
- 		return $columns;
+ 		return array(
+            "(SELECT SUM(s.Planned) FROM pm_Task s " .
+            "  WHERE s.ChangeRequest = ".$this->getPK($alias)." ) TasksPlanned "
+        );
  	}
 }

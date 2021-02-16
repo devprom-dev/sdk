@@ -6,7 +6,7 @@ class StateCommonPredicate extends FilterPredicate
  	{
         if ( !$this->getObject() instanceof MetaobjectStatable ) return " AND 1 = 1 ";
 
-        $states = array_filter(preg_split('/,/', $filter), function($value) {
+        $states = array_filter(\TextUtils::parseFilterItems($filter), function($value) {
             return in_array($value, array(
                 StateCommonRegistry::Submitted,
                 StateCommonRegistry::Progress,
@@ -14,7 +14,7 @@ class StateCommonPredicate extends FilterPredicate
             ));
         });
 
-        if ( count($states) < 1 ) return " AND 1 = 1 ";
+        if ( count($states) < 1 ) return " AND 1 = 2 ";
 
         return " AND EXISTS ( SELECT 1 FROM pm_State s 
                     WHERE ".$this->getAlias().".VPD = s.VPD 

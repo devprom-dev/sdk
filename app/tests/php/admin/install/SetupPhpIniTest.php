@@ -2,13 +2,19 @@
 
 class SetupPhpIniTest extends DevpromTestCase
 {
+    private $command = null;
+
+    function setUp() {
+        parent::setUp();
+        $this->command = $this->getMockBuilder(\SetupPhpIni::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getPhpIniContent', 'writePhpIniContent'])
+            ->getMock();
+    }
+
     function testMissingExtensionsAppended()
     {   
-        global $model_factory;
-        
-        $installable_mock = $this->getMock('SetupPhpIni', array('getPhpIniContent', 'writePhpIniContent'));
-        
-        $installable_mock->expects($this->any())->method('getPhpIniContent')->will( $this->returnValue(
+        $this->command->expects($this->any())->method('getPhpIniContent')->will( $this->returnValue(
                '[PHP]'.PHP_EOL.
                'extension_dir="../php/extensions"'.PHP_EOL.
                'upload_max_filesize=20M'.PHP_EOL.
@@ -23,15 +29,15 @@ class SetupPhpIniTest extends DevpromTestCase
                'extension=php_imap.dll'.PHP_EOL.
                'zend_extension="php_xdebug-2.2.3-5.5-vc11.dll"'.PHP_EOL
         ));
-        
-        $installable_mock->expects($this->once())->method('writePhpIniContent')
+
+        $this->command->expects($this->once())->method('writePhpIniContent')
             ->with($this->logicalAnd(
                     $this->stringContains('extension=php_pdo_mysql.dll', false),
                     $this->stringContains('extension=php_fileinfo.dll', false),
                     $this->stringContains('extension=php_imap.dll', false),
                     $this->logicalNot($this->stringContains('extension=php_oracle.dll', false))
                    ));
-        
-        $installable_mock->install();
+
+        $this->command->install();
     }
 }

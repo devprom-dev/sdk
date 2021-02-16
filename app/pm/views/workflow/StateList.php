@@ -2,45 +2,35 @@
 
 class StateList extends PMPageList
 {
-    function getColumns()
+    function extendModel()
     {
-        $this->object->addAttribute('Transitions', '', translate('Переходы'), true);
-        $this->object->setAttributeVisible('IsTerminal', false);
-
-        return parent::getColumns();
+        $this->getObject()->setAttributeVisible('IsTerminal', false);
+        $this->getObject()->setAttributeOrderNum('Transitions', 99999);
+        parent::extendModel();
     }
 
-    function drawCell( $object_it, $attr )
+    function drawRefCell( $entity_it, $object_it, $attr )
     {
         $view = $this->getRenderView();
 
         switch ( $attr )
         {
             case 'Transitions':
-                $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
-                    array (
-                        new FilterAttributePredicate('SourceState', $object_it->getId()),
-                        new SortOrderedClause()
-                    )
-                );
-
-                while ( !$transition_it->end() )
+                while ( !$entity_it->end() )
                 {
                 	$actions = array();
+                	$transition_it = $entity_it->copy();
 
                     $object_it->object->setVpdContext($object_it);
 
 			        $method = new ObjectModifyWebMethod($transition_it);
-                    $method->setRedirectUrl('donothing');
                     $actions[] = array (
                         'url' => $method->getJSCall(),
                         'name' => $method->getCaption()
                     );
 
                 	$method = new DeleteObjectWebMethod($transition_it);
-					if ( $method->hasAccess() )
-					{
-						$method->setRedirectUrl('donothing');
+					if ( $method->hasAccess() ) {
 						$actions[] = array();
 					    $actions[] = array(
 						    'name' => $method->getCaption(),
@@ -93,13 +83,12 @@ class StateList extends PMPageList
 
                     echo '<div class="clear-fix"></div>';
 
-                    $transition_it->moveNext();
+                    $entity_it->moveNext();
                 }
-
                 break;
                 
             default:
-                parent::drawCell( $object_it, $attr );
+                parent::drawRefCell( $entity_it, $object_it, $attr );
         }
     }
 
@@ -111,10 +100,7 @@ class StateList extends PMPageList
         $object->setVpdContext($object_it);
 
         $method = new ObjectCreateNewWebMethod($object);
-        if ( $method->hasAccess() )
-        {
-			$method->setRedirectUrl('donothing');
-
+        if ( $method->hasAccess() ) {
 			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
         	$actions[] = array (
         			'name' => text(891),
@@ -145,8 +131,7 @@ class StateList extends PMPageList
     	return $fields;
     }
     
-	function getGroupDefault()
-	{
+	function getGroupDefault() {
 		return 'none';
 	}
 	

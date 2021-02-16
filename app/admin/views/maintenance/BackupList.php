@@ -15,37 +15,22 @@ class BackupList extends PageList
 	
 	function IsNeedToDisplayLinks( ) { return false; }
 
-	function getColumns()
-	{
-		$this->object->addAttribute('Description', '', translate('Описание'), true);
-		$this->object->addAttribute('Size', '', translate('Размер'), true);
-
-		return parent::getColumns();
-	}
-
-	function IsNeedToDisplay( $attr )
-	{
-		switch($attr)
-		{
-			case 'Caption':
-				return false;
-
-			case 'RecordCreated':
-			    return true;
-		}
-
-		return parent::IsNeedToDisplay($attr);
-	}
+	function extendModel()
+    {
+        parent::extendModel();
+        $this->getObject()->addAttribute('Size', '', translate('Размер'), true);
+        $this->getObject()->setAttributeVisible('RecordCreated', true);
+    }
 
 	function drawCell( $object_it, $attr )
 	{
 		switch ( $attr )
 		{
 			case 'RecordCreated':
-				echo $object_it->get('RecordCreated');
+				parent::drawCell( $object_it, $attr );
 				break;
 
-			case 'Description':
+			case 'Caption':
 				$this->backup_it->moveTo('BackupFileName', $object_it->get('Caption'));
 				if( $this->backup_it->get('BackupFileName') == $object_it->get('Caption') ) {
 				    parent::drawCell( $object_it, 'Caption' );

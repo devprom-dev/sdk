@@ -24,13 +24,13 @@ import ru.devprom.pages.project.requests.RequestViewPage;
 
 public class RequirementNewPage extends SDLCPojectPageBase {
 
-	@FindBy(id = "WikiPageCaption")
+	@FindBy(xpath = "//div[@id='modal-form']//*[@id='WikiPageCaption']")
 	protected WebElement captionEdit;
 
 	@FindBy(id = "ParentPageText")
 	protected WebElement parentPageEdit;
 
-	@FindBy(id = "WikiPagePageType")
+	@FindBy(xpath = "//div[@id='modal-form']//*[@id='WikiPagePageType']")
 	protected WebElement typeEdit;
 
 	@FindBy(id = "WikiPageSubmitBtn")
@@ -226,8 +226,7 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 
 	public RequirementViewPage clickToRequirement(String id) {
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(.,'"
-						+ id + "')]")).click();
+				By.xpath("//tr/td[@id='uid']/a[contains(.,'" + id + "')]")).click();
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
 				.presenceOfElementLocated(By
 						.xpath("//div[@class='wiki-page-document']")));

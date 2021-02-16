@@ -5,14 +5,6 @@
 class ProjectIterator extends OrderedIterator
 {
     protected $methodology_it_cache = null;
-    protected $parent_it = null;
-
-    public function __sleep()
-    {
-        return array_merge( parent::__sleep(),
-            array ('parent_it')
-        );
-    }
 
     public function __wakeup()
     {
@@ -33,45 +25,39 @@ class ProjectIterator extends OrderedIterator
 
 	function getParentIt()
     {
-        if (is_object($this->parent_it)) return $this->parent_it;
-        return $this->parent_it = $this->buildParentIt()->copy();
-    }
-
-	function buildParentIt()
-	{
-		if ( $this->IsPortfolio() ) {
-	        return $this->object->createCachedIterator(array());
-	    }
-
-	    if ( $this->get('LinkedProject') != '' ) {
-            $project_it = $this->object->getRegistry()->Query(
-                array(
-                    new FilterInPredicate($this->get('LinkedProject')),
-                    new ProjectAccessiblePredicate(getSession()->getUserIt())
-                )
-            );
-            while ( !$project_it->end() ) {
-                if ( $project_it->IsProgram() ) return $project_it;
-                $project_it->moveNext();
-            }
+        if ( !class_exists('ProjectLinksPersister') ) {
+            return $this->object->getEmptyIterator();
         }
 
-	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
-        while ( !$portfolio_it->end() )
-	    {
-	        if ( $portfolio_it->get('LinkedProject') == '' ) {
-                $portfolio_it->moveNext();
-                continue;
-            }
-	        $project_ids = \TextUtils::parseIds($portfolio_it->get('LinkedProject'));
-	        if ( in_array($this->getId(), $project_ids) ) return $portfolio_it;
-	        $portfolio_it->moveNext();
-	    }
+        $projectIt = $this->object->getRegistryBase()->Query(
+            array (
+                new FilterInPredicate($this->getId()),
+                new ProjectLinksPersister(),
+                new ProjectGroupPersister()
+            )
+        );
 
-	    $portfolio_it->moveTo('CodeName', 'my');
-	    return $portfolio_it->getId() != '' ? $portfolio_it : $this->object->createCachedIterator(array());
-	}
-	
+        if ( $projectIt->get('Programs') != '' ) {
+            return $this->object->getExact(\TextUtils::parseIds($projectIt->get('Programs')));
+        }
+
+        $portfolio = getFactory()->getObject('Portfolio');
+        if ( $projectIt->get('GroupId') != '' ) {
+            $ids = array_map( function($item) {
+                            return 10000000 + $item;
+                        }, \TextUtils::parseIds($projectIt->get('GroupId')));
+            return $portfolio->getExact($ids);
+        }
+
+        $portfolioIt = $portfolio->getAll();
+
+        $portfolioIt->moveTo('CodeName', 'my');
+        if ( $portfolioIt->getId() != '' ) return $portfolioIt;
+
+        $portfolioIt->moveTo('CodeName', 'all');
+        return $portfolioIt;
+    }
+
  	function IsPublic()
  	{
  		return $this->get('IsProjectInfo') == 'Y';
@@ -121,7 +107,15 @@ class ProjectIterator extends OrderedIterator
  	function buildMethodologyIt()
     {
         $methodology = getFactory()->getObject('Methodology');
-        if ( $this->getId() < 1 ) return $methodology->getEmptyIterator();
+        if ( $this->getId() < 1 ) {
+            $data = array();
+            foreach( $methodology->getAttributes() as $attribute => $info ) {
+                if ( $methodology->getAttributeType($attribute)  == 'char' ) {
+                    $data[$attribute] = 'Y';
+                }
+            }
+            return $methodology->createCachedIterator(array($data));
+        }
         return $methodology->getRegistry()->Query(
             array( new FilterAttributePredicate('Project', $this->getId()) )
         );
@@ -208,62 +202,7 @@ class ProjectIterator extends OrderedIterator
 		return round($it->get('Capacity'), 1);
 	}
 	
-	function getTeamEfficiency()
-	{
-		$sql = " SELECT IFNULL(AVG(m2.MetricValue), 0) Efficiency " .
-		 	   "   FROM pm_IterationMetric m2, pm_Release r " .
-		 	   "  WHERE m2.Iteration = r.pm_ReleaseId " .
-		 	   "	AND m2.Metric = 'Efficiency' ".
-		 	   "    AND r.Project = ".$this->getId().
-		 	   "    AND m2.MetricValue > 0 ";
-		
-		$it = $this->object->createSQLIterator( $sql );
-		return round($it->get('Efficiency'));
-	}
-
-	function getTeamBugsPercent()
-	{
-		$sql = 	" SELECT IFNULL(AVG(m2.MetricValue), 0) BugsInWorkload " .
-		 		"   FROM pm_VersionMetric m2, pm_Version v " .
-		 		"  WHERE m2.Version = v.pm_VersionId" .
-		 		"    AND v.Project = ".$this->getId().
-		 		"	 AND m2.Metric = 'BugsInWorkload' " .
-		 		"    AND m2.MetricValue > 0 ".
-		 	    "  ORDER BY v.RecordCreated DESC" .
-		 	    "  LIMIT 3";
-		
-		$it = $this->object->createSQLIterator( $sql );
-		return round($it->get('BugsInWorkload'));
-	}
-	
-	function getTeamEstimationError()
-	{
-		$sql = 	" SELECT IFNULL(AVG(m2.MetricValue), 0) EstimationError " .
-		 		"   FROM pm_VersionMetric m2, pm_Version v " .
-		 		"  WHERE m2.Version = v.pm_VersionId" .
-		 		"    AND v.Project = ".$this->getId().
-		 		"	 AND m2.Metric = 'EstimationError' " .
-		 		"    AND m2.MetricValue > 0 ".
-		 	    "  ORDER BY v.RecordCreated DESC" .
-		 	    "  LIMIT 3";
-		
-		$it = $this->object->createSQLIterator( $sql );
-		return round($it->get('EstimationError'));
-	}
-
-	function getActualCost()
-	{
-		$sql = 	" SELECT IFNULL(SUM(m2.MetricValue), 0) Cost " .
-		 		"   FROM pm_VersionMetric m2, pm_Version v " .
-		 		"  WHERE m2.Version = v.pm_VersionId" .
-		 		"    AND v.Project = ".$this->getId().
-		 		"	 AND m2.Metric = 'ActualCost' ";
-		
-		$it = $this->object->createSQLIterator( $sql );
-		return round($it->get('Cost'));
-	}
-
-	function getTotalWorkload() 
+	function getTotalWorkload()
 	{
 		$request = getFactory()->getObject('pm_ChangeRequest');
 		$request->addFilter( new FilterAttributePredicate('Project', $this->getId()) );
@@ -288,101 +227,6 @@ class ProjectIterator extends OrderedIterator
 		return $this->get('Rating');
 	}
 	
-	function getMetricsDate()
-	{
-		$sql = " SELECT MAX(m.RecordModified) LastDate " .
-			   "   FROM pm_VersionMetric m, pm_Version v " .
-			   "  WHERE m.Version = v.pm_VersionId " .
-			   "    AND v.Project = ".$this->getId();
-			   
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->getDateTimeFormat('LastDate');
-	}
-	
-	function getRecentChangeIt( $limit = 10 )
-	{
-		global $model_factory;
-		
-		$changes = $model_factory->getObject('ChangeLog');
-		
-		$sql = " SELECT ch.*, i.Project, i.IsKnowledgeBase, i.IsBlog, " .
-			   "		i.IsChangeRequests, i.IsParticipants, i.IsPublicArtefacts " .
-			   "   FROM ObjectChangeLog ch, pm_PublicInfo i " .
-			   "  WHERE i.VPD = ch.VPD AND ch.VPD <> '' ".
-			   " 	AND i.Project = ".$this->getId().
-			   "  ORDER BY ch.RecordCreated DESC" .
-			   "  LIMIT ".$limit;
-			   
-		return $changes->createSQLIterator( $sql );
-	}
-	
-	function getPostIt( $limit = 20 )
-	{
-		global $model_factory;
-		
-		$sql = " SELECT p.*, j.pm_ProjectId Project " .
-			   "   FROM BlogPost p, pm_Project j, pm_PublicInfo i" .
-			   "  WHERE p.Blog = j.Blog " .
-			   "    AND j.pm_ProjectId = i.Project " .
-			   "    AND j.pm_ProjectId = " .$this->getId().
-			   "  ORDER BY p.RecordCreated DESC" .
-			   "  LIMIT ".$limit;
-		
-		$post = $model_factory->getObject('BlogPost');
-		return $post->createSQLIterator($sql);
-	}
-
-	function getRelatedPostIt( $limit = 20 )
-	{
-		global $model_factory;
-		
-		$sql = " SELECT p.*, j.pm_ProjectId Project " .
-			   "   FROM BlogPost p, pm_Project j " .
-			   "  WHERE p.Blog = j.Blog " .
-			   "    AND j.pm_ProjectId IN (".join($this->idsToArray(), ', ').") ".
-			   "  ORDER BY p.RecordCreated DESC" .
-			   "  LIMIT ".$limit;
-
-		$post = $model_factory->getObject('BlogPost');
-		
-		return $post->createSQLIterator($sql);
-	}
-	
-	function getTagsIt()
-	{
-		global $model_factory;
-		$protag = $model_factory->getObject('pm_ProjectTag');
-		
-		return $protag->getByRefArray(
-			array( 'Project' => $this->idsToArray() ) 
-			);
-	}
-	
-	function getSitePageIt( $page )
-	{
-		global $model_factory;
-		
-		$sql = "SELECT p.* " .
-				" FROM WikiPage p " .
-				"WHERE p.ReferenceName = " .getFactory()->getObject('ProjectPage')->getReferenceName().
-				"  AND (SELECT COUNT(1) FROM WikiTag wt, Tag t " .
-				"		 WHERE wt.Wiki = p.WikiPageId AND t.TagId = wt.Tag " .
-				"		   AND t.Caption IN ('sitepage', '".$page."') ) > 1 ".
-				"  AND p.Project = ".$this->getId().
-				" ORDER BY p.WikiPageId ASC";
-
- 		$page = $model_factory->getObject('ProjectPage');
- 		$page_it = $page->createSQLIterator( $sql );
-
- 		return $page_it;
-	}
-
-	function getProductPageIt()
-	{
-		return $this->getSitePageIt( 'product' );
-	}
-
 	function getDaysInWeek()
 	{
 		if ( $this->get('DaysInWeek') < 1 )

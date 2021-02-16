@@ -18,7 +18,7 @@ switch ( $image )
 $sprites_on_row = floor(32767 / $size);
 $row = floor($id / $sprites_on_row);
 $column = $id - $row * $sprites_on_row - 1;
-$timestamp = filemtime(SERVER_ROOT_PATH."images/".$image.".png");
+$timestamp = getSession()->getUserPicTimestamp();
 
 ?>
-<div class="<?=$class?>" title="<?=$title?>" style="background: url('/images/<?=$image?>.png?v=<?=$timestamp?>') no-repeat -<?=($column * $size)?>px -<?=($row * $size)?>px;"></div>
+<div class="<?=$class?>" title="<?=$title?>" style="background: url('/images/<?=$image?>.png?v=<?=$timestamp?>') no-repeat -<?=($column * $size)?>px <?=(max(0, -1 * $row * $size))?>px;"></div>

@@ -120,7 +120,7 @@ class SoapService
 
 		if ( !getFactory()->getAccessPolicy()->can_read($object) )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(549))));
+			$server->fault('', $this->logError(text(549)));
 			return;
 		}
 
@@ -128,7 +128,7 @@ class SoapService
 		 
 		if ( $it->getId() == '' )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+			$server->fault('', $this->logError(text(708)));
 			return;
 		}
 		 
@@ -147,7 +147,7 @@ class SoapService
 		
 		if ( !getFactory()->getAccessPolicy()->can_create($object) )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(706))));
+			$server->fault('', $this->logError(text(706)));
 			return;
 		}
 
@@ -189,7 +189,7 @@ class SoapService
 
 		if ( !getFactory()->getAccessPolicy()->can_create($object) )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(706))));
+			$server->fault('', $this->logError(text(706)));
 			return;
 		}
 
@@ -235,13 +235,13 @@ class SoapService
 
 		if ( $it->count() < 1 )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+			$server->fault('', $this->logError(text(708)));
 			return;
 		}
 
 		if ( !getFactory()->getAccessPolicy()->can_modify($it) )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(707))));
+			$server->fault('', $this->logError(text(707)));
 			return;
 		}
 
@@ -263,7 +263,7 @@ class SoapService
 
 		$result = $object->modify_parms($id, $parms);
 		if ( $result < 1 ) {
-		    $server->fault('', $this->logError(IteratorBase::wintoutf8(str_replace('%1', $it->getDisplayName(), text(1216)))));
+		    $server->fault('', $this->logError(str_replace('%1', $it->getDisplayName(), text(1216))));
         }
 
         getFactory()->getEventsManager()
@@ -291,13 +291,13 @@ class SoapService
 			
 			if ( $it->count() < 1 )
 			{
-				$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+				$server->fault('', $this->logError(text(708)));
 				return;
 			}
 
 			if ( !getFactory()->getAccessPolicy()->can_modify($it) )
 			{
-				$server->fault('', $this->logError(IteratorBase::wintoutf8(text(707))));
+				$server->fault('', $this->logError(text(707)));
 				return;
 			}
 
@@ -316,7 +316,7 @@ class SoapService
 				
 			$result = $object->modify_parms($it->getId(), $object_parms);
 			if ( $result < 1 ) {
-				$server->fault('', $this->logError(IteratorBase::wintoutf8(str_replace('%1', $it->getDisplayName(), text(1216)))));
+				$server->fault('', $this->logError(str_replace('%1', $it->getDisplayName(), text(1216))));
 			}
             $ids[] = $it->getId();
 		}
@@ -339,13 +339,13 @@ class SoapService
 
 		if ( $it->count() < 1 )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+			$server->fault('', $this->logError(text(708)));
 			return;
 		}
 
 		if ( !getFactory()->getAccessPolicy()->can_delete($it) )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(707))));
+			$server->fault('', $this->logError(text(707)));
 			return;
 		}
 
@@ -367,13 +367,13 @@ class SoapService
 
 			if ( $it->count() < 1 )
 			{
-				$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+				$server->fault('', $this->logError(text(708)));
 				return;
 			}
 
 			if ( !getFactory()->getAccessPolicy()->can_delete($it) )
 			{
-				$server->fault('', $this->logError(IteratorBase::wintoutf8(text(707))));
+				$server->fault('', $this->logError(text(707)));
 				return;
 			}
 
@@ -400,7 +400,7 @@ class SoapService
 		$object = getFactory()->getObject($classname);
 
 		if ( !getFactory()->getAccessPolicy()->can_read($object) ) {
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(549))));
+			$server->fault('', $this->logError(text(549)));
 			return;
 		}
 
@@ -437,7 +437,7 @@ class SoapService
 
 		if ( !getFactory()->getAccessPolicy()->can_read($object) )
 		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(549))));
+			$server->fault('', $this->logError(text(549)));
 			return;
 		}
 

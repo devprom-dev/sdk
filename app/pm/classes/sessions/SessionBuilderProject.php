@@ -12,7 +12,6 @@ class SessionBuilderProject extends SessionBuilder
 
         // cache context
         $session->getProjectIt()->getMethodologyIt();
-        $session->getProjectIt()->getParentIt();
 
         return $session;
     }
@@ -37,21 +36,27 @@ class SessionBuilderProject extends SessionBuilder
                 }
                 $portfolio_it->moveNext();
             }
-            throw new Exception();
+            if ( in_array($project, array('my','all')) ) {
+                $firstProjectIt = getFactory()->getObject('Project')->getRegistry()->Query(
+                    array(
+                        new ProjectParticipatePredicate(),
+                        new ProjectStatePredicate('active')
+                    )
+                );
+                if ( $firstProjectIt->getId() == '' ) {
+                    $portfolio_it->moveTo('CodeName', 'all');
+                    if ( $portfolio_it->get('CodeName') == 'all' ) {
+                        return $portfolio_it->getSession();
+                    }
+                }
+                return new PMSession($firstProjectIt, null, null, $cacheService);
+            }
+            else {
+                return new PMSession($cache->getEmptyIterator(), null, null, $cacheService);
+            }
         }
         else {
             return new PMSession($cache_it, null, null, $cacheService);
         }
     }
-
-    public function getUserProjectIt()
-    {
-        return getFactory()->getObject('Project')->getRegistry()->Query(
-            array(
-                new ProjectParticipatePredicate(),
-                new ProjectStatePredicate('active')
-            )
-        );
-    }
-
 }

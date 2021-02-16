@@ -1,37 +1,34 @@
 <?php
-
 include "FormTransitionProjectRoleEmbedded.php";
 
 class FieldTransitionProjectRole extends FieldForm
 {
  	var $object_it;
  	
- 	function FieldTransitionProjectRole ( $object_it )
- 	{
+ 	function __construct( $object_it ) {
  		$this->object_it = $object_it;
  	}
  	
- 	function render( $view )
- 	{
+ 	function render( $view ) {
  	    $this->draw( $view );
  	}
  	
  	function draw( $view = null )
  	{
- 		global $model_factory;
-
-		$anchor = $model_factory->getObject( 'TransitionRole' );
-		if ( is_object($this->object_it) )
-		{
-			$anchor->addFilter( new TransitionRolePredicate($this->object_it->getId()) );
+		$anchor = getFactory()->getObject( 'TransitionRole' );
+		if ( is_object($this->object_it) ) {
+            $anchorIt = $anchor->getRegistry()->Query(
+                array(
+                    new TransitionRolePredicate($this->object_it->getId())
+                )
+            );
 		}
-		else
-		{
-			$anchor->addFilter( new TransitionRolePredicate(0) );
+		else {
+            $anchorIt = $anchor->getEmptyIterator();
 		}
 
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
-	 		$form = new FormTransitionProjectRoleEmbedded( $anchor, 'Transition' );
+	 		$form = new FormTransitionProjectRoleEmbedded( $anchorIt, 'Transition' );
 	 		$form->setReadonly( $this->readOnly() );
             $form->setTransitionIt($this->object_it);
 	 		$form->draw( $view );

@@ -24,19 +24,32 @@
                                 <thead>
                                     <tr>
                                         <th class="no-wrap {% if sortColumn == 'issue.id' %} {{ sortDirectionClass }}{% endif %}" width="10%">
-                                            <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'issue.id','sortDirection':reverseSortDirection}) }}">
+                                            <a href="{{ path('issue_list', {'filter':issuesFilter,'state':state,'sortColumn':'issue.id','sortDirection':reverseSortDirection}) }}">
                                                 {{ 'issue_id'|trans }}
                                                 <b class="sort-caret"></b>
                                             </a>
                                         </th>
                                         <th class="no-wrap {% if sortColumn == 'issue.caption' %} {{ sortDirectionClass }}{% endif %}">
-                                            <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'issue.caption','sortDirection':reverseSortDirection}) }}">
+                                            <a href="{{ path('issue_list', {'filter':issuesFilter,'state':state,'sortColumn':'issue.caption','sortDirection':reverseSortDirection}) }}">
                                                 {{ 'issue_caption'|trans }}
                                                 <b class="sort-caret"></b>
                                             </a>
+
+                                            <a class="btn-first btn btn-sm {% if state == 'all' %} {{ 'btn-success' }}{% endif %}"
+                                               href="{{ path('issue_list', {'filter':issuesFilter,'state':'all','sortColumn':sortColumn,'sortDirection':sortDirection}) }}">
+                                                {{ 'issue_state_all'|trans }}
+                                            </a>
+                                            <a class="btn btn-sm {% if state == 'open' or state == '' %} {{ 'btn-success' }}{% endif %}"
+                                               href="{{ path('issue_list', {'filter':issuesFilter,'state':'open','sortColumn':sortColumn,'sortDirection':sortDirection}) }}">
+                                                {{ 'issue_state_open'|trans }}
+                                            </a>
+                                            <a class="btn btn-sm {% if state == 'closed' %} {{ 'btn-success' }}{% endif %}"
+                                               href="{{ path('issue_list', {'filter':issuesFilter,'state':'closed','sortColumn':sortColumn,'sortDirection':sortDirection}) }}">
+                                                {{ 'issue_state_closed'|trans }}
+                                            </a>
                                         </th>
                                         <th class="no-wrap {% if sortColumn == 'severity.id' %} {{ sortDirectionClass }}{% endif %}" width="10%">
-                                            <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'severity.id','sortDirection':reverseSortDirection}) }}">
+                                            <a href="{{ path('issue_list', {'filter':issuesFilter,'state':state,'sortColumn':'severity.id','sortDirection':reverseSortDirection}) }}">
                                                 {{ 'issue_severity'|trans }}
                                                 <b class="sort-caret"></b>
                                             </a>
@@ -47,7 +60,7 @@
                                         </th>
                                         {% endif %}
                                         <th class="no-wrap hidden-xs{% if sortColumn == 'issue.createdAt' %} {{ sortDirectionClass }}{% endif %}" width="20%">
-                                            <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'issue.createdAt','sortDirection':reverseSortDirection}) }}">
+                                            <a href="{{ path('issue_list', {'filter':issuesFilter,'state':state,'sortColumn':'issue.createdAt','sortDirection':reverseSortDirection}) }}">
                                                 {{ 'issue_createdAt'|trans }}
                                                 <b class="sort-caret"></b>
                                             </a>
@@ -61,13 +74,16 @@
                                     <tr>
                                         <td class="state-row" colspan="{{ app.request.get('filter') == "company" ? 5 : 4 }}">
                                             <b>{{ issue.state.name|trans }}</b>
+                                            {% if issue.state.description != "" %}
+                                                <span class="state-desc">&mdash; {{ issue.state.description|unescapeHtml }}</span>
+                                            {% endif %}
                                             {% set state = issue.state.name %}
                                         </td>
                                     </tr>
                                     {% endif %}
                                     <tr>
                                         <td class="issue-id-cell"  data-title="{{ 'issue_id'|trans }}">
-                                            <a href="{{ path('issue_show', { 'id': issue.id }) }}">I-{{ issue.id }}</a>
+                                            <a href="{{ path('issue_show', { 'id': issue.id }) }}">{{ issue.id }}</a>
                                         </td>
                                         <td class="issue-caption-cell" data-title="{{ 'issue_caption'|trans }}">
                                             <a href="{{ path('issue_show', { 'id': issue.id }) }}">
@@ -117,9 +133,19 @@
                             <div class="section-subtitle">{{ 'index.no.issues'|trans }}</div>
                         </header>
                         <div class="body">
-                            <a href="{{ path('issue_new') }}" class="btn btn-lg btn-success" id="create-issue-button">
-                                <i class="icon-plus"></i> {{ 'issue.add'|trans }}
-                            </a>
+                            <div>
+                                <a href="{{ path('issue_new') }}" class="btn btn-lg btn-success" id="create-issue-button">
+                                    <i class="icon-plus"></i> {{ 'issue.add'|trans }}
+                                </a>
+                            </div>
+                            {% if state != 'closed' %}
+                                <div>
+                                    <br/><br/>
+                                    <a class="btn btn-link" href="{{ path('issue_list', {'state':'closed'}) }}">
+                                        {{ 'index.go.closed.issues'|trans }}
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

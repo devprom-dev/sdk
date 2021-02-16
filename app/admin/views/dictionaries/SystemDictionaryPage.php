@@ -9,11 +9,8 @@ class SystemDictionaryPage extends AdminPage
 {
 	function __construct()
 	{
-		global $_REQUEST, $model_factory;
-			
-		if ( $_REQUEST['entity'] != '' )
-		{
-			$object = $model_factory->getObject($_REQUEST['entity']);
+		if ( $_REQUEST['entity'] != '' ) {
+			$object = getFactory()->getObject($_REQUEST['entity']);
 			$_REQUEST['dict'] = $object->getEntityRefName();
 		}
 			
@@ -86,7 +83,7 @@ class SystemDictionaryPage extends AdminPage
 		return new SystemDictionaryTable( new SystemDictionary() );
 	}
 
-	function getForm()
+	function getEntityForm()
 	{
 		$object = $this->getDictionary();
 

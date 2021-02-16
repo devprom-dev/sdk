@@ -14,7 +14,7 @@ function showAccountForm(url)
     $('#modal-frame').ready(function () {
         $('#modal-form img').show();
     });
-    $('#modal-frame').load(function () {
+    $('#modal-frame').on("load", function () {
         $('#modal-form img').hide();
         $(this).show();
     });
@@ -58,7 +58,7 @@ function showAccountForm(url)
 							var message = data.message;
 							
 							if ( state == 'redirect' ) {
-								$('#modal-frame').load(function() {buildProcessingForm();}).attr('src', data.object);
+								$('#modal-frame').on('load',function() {buildProcessingForm();}).attr('src', data.object);
 								$('#modal-form').dialog( "option", "width", $(window).width()*3/5 );
 								$('#modal-form').dialog( "option", "position", "center" );
 							}

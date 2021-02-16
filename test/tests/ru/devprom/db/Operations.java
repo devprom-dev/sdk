@@ -22,6 +22,7 @@ public class Operations {
      private static int columnParentPath;
      private static int columnSectionNumber;
      private static int columnDocumentId;
+	 private static int columnIsDocument;
      private static int columnSortIndex;
      private static int columnVPD;
      private static int columnUID;
@@ -326,8 +327,8 @@ public class Operations {
 	public static List<String[]> generateSnapshotItemValuesTable(List<String[]> requirements) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		List<String[]> snapshotItemValues = new ArrayList<String[]>();
 		snapshotItemValueStructure = getLastSnapshotItemValue();
-		String[] captions = {"Название","Содержание",null,"Родительская страница","Путь к родительской странице","Номер раздела",null,"Пользовательское поле 3",null};
-		String[] referenceNames = {"Caption","Content","DocumentId","ParentPage","ParentPath","SectionNumber","SortIndex","UserField3"};
+		String[] captions = {"Название","Содержание",null,null,"Родительская страница","Путь к родительской странице","Номер раздела",null,"Пользовательское поле 3",null};
+		String[] referenceNames = {"Caption","Content","DocumentId","IsDocument","ParentPage","ParentPath","SectionNumber","SortIndex","UserField3"};
 		String[] values = new String[referenceNames.length];
 		
 		int columnCount = snapshotItemValueStructure.getMetaData().getColumnCount();
@@ -346,11 +347,12 @@ public class Operations {
 			values[0]=req[columnCaption];
 			values[1]=req[columnContent];
 			values[2]=req[columnDocumentId];
-			values[3]=req[columnParentPage];
-			values[4]=req[columnParentPath];
-			values[5]=req[columnSectionNumber];
-			values[6]=req[columnSortIndex];
-			values[7]="";
+			values[3]=req[columnIsDocument];
+			values[4]=req[columnParentPage];
+			values[5]=req[columnParentPath];
+			values[6]=req[columnSectionNumber];
+			values[7]=req[columnSortIndex];
+			values[8]="";
 				
 			   for (int i=0;i<values.length;i++) {
 			String[] row = new String[columnCount];
@@ -560,6 +562,7 @@ public class Operations {
 		    columnParentPath = rs.findColumn("ParentPath")-1;
 		    columnSectionNumber = rs.findColumn("SectionNumber")-1;
 		    columnDocumentId = rs.findColumn("DocumentId")-1;
+		    columnIsDocument = rs.findColumn("IsDocument")-1;
 		    columnSortIndex = rs.findColumn("SortIndex")-1;
 		    columnVPD =  rs.findColumn("VPD")-1;
 		    columnUID =  rs.findColumn("UID")-1;
@@ -601,6 +604,7 @@ public class Operations {
 		 parent[columnParentPath] = ","+id+",";
 		 parent[columnSectionNumber] = "1";
 		 parent[columnDocumentId] = String.valueOf(id);
+		 parent[columnIsDocument] = "1";
 		 long sortIndex =  orderNum + 10000000000L;
 		 String parentSortIndex = String.valueOf(sortIndex).substring(1);
 		 parent[columnSortIndex] = parentSortIndex;
@@ -621,6 +625,7 @@ public class Operations {
 				 second[columnParentPath]  = ","+parentId+","+id+",";
 				 second[columnSectionNumber] = "1."+k;
 				 second[columnDocumentId] = String.valueOf(parentId);
+				 second[columnIsDocument] = "0";
 				 long sortIndex2 =  orderNum + 10000000000L;
 				 String secondSortIndex = String.valueOf(sortIndex2).substring(1);
 				 second[columnSortIndex] = parentSortIndex+","+secondSortIndex;
@@ -641,6 +646,7 @@ public class Operations {
 					 third[columnParentPath] = ","+parentId+"," + secondId+ ","+id+",";
 					 third[columnSectionNumber] = "1."+k +"." + n;
 					 third[columnDocumentId] = String.valueOf(parentId);
+					 third[columnIsDocument] = "0";
 					 long sortIndex3 =  orderNum + 10000000000L;
 					 third[columnSortIndex] = parentSortIndex+","+secondSortIndex+","+String.valueOf(sortIndex3).substring(1);
 					 requirements.add(third);

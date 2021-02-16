@@ -42,7 +42,7 @@ class AttachmentController extends Controller
         }
 
         $response = new BinaryFileResponse($attachment->getFilePath());
-        $response->headers->set(\EnvironmentSettings::getDownloadHeader($attachment->getOriginalFilename()));
+        $response->headers->set('Content-Disposition', 'attachment; filename="'.$attachment->getOriginalFilename().'"');
         $response->headers->set('Content-Type', $attachment->getContentType());
 
         return $response;
@@ -70,9 +70,28 @@ class AttachmentController extends Controller
         }
 
         $response = new BinaryFileResponse($attachment->getFilePath());
-        $response->headers->set(\EnvironmentSettings::getDownloadHeader($attachment->getOriginalFilename()));
+        $parts = preg_split('/:/', \EnvironmentSettings::getDownloadHeader($attachment->getOriginalFilename()));
+        $response->headers->set($parts[0], $parts[1]);
         $response->headers->set('Content-Type', $attachment->getContentType());
 
+        return $response;
+    }
+
+    /**
+     * @Route("/document/attachment/{attachmentId}", name="doc_attachment_download", requirements={"attachmentId" = "\d+"})
+     * @Method("GET")
+     */
+    public function downloadDocsAttachmentAction($attachmentId)
+    {
+        $attachment = $this->container->get('knowledge_service')->getAttachmentById($attachmentId);
+        if ( !is_object($attachment) ) {
+            return $this->redirect($this->generateUrl('docs_list', array()));
+        }
+
+        $response = new BinaryFileResponse($attachment->getFilePath());
+        $parts = preg_split('/:/', \EnvironmentSettings::getDownloadHeader($attachment->getOriginalFilename()));
+        $response->headers->set($parts[0], $parts[1]);
+        $response->headers->set('Content-Type', $attachment->getContentType());
         return $response;
     }
 
@@ -85,8 +104,8 @@ class AttachmentController extends Controller
     {
         $attachment = new IssueAttachment();
 
-        $form = $this->createForm(new AttachmentFormType(), $attachment);
-        $form->bind($request);
+        $form = $this->createForm(AttachmentFormType::class, $attachment);
+        $form->handleRequest($request);
 
         $issue = $this->getIssueService()->getIssueById($issueId);
 
@@ -115,9 +134,7 @@ class AttachmentController extends Controller
     public function showFormAction($issueId) {
 
         $issue = $this->getIssueService()->getIssueById($issueId);
-
-        $form = $this->createForm(new AttachmentFormType());
-
+        $form = $this->createForm(AttachmentFormType::class);
         return array(
             'issue' => $issue,
             'form' => $form->createView()

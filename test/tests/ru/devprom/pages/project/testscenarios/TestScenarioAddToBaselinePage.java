@@ -25,9 +25,6 @@ public class TestScenarioAddToBaselinePage extends SDLCPojectPageBase {
 	@FindBy (id="VersionText")
 	protected WebElement nameInput;
 	
-	@FindBy (id="CopyOption")
-	protected WebElement createCopyBox;
-	
 	@FindBy (id="Description")
 	protected WebElement descriptionInput;
 	
@@ -37,11 +34,7 @@ public class TestScenarioAddToBaselinePage extends SDLCPojectPageBase {
 	@FindBy (id="SubmitBtn")
 	protected WebElement submitBtn;
 
-	public TestScenarioViewPage addToBaseline(TestScenario testScenario, String baselineName){
-		return addToBaseline(testScenario, baselineName, true);
-	}
-
-	public TestScenarioViewPage addToBaseline(TestScenario testScenario, String baselineName, boolean isCopy)
+	public TestScenarioViewPage Submit(TestScenario testScenario, String baselineName)
 	{
 		waitForDialog();
 		projectInput.sendKeys(Keys.TAB);
@@ -57,18 +50,21 @@ public class TestScenarioAddToBaselinePage extends SDLCPojectPageBase {
 		} catch (InterruptedException e) {
 		}
 		descriptionInput.sendKeys(Keys.TAB);
-		if (isCopy) createCopyBox.click();
 		submitDialog(submitBtn);
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+		}
 		String uid = "S-" + driver.findElement(
 				By.xpath("//tr[contains(@id,'pmwikidocumentlist1_row')]//div[contains(@class,'wysiwyg-text') and  contains(.,'" + testScenario.getName() + "')]")).getAttribute("objectid");
 		testScenario.setId(uid);
 		return new TestScenarioViewPage(driver);
 	}
-	
-	public TestScenarioViewPage addToBaseline(TestScenario testScenario, String baselineName, String description, boolean isCopy, String projectName){
+
+	public TestScenarioViewPage Submit(TestScenario testScenario, String baselineName, String description, String projectName){
 		if (!"".equals(description)) addDescription(description);
 		if (!"".equals(projectName)) selectProject(projectName);
-		return addToBaseline(testScenario, baselineName, isCopy);
+		return Submit(testScenario, baselineName);
 	}
 	
 	public void addDescription(String description){

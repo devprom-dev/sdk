@@ -1,7 +1,6 @@
 <?php
 
  include('header.php');
- include('methods/c_watcher_methods.php');
  include('views/project/ProfilePage.php');
  include('views/watchers/WatchingsPage.php');
 

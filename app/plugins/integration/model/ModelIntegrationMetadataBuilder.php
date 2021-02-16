@@ -10,6 +10,7 @@ class ModelIntegrationMetadataBuilder extends ObjectMetadataEntityBuilder
 
 		$metadata->addAttribute('IntegrationLink', 'VARCHAR', text('integration8'), false, false);
         $metadata->addAttributeGroup('IntegrationLink', 'trace');
+        $metadata->addAttributeGroup('IntegrationLink', 'non-form');
         $metadata->addAttribute('IntegrationRef', 'REF_IntegrationLinkId', text('integration23'), false, false);
         $metadata->addAttributeGroup('IntegrationRef', 'system');
         $metadata->addAttributeGroup('IntegrationRef', 'trace');

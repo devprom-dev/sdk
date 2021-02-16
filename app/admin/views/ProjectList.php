@@ -2,32 +2,23 @@
 
 class ProjectList extends PageList
 {
-	function setupColumns()
-	{
-        $this->object->setAttributeCaption( 'IsClosed', translate('Состояние') ); 
- 		
- 		$this->object->addAttribute('Coordinators', 'REF_cms_UserId', translate('Координаторы'), true);
-		
-		$this->object->addPersister( new ProjectLeadsPersister() );
-	    
-        parent::setupColumns();
-		
+    function extendModel()
+    {
+        $this->getObject()->addAttribute('Coordinators', 'REF_cms_UserId', translate('Координаторы'), true);
+        $this->getObject()->addPersister( new ProjectLeadsPersister() );
+
         $visible = array( 'Caption', 'CodeName', 'Coordinators', 'IsClosed' );
-
-	    $attrs = array_keys($this->object->getAttributes());
-        
-        foreach( $attrs as $attribute )
-        {
+        foreach( array_keys($this->getObject()->getAttributes()) as $attribute ) {
             if ( in_array($attribute, $visible) ) continue;
-            
-            $this->object->setAttributeVisible($attribute, false);
+            $this->getObject()->setAttributeVisible($attribute, false);
         }
-		
-		$this->object->setAttributeVisible('UID', true);
-	}
 
-	function IsNeedToModify( $object_it )
-	{ 
+        $this->getObject()->setAttributeVisible('UID', true);
+
+        parent::extendModel();
+    }
+
+	function IsNeedToModify( $object_it ) {
 	    return false; 
 	}
 
@@ -37,8 +28,6 @@ class ProjectList extends PageList
 
 		$method = new ModifyAttributeWebMethod($object_it, 'IsClosed', $object_it->get('IsClosed') == 'Y' ? 'N' : 'Y');
 		if ( $method->HasAccess() ) {
-            $method->setRedirectUrl('donothing');
-
 			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 		    $actions[] = array(
     		    'url' => $method->getJSCall(),
@@ -51,18 +40,13 @@ class ProjectList extends PageList
 
 	function drawCell( $object_it, $attr )
 	{
-		global $model_factory;
-
 		switch( $attr )
 		{
 		    case 'IsClosed':
-		        
-		        echo $object_it->get('IsClosed') == 'Y' ? translate('Закрыт') : translate('Открыт'); 
-		        
+		        echo $object_it->get('IsClosed') == 'Y' ? translate('Закрыт') : translate('Открыт');
 		        break;
 		        
 		    default:
-		        
 		        parent::drawCell( $object_it, $attr );
 		}
 	}
