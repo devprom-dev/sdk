@@ -116,8 +116,7 @@ class UploadFileService
 
         // remove obsolete temporary files
         $file_registry = getFactory()->getObject('cms_TempFile')->getRegistry();
-        $file_registry->setPersisters( array(new \ObjectRecordAgePersister()) );
-        $file_it = $file_registry->getAll();
+        $file_it = $file_registry->Query(array(new \ObjectRecordAgePersister()));
 
         while( !$file_it->end() ) {
             if ( $file_it->get('AgeDays') > 0 ) $file_it->delete();

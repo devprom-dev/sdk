@@ -6,14 +6,14 @@ $commentMethod->setRedirectUrl('donothing');
 
 $url = $object_it->get('CommentsCount') < 1
     ? ($commentMethod->hasAccess() ? $commentMethod->getJSCall() : '')
-    : "javascript: filterItemComments(".$object_it->getId()."); $('.details-header a[did=comments]').attr('active-item', ".$object_it->getId().").click();";
+    : "javascript: $('.details-header a[did=comments]').attr('active-item', ".$object_it->getId().").click(); setTimeout(function(){filterItemComments(".$object_it->getId().");}, 500);";
 
 $title = $object_it->get('CommentsCount') < 1
     ? text(2477)
     : text(3005);
 ?>
-<a title="<?=$title?>" onclick="<?=$url?>">
-    <? if ( $object_it->get('NewComments') != '' ) { ?>
+<a tabindex="-1" title="<?=$title?>" onclick="<?=$url?>">
+    <? if ( $object_it->get('NewComments') != '' && $object_it->get('CommentsCount') > 0 ) { ?>
         <span class="label label-info">
     	    <i class="icon-white icon-comment has-comments"></i>
         </span>

@@ -2,22 +2,10 @@
 
 class VersionTree extends VersionList
 {
-    function getTemplate() {
-        return "core/PageTreeGrid.php";
-    }
+    use PageTreeTrait;
 
     function combineCaptionWithDescription() {
         return false;
-    }
-
-    function buildItemsHash($object, $predicates) {
-        return \TextUtils::buildIds(
-            $object->getRegistryBase()->Query(
-                array_filter($predicates, function($predicate) {
-                    return ! $predicate instanceof FilterInPredicate;
-                })
-            )->idsToArray()
-        );
     }
 
     function getRenderParms()

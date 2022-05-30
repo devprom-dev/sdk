@@ -44,6 +44,11 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     		$items[] = $module_it->buildMenuItem();
 		}
 
+        $module_it = $module->getExact('dicts-stateattribute');
+        if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
+            $items[] = $module_it->buildMenuItem();
+        }
+
         if ( getSession()->getUserIt()->IsAdministrator() ) {
             $items[] = array(
                 'name' => translate('Администрирование'),
@@ -75,7 +80,7 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
             );
 
             $template_classes = array(
-                'TextTemplate', 'RequestTemplate', 'ExportTemplate'
+                'TextTemplate', 'RequestTemplate', 'TaskTemplate', 'ExportTemplate'
             );
             $object_it = getFactory()->getObject('Dictionary')->getAll();
 

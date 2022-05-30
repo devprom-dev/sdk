@@ -7,7 +7,6 @@ class QuestionList extends PMPageList
 		$predicates = array(
 			new QuestionAuthorFilter( $values['author'] ),
 			new StatePredicate( $values['state'] ),
-			new TransitionObjectPredicate( $this->getObject(), $values['transition'] ),
 			new CustomTagFilter( $this->getObject(), $values['tag'] )
 		);
 		

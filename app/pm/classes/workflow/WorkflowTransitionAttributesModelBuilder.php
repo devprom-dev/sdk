@@ -20,6 +20,7 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
     	if ( ! $object instanceof MetaobjectStatable ) return;
  	    if ( $object->getStateClassName() == '' ) return;
         $visibleAttributes = array();
+        $skipAttributes = $object->getAttributesByGroup('system');
  	    
  	    foreach( $object->getAttributes() as $attribute => $data ) {
  	    	$object->setAttributeVisible($attribute, false);
@@ -59,6 +60,10 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
                 $attribute_it->moveNext();
                 continue;
             }
+            if ( in_array($attribute_it->get('ReferenceName'), $skipAttributes) ) {
+                $attribute_it->moveNext();
+                continue;
+            }
 			$object->setAttributeRequired(
 				$attribute_it->get('ReferenceName'), $attribute_it->get('IsRequired') == 'Y'
 			);
@@ -74,10 +79,13 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
             if ( $attribute_it->get('IsVisible') == 'Y' ) {
                 $visibleAttributes[] = $attribute_it->get('ReferenceName');
             }
+            if ( $attribute_it->get('DefaultValue') != '' ) {
+                $object->setAttributeDefault($attribute_it->get('ReferenceName'), $attribute_it->get('DefaultValue'));
+            }
 			$attribute_it->moveNext();
 		}
 
- 	    $attribute_it = getFactory()->getObject('TransitionAttribute')->getRegistry()->Query(
+ 	    $attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
             array(
                 new FilterAttributePredicate('Transition', $this->transition_it->getId()),
                 new FilterBaseVpdPredicate()
@@ -86,6 +94,10 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
 
 		while( !$attribute_it->end() )
 		{
+            if ( in_array($attribute_it->get('ReferenceName'), $skipAttributes) ) {
+                $attribute_it->moveNext();
+                continue;
+            }
             if ( $attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y' ) {
                 $object->setAttributeVisible( $attribute_it->get('ReferenceName'), true );
                 $object->setAttributeRequired(

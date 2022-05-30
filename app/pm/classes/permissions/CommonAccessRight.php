@@ -9,35 +9,28 @@ class CommonAccessRight extends Metaobject
 {
  	var $objects;
  	
- 	function CommonAccessRight()
+ 	function __construct()
  	{
  		$this->objects = array();
- 		
- 		parent::Metaobject('pm_AccessRight');
- 		
+ 		parent::__construct('pm_AccessRight');
  		$this->addObject( getFactory()->getObject('ProjectPage') );
  	}
  	
-	function createIterator()
-	{
+	function createIterator() {
 		return new CommonAccessRightIterator( $this );
 	}
 
-	function addObject( & $object )
-	{
+	function addObject( $object ) {
 		$this->objects[strtolower(get_class($object))] = $object;
 	}
 	
 	function getFilterValue( $filter_class )
 	{
-		foreach( $this->getFilters() as $filter )
-		{
-			if ( is_a($filter, $filter_class) )
-			{
+		foreach( $this->getFilters() as $filter ) {
+			if ( is_a($filter, $filter_class) ) {
 				return $filter->getValue();
 			}
 		}
-		
 		return '';
 	}
 	
@@ -56,7 +49,7 @@ class CommonAccessRight extends Metaobject
 
  		foreach( $this->objects as $className => $object )
  		{
- 		    $className = in_array(get_class($object), array('Metaobject','Increment')) ? strtolower($object->getClassName()) : $className;
+ 		    $className = in_array(get_class($object), array('Metaobject')) ? strtolower($object->getClassName()) : $className;
  		    if ( count($entities) > 0 && !in_array($className, $entities) ) continue;
 
  			$data[] = array (
@@ -131,7 +124,22 @@ class CommonAccessRight extends Metaobject
 
  			$module_it->moveNext();
 		}
- 		
+
+		$sections = array(
+		    'pagesectioncomments' => translate('Комментарии'),
+            'statablelifecyclesection' => translate('Жизненный цикл'),
+            'pmlastchangessection' => translate('Последние изменения'),
+            'networksection' => text(2127)
+        );
+
+		foreach( $sections as $className => $title ) {
+            $data[] = array (
+                'ReferenceName' => "section:{$className}",
+                'ReferenceType' => 'PMPluginModule',
+                'DisplayName' => sprintf(text(3133), $title)
+            );
+        }
+
 		usort( $data, 'usort_display_name' );
 		
 		return $data;
@@ -269,15 +277,12 @@ class CommonAccessRight extends Metaobject
 			$role_it->moveNext();
 		}
 
-		if ( in_array($filter_kind, array('', 'all', 'object')) )
-		{
+		if ( in_array($filter_kind, array('', 'all', 'object')) ) {
 			$recordset = array_merge($recordset, $this->getDataAccess());
 		}
 
-		foreach ( $this->getRegistryDefault()->getSorts() as $sort )
-		{
-			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ReferenceName' )
-			{
+		foreach ( $this->getRegistry()->getSorts() as $sort ) {
+			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ReferenceName' ) {
 				usort( $recordset, 'usort_display_name' );
 			}
 		}

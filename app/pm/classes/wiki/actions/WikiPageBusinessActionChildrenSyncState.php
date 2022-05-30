@@ -15,30 +15,33 @@ class WikiPageBusinessActionChildrenSyncState extends BusinessActionWorkflow
 	function apply( $object_it )
  	{
  	    $childObject = getFactory()->getObject(get_class($object_it->object));
-        $stateAttribute = 'State';
+        $targetStateIt = $object_it->getRef('LastTransition')->getRef('TargetState');
 
 		$page_it = $childObject->getRegistry()->Query(
             array (
-                new ParentTransitiveFilter($object_it->getId()),
-                new FilterNotInPredicate($object_it->getId()),
-                new WikiNonRootFilter()
+                new FilterAttributePredicate('ParentPage', $object_it->getId())
             )
 		);
 		
 		$service = new WorkflowService($childObject);
 		while( !$page_it->end() )
 		{
-		    if ( $page_it->get($stateAttribute) == $object_it->get($stateAttribute) ) {
-                $page_it->moveNext();
-                continue;
-            }
 			try {
-				$service->moveByTransition(
-						$page_it, $object_it->getRef('LastTransition'), '', array(), true
-					);
+                $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
+                    array (
+                        new \TransitionSourceStatePredicate($page_it->get('State')),
+                        new \FilterAttributePredicate('TargetState', $targetStateIt->getId())
+                    )
+                );
+                if ( $transition_it->getId() != '' ) {
+                    $service->moveByTransition(
+                        $page_it, $transition_it, '', array(), true
+                    );
+                }
 			}
 			catch( Exception $e ) {
 				Logger::getLogger('System')->error($e->getMessage());
+                throw $e;
 			}
 			$page_it->moveNext();
 		}

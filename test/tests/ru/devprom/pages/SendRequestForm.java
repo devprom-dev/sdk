@@ -35,7 +35,7 @@ public class SendRequestForm extends PageBase {
 			Assert.fail("Sending request was failed");
 		}
 		
-		driver.findElement(By.xpath("//div[@class='alert alert-success']/a[@href]")).click();
+		driver.findElement(By.xpath("//div[contains(@class,'alert-success')]/a[@href]")).click();
 		return new RequestViewPage(driver);
 	}
 	

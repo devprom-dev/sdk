@@ -196,7 +196,7 @@ class AccessPolicyProject extends AccessPolicyBase
                     }
 	 			}
 
-	 			if ( is_null($access_map[$role_id]) ) {
+	 			if ( is_null($access_map[$role_id]) && $object->IsAttributeStored($attribute_refname) ) {
                     $access = $this->access_it->getClassAccess( $role_id,
                         array_merge(
                             class_parents($object, false),
@@ -229,7 +229,8 @@ class AccessPolicyProject extends AccessPolicyBase
  		    return $this->checkRestrictions(true, $action_kind, $object);
         }
 
-		return true;
+		return !$object->getAttributeEditable($attribute_refname) && $action_kind == ACCESS_READ
+            || $object->getAttributeEditable($attribute_refname);
  	}
 
  	function getEntityAccess( $action_kind, &$object ) 
@@ -291,23 +292,20 @@ class AccessPolicyProject extends AccessPolicyBase
  	
  	function getDefaultEntityAccessRole( $action_kind, &$object, $role_id ) 
  	{
- 		$array = is_object(getFactory()->getPluginsManager()) ? getFactory()->getPluginsManager()->getPluginsForSection('pm') : array();
+ 		$array = is_object(getFactory()->getPluginsManager())
+            ? getFactory()->getPluginsManager()->getPluginsForSection('pm')
+            : array();
 			
-		foreach ( $array as $plugin )
-		{
-			$ref_name = $this->getRoleReferenceName($role_id);
-			
-			$access = $plugin->getEntityAccess( $action_kind, $ref_name, $object );
-
+		foreach ( $array as $plugin ) {
+			$access = $plugin->getEntityAccess(
+			    $action_kind, $this->getRoleReferenceName($role_id), $object );
 			if ( is_bool($access) ) return $access;
 		}
  		
-		if( is_object($object) )
-		{
+		if( is_object($object) ) {
 			$ref_name = $object->getClassName();
 		}
-		else 
-		{
+		else {
 			return true;
 		}
 
@@ -342,7 +340,6 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'pm_Release':
 					case 'pm_State':
 					case 'pm_Transition':
-					case 'pm_TransitionAttribute':
 					case 'pm_TextTemplate':
                     case 'pm_Milestone':
 					case 'WikiPage':
@@ -432,7 +429,6 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'pm_ParticipantRole':
 					case 'pm_State':
 					case 'pm_Transition':
-					case 'pm_TransitionAttribute':
 					case 'pm_TransitionRole':
 					case 'cms_Resource':
 						return $action_kind == ACCESS_READ;
@@ -522,8 +518,15 @@ class AccessPolicyProject extends AccessPolicyBase
 				}
 				break;
 		}
-				
-		return parent::getObjectAccess( $action_kind, $object_it ); 
+
+        if ( $object_it->object instanceof Activity ) {
+           if ( $object_it->get('ReportDate') < date('Y-m-d') ) {
+                $pastActivity = getFactory()->getObject('ActivityPast');
+                return $this->getEntityAccess( $action_kind,  $pastActivity);
+            }
+        }
+
+		return parent::getObjectAccess( $action_kind, $object_it );
  	}
 	
  	function getObjectAccessRole( $action_kind, &$object_it, $role_id )
@@ -600,7 +603,7 @@ class AccessPolicyProject extends AccessPolicyBase
 		$access = $this->calculateAccess($access_map);
  		if ( is_bool($access) ) return $access;
 
-		return parent::getDefaultObjectAccess( $action_kind, $object_it ); 
+		return parent::getDefaultObjectAccess( $action_kind, $object_it );
  	}
  	 	
  	function getDefaultObjectAccessRole( $action_kind, &$object_it, $role_id ) 
@@ -648,10 +651,13 @@ class AccessPolicyProject extends AccessPolicyBase
 					    || $object_it->get('VPD') == getSession()->getProjectIt()->get('VPD');
 				}
 				
-				if ( $ref_name == 'pm_ProjectRole' && $action_kind == ACCESS_DELETE ) 
+				if ( $ref_name == 'pm_ProjectRole' )
 				{
-					$part = getFactory()->getObject('pm_Participant');
-					return !$part->hasTeamMembers( $object_it );
+                    if ( in_array($object_it->get('ReferenceName'), array('guest','linkedguest')) && $action_kind != ACCESS_READ ) return false;
+				    if ( $action_kind == ACCESS_DELETE ) {
+                        $part = getFactory()->getObject('pm_Participant');
+                        return !$part->hasTeamMembers($object_it, $this->project_it);
+                    }
 				}
 
                 if ( $ref_name == 'pm_Activity' ) return true;

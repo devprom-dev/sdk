@@ -140,9 +140,18 @@ public class CKEditor {
     	addUMLBtn.click();
     	(new WebDriverWait(driver,Configuration.getWaiting())).until(ExpectedConditions.visibilityOf(okUMLBtn));
     	addUMLField.sendKeys(uml);
-    	okUMLBtn.click();  
+		clickOnInvisibleElement(okUMLBtn);
     }
-    
+
+	public void clickOnInvisibleElement(WebElement element) {
+		mouseMove(element);
+		String script = "var object = arguments[0];"
+				+ "var theEvent = document.createEvent(\'MouseEvent\');"
+				+ "theEvent.initMouseEvent(\'click\', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);"
+				+ "object.dispatchEvent(theEvent);";
+		((JavascriptExecutor) driver).executeScript(script, element);
+	}
+
      public void addFormula(String formula) {
         try{
         	By locator = By.xpath("//div[contains(@class,'editor-area')]//span[contains(@class,'cke_toolgroup')]//a[contains(@class,'cke_button__mathjax')]");

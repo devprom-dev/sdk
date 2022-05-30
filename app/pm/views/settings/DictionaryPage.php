@@ -4,6 +4,7 @@ use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
 include "DictionaryItemForm.php";
 include "ProjectRoleForm.php";
 include "TaskTypeForm.php";
+include "RecurringForm.php";
 include "CustomAttributeEntityForm.php";
 include "CustomAttributeFinalForm.php";
 include "DictionaryItemsTable.php";
@@ -11,12 +12,16 @@ include "DictionaryTable.php";
 include "TestExecutionResultForm.php";
 include "TextTemplateForm.php";
 include "TextTemplateTable.php";
+include "DictionaryPageSettingBuilder.php";
+include "FormFieldForm.php";
+include "FormFieldTable.php";
 
 include SERVER_ROOT_PATH."pm/views/workflow/TransitionForm.php";
 include SERVER_ROOT_PATH."pm/views/workflow/StateForm.php";
 include SERVER_ROOT_PATH."pm/views/workflow/StateTable.php";
 include SERVER_ROOT_PATH."pm/views/templates/ObjectTemplateTable.php";
 include SERVER_ROOT_PATH."pm/views/templates/RequestTemplateForm.php";
+include SERVER_ROOT_PATH."pm/views/templates/TaskTemplateForm.php";
 include SERVER_ROOT_PATH."pm/views/wiki/RequirementTypeForm.php";
 include SERVER_ROOT_PATH."pm/classes/settings/DictionaryItemModelBuilder.php";
 
@@ -27,6 +32,7 @@ class DictionaryPage extends PMPage
  	function __construct()
  	{
         getSession()->addBuilder( new \RequestModelExtendedBuilder() );
+        getSession()->addBuilder( new \DictionaryPageSettingBuilder() );
 
  		parent::__construct();
  		
@@ -87,6 +93,9 @@ class DictionaryPage extends PMPage
                 case 'pm_TextTemplate':
                     return new TextTemplateTable( $object );
 
+                case 'pm_StateAttribute':
+                    return new FormFieldTable( $object );
+
 				default:
 					if ( is_a($object, 'ObjectTemplate') ) {
 						return new ObjectTemplateTable( $object );
@@ -104,6 +113,10 @@ class DictionaryPage extends PMPage
             return new RequestTemplateForm(getFactory()->getObject('RequestTemplate'));
         }
 
+        if ( $_REQUEST['dict'] == 'TaskTemplate' ) {
+            return new TaskTemplateForm(getFactory()->getObject('TaskTemplate'));
+        }
+
 		$object = $this->getObject();
 
 		if ( !is_object($object) ) return null;
@@ -115,6 +128,9 @@ class DictionaryPage extends PMPage
 				
 			case 'pm_TaskType':
 				return new TaskTypeForm ( $object );
+
+            case 'pm_Recurring':
+                return new RecurringForm( $object );
 
 			case 'pm_Transition':
 				return new TransitionForm( getFactory()->getObject('Transition') );
@@ -130,6 +146,9 @@ class DictionaryPage extends PMPage
 
             case 'pm_TextTemplate':
                 return new TextTemplateForm($object);
+
+            case 'pm_StateAttribute':
+                return new FormFieldForm($object);
 				
 		    case 'pm_CustomAttribute':
 		    	
@@ -165,16 +184,12 @@ class DictionaryPage extends PMPage
  	
  	function buildFormSections( $object_it )
  	{
-		$this->addInfoSection(
-            new PageSectionAttributes(
-                $this->getFormRef()->getObject(), 'additional', translate('Дополнительно')
-            )
-		);
  		if ( !is_object($object_it) ) return;
  		if ( $_REQUEST['dict'] == 'RequestTemplate' ) return;
+        if ( $_REQUEST['dict'] == 'TaskTemplate' ) return;
 
  		if ( $object_it->object->getAttributeType('RecentComment') != '' ) {
- 			$this->addInfoSection( new PageSectionComments($object_it) );
+ 			$this->addInfoSection( new PageSectionComments($object_it, $this->getCommentObject()) );
  		}
  	}
 

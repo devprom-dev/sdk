@@ -1,8 +1,9 @@
 <?php
-
 include SERVER_ROOT_PATH . "pm/classes/model/classes.php";
+include SERVER_ROOT_PATH . "pm/classes/common/CustomAttributesModelBuilder.php";
+include SERVER_ROOT_PATH . "pm/classes/common/CustomAttributesObjectModelBuilder.php";
 include "validators/ModelCustomAttributesValidator.php";
-include "validators/ModelStateValidator.php";
+include "validators/ModelValidatorAvoidInfiniteLoop.php";
 
 class ModelFactoryProject extends ModelFactoryExtended
 {
@@ -12,7 +13,6 @@ class ModelFactoryProject extends ModelFactoryExtended
 			'pm_calendarinterval' => array('Calendar'),
 			'wikipage' => array( 'PMWikiPage'),
 			'wikipagetype' => array( 'WikiTypeBase'),
-			'blogpost' => array( 'PMBlogPost'),
 			'pm_tasktype' => array( 'TaskType'),
 			'pm_release' => array( 'Iteration'),
 		    'pm_task' => array( 'Task'),
@@ -43,7 +43,6 @@ class ModelFactoryProject extends ModelFactoryExtended
 			'pm_transition' => array('Transition'),
 			'pm_transitionrole' => array('TransitionRole'),
 			'pm_transitionpredicate' => array('TransitionPredicate'),
-			'pm_transitionattribute' => array('TransitionAttribute'),
 			'pm_transitionresetfield' => array('TransitionResetField'),
             'pm_transitionaction' => array('TransitionAction'),
 			'pm_customreport' => array('PMCustomReport'),
@@ -55,7 +54,13 @@ class ModelFactoryProject extends ModelFactoryExtended
 		    'pm_projectuse' => array( 'ProjectUse' ),
 			'pm_featuretype' => array( 'FeatureType' ),
 			'pm_stateattribute' => array( 'StateAttribute' ),
-            'pm_invitation' => array('Invitation')
+            'pm_invitation' => array('Invitation'),
+            'pm_recurring' => array('Recurring'),
+            'comment' => array('Comment'),
+            'pm_exporttemplate' => array('ExportTemplate'),
+            'pm_componenttype' => array('ComponentType'),
+            'pm_component' => array('Component'),
+            'pm_componenttrace' => array('ComponentTrace')
 		));
 	}
 
@@ -64,9 +69,51 @@ class ModelFactoryProject extends ModelFactoryExtended
         return array_merge(
             parent::getModelValidators(),
             array(
-                new ModelCustomAttributesValidator(),
-                new ModelStateValidator()
+                new ModelCustomAttributesValidator()
             )
         );
+    }
+
+    public function invalidateCache( $sections = array('sessions') )
+    {
+        getFactory()->getAccessPolicy()->invalidateCache();
+        getFactory()->getEntityOriginationService()->invalidateCache();
+        getFactory()->getCacheService()->setReadonly();
+        foreach( $sections as $section ) {
+            getFactory()->getCacheService()->invalidate($section);
+        }
+        getSession()->truncate();
+    }
+
+    public function createEntity( $object, $parms, $validators = array(), $mappers = array() )
+    {
+        $builder = new \CustomAttributesModelBuilder();
+        $builder->build($object);
+        return parent::createEntity( $object, $parms, $validators, $mappers);
+    }
+
+    public function modifyEntity( $objectIt, $parms, $validators = array(), $mappers = array() )
+    {
+        $builder = new \CustomAttributesObjectModelBuilder($objectIt);
+        $builder->build($objectIt->object);
+        return parent::modifyEntity($objectIt, $parms, $validators, $mappers);
+    }
+
+    public function getEntities( $object, $objectId )
+    {
+        if ( !is_array($objectId) ) $objectId = array($objectId);
+
+        $data = array();
+        foreach( $objectId as $id ) {
+            $data[] = array(
+                $object->getIdAttribute() => $id
+            );
+        }
+
+        $builder = new \CustomAttributesObjectModelBuilder(
+            $object->createCachedIterator($data));
+        $builder->build($object);
+
+        return parent::getEntities( $object, $objectId );
     }
 }

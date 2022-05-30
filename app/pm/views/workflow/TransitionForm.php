@@ -35,22 +35,16 @@ class TransitionForm extends PMPageForm
 
 	function createFieldObject( $attr_name ) 
 	{
-		global $model_factory, $_REQUEST;
-
 		$object_it = $this->getObjectIt();
+		$state = getFactory()->getObject('pm_State');
 		
-		$state = $model_factory->getObject('pm_State');
-		
-		if ( $_REQUEST['SourceState'] > 0 )
-		{
+		if ( $_REQUEST['SourceState'] > 0 ) {
 			$state_it = $state->getByRef('pm_StateId', $_REQUEST['SourceState']);
 		}
 		elseif ( is_object($object_it) )
 		{
 			$state_it = $object_it->getRef('TargetState');
-			
-			if ( $state_it->getId() == '' )
-			{
+			if ( $state_it->getId() == '' ) {
 			    $state_it = $object_it->getRef('SourceState');
 			}
 		}
@@ -62,26 +56,29 @@ class TransitionForm extends PMPageForm
 				return null;
 
 			case 'TargetState': 
-				$state->addFilter( new StateClassPredicate($state_it->get('ObjectClass')) );
-				$state->addFilter( new FilterBaseVpdPredicate() );
-				$state->addSort( new SortOrderedClause() );
-				return new FieldDictionary( $state );
+				return new FieldDictionary(
+                    $state->getRegistry()->Query(
+                        array(
+                            new StateClassPredicate($state_it->get('ObjectClass')),
+                            new FilterBaseVpdPredicate(),
+                            new SortOrderedClause()
+                        )
+                    )
+                );
 				
 			case 'ProjectRoles':
 				return new FieldTransitionProjectRole($this->object_it);
 
 			case 'Attributes':
-				$field = new FieldTransitionAttribute($this->object_it);
-				$field->setStateIt( $state_it );
-				return $field;
-				
+				return new FieldTransitionAttribute($object_it, $state_it->getObject());
+
 			case 'Predicates':
-				$field = new FieldTransitionPredicate($this->object_it);
+				$field = new FieldTransitionPredicate($object_it);
 				$field->setStateIt( $state_it );
 				return $field;
 				
 			case 'ResetFields':
-				$field = new FieldTransitionResetField( $this->object_it );
+				$field = new FieldTransitionResetField($object_it);
 				$field->setStateIt( $state_it );
 				return $field;
 

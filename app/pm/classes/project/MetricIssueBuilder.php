@@ -2,5 +2,5 @@
 
 abstract class MetricIssueBuilder
 {
-    abstract public function build ( $issueIt, & $parms );
+    abstract public function buildAll ( $registry, $queryParms );
 }

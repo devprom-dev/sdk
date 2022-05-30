@@ -76,9 +76,6 @@ public class RequestDonePage extends SDLCPojectPageBase {
 	 * @return
 	 */
 	public void tryToComplete(String comment, String version) {
-		versionInput.clear();
-		versionInput.sendKeys(version);
-		autocompleteSelect(version);
 		(new CKEditor(driver)).typeText(comment);
 		submitBtn.click();
 	}

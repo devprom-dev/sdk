@@ -32,6 +32,7 @@ monolog:
             level: error
             max_files: 5 # Set up to keep log files for 5 recent days only
             channels: ["!mail"]
+            include_stacktraces: true
         mail:
             type: rotating_file
             path: "%kernel.logs_dir%/mail.log"

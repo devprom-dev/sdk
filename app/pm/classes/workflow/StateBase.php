@@ -13,6 +13,7 @@ include "predicates/StateTransitionTargetPredicate.php";
 include "StateBaseModelBuilder.php";
 include "persisters/StateQueueLengthPersister.php";
 include "validators/StateModelValidator.php";
+include "sorts/StateOrderedSortClause.php";
 
 class StateBase extends Metaobject
 {
@@ -88,41 +89,18 @@ class StateBase extends Metaobject
 		return parent::getPageNameObject().'&entity='.get_class($this);
 	}
 	
-	function getSuitableToRoles( $roles )
-	{
-		$roles = array_filter($roles, function($value) {
-				return $value > 0;
-		});
-		
-		if ( count($roles) < 1 ) $roles = array(0);
-		
-		$sql = " SELECT t.* " .
-			   "   FROM ".$this->getRegistry()->getQueryClause()." t" .
-			   "  WHERE EXISTS (SELECT 1 FROM pm_Transition tn, pm_TransitionRole tr" .
-			   "				  WHERE tn.SourceState = t.pm_StateId" .
-			   "					AND tn.pm_TransitionId = tr.Transition" .
-			   "					AND tr.ProjectRole IN (".join($roles, ',').") )".
-			   $this->getVpdPredicate().
-			   $this->getFilterPredicate().
-			   "  ORDER BY t.OrderNum ASC ";
-
-		return $this->createSQLIterator( $sql );
-	}
-	
  	function add_parms( $parms )
 	{
-	    global $model_factory;
-	    
 	    $result = parent::add_parms( $parms );
 	    
 	    if ( $result > 0 )
 	    {
 	        // check objects without any state defined
-	        $class = $model_factory->getClass($parms['ObjectClass']);
+	        $class = getFactory()->getClass($parms['ObjectClass']);
 	        
 			if ( class_exists($class, false) )
 			{
-				$object = $model_factory->getObject($class);
+				$object = getFactory()->getObject($class);
 				
 				$object_it = $object->getByRefArray( array (
 				    'State' => 'NULL' 
@@ -191,9 +169,8 @@ class StateBase extends Metaobject
 
         $result = parent::delete($object_id, $record_version);
 
-        $class = getFactory()->getClass($this->getObjectClass());
-        if ( class_exists($class, false) )
-        {
+        $class = getFactory()->getClass($wasStateIt->get('ObjectClass'));
+        if ( class_exists($class, false) ) {
             $this->updateObjectState(
                 $class,
                 array_shift($this->getAll()->fieldToArray('ReferenceName')),

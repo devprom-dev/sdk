@@ -3,54 +3,106 @@ var annotaion = {
 };
 
 function highlightComment() {
-    var locstr = String(window.location);
-    if ( locstr.indexOf('#comment') > 0 ) {
-        var commentString = locstr.substring(locstr.indexOf('#comment'));
-        var parts = commentString.split('#');
-        var section = $('#'+parts[1]).parent('.comment-thread-container').attr('active', '');
+    var locstr = window.location.hash;
+    if ( locstr.indexOf('#comment') > -1 ) {
+        var parts = locstr.split('#');
+        var section = $('#'+parts[1]).parent('.comment-thread-container');
+        if ( section.length > 0 ) {
+            section.attr('active', '');
+            window.location.hash = '';
+            history.replaceState(null, null, ' ');
+        }
+
+        var parts = locstr.split('#comment');
+        if ( parts.length > 1 ) {
+            annotationShowComment($('mark.commid' + parts[1]), function() {
+                window.location.hash = '';
+                history.replaceState(null, null, ' ');
+            });
+        }
     }
+}
+
+function setupFilterComments( attributes ) {
+    $('.comments-filter').each(function() {
+        $(this).removeAttr('checked');
+    });
+    $.each(attributes, function(key,item) {
+        if ( item == 'order-asc' ) {
+            $('.comments-filter[name=order]').attr('checked','checked');
+            return true;
+        }
+        $('.comments-filter[name='+item+']').attr('checked','checked');
+    });
+    filterCommentsUpdate(attributes);
 }
 
 function filterComments() {
     var attributes = [];
     $('.comments-filter').each(function() {
         if ( $(this).attr('name') == 'order' ) {
-            sortComments($(this).is(':checked') ? '1' : '-1');
+            attributes.push($(this).is(':checked') ? 'order-asc' : 'order-desc');
             return true;
         }
         if ( $(this).is(':checked') ) {
-            attributes.push('['+$(this).attr('name')+']');
+            attributes.push($(this).attr('name'));
         }
     });
-    var selector = '.comment-thread-container[active],.comment-thread-container' + attributes.join('');
+    localStorage.setItem('comments-filter-settings', JSON.stringify(attributes));
+    filterCommentsUpdate(attributes);
+}
+
+function filterCommentsUpdate( attributes ) {
+    var selectorAttributes = [];
+    $.each(attributes, function(key,item) {
+        if ( item == 'order-asc' ) {
+            sortComments('1');
+            return true;
+        }
+        if ( item == 'order-desc' ) {
+            sortComments('-1');
+            return true;
+        }
+        selectorAttributes.push('['+item+']')
+    });
+    var selector = '.comment-thread-container[active],.comment-thread-container' + selectorAttributes.join('');
     $('.comment-thread-container').removeClass('in');
     $(selector).addClass('in').parents('.comment-thread-container').addClass('in');
 }
 
 function filterItemComments(item)
 {
-    $('.comment-well .collapse.in').removeClass('in');
-    $('.comment-well .plus-minus-toggle').addClass('collapsed');
-    var object = $('.comment-well[item='+item+']');
-    if ( object.length < 1 ) return;
-    object.find('.collapse:not(.in)').addClass('in');
-    object.find('.plus-minus-toggle').removeClass('collapsed');
+    $('.comment-well[item='+item+']').each(function() {
+        var commentId = $(this).parents('tr[object-id]').attr('object-id');
+        makeCommentActive(commentId);
+        return false;
+    })
     $('.details-body').animate({
-        scrollTop: object.offset().top
+        scrollTop: $('.comment-well[item='+item+']').parent().position().top
     }, 300);
 }
 
-function filterExactComment(item)
+function makeCommentActive(item)
 {
-    $('.comment-well .collapse.in').removeClass('in');
-    $('.comment-well .plus-minus-toggle').addClass('collapsed');
-    var object = $('.comment-well[object-id='+item+']');
+    $('tr[object-class="Comment"][object-id]').removeClass('active');
+    var object = $('tr[object-class="Comment"][object-id='+item+']');
     if ( object.length < 1 ) return;
-    object.find('.collapse:not(.in)').addClass('in').removeAttr('style').scrollTop(0);
-    object.find('.plus-minus-toggle').removeClass('collapsed');
+    object.addClass('active');
+    object.find('.comment-well .collapse:not(.in)').addClass('in').attr("style", "");
+    object.find('.comment-well .plus-minus-toggle').removeClass('collapsed');
+}
+
+function filterExactComment(commentId, callback)
+{
+    makeCommentActive(commentId);
+    var object = $('tr[object-class="Comment"][object-id='+commentId+']');
+    if ( object.length < 1 ) return;
     $('.details-body').animate({
-        scrollTop: object.offset().top
+        scrollTop: object.find('.comment-well').parent().position().top
     }, 300);
+    if ( typeof callback == 'function' ) {
+        callback();
+    }
 }
 
 function sortComments( sort )
@@ -58,6 +110,7 @@ function sortComments( sort )
     if ( sort != "-1") sort = "1";
     cookies.setOptions({expires:new Date(new Date().getFullYear() + 1, 1, 1)});
     cookies.set('sort-comments', sort);
+    if ( $('.comments-thread:has(.editor-area)').length > 0 ) return;
     sortByModified('.comments-thread', sort);
     if ( sort == "-1" ) {
         $('.sort-btn-desc').hide();
@@ -138,26 +191,45 @@ function makeupAnnotations(jqe, editable)
     containerList.each(function() {
         var container = $(this);
         try {
+            var editorInstance;
+            if ( typeof CKEDITOR != 'undefined' ) {
+                editorInstance = CKEDITOR.instances[container.attr('id')];
+            }
             var annotationJson = JSON.parse($(this).attr('annotation'));
             $.each(annotationJson, function(i,j) {
-                if ( j.t != '' ) {
-                    container.mark(j.t, {
-                        separateWordSearch: false,
-                        accuracy: 'exactly',
-                        acrossElements: true,
-                        className: 'commid' + j.i,
-                        noMatch: function(t) {
-                            container.find(j.p).markRanges([{start:j.s,length:j.l}], {
+                var pathElement = container.find(j.p);
+                if ( pathElement.length < 1 ) return;
+                pathElement.mark(j.t, {
+                    separateWordSearch: false,
+                    accuracy: 'exactly',
+                    acrossElements: true,
+                    className: 'commid' + j.i,
+                    noMatch: function(t) {
+                        if ( pathElement.text().indexOf(j.t) < 0 ) {
+                            container.mark(j.t, {
+                                separateWordSearch: false,
+                                acrossElements: true,
                                 className: 'commid' + j.i
                             });
                         }
-                    });
-                } else {
-                    container.find(j.p).markRanges([{start:j.s,length:j.l}], {
-                        className: 'commid' + j.i
-                    });
-                }
-            })
+                        else {
+                            pathElement.markRanges([{start:j.s,length:j.l}], {
+                                className: 'commid' + j.i,
+                                noMatch: function(t) {
+                                    container.mark(j.t, {
+                                        separateWordSearch: false,
+                                        accuracy: 'exactly',
+                                        acrossElements: true,
+                                        className: 'commid' + j.i
+                                    });
+                                }
+                            });
+
+                        }
+                    }
+                });
+            });
+            if ( editorInstance ) editorInstance.resetDirty();
         }
         catch(e) {}
     });
@@ -199,18 +271,16 @@ function initalizeAnnotations()
     });
 }
 
-function annotationShowComment(el) {
+function annotationShowComment(el, callback) {
     if ( !el.is('mark[class]') ) return;
     var result = el.attr('class').match(/commid(\d+)/);
     if ( !result ) return;
     var commentId = result[1];
-    $('mark').removeClass('selected');
-    el.addClass('selected');
     var commentsPanel = $('.details-header a[did=comments]');
     if ( commentsPanel.length > 0 ) {
         commentsPanel.attr('active-object', commentId).click();
         setTimeout(function() {
-            filterExactComment(commentId);
+            filterExactComment(commentId, callback);
         }, 500);
     }
     else {
@@ -221,16 +291,16 @@ function annotationShowComment(el) {
 
 function annotationSelectComment(comment, anchor)
 {
-    gotoRandomPage(anchor,1,true);
-    $('mark').removeClass('selected');
-    var commentElement = $('mark.commid'+comment);
-    if ( commentElement.length < 1 ) return;
-    commentElement.addClass('selected');
-    if ( !commentElement.isInViewport() ) {
-        $('.table-master .list-container').animate({
-            scrollTop:  commentElement.offset().top - 210
-        }, 300);
-    }
+    makeCommentActive(comment);
+    gotoRandomPage(anchor,1,true, function() {
+        var commentElement = $('mark.commid'+comment);
+        if ( commentElement.length < 1 ) return;
+        if ( !commentElement.isInViewport() ) {
+            $('.table-master .list-container').animate({
+                scrollTop:  commentElement.offset().top - 210
+            }, 300);
+        }
+    });
 }
 
 function getDomPath(el) {

@@ -4,7 +4,7 @@ class LanguageSettingsPersister extends ObjectSQLPersister
 {
  	function modify( $object_id, $parms )
  	{
-		$settings_path = $_SERVER['DOCUMENT_ROOT'].'/settings_server.php';
+		$settings_path = DOCUMENT_ROOT.'settings_server.php';
 		
 		$language_it = getFactory()->getObject('cms_Language')->getExact( $parms['cms_LanguageId'] );
 		

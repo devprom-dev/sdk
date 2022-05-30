@@ -1,11 +1,11 @@
 <?php
-include_once "AuthenticationAppKeyFactory.php";
-include_once "AuthenticationCookiesFactory.php";
-include_once "AuthenticationHttpBasicFactory.php";
-include_once "AuthenticationAPIKeyFactory.php";
-include_once 'AuthenticationLDAPFactory.php';
-include_once 'AuthenticationLDAPMixedFactory.php';
-include_once 'AuthenticationAuthFormFactory.php';
+include "AuthenticationAppKeyFactory.php";
+include "AuthenticationCookiesFactory.php";
+include "AuthenticationHttpBasicFactory.php";
+include "AuthenticationAPIKeyFactory.php";
+include 'AuthenticationAuthFormFactory.php';
+include 'AuthenticationOpenIDFactory.php';
+include 'AuthenticationNtlmKerberosFactory.php';
 
 class AuthenticationFactorySet
 {
@@ -26,9 +26,9 @@ class AuthenticationFactorySet
  	    $result = array(
             new AuthenticationAppKeyFactory(),
             new AuthenticationAPIKeyFactory(),
-            new AuthenticationAuthFormFactory(),
-            new AuthenticationLDAPFactory(),
-            new AuthenticationLDAPMixedFactory()
+            new AuthenticationOpenIDFactory(),
+            new AuthenticationNtlmKerberosFactory(),
+            new AuthenticationAuthFormFactory()
         );
 
         $plugins = getFactory()->getPluginsManager();

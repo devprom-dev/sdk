@@ -14,7 +14,6 @@ class WikiHistoryList extends ProjectLogList
 		parent::retrieve();
 
 		$object_it = $this->getTable()->getObjectIt();
-		if ( $object_it->getId() < 1 ) return;
 
 		$this->can_revert = true;
 		$this->documentMode = $object_it->get('TotalCount') > 0;
@@ -29,10 +28,14 @@ class WikiHistoryList extends ProjectLogList
 				new FilterModifiedBeforePredicate($filterValues['finish']),
 				new FilterModifiedAfterPredicate($_REQUEST['start']),
 				new SortAttributeClause('WikiPage'),
-				new SortAttributeClause('RecordCreated')
+				new SortAttributeClause('RecordCreated.D')
 			)
 		);
 	}
+
+    protected function getShorten() {
+        return false;
+    }
 
 	function getColumnFields()
 	{
@@ -56,7 +59,21 @@ class WikiHistoryList extends ProjectLogList
 	
     function getChangeIds( $object_it )
     {
-        $history_url = explode(',',$object_it->getHtmlDecoded('ObjectUrl'));
+        if ( strpos($object_it->getHtmlDecoded('ObjectUrl'), 'history?object') === false )
+        {
+            $this->change_it->moveTo('WikiPage', $object_it->get('ObjectId'));
+            while( $this->change_it->get('WikiPage') == $object_it->get('ObjectId') ) {
+                if ( $this->change_it->get('RecordCreated') <= $object_it->get('RecordCreated') ) {
+                    return array(
+                        $this->change_it->getId()
+                    );
+                }
+                $this->change_it->moveNext();
+            }
+        }
+
+        // obsolete way
+        $history_url = explode(ChangeLogAggregatePersister::CONTENT_SEPARATOR,$object_it->getHtmlDecoded('ObjectUrl'));
         if ( count($history_url) < 1 ) $history_url = array($object_it->getHtmlDecoded('Content'));
 
         $ids = array();
@@ -84,7 +101,9 @@ class WikiHistoryList extends ProjectLogList
                 }
                 else {
                     $this->change_it->moveToId(array_pop($ids));
-                    $this->change_it->moveNext();
+                    if ( $this->change_it->getPos() < $this->change_it->count() - 1 ) {
+                        $this->change_it->moveNext();
+                    }
                 }
                 $nowContent = $this->change_it->getHtmlDecoded('Content');
 
@@ -94,13 +113,11 @@ class WikiHistoryList extends ProjectLogList
                     $nowContent = $pageIt->getHtmlDecoded('Content');
                 }
 
-                if ( $prevContent != '' ) {
-                    $data = $object_it->getData();
-                    $data[$attr] = preg_replace(
-                        '/\[url=[^\]]+\]/i', $this->getPagesDiff( $prevContent, $nowContent ), $data[$attr]
-                    );
-                    $object_it = $object_it->object->createCachedIterator(array($data));
-                }
+                $data = $object_it->getData();
+                $data[$attr] = preg_replace(
+                    '/\[url=[^\]]+\]/i', $this->getPagesDiff( $prevContent, $nowContent ), $data[$attr]
+                );
+                $object_it = $object_it->object->createCachedIterator(array($data));
 
                 parent::drawCell( $object_it, $attr );
 				break;

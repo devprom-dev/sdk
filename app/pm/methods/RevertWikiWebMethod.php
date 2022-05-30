@@ -29,12 +29,24 @@ class RevertWikiWebMethod extends FilterWebMethod
         if ( $object_it->getId() != '' && getFactory()->getAccessPolicy()->can_modify($object_it) ) {
             $changeIt = getFactory()->getObject('WikiPageChange')->getExact($_REQUEST['revision']);
             if ( $changeIt->getId() != '' ) {
-                $object_it->Revert($changeIt);
-                $log_it = getFactory()->getObject('ChangeLog')->getExact(\TextUtils::parseIds($_REQUEST['logid']));
-                while( !$log_it->end() ) {
-                    $log_it->object->delete($log_it->getId());
-                    $log_it->moveNext();
-                }
+                $object->modify_parms($object_it->getId(), array(
+                    'Content' => $changeIt->getHtmlDecoded('Content')
+                ));
+
+                $change_parms = array(
+                    'Caption' => $object_it->getDisplayName(),
+                    'ObjectId' => $object_it->getId(),
+                    'EntityName' => $object_it->object->getDisplayName(),
+                    'ClassName' => strtolower(get_class($object_it->object)),
+                    'ChangeKind' => 'modified',
+                    'Content' => sprintf(text(3100),
+                                    $changeIt->getDateFormattedShort('RecordCreated') . ' '. $changeIt->getTimeFormat('RecordCreated'),
+                                    $changeIt->getRef('Author')->getDisplayName()
+                                ),
+                    'VisibilityLevel' => 1,
+                    'SystemUser' => getSession()->getUserIt()->getId()
+                );
+                getFactory()->getObject('ObjectChangeLog')->add_parms( $change_parms );
             }
         }
     }

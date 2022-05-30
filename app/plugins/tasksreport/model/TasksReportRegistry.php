@@ -8,7 +8,7 @@ class TasksReportRegistry extends ObjectRegistrySQL
             SELECT t.*, r.StartDateOnly, (SELECT MAX(ac.ReportDate) FROM pm_Activity ac WHERE ac.Task = t.pm_TaskId) LastDate, 
                    r.regionCaption, r.DayFact, r.FactRegion, r.regionId
               FROM pm_Task t INNER JOIN 
-                   (select a.Task, cal.StartDateOnly, r.regionCaption, r.regionId, 
+                   (select a.Task, cal.StartDateOnly, r.regionCaption, r.regionId, av.StringValue,
                            SUM(a.Capacity) DayFact,
                            ROUND(SUM(a.Capacity) / IF(av.StringValue = '1', 10, LENGTH(av.StringValue) - LENGTH(REPLACE(av.StringValue, ',', '')) + 1), 2) FactRegion
                       from pm_CalendarInterval cal, pm_Activity a, pm_CustomAttribute ca, pm_AttributeValue av,
@@ -37,7 +37,7 @@ class TasksReportRegistry extends ObjectRegistrySQL
                        and av.CustomAttribute = ca.pm_CustomAttributeId
                        and ca.ReferenceName = '".REGION_REFNAME."'
                        and (FIND_IN_SET(r.regionId, av.StringValue) > 0 OR av.StringValue = '1')
-                     group by 1, 2, 3, 4
+                     group by 1, 2, 3, 4, 5
                    ) r ON r.Task = t.pm_TaskId ) ";
     }
 }

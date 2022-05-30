@@ -24,7 +24,6 @@ class FormEmbedded
  	{
         if ( $object instanceof Metaobject ) {
             $this->object = $object;
-            $this->iterator = $this->object->getAll();
         }
         else {
             $this->iterator = $object;
@@ -129,14 +128,14 @@ class FormEmbedded
  	
  	function getAttributes()
  	{
-		$names = array_keys($this->object->getAttributes());
 		$visible = array();
 
-		for ( $i = 0; $i < count($names); $i++ ) {
-			if ( !$this->object->IsAttributeVisible($names[$i]) && !$this->object->IsAttributeStored($names[$i]) ) continue;
-            $visible[] = $names[$i];
+		foreach( array_keys($this->object->getAttributes()) as $attribute ) {
+			if ( !$this->object->IsAttributeVisible($attribute) && !$this->object->IsAttributeStored($attribute) ) continue;
+            if ( !getFactory()->getAccessPolicy()->can_modify_attribute($this->object, $attribute) ) continue;
+            $visible[] = $attribute;
 		}
-		
+
 		return $visible;
  	}
  	
@@ -147,6 +146,9 @@ class FormEmbedded
  	
  	function getIteratorRef()
  	{
+        if ( !is_object($this->iterator) ) {
+            $this->iterator = $this->object->getAll();
+        }
  		return $this->iterator;
  	}
 
@@ -262,57 +264,57 @@ class FormEmbedded
 		}
 		else
 		{
-			switch ( $type )
-			{
-				case 'date':
-				case 'datetime':
-					echo '<input class="input-medium datepickerform" type="text" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'">';
-					break;
-					
-				case 'float':
-				case 'integer':
-					echo '<input class="input-medium" type="text" id="'.$field_name.'" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'">';
-					break;
-	
-				case 'varchar':
-					echo '<input class="input-block-level" type="text" id="'.$field_name.'" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'">';
-					break;
-				
-				case 'password':
-					echo '<input class="input-block-level" type="password" id="'.$field_name.'" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'">';
-					break;
-					
-				case 'char':
-					echo '<label class="checkbox"><input class=checkbox type="checkbox" id="'.$field_name.'" name="'.$field_name.'" '.($value == 'Y' ? 'checked' : '').' tabindex="'.$tabindex.'">'.translate($this->object->getAttributeUserName($attr)).'</label>';
-					break;
-				
-				case 'file':
-					echo '<input class="input-block-level" id="'.$field_name.'" type="file" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'">';
-					echo '<input type="hidden" name="MAX_FILE_SIZE" value="'.EnvironmentSettings::getMaxFileSize().'">';
-					break;
-	
-				case 'text':
-					echo '<textarea class="input-block-level" id="'.$field_name.'" name="'.$field_name.'" rows=3 tabindex="'.$tabindex.'">'.$value.'</textarea>';
-					break;
-	
-				default:
-					$field = $this->createField( $attr );
-                    if ( is_object($field) ) {
-                        $field->setName( $field_name );
-                        $field->setId( $field_name );
-                        $field->setValue( $value );
-                        $field->setTabIndex( $tabindex );
-                        $field->setDefault( $this->object->getDefaultAttributeValue($attr) );
+            $field = $this->createField( $attr );
+            if ( is_object($field) ) {
+                $field->setName( $field_name );
+                $field->setId( $field_name );
+                $field->setValue( $value );
+                $field->setTabIndex( $tabindex );
+                $field->setDefault( $this->object->getDefaultAttributeValue($attr) );
 
-                        if ( $field instanceof FieldWYSIWYG and $field->hasBorder() ) {
-                            $field->setRows(1);
-                            $field->draw();
-                        }
-                        else {
-                            $field->draw();
-                        }
-                    }
-			}
+                if ( $field instanceof FieldWYSIWYG and $field->hasBorder() ) {
+                    $field->setRows(1);
+                    $field->draw();
+                }
+                else {
+                    $field->draw();
+                }
+            }
+            else {
+                switch ( $type )
+                {
+                    case 'date':
+                    case 'datetime':
+                        echo '<input class="input-medium datepickerform" type="text" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" autocomplete="off">';
+                        break;
+
+                    case 'float':
+                    case 'integer':
+                        echo '<input class="input-medium" type="text" id="'.$field_name.'" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'" autocomplete="off">';
+                        break;
+
+                    case 'varchar':
+                        echo '<input class="input-block-level" type="text" id="'.$field_name.'" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'" autocomplete="off">';
+                        break;
+
+                    case 'password':
+                        echo '<input class="input-block-level" type="password" id="'.$field_name.'" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'">';
+                        break;
+
+                    case 'char':
+                        echo '<label class="checkbox"><input class=checkbox type="checkbox" id="'.$field_name.'" name="'.$field_name.'" '.($value == 'Y' ? 'checked' : '').' tabindex="'.$tabindex.'">'.translate($this->object->getAttributeUserName($attr)).'</label>';
+                        break;
+
+                    case 'file':
+                        echo '<input class="input-block-level" id="'.$field_name.'" type="file" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'">';
+                        echo '<input type="hidden" name="MAX_FILE_SIZE" value="'.EnvironmentSettings::getMaxFileSize().'">';
+                        break;
+
+                    default:
+                        echo '<textarea class="input-block-level" id="'.$field_name.'" name="'.$field_name.'" rows=3 tabindex="'.$tabindex.'">'.$value.'</textarea>';
+                        break;
+                }
+            }
 		}
 		
 		$description = $this->getFieldDescription($attr);
@@ -619,11 +621,9 @@ class FormEmbedded
 				echo '</div>';
 			echo '</div>';
 
-			if ( !$this->getReadonly() && getFactory()->getAccessPolicy()->can_create($this->getObject()) ) {
-                echo '<div>';
-                    $this->drawAddButton( $view, $this->tabindex );
-                echo '</div>';
-            }
+            echo '<div>';
+                $this->drawAddButton( $view, $this->tabindex );
+            echo '</div>';
 
 	 		echo '</div>';
 		}
@@ -646,6 +646,9 @@ class FormEmbedded
  	
  	function drawAddButton( $view, $tabindex )
  	{
+        if ( $this->getReadonly() ) return;
+        if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return;
+
         echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" href="'.$this->getAddButtonUrl().'">'.$this->getAddButtonText().'</a>';
  	}
 

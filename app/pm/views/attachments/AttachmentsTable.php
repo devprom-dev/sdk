@@ -9,19 +9,25 @@ class AttachmentsTable extends PMPageTable
 
     function getFilters()
     {
-        $filters = array();
-        $filters[] = new FilterObjectMethod(getFactory()->getObject('AttachmentEntity'), text(2098), 'class');
-        $filters[] = new FilterDateWebMethod(translate('Добавлено после'), 'start');
-        $filters[] = new ViewFinishDateWebMethod('Добавлено до');
-        return $filters;
+        return array_merge(
+            parent::getFilters(),
+            array(
+                new FilterObjectMethod(getFactory()->getObject('AttachmentEntity'), text(2098), 'class'),
+                new FilterDateIntervalWebMethod(translate('Добавлено'), 'start'),
+                new FilterDateIntervalWebMethod(translate('Добавлено'), 'finish')
+            )
+        );
     }
 
     function getFilterPredicates( $values )
     {
-        return array (
-            new FilterModifiedAfterPredicate( $values['start'] ),
-            new FilterModifiedBeforePredicate( $values['finish'] ),
-            new AttachmentClassPredicate($values['class'])
+        return array_merge(
+            parent::getFilterPredicates( $values ),
+            array (
+                new FilterModifiedAfterPredicate( $values['start'] ),
+                new FilterModifiedBeforePredicate( $values['finish'] ),
+                new AttachmentClassPredicate($values['class'])
+            )
         );
     }
 

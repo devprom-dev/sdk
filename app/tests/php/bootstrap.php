@@ -2,7 +2,7 @@
 
 define( 'SERVER_ROOT_PATH', dirname(__FILE__).'/../../');
 define( 'DOCUMENT_ROOT', SERVER_ROOT_PATH);
-define( 'CACHE_PATH', sys_get_temp_dir().'/cache/');
+define( 'CACHE_PATH', sys_get_temp_dir().'/cache');
 define( 'APP_ENCODING', 'utf-8');
 define( 'APP_CHARSET', 'utf8');
 

@@ -1,5 +1,4 @@
 <?php
-
 include_once "FunctionalAreaMenuProjectBuilder.php";
 
 class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilder
@@ -8,9 +7,6 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
     {
     	$menus = parent::build($set);
  	    
-		$report = getFactory()->getObject('PMReport');
-        $module = getFactory()->getObject('Module');
-
 		$items = array();
 
 		$this->buildQuickItems($items);
@@ -24,15 +20,13 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 			}
 		}
 		if ( !$has_mytasks ) {
-			array_unshift($menus['quick']['items'], $report->getExact('mytasks')->buildMenuItem());
+			array_unshift($menus['quick']['items'], $this->getReport()->getExact('mytasks')->buildMenuItem());
 		}
-		$menus['quick']['items'][] = $report->getExact('discussions')->buildMenuItem();
-		$menus['quick']['items'] = array_merge($menus['quick']['items'],
-				array (
-						'whatsnew' => $module->getExact('whatsnew')->buildMenuItem()
-				)
-		);
-		
+		$menus['quick']['items'][] = $this->getReport()->getExact('discussions')->buildMenuItem();
+		$menus['quick']['items']['whatsnew'] = $this->getModule()->getExact('whatsnew')->buildMenuItem();
+        $menus['quick']['items'][] = $this->getModule()->getExact('projects')->buildMenuItem();
+        $menus['quick']['items']['search'] = $this->getModule()->getExact('search')->buildMenuItem();
+
 		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
 		
 		return $menus;

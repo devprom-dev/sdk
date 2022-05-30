@@ -20,10 +20,14 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
     {
         // build search query
         $jql = array(
-            'max' => $limit
+            'max' => $limit,
+            'query' => "project: {$this->getObjectIt()->get('ProjectKey')}"
         );
         if ( $timestamp != '' ) {
-            $jql['updatedAfter'] = strtotime($timestamp) * 1000;
+            $time = new DateTime($timestamp, new DateTimeZone("UTC"));
+            $time->modify("+1 second");
+            $timestamp = array_shift(preg_split('/\./', $time->format(DateTime::RFC3339_EXTENDED)));
+            $jql['query'] .= " updated: {$timestamp} .. Tomorrow";
         }
 
         $releases = array();
@@ -32,7 +36,7 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
         $nextTimestamp = '';
 
         try {
-            $result = $this->jsonGet('/rest/issue/byproject/'.$this->getObjectIt()->get('ProjectKey'), $jql);
+            $result = $this->jsonGet("/api/issues?fields=id,summary,updated&", $jql);
             foreach( $result as $issue )
             {
                 $class = 'Request';
@@ -46,7 +50,7 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
                 );
 
                 try {
-                    $resultAttachment = $this->jsonGet('/rest/issue/' . $id . '/attachment', $jql);
+                    $resultAttachment = $this->jsonGet('/api/issues/' . $id . '/attachments?fields=id,fileUrl');
                     foreach ($resultAttachment['fileUrl'] as $attachmentItem) {
                         if (!$this->checkNewItem($timestamp, $attachmentItem)) continue; // skip non-modified items
                         $issues[] = array(
@@ -60,7 +64,7 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
                 }
 
                 try {
-                    $resultTime = $this->jsonGet('/rest/issue/'.$id.'/timetracking/workitem', $jql);
+                    $resultTime = $this->jsonGet('/api/issues/'.$id.'/timeTracking/workItems?fields=id');
                     foreach( $resultTime as $timeItem ) {
                         if ( !$this->checkNewItem($timestamp, $timeItem) ) continue; // skip non-modified items
                         $issues[] = array (
@@ -143,7 +147,7 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
 
     function buildDictionaries()
     {
-        $stateResult = $this->jsonGet('/rest/admin/customfield/stateBundle/States', array(), false);
+        $stateResult = $this->jsonGet('/api/admin/customfield/stateBundle/States', array(), false);
         foreach( $stateResult['state'] as $issueState ) {
             $this->issueStates[$issueState['value']] = $issueState['value'];
         }
@@ -153,12 +157,12 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
     {
         $map = array();
         $users = $this->jsonGet(
-            '/rest/admin/user',
+            '/api/admin/user',
             array(),
             false
         );
         foreach( $users as $user ) {
-            $userInfo = $this->jsonGet('/rest/admin/user/'.$user['login'], array(), false );
+            $userInfo = $this->jsonGet('/api/admin/user/'.$user['login'], array(), false );
             $map[$userInfo['login']] = $user[$this->getUserEmailAttribute()];
         }
         return $map;
@@ -197,8 +201,8 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
         curl_setopt($loginCurl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($loginCurl, CURLOPT_COOKIEJAR, $this->cookiesFile);
         curl_setopt($loginCurl, CURLOPT_POSTFIELDS, http_build_query($loginParms));
-        curl_setopt($loginCurl, CURLOPT_URL, rtrim($this->getObjectIt()->get('URL'),'\\/').'/rest/user/login');
-        curl_setopt($loginCurl, CURLOPT_POST, true);
+        curl_setopt($loginCurl, CURLOPT_URL, rtrim($this->getObjectIt()->get('URL'),'\\/').'/youtrack/api/rest/user/login');
+        curl_setopt($loginCurl, CURLOPT_PUT, true);
         curl_setopt($loginCurl, CURLOPT_TIMEOUT, 30);
 
         $result = curl_exec($loginCurl);

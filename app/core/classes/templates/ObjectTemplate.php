@@ -10,8 +10,10 @@ abstract class ObjectTemplate extends Metaobject
 	public function __construct()
 	{
 		parent::__construct('cms_Snapshot', new ObjectTemplateRegistry($this));
+		$this->setSortDefault( new SortAttributeClause('Caption') );
 		$this->setAttributeVisible('ListName', false);
 		$this->setAttributeVisible('SystemUser', false);
+        $this->setAttributeVisible('Recurring', true);
 	}
 	
 	abstract public function getTypeName();
@@ -74,5 +76,26 @@ abstract class ObjectTemplate extends Metaobject
                 array('SnapshotItem', 'ReferenceName')
             );
         }
+    }
+
+    function processRecurringAction( $objectIt, $logger )
+    {
+        $templateIt = $this->getRegistry()->Query(
+            array(
+                new FilterInPredicate($objectIt->getId()),
+                new ObjectTemplatePersister()
+            )
+        );
+        if ( $templateIt->getId() == '' ) return false;
+
+        $parms = array();
+        foreach( $this->getAttributesTemplated() as $attribute ) {
+            $parms[$attribute] = $templateIt->getHtmlDecoded($attribute);
+        }
+
+        $entity = getFactory()->getObject($this->getTypeName());
+        getFactory()->createEntity($entity, $parms);
+
+        return true;
     }
 }

@@ -14,8 +14,7 @@ class PortfolioAllBuilder extends PortfolioBuilder
             if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return;
         }
 
-		$project_ids = getFactory()->getObject('pm_Project')->getRegistry()->Query()->idsToArray();
-        if ( count($project_ids) < 1 ) return;
+		$project_ids = getFactory()->getObject('ProjectActive')->getRegistry()->QueryKeys()->idsToArray();
 
         $object->addPortfolio( 
             array (

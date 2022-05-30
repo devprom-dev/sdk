@@ -9,7 +9,7 @@ class ModelValidatorEmbeddedForm extends ModelValidatorInstance
 		$this->validate_field = $validate_field;
 	}
 	
-	public function validate( Metaobject $object, array & $parms )
+	public function validate( Metaobject $object, array $parms )
 	{
 		$rows = array();
 

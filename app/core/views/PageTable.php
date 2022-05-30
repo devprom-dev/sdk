@@ -8,9 +8,13 @@ include_once SERVER_ROOT_PATH."core/methods/AutoSaveFieldWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterObjectMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterCheckMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
+include_once SERVER_ROOT_PATH."core/methods/FilterDateIntervalWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterTextWebMethod.php";
 include_once SERVER_ROOT_PATH.'core/methods/ObjectCreateNewWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/FilterReferenceWebMethod.php';
+include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
+include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
+include_once SERVER_ROOT_PATH.'core/methods/ExcelExportWebMethod.php';
 
 class PageTable extends ViewTable
 {
@@ -98,13 +102,40 @@ class PageTable extends ViewTable
 	
  	function getFilterPredicates( $values )
  	{
- 		return array(
-            new FilterSearchAttributesPredicate(
-                    $values['search'], $this->getObject()->getSearchableAttributes()
+ 	    $predicates = $this->buildAttributesPredicates($values);
+ 	    $predicate = $this->buildSearchPredicate($values);
+ 	    if ( is_object($predicate) ) {
+            $predicates[] = $predicate;
+        }
+ 		return $predicates;
+ 	}
+
+ 	function buildSearchPredicate($values) {
+ 	    return new FilterSearchAttributesPredicate(
+                $values['search'], $this->getObject()->getSearchableAttributes()
+            );
+    }
+
+    function buildAttributesPredicates( $values )
+    {
+        $predicates = array();
+        $attributes = $this->getObject()->getAttributesStored();
+        $loweredAttributes = array_diff(
+                array_map(function($value) {
+                        return strtolower($value);
+                    }, $attributes),
+                array(
+                    'state', 'project'
                 )
         );
- 	}
- 	
+        foreach( $values as $key => $value ) {
+            if ( $value == '' ) continue;
+            if ( !in_array($key, $loweredAttributes) ) continue;
+            $predicates[] = new FilterAttributePredicate($attributes[array_search($key, $loweredAttributes)], $value);
+        }
+        return $predicates;
+    }
+
 	function buildFilters()
 	{
 	    if ( count($this->filters) > 0 ) return $this->filters;
@@ -193,7 +224,7 @@ class PageTable extends ViewTable
         foreach( $this->buildFilters() as $filter ) {
             array_walk( $values, function(&$value, $key) use($filter) {
                 if ( $filter->getValueParm() == $key ) {
-                    $value = $filter->parseFilterValue($value);
+                    $value = $filter->parseFilterValue($value, $this->getObject());
                 }
             });
         }
@@ -273,9 +304,17 @@ class PageTable extends ViewTable
                 'color',
                 'groupfunc',
                 'sortgroup',
-                'search'
+                'search',
+                'target',
             ),
-            array_keys($this->getObject()->getAttributes())
+            array_diff(
+                array_map(function($value) {
+                        return strtolower($value);
+                    }, $this->getObject()->getAttributesStored()),
+                array(
+                    'project'
+                )
+            )
         );
 	}
 
@@ -316,21 +355,7 @@ class PageTable extends ViewTable
 		return false;
 	}
 	
-	function IsNeedNavigator()
-	{
-		if ( $_REQUEST['tableonly'] != '' ) return false;
-
-		$list =& $this->getListRef();
-		if ( is_object($list) )
-		{		
-			return $list->IsNeedNavigator();
-		}
-		
-		return parent::IsNeedNavigator();
-	}
-
-	function getActions()
-	{
+	function getActions() {
 		return array();
 	}
 
@@ -409,18 +434,31 @@ class PageTable extends ViewTable
 	{
 		return array();
 	}
-	
+
+	function buildBulkActionIt()
+    {
+        $action = new BulkAction($this->getObject());
+        return $action->getAll();
+    }
+
 	function getBulkActions()
 	{
-		$action = new BulkAction($this->getObject());
-		$action_it = $action->getAll();
-		
+        $filterValues = $this->getFilterValues();
+        $action_it = $this->buildBulkActionIt();
+
 		$workflow_actions = array();
 		$delete_actions = array();
 		$modify_actions = array();
 		$custom_actions = array();
 		
 		$url = '?formonly=true';
+
+		$filterItems = \TextUtils::parseFilterItems($filterValues['target']);
+		$projectSelected = array_shift($filterItems);
+		if ( $projectSelected != '' ) {
+		    $url .= '&project='.getFactory()->getObject('Project')
+                        ->getExact($projectSelected)->get('CodeName');
+        }
 		
 		while( !$action_it->end() )
 		{
@@ -514,7 +552,12 @@ class PageTable extends ViewTable
 		$attributes = array_keys($object->getAttributes());
 		
 	    $fields = array();
-		
+
+	    $uid = new ObjectUID();
+	    if ( $uid->hasUidObject($object) ) {
+            $fields[] = 'UID';
+        }
+
 		foreach( $attributes as $key => $field )
 		{
 		    $db_type = $object->getAttributeDbType($field);
@@ -538,8 +581,11 @@ class PageTable extends ViewTable
  	function getSortAttributeClause( $field )
 	{
 	    $parts = preg_split('/\./', $field);
-	    if ( !$this->getObject()->hasAttribute($parts[0]) ) return null;
+	    if ( $parts[0] == 'UID' ) {
+	        return new SortUIDClause($parts[1] == 'D' ? 'DESC' : 'ASC');
+        }
 
+	    if ( !$this->getObject()->hasAttribute($parts[0]) ) return null;
 	    if ( $this->getObject()->IsReference($parts[0]) ) {
 	        $refObject = $this->getObject()->getAttributeObject($parts[0]);
 	        if ( $refObject->IsDictionary() && $refObject->hasAttribute('ReferenceName') && $refObject->getEntityRefName() != 'entity' ) {
@@ -591,10 +637,8 @@ class PageTable extends ViewTable
 	function drawScripts()
 	{
 		$values = $this->getFilterValues();
-		
 		?>
 		<script type="text/javascript">
-            devpromOpts.updateUI = function() {};
 			filterLocation.visibleColumns = ['<? echo join(preg_split('/-/', trim(SanitizeUrl::parseScript($values['show']), '-')),"','") ?>'];
 			filterLocation.hiddenColumns = ['<? echo join(preg_split('/-/', trim(SanitizeUrl::parseScript($values['hide']), '-')),"','") ?>'];
 			<?php foreach( $values as $key => $value ) { ?>
@@ -653,28 +697,28 @@ class PageTable extends ViewTable
             if ( is_object($filter->getFreezeMethod()) ) $filter->getFreezeMethod()->setValues($filter_values);
 
             $filterId = $filter->getCaption();
-            if ( is_a($filter, 'SelectDateRefreshWebMethod') )
+            if ( $filter instanceof SelectDateRefreshWebMethod )
             {
-                ob_start();
-                $filter->drawSelect();
-                $html = ob_get_contents();
-                ob_end_clean();
-
-                $filter_items[$filterId] = array (
-                    'html' => $html,
-                    'caption' => $filter->getCaption(),
-                    'class' => get_class($filter),
-                    'value' => $filter->getValue(),
-                    'name' => $filter->getValueParm()
-                );
+                if ( array_key_exists($filterId, $filter_items) ) {
+                    $filter_items[$filterId]['valueRight'] = array_shift(\TextUtils::parseFilterItems($filter->getValue()));
+                    $filter_items[$filterId]['nameRight'] = $filter->getValueParm();
+                }
+                else {
+                    $filter_items[$filterId] = array (
+                        'caption' => $filter->getCaption(),
+                        'class' => get_class($filter),
+                        'value' => array_shift(\TextUtils::parseFilterItems($filter->getValue())),
+                        'name' => $filter->getValueParm()
+                    );
+                }
             }
-
-            if ( is_a($filter, 'FilterWebMethod') ) {
+            else if ( is_a($filter, 'FilterWebMethod') )
+            {
                 $filter_items[$filterId] = array (
                     'type' => $filter->getType(),
                     'name' => $filter->getName(),
                     'caption' => $filter->getCaption(),
-                    'options' => array_map(function($item) { return htmlentities($item); }, $filter->getValues()),
+                    'options' => array_map(function($item) { return htmlentities($item, ENT_NOQUOTES); }, $filter->getValues()),
                     'value' => $filter_values[$filter->getName()],
                     'class' => get_class($filter),
                     'attribute' => $filter->getType() != 'singlevalue' ? 'multiple' : '',
@@ -715,16 +759,33 @@ class PageTable extends ViewTable
             $filter->setFilter( $this->getFiltersName() );
             if ( is_object($filter->getFreezeMethod()) ) $filter->getFreezeMethod()->setValues($filter_values);
 
-            $values = \TextUtils::parseFilterItems($filter_values[$filter->getValueParm()]);
+            $values = array_diff(
+                TextUtils::parseItems($filter_values[$filter->getValueParm()], ','),
+                array(
+                    'none', 'all', 'hide'
+                )
+            );
             if ( count($values) < 1 ) continue;
 
+            $filterId = $filter->getCaption();
             if ( !is_a($filter, 'FilterWebMethod') )
             {
-                $filter_buttons[$filter->getCaption()] = array (
-                    'caption' => $filter->getCaption(),
-                    'value' => \TextUtils::getWords($filter->getValue(), 2),
-                    'name' => $filter->getValueParm()
-                );
+                $title = $filter instanceof SelectDateRefreshWebMethod
+                    ? $filter->getValue()
+                    : \TextUtils::getWords($filter->getValue(), 2);
+
+                if ( array_key_exists($filterId, $filter_buttons) ) {
+                    $filter_buttons[$filterId]['value'] = sprintf(
+                        text(3121), $filter_buttons[$filterId]['value'], $filter->getValue()
+                    );
+                }
+                else {
+                    $filter_buttons[$filterId] = array (
+                        'caption' => $filter->getCaption(),
+                        'value' => $title,
+                        'name' => $filter->getValueParm()
+                    );
+                }
             }
             else {
                 $filter_options = array_filter(
@@ -735,14 +796,14 @@ class PageTable extends ViewTable
                     ARRAY_FILTER_USE_BOTH
                 );
 
-                if ( $filter instanceof FilterObjectMethod) {
+                if ( $filter instanceof FilterObjectMethod ) {
                     $filter_options = array_unique( array_merge(
                         $filter_options, $filter->getValuesText($values)
                     ));
                 }
 
                 $title = \TextUtils::getWords(join(', ',$filter_options), 2);
-                $filter_buttons[$filter->getCaption()] = array (
+                $filter_buttons[$filterId] = array (
                     'caption' => $filter->getCaption(),
                     'value' => $title,
                     'name' => $filter->getValueParm()
@@ -751,19 +812,9 @@ class PageTable extends ViewTable
         }
         ksort($filter_buttons);
 
-	    $additional_actions = array();
-	    
 	    $new_actions = $this->getNewActions();
-	    
-	    if ( count($new_actions) > 0 )
-	    {
-	    	$additional_actions[] = array (
-				'name' => translate('Добавить'),
-				'items' => $new_actions
-			); 
-	    }
-	    
 	    $actions = $this->getActions();
+
 	    if ( $this->getListRef() instanceof PageChart ) {
             $export_actions = $this->getListRef()->getExportActions();
         }
@@ -783,25 +834,30 @@ class PageTable extends ViewTable
 		}
 
 		$plugins = getFactory()->getPluginsManager();
-	    
-		$plugins_interceptors = is_object($plugins) 
+		$plugins_interceptors = is_object($plugins)
 				? $plugins->getPluginsForSection(getSession()->getSite()) : array();
 		
-		foreach( $plugins_interceptors as $plugin )
-		{
+		foreach( $plugins_interceptors as $plugin ) {
 			$plugin->interceptMethodTableGetActions( $this, $actions );
+            $plugin->interceptMethodTableGetNewActions( $this, $new_actions );
 		}
 	    
 	    $delete_actions = $this->getDeleteActions();
    
-	    if ( count($delete_actions) > 0 )
-	    {
+	    if ( count($delete_actions) > 0 ) {
 	    	if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-	    	
 	    	$actions = array_merge($actions, $delete_actions);
 	    }
 
-		return array_merge($parms, array(
+        $additional_actions = array();
+        if ( count($new_actions) > 0 ) {
+            $additional_actions[] = array (
+                'name' => translate('Добавить'),
+                'items' => $new_actions
+            );
+        }
+
+        return array_merge($parms, array(
             'filter_visible' => count($this->filters) > 0,
             'filter_buttons' => $filter_buttons,
             'filter_search' =>
@@ -809,7 +865,6 @@ class PageTable extends ViewTable
                     'searchable' => $this->getObject() instanceof Metaobject
                         && $this->getObject()->getSearchableAttributes(),
                     'value' => addslashes(join(' ', \TextUtils::parseFilterItems($filter_values['search']))),
-                    'script' => "javascript: filterLocation.setup('search='+$(this).val())"
                 ),
             'filter_modified' => !$this->IsFilterPersisted(),
             'actions' => $actions,

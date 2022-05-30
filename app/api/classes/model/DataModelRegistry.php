@@ -20,17 +20,14 @@ class DataModelRegistry extends ObjectRegistrySQL
 		}
 	}
 	
-	public function getAll()
+	public function Query($parms = array())
 	{
-		foreach( getSession()->getBuilders('IDataModelRegistryBuilder') as $builder )
-		{
+		foreach( getSession()->getBuilders('IDataModelRegistryBuilder') as $builder ) {
 			$builder->build( $this );
 		}
 		
 		$data = array();
-		
-		foreach( $this->classes as $class )
-		{
+		foreach( $this->classes as $class ) {
 			$data[] = array (
 					'entityId' => $class,
 					'Caption' => $class

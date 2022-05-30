@@ -1,5 +1,4 @@
 <?php
-use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
 
 class TimeSpentEvent extends SystemTriggersBase
 {
@@ -10,17 +9,14 @@ class TimeSpentEvent extends SystemTriggersBase
 		$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
 			array ( new FilterInPredicate($object_it->get('Task')) )
 		);
-		if ( $task_it->get('ChangeRequest') != '' ) {
+		if ( $task_it->get('ChangeRequest') != '' )
+		{
 		    $requestId = $task_it->get('ChangeRequest');
             register_shutdown_function(function() use ( $requestId ) {
-                    $service = new StoreMetricsService();
-                    $request = new Request();
-
-                    $service->storeIssueMetrics(
-                        $request->getRegistry(),
+                    $service = new \Devprom\ProjectBundle\Service\Project\StoreMetricsService();
+                    $service->forceIssueMetrics(
                         array (
-                            new FilterInPredicate(array($requestId)),
-                            new RequestMetricsPersister()
+                            new FilterInPredicate(array($requestId))
                         )
                     );
                 }

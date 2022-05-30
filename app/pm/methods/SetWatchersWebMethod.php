@@ -42,7 +42,7 @@ class SetWatchersWebMethod extends WebMethod
                 new FilterAttributePredicate('ObjectClass', strtolower(get_class($className)))
             )
         );
-        \Logger::getLogger('Commands')->error($watcherIt->count());
+
         while( !$watcherIt->end() ) {
             $watcherIt->object->delete($watcherIt->getId());
             $watcherIt->moveNext();

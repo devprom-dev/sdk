@@ -18,6 +18,7 @@ class QuestionModelExtendedBuilder extends ObjectModelBuilder
     $object->addPersister( new QuestionTagPersister() );
 
     $object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
+    $object->addAttributeGroup('RecentComment', 'non-form');
     $object->addPersister( new CommentRecentPersister() );
 
     $object->addPersister( new AttachmentsPersister() );

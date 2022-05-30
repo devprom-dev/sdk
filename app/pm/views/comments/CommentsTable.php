@@ -1,7 +1,7 @@
 <?php
 include "CommentsList.php";
 
-class CommentsTable extends PMPageTable
+class CommentsTable extends PMPageDetailsTable
 {
 	function getList() {
 		return new CommentsList( $this->getObject() );
@@ -32,12 +32,24 @@ class CommentsTable extends PMPageTable
 		return array(
 			new CommentObjectFilter($objectIt),
             new FilterAttributePredicate('Closed', 'N'),
-            new CommentRootFilter()
+            count(\TextUtils::parseFilterItems($values['commentstate'])) > 0
+                ? new CommentContextPredicate($values['commentstate'])
+                : new CommentRootFilter()
 		);
 	}
 
     function getTemplate() {
         return "core/PageTableDetailsBody.php";
+    }
+
+    function getFilterParms()
+    {
+        return array_merge(
+                    parent::getFilterParms(),
+                    array(
+                        'commentstate'
+                    )
+                );
     }
 
     function drawScripts()

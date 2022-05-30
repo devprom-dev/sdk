@@ -2,6 +2,10 @@
 
 class SearchList extends PMStaticPageList
 {
+    function getItemsCount( $it ) {
+        return $it->count();
+    }
+
     function getColumnFields() {
         return array('UID', 'Caption', 'ReferenceName');
     }

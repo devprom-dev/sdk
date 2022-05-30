@@ -50,7 +50,7 @@ class ModuleService
         }
 
  		$module_it = getFactory()->getObject('Module')->getAll();
-		$report_it = getFactory()->getObject('PMReport')->getRegistry()->getAll();
+		$report_it = getFactory()->getObject('PMReport')->getRegistry()->Query(array());
 		
 		$skip_modules = array();
 		
@@ -87,7 +87,7 @@ class ModuleService
 				$module_it->moveNext(); continue;
 			}
 			
-			if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) {
+			if ( $module_it->get('Area') == '' || !getFactory()->getAccessPolicy()->can_read($module_it) ) {
 				$module_it->moveNext(); continue;
 			}
 

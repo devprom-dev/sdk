@@ -12,6 +12,7 @@ class DocumentTemplate extends Metaobject
 			$registry->setReferenceName($reference->getReferenceName());
 		}
 		parent::__construct('pm_DocumentTemplate', $registry);
+        $this->addAttributeGroup('Content', 'skip-mapper');
 		$this->addAttributeGroup('ReferenceName', 'system');
 	}
 

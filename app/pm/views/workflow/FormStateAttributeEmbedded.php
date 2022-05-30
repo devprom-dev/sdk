@@ -1,9 +1,14 @@
 <?php
-
 include_once "FieldAttributeDictionary.php";
 
 class FormStateAttributeEmbedded extends PMFormEmbedded
 {
+    private $attributeObject = null;
+
+    function setAttributeObject( $object ) {
+        $this->attributeObject = $object;
+    }
+
  	function IsAttributeVisible( $attribute )
  	{
  		switch ( $attribute )
@@ -15,7 +20,7 @@ class FormStateAttributeEmbedded extends PMFormEmbedded
             case 'IsMainTab':
             case 'IsAskForValue':
             case 'IsVisibleOnEdit':
- 				return true;
+                return true;
 
  			default:
  				return false;
@@ -28,7 +33,6 @@ class FormStateAttributeEmbedded extends PMFormEmbedded
  		{
  			case 'ReferenceName':
  				return true;
- 				
  			default:
  				return parent::IsAttributeObject( $attr_name );
  		}
@@ -39,14 +43,23 @@ class FormStateAttributeEmbedded extends PMFormEmbedded
 		switch( $attr_name )
 		{
 			case 'ReferenceName':
-				return new FieldAttributeDictionary(
-						getFactory()->getObject( 
-								$this->getObject()->getAttributeObject('State')->getObjectClass() 
-						)
-				);
-
+                $readonly = str_replace('"',"'",
+                    JsonWrapper::encode(
+                        array_values(
+                            array_diff(
+                                $this->attributeObject->getAttributesReadonly(),
+                                array(
+                                    'Fact'
+                                )
+                            )
+                        )
+                    )
+                );
+				$field = new FieldAttributeDictionary($this->attributeObject);
+                $field->setScript("updateStateAttributeData($('#embeddedFormBody{$this->getFormId()}'),$(this),{$readonly});");
+                return $field;
 			default:
-				return parent::createFieldObject( $attr_name );
+				return parent::createField( $attr_name );
 		}
 	}
 }

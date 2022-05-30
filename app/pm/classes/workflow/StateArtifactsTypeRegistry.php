@@ -2,7 +2,7 @@
 
 class StateArtifactsTypeRegistry extends ObjectRegistrySQL
 {
-	public function getAll()
+	public function Query($parms = array())
 	{
 		return $this->createIterator(
             array (
@@ -13,6 +13,10 @@ class StateArtifactsTypeRegistry extends ObjectRegistrySQL
                 array (
                     'entityId' => 'TestScenario',
                     'Caption' => translate('Тестовая документация')
+                ),
+                array (
+                    'entityId' => 'TestExecution',
+                    'Caption' => text('testing78')
                 ),
                 array (
                     'entityId' => 'HelpPage',

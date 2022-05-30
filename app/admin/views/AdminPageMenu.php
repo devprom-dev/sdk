@@ -22,7 +22,8 @@ class AdminPageMenu extends PageMenu
             array(
                 array( 'url' => '/admin/jobs.php', 'name' => text(2024), 'uid' => 'jobs' ),
                 array ( 'name' => translate('Резервные копии'), 'url' => '/admin/backups.php', 'uid' => 'backups' ),
-                array ( 'name' => translate('Логи'), 'url' => '/admin/log/', 'uid' => 'logs' )
+                array ( 'name' => translate('Логи'), 'url' => '/admin/log/', 'uid' => 'logs' ),
+                array ( 'name' => text(3109), 'url' => '/admin/webhooklogs/', 'uid' => 'webhooklogs' )
             )
         );
         $pages[] = array(

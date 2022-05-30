@@ -135,7 +135,8 @@ class ObjectChangeLogger
 
     protected function buildProjectSession($issue, User $user)
     {
-        $this->project_session = new \PMSession(
+        global $session;
+        $session = new \PMSession(
             getFactory()->getObject('Project')->getExact($issue->getProject()->getId()),
             new \AuthenticationFactory(
                 getFactory()->getObject('User')->createCachedIterator(
@@ -149,7 +150,6 @@ class ObjectChangeLogger
             )
         );
         getFactory()->setAccessPolicy(new \AccessPolicy(getFactory()->getCacheService()));
-		return $this->project_session;
     }
     
     protected function notifyCustomerCreated(User $user)
@@ -162,7 +162,9 @@ class ObjectChangeLogger
     protected function notifyIssueCreated(Issue $issue, User $user)
     {
     	$this->buildProjectSession($issue, $user);
-		$object_it = getFactory()->getObject('Request')->getExact($issue->getId());
+		$object_it = getFactory()->getObject('Request')
+                        ->getExact($issue->getId())->getSpecifiedIt();
+        $object_it->object->updateUID($object_it->getId());
 		
 		getFactory()->getEventsManager()->notify_object_add($object_it, array());
 		getFactory()->getEventsManager()

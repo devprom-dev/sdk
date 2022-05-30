@@ -11,8 +11,7 @@ abstract class NewDocumentWebMethod extends WebMethod
 			? $object_it : getFactory()->getObject('entity')->getEmptyIterator()
 		);
 		parent::__construct();
-        $this->setBeforeCallback('devpromOpts.updateUI');
-        $this->setRedirectUrl('devpromOpts.updateUI');
+        $this->setRedirectUrl('function(){devpromOpts.updateUI();}');
 	}
 
 	abstract public function getObject();
@@ -65,11 +64,20 @@ abstract class NewDocumentWebMethod extends WebMethod
 			$context = new CloneContext();
             $context->setResetUids(true);
 			$context->setUseExistingReferences(true);
+            $context->setRaiseExceptions(true);
 
 			foreach( $this->getReferences() as $cloneObject )
 			{
 				$cloneObject = getFactory()->getObject( get_class($cloneObject) );
-				$iterator = $cloneObject->createXMLIterator($xml);
+				$iterator = $cloneObject->createCachedIterator(
+                        array_map(
+                            function($row) {
+                                unset($row['Author']);
+                                return $row;
+                            },
+                            $cloneObject->createXMLIterator($xml)->getRowset()
+                        )
+                    );
 				CloneLogic::Run( $context, $cloneObject, $iterator, getSession()->getProjectIt());
 			}
 

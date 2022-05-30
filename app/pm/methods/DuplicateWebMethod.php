@@ -148,9 +148,6 @@ class DuplicateWebMethod extends WebMethod
         if ( count($duplicates) > 0 ) {
             $duplicate_it = $object_it->object->getExact($duplicates);
 
-            getFactory()->getEventsManager()->
-                executeEventsAfterBusinessTransaction($duplicate_it->copyAll(), 'WorklfowMovementEventHandler');
-
             $duplicate_it->moveFirst();
             $this->setResult($duplicate_it);
 
@@ -186,13 +183,14 @@ class DuplicateWebMethod extends WebMethod
  	       $ids_map = array_merge($ids_map, $this->getIdsMap($object));
  	    }
  	    $xml .= '</entities>';
-  
+
  	    $object_it = $this->getObjectIt();
 
  	    $context = $this->buildContext();
  	    $context->setIdsMap( $ids_map );
         $context->setUseExistingReferences( true );
         $context->setRestoreFromTemplate(false);
+        $context->setRaiseExceptions(true);
 
  	    if ( $project_it->getId() == '' ) {
             // bind data to existing objects if any
@@ -224,7 +222,7 @@ class DuplicateWebMethod extends WebMethod
  	        	$iterator = $object->createCachedIterator($rowset);
  	        }
 
-     	    CloneLogic::Run( $context, $object, $iterator, $project_it);
+ 	        CloneLogic::Run( $context, $object, $iterator, $project_it);
  	    }
 
  	    return $context;

@@ -22,6 +22,8 @@ class ChangeLogWhatsNew extends ChangeLog
 		}
         $this->setAttributeVisible('RecordModified', true);
 
+        $this->addAttribute( 'Project', 'REF_pm_ProjectId', translate('Проект'), false, false );
+
 		$this->setSortDefault( array(
 			new SortChangeLogRecentClause()
 		));

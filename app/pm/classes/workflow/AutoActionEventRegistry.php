@@ -7,6 +7,7 @@ class AutoActionEventRegistry extends ObjectRegistrySQL
 	const CreateOnly = 3;
 	const ModifyOnly = 4;
 	const NewComment = 5;
+    const Schedule = 6;
 
  	function createSQLIterator( $sql )
  	{
@@ -30,6 +31,10 @@ class AutoActionEventRegistry extends ObjectRegistrySQL
             array (
                 'entityId' => self::NewComment,
                 'Caption' => text(2339)
+            ),
+            array (
+                'entityId' => self::Schedule,
+                'Caption' => text(3105)
             )
  		));
  	}

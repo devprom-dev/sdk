@@ -22,7 +22,7 @@ class TextChangesChartTable extends PMPageTable
     
     function buildAuthorFilter()
     {
-    	$filter = new FilterObjectMethod(getFactory()->getObject('ProjectUser'), translate('Автор'));
+    	$filter = new FilterObjectMethod(getFactory()->getObject('WorkerUser'), translate('Автор'));
     	$filter->setHasNone(false);
     	return $filter;
     }

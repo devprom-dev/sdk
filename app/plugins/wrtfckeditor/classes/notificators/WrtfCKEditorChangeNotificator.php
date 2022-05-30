@@ -22,21 +22,9 @@ class WrtfCKEditorChangeNotificator extends SystemTriggersBase
 		        
 		        break;
 		        
-		    case 'BlogPost':
-		        
-		        $this->storeImages($object_it, 'Content');
-		        
-		        break;
-		    
 		    case 'WikiPageFile':
 		        
 		        $this->storeImages($object_it->getRef('WikiPage'), 'Content');
-		        
-		        break;
-		        
-		    case 'BlogPostFile':
-		        
-		        $this->storeImages($object_it->getRef('BlogPost'), 'Content');
 		        
 		        break;
 		        
@@ -149,7 +137,7 @@ class WrtfCKEditorChangeNotificator extends SystemTriggersBase
     
      	$result = array();
      	
-     	if ( preg_match_all('/cms_TempFile|WikiPageFile|BlogPostFile/i', $url, $result) )
+     	if ( preg_match_all('/cms_TempFile|WikiPageFile/i', $url, $result) )
      	{
      		$predicates = array();
      		
@@ -157,7 +145,7 @@ class WrtfCKEditorChangeNotificator extends SystemTriggersBase
      		{
      			case 'WikiPage':
      				
-     			    $file = $model_factory->getObject('WikiPageFile');
+     			    $file = getFactory()->getObject('WikiPageFile');
      				
      			    $predicates[] = new FilterAttributePredicate('WikiPage', $this->object_it->getId());
      				
@@ -165,19 +153,9 @@ class WrtfCKEditorChangeNotificator extends SystemTriggersBase
      				
      			    break;
      				
-     			case 'BlogPost':
-     				
-     			    $file = $model_factory->getObject('BlogPostFile');
-     				
-     			    $predicates[] = new BlogPostFilePostFilter($this->object_it->getId());
-     				
-     			    $key_field = 'ContentExt';
-     				
-     			    break;
-    
      			default:
      				
-     			    $file = $model_factory->getObject('pm_Attachment');
+     			    $file = getFactory()->getObject('pm_Attachment');
      				
      			    $predicates[] = new AttachmentObjectPredicate($this->object_it);
      				

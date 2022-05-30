@@ -4,11 +4,8 @@ class AccessRightUserPredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
- 		$user = $model_factory->getObject('User');
- 		
- 		$user_it = $user->getExact($filter);
+ 		$user_it = getFactory()->getObject('User')
+            ->getExact(\TextUtils::parseFilterItems($filter));
  		
  		if ( $user_it->getId() < 1 ) return " AND 1 = 2 ";
  		

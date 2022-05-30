@@ -149,16 +149,17 @@ class CheckpointPHPSetting extends CheckpointEntryDynamic
    	function buildExtentionSettings()
    	{
    		return array (
-   				"mbstring",
-   				"gd",
-   				"zip",
-   				"zlib",
-   				"curl",
-   				"openssl",
-   				"dom",
-   				"fileinfo",
-   				"pdo_mysql",
-   				"imap"
+            "mbstring",
+            "gd",
+            "zip",
+            "zlib",
+            "curl",
+            "openssl",
+            "dom",
+            "fileinfo",
+            "pdo_mysql",
+            "imap",
+            "bcmath"
    		);
    	}
    	

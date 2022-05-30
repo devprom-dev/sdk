@@ -13,7 +13,7 @@ class ExcelExportWebMethod extends ExportWebMethod
  		return parent::getJSCall(
 			array_merge(
 				array(
-					'caption' => \TextUtils::stripAnyTags($caption != '' ? $caption : $this->getCaption()),
+					'title' => \TextUtils::stripAnyTags($caption != '' ? $caption : $this->getCaption()),
 					'class' => $class
 				),
 				$parms

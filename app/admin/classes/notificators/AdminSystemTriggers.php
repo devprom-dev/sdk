@@ -1,25 +1,13 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
-include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
 include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
  
 class AdminSystemTriggers extends SystemTriggersBase
 {
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
-		$session = getSession();
-
 		switch( $object_it->object->getEntityRefName() )
 		{
-			case 'cms_User':
-                $generator = new UserPicSpritesGenerator();
-                $generator->storeSprites();
-
-                $this->invalidateCache(array('projects','apps','sessions'));
-				$this->executeCheckpoints();
-				break;
-				
 			case 'cms_BlackList':
             case 'co_AccessRight':
             case 'co_UserGroupLink':
@@ -58,7 +46,7 @@ class AdminSystemTriggers extends SystemTriggersBase
 	{
 		$checkpoint_factory = getCheckpointFactory();
 		$checkpoint = $checkpoint_factory->getCheckpoint( 'CheckpointSystem' );
-	    $checkpoint->checkOnly( array('CheckpointHasAdmininstrator', 'CheckpointSystemAdminEmail') );
+	    $checkpoint->checkOnly( array('CheckpointSystemAdminEmail') );
 	}
 
 	function invalidateCache( array $paths ) {

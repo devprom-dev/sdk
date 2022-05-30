@@ -45,46 +45,37 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		return $this->attrs;
  	}
 
-	function getAttributes()
-    {
-		return array_map(
-		    function($item) {
-		        return $item['name'];
-            },
-            $this->attrs
-        );
-	}
-
- 	function add( $object_id, $parms )
- 	{
+ 	function add( $object_id, $parms ) {
 		$this->set($object_id, $parms, true);
  	}
 
- 	function modify( $object_id, $parms )
- 	{
-		$this->set($object_id, $parms);
- 	}
- 	
- 	protected function set( $object_id, $parms, $useDefaults = false )
+    function modify( $object_id, $parms ) {
+        $this->set($object_id, $parms);
+    }
+
+ 	protected function set( $object_id, $parms, $useDefaults = false, $newOnly = true )
  	{
  	 	$attributes = $this->getAttributesInfo();
+        if ( count($attributes) < 1 ) return;
 
  		$value = getFactory()->getObject('pm_AttributeValue');
-        $value->disableVpd();
         $valueRegistry = $value->getRegistry();
-        $objectAttributes = $this->getObject()->getRegistryBase()->Query(
-                array(
-                    new FilterInPredicate($object_id)
-                )
-            )->getData();
+        $objectAttributes = array();
 
- 		foreach( $attributes as $attr_id => $attr )
+ 		foreach( $attributes as $attr )
  		{
             if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
                 if ( $attr['name'] == 'UID' ) {
                     continue;
                 }
                 else {
+                    if ( count($objectAttributes) < 1 ) {
+                        $objectAttributes = $this->getObject()->getRegistryBase()->Query(
+                                array(
+                                    new FilterInPredicate($object_id)
+                                )
+                            )->getData();
+                    }
                     $parms[$attr['name']] = $this->computeFormula($objectAttributes, $attr['default']);
                 }
             }
@@ -100,14 +91,24 @@ class CustomAttributesPersister extends ObjectSQLPersister
             );
             $this->setValueParms( $attr, $parms, $value_parms );
 
-            $valueRegistry->Merge(
-                $value_parms,
-                array(
-                    'CustomAttribute',
-                    'ObjectId'
-                )
-            );
-
+            if ( $newOnly ) {
+                $cnt = $valueRegistry->Count(array(
+                    new FilterAttributePredicate('CustomAttribute', $value_parms['CustomAttribute']),
+                    new FilterAttributePredicate('ObjectId', $value_parms['ObjectId'])
+                ));
+                if ( $cnt < 1 ) {
+                    $valueRegistry->Create($value_parms);
+                }
+            }
+            else {
+                $valueRegistry->Merge(
+                    $value_parms,
+                    array(
+                        'CustomAttribute',
+                        'ObjectId'
+                    )
+                );
+            }
  		}
  	}
 
@@ -133,7 +134,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
  	{
  	    $attributeTypeIt = $this->getTypeIt($attribute);
 		$value_column = $attributeTypeIt->getValueColumn();
- 		
+
  		if ( !array_key_exists( $attribute['name'], $parms ) )
  		{
  		    if ( $parms[$attribute['name'].'OnForm'] == 'Y' ) {
@@ -145,6 +146,9 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		}
  		elseif ( $attributeTypeIt->get('ReferenceName') != 'wysiwyg' )
  		{
+ 		    if ( is_array($parms[$attribute['name']]) ) {
+ 		        $parms[$attribute['name']] = join(',', $parms[$attribute['name']]);
+            }
  			$parms[$attribute['name']] = html_entity_decode(
  			    $parms[$attribute['name']], ENT_QUOTES | ENT_HTML401, APP_ENCODING);
  		}

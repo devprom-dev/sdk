@@ -241,7 +241,7 @@ public class RequestBoardTest extends ProjectTestBase {
 	      driver.navigate().refresh();
 
 	      List<String> datesStepTwo = rbp.readDatesTitles(request.getNumericId());
-	      Assert.assertEquals(datesStepTwo.size(), 4, "На данном этапе ожидается 4 записей типа Дата");
+	      Assert.assertEquals(datesStepTwo.size(), 3, "На данном этапе ожидается 4 записей типа Дата");
 	      Assert.assertTrue(datesStepTwo.contains("Дата создания"), "Отсутствует Дата создания");
 	      Assert.assertTrue(datesStepTwo.contains("Дата изменения"), "Отсутствует Дата изменения");
 	      Assert.assertTrue(datesStepTwo.contains("Дата начала"), "Отсутствует Дата начала");
@@ -253,7 +253,7 @@ public class RequestBoardTest extends ProjectTestBase {
 		  driver.navigate().refresh();
 
 	      List<String> datesStepThree = rbp.readDatesTitles(request.getNumericId());
-	      Assert.assertEquals(datesStepThree.size(), 4, "На данном этапе ожидается 4 записи типа Дата");
+	      Assert.assertEquals(datesStepThree.size(), 3, "На данном этапе ожидается 4 записи типа Дата");
 	      Assert.assertTrue(datesStepThree.contains("Дата создания"), "Отсутствует Дата создания");
 	      Assert.assertTrue(datesStepThree.contains("Дата изменения"), "Отсутствует Дата изменения");
 	      Assert.assertTrue(datesStepThree.contains("Дата начала"), "Отсутствует Дата начала");
@@ -266,21 +266,19 @@ public class RequestBoardTest extends ProjectTestBase {
 		  driver.navigate().refresh();
 
 		  List<String> datesStepFour = rbp.readDatesTitles(request.getNumericId());
-	      Assert.assertEquals(datesStepFour.size(), 4, "На данном этапе ожидается 4 записи типа Дата");
+	      Assert.assertEquals(datesStepFour.size(), 3, "На данном этапе ожидается 4 записи типа Дата");
 	      Assert.assertTrue(datesStepFour.contains("Дата создания"), "Отсутствует Дата создания");
 	      Assert.assertTrue(datesStepFour.contains("Дата изменения"), "Отсутствует Дата изменения");
 	      Assert.assertTrue(datesStepFour.contains("Дата начала"), "Отсутствует Дата начала");
-	      Assert.assertTrue(datesStepFour.contains("Оценка завершения"), "Отсутствует Оценка завершения");
-	      
+
 	      rbp = rbp.moveToCompleted(request.getNumericId(), "", null, "Релиз: 0");
 		  driver.navigate().refresh();
 
 		  List<String> datesStepFive = rbp.readDatesTitles(request.getNumericId());
-	      Assert.assertEquals(datesStepFive.size(), 5, "На данном этапе ожидается тринадцать записей типа Дата");
+	      Assert.assertEquals(datesStepFive.size(), 4, "На данном этапе ожидается тринадцать записей типа Дата");
 	      Assert.assertTrue(datesStepFive.contains("Дата создания"), "Отсутствует Дата создания");
 	      Assert.assertTrue(datesStepFive.contains("Дата изменения"), "Отсутствует Дата изменения");
 	      Assert.assertTrue(datesStepFive.contains("Дата начала"), "Отсутствует Дата начала");
-	      Assert.assertTrue(datesStepFive.contains("Оценка завершения"), "Отсутствует Оценка завершения");
 	      Assert.assertTrue(datesStepFive.contains("Дата окончания"), "Отсутствует Дата окончания");
 	}
 	
@@ -308,9 +306,8 @@ public class RequestBoardTest extends ProjectTestBase {
 		      rbp = new RequestsBoardPage(driver);
 		      double readEst = rbp.readEstimation(request.getNumericId());
 		      Assert.assertEquals(readEst, 22.0, "Неправильное значение атрибута Трудоемкость");
-		      String est = rbp.readAttributeByName(request.getNumericId(), "Осталось, ч.");
-		      est = est.replace(",",".").replace("ч", "");
-		      double readEstLeft = Double.parseDouble(est);
+		      String est = rbp.readAttributeByName(request.getNumericId(), "Осталось");
+		      double readEstLeft = rbp.convertToDouble(est);
 		      Assert.assertEquals(readEstLeft, 22.0, "Неправильное значение атрибута Оставшаяся трудоемкость");
 		      
 		      Spent spent = new Spent("",5.0, user,"описание для задачи");

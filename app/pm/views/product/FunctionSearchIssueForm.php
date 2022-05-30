@@ -27,6 +27,8 @@ class FunctionSearchIssueForm extends PMPageForm
                 )
             );
         }
-        $this->redirectOnModified($this->object_it, $this->getRedirectUrl());
+
+		$this->redirectOnModified($this->object_it, $this->getRedirectUrl());
+		return true;
 	}
 }

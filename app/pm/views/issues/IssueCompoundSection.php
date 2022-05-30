@@ -12,7 +12,7 @@ class IssueCompoundSection extends InfoSection
  		$this->left_style = 'width:49%';
  		$this->right_style = 'width:49%';
  		
- 		parent::InfoSection();
+ 		parent::__construct();
  	}
  	
  	function addLeft( $section )

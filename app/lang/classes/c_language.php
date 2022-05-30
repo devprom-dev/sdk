@@ -228,36 +228,55 @@ include "DateFormatRussian.php";
 	{
 		list( $monthes, $days, $hours, $minutes ) = $this->convertHours($givenHours, $hoursInDay);
 		$result = '';
-        if ( $monthes > 0 ) {
-            $result .= $monthes.'мес ';
+        if ( abs($monthes) > 0 ) {
+            $result .= abs($monthes).'мес ';
         }
-        if ( $days > 0 ) {
-            $result .= $days.'д ';
+        if ( abs($days) > 0 ) {
+            $result .= abs($days).'д ';
         }
-		if ( $hours > 0 ) {
-			$result .= $hours.'ч ';
+		if ( abs($hours) > 0 ) {
+			$result .= abs($hours).'ч ';
 		}
-		if ( $minutes > 0 ) {
-			$result .= $minutes.'м ';
+		if ( abs($minutes) > 0 ) {
+			$result .= abs($minutes).'м ';
 		}
 		if ( $givenHours <= 0 ) {
 			$result .= 0;
 		}
-		return trim($result);
+		return ($givenHours < 0 ? '-' : '') .  trim($result);
 	}
 
 	 function getHoursWording( $hours )
 	 {
 		 list( $hours, $minutes ) = $this->convertToHoursAndMinutes($hours);
 		 $result = '';
-		 if ( $hours > 0 ) {
-			 $result .= $hours.'ч ';
+		 if ( abs($hours) > 0 ) {
+			 $result .= abs($hours).'ч ';
 		 }
-		 if ( $minutes > 0 ) {
-			 $result .= $minutes.'м ';
+		 if ( abs($minutes) > 0 ) {
+			 $result .= abs($minutes).'м ';
 		 }
-		 return trim($result);
+		 return ($hours < 0 ? '-' : '') . trim($result);
 	 }
+
+     public function formatFloatValue($value, $attributeGroups = array())
+     {
+         if ( $value == '' ) return $value;
+
+         if ( in_array('hours', $attributeGroups) ) {
+             return $this->getHoursWording($value);
+         }
+         elseif ( in_array('astronomic-time', $attributeGroups) ) {
+             return $this->getDurationWording($value);
+         }
+         elseif ( in_array('working-time', $attributeGroups) ) {
+             return $this->getDurationWording($value, 8);
+         }
+         else {
+             return number_format(floatval($value),
+                 \EnvironmentSettings::getFloatPrecision(), ',', ' ');
+         }
+     }
  }
  
  ////////////////////////////////////////////////////////////////////////////////// 
@@ -306,35 +325,35 @@ include "DateFormatRussian.php";
 	 {
 		 list( $monthes, $days, $hours, $minutes ) = $this->convertHours($givenHours, $hoursInDay);
 		 $result = '';
-		 if ( $monthes > 0 ) {
-			 $result .= $monthes.'mo ';
+		 if ( abs($monthes) > 0 ) {
+			 $result .= abs($monthes).'mo ';
 		 }
-		 if ( $days > 0 ) {
-			 $result .= $days.'d ';
+		 if ( abs($days) > 0 ) {
+			 $result .= abs($days).'d ';
 		 }
-		 if ( $hours > 0 ) {
-			 $result .= $hours.'h ';
+		 if ( abs($hours) > 0 ) {
+			 $result .= abs($hours).'h ';
 		 }
-		 if ( $minutes > 0 ) {
-			 $result .= $minutes.'m ';
+		 if ( abs($minutes) > 0 ) {
+			 $result .= abs($minutes).'m ';
 		 }
 		 if ( $givenHours <= 0 ) {
 			 $result .= 0;
 		 }
-		 return trim($result);
+		 return ($givenHours < 0 ? '-' : '') . trim($result);
 	 }
 
 	 function getHoursWording( $hours )
 	 {
 		 list( $hours, $minutes ) = $this->convertToHoursAndMinutes($hours);
 		 $result = '';
-		 if ( $hours > 0 ) {
-			 $result .= $hours.'h ';
+		 if ( abs($hours) > 0 ) {
+			 $result .= abs($hours).'h ';
 		 }
-		 if ( $minutes > 0 ) {
-			 $result .= $minutes.'m ';
+		 if ( abs($minutes) > 0 ) {
+			 $result .= abs($minutes).'m ';
 		 }
-		 return trim($result);
+		 return ($hours < 0 ? '-' : '') . trim($result);
 	 }
  }
  

@@ -3,18 +3,21 @@ include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorInsta
 
 class StateModelValidator extends ModelValidatorInstance
 {
-	public function validate( Metaobject $object, array & $parms )
+	public function validate( Metaobject $object, array $parms )
 	{
 	    if ( $parms['ReferenceName'] == '' ) return "";
+        if ( $parms['ObjectClass'] == '' ) return "";
+
         $object_it = $object->getRegistry()->Query(
             array(
                 new FilterBaseVPDPredicate(),
                 new FilterAttributePredicate('ReferenceName', $parms['ReferenceName']),
+                new FilterAttributePredicate('ObjectClass', $parms['ObjectClass']),
                 new FilterNotInPredicate($parms[$object->getIdAttribute()])
             )
         );
         if ( $object_it->count() > 0 ) return text(1121);
-        if ( !\TextUtils::checkDatabaseColumnName($parms['ReferenceName']) ) return text(1126);
+        if ( !\TextUtils::checkReferenceName($parms['ReferenceName']) ) return text(1126);
 
 		return "";
 	}

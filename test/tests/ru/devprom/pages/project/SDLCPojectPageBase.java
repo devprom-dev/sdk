@@ -10,6 +10,7 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import ru.devprom.helpers.Configuration;
 import ru.devprom.items.Project;
 import ru.devprom.pages.project.attributes.AttributeSettingsPage;
 import ru.devprom.pages.project.blogs.BlogPage;
@@ -90,7 +91,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	protected WebElement blogItem;
 
 	// Релизы и итерации
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@uid='projectplan']")
+	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@uid='project-plan-hierarchy']")
 	protected WebElement releaseItem;
 
 	// Вехи
@@ -101,12 +102,16 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@uid='features-list']")
 	protected WebElement featuresItem;
 
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@uid='productbacklog']")
+	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@uid='productbacklog']")
 	protected WebElement backlogItem;
 
 	// Доска пожеланий
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='Доска пожеланий']")
+	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@uid='issues-board']")
 	protected WebElement boardItem;
+
+	// Доска пожеланий
+	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@uid='commonissuesboard']")
+	protected WebElement commonBoardItem;
 
 	// Планирование релизов
 	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='Планирование релизов']")
@@ -317,20 +322,27 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	}
 
 	public RequestsPage gotoRequests() {
-		manageLink.click();
+		analysisLink.click();
 		clickOnInvisibleElement(backlogItem);
 		return new RequestsPage(driver);
 	}
 	
 	public RequestsBoardPage gotoRequestsBoard() {
-		manageLink.click();
+		analysisLink.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(boardItem));
 		boardItem.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//table[@id='requestboard1']"))));
 		return new RequestsBoardPage(driver);
 	}
-	
-	
+
+	public CrossProjectsRequestsBoard gotoCommonRequestsBoard() {
+		analysisLink.click();
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(commonBoardItem));
+		commonBoardItem.click();
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//table[@id='requestboard1']"))));
+		return new CrossProjectsRequestsBoard(driver);
+	}
+
 	
 	public FunctionsPage gotoFunctions() {
 		manageLink.click();
@@ -593,6 +605,9 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	public SearchResultsPage searchByKeyword(String keyword){
 		favLink.click();
+		String url = driver.getCurrentUrl();
+		driver.navigate().to(Configuration.getBaseUrl() + "/core/processjobs.php");
+		driver.navigate().to(url);
 		(new WebDriverWait(driver,3)).until(ExpectedConditions.visibilityOf(searchInput));
 		searchInput.clear();
 		searchInput.sendKeys(keyword);
@@ -608,7 +623,8 @@ public RequestViewPage searchByRequestId(String id) {
 	searchInput.clear();
 	searchInput.sendKeys(id);
 	searchBtn.click();
-	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//ul[contains(@class,'breadcrumb')]/li/a[text()='Доска пожеланий']")));
+	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(
+			By.xpath("//ul[contains(@class,'breadcrumb')]/li/button[contains(.,'"+id+"')]")));
 		return new RequestViewPage(driver);
 	}
 

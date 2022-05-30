@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."pm/views/product/FieldFunctionTrace.php";
+include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include "FieldFeatureTagTrace.php";
 include "FieldFeatureIssues.php";
 
@@ -135,7 +136,7 @@ class FunctionForm extends PMPageForm
 
  	function getAbleCreateIssue( $objectIt ) {
 	    return $objectIt->get('Type') == ''
-            || $objectIt->object->IsReference('Type') != '' && $objectIt->getRef('Type')->get('HasIssues') == 'Y';
+            || $objectIt->object->IsReference('Type') && $objectIt->getRef('Type')->get('HasIssues') == 'Y';
     }
 
  	function getNewRelatedActions()
@@ -285,6 +286,9 @@ class FunctionForm extends PMPageForm
                 }
                 return null;
 
+            case 'Attachment':
+                return new FieldAttachments( is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->object );
+
 			default:
 				return parent::createFieldObject( $name );
 		}
@@ -296,6 +300,9 @@ class FunctionForm extends PMPageForm
 
 		if ( $this->getAction() == 'add' ) {
             if ( $result && $this->request_it->getId() > 0 ) {
+                DAL::Instance()->Query(
+                    "UPDATE pm_Task SET ChangeRequest = NULL WHERE ChangeRequest = {$this->request_it->getId()}"
+                );
                 $this->request_it->object->delete($this->request_it->getId());
             }
             if ( $result && $this->assignRequestIt->getId() > 0 ) {

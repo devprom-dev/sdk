@@ -4,7 +4,7 @@ class StaticPageList extends PageList
  {
  	function StaticPageList ( $object )
  	{
- 		parent::PageList( $object );
+ 		parent::__construct( $object );
  	}
 
 	function IsNeedToDelete( ) { return false; }

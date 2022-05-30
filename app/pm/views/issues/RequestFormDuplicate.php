@@ -23,12 +23,6 @@ class RequestFormDuplicate extends RequestForm
 		$object = $this->getObject();
 		$object->addAttribute('LinkType', 'REF_RequestLinkTypeId', translate('Тип связи'), true, false, '', 1);
 
-		if ( $_REQUEST['Project'] == '' ) {
-			$object->setAttributeVisible('Project', true);
-			$object->setAttributeType('Project', 'REF_ProjectAccessibleActiveId');
-			$object->setAttributeOrderNum('Project', 2);
-		}
-
 		$this->duplicateMethod = new DuplicateIssuesWebMethod($this->source_it);
 	}
 	
@@ -38,8 +32,6 @@ class RequestFormDuplicate extends RequestForm
 		{
 			case 'LinkType':
 				return getFactory()->getObject('RequestLinkType')->getByRef('ReferenceName', 'implemented')->getId();
-			case 'Project':
-				return $_REQUEST['Project'] > 0 ? $_REQUEST['Project'] : parent::getFieldValue($attribute);
             case 'Type':
                 if ( $_REQUEST['Project'] > 0 ) {
                     $typeIt = getFactory()->getObject('RequestType')
@@ -47,6 +39,8 @@ class RequestFormDuplicate extends RequestForm
                     return $typeIt->getId();
                 }
                 return '';
+            case 'Project':
+                return parent::getFieldValue( $attribute );
 			default:
                 $defaults = $this->duplicateMethod->getAttributesDefaults($this->source_it);
                 if ( array_key_exists($attribute, $defaults) ) {
@@ -67,16 +61,6 @@ class RequestFormDuplicate extends RequestForm
 		}
 		return array_merge(parent::getSourceIt(), $result);
 	}
-
-	function IsAttributeEditable($attribute)
-    {
-        switch( $attribute ) {
-            case 'Project':
-                return true;
-            default:
-                return parent::IsAttributeEditable($attribute);
-        }
-    }
 
     function process()
 	{
@@ -99,11 +83,13 @@ class RequestFormDuplicate extends RequestForm
                 $this->duplicateMethod->execute_request();
 				$this->redirectOnAdded($this->duplicateMethod->getResult());
 			}
+			return true;
 		}
 		catch( Exception $e ) {
 			$this->setRequiredAttributesWarning();
 			$this->setWarningMessage($e->getMessage());
 			$this->edit('');
+			return false;
 		}
 	}
 }

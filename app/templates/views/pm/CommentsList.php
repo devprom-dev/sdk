@@ -12,12 +12,12 @@
 
                 <? if ( $form->IsAttributeModifiable('Caption') ) { ?>
                     <? if ( $public_comment ) { ?>
-                        <a tabindex="5" class="btn btn-sm btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
-                            <i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
+                        <a tabindex="5" class="btn btn-sm btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '', '<?=$control_uid?>');">
+                            <i class="icon-comment icon-white"></i> <?=text(2477)?>
                         </a>
                     <? } ?>
                     <? if ( $private_comment ) { ?>
-                        &nbsp; <a tabindex="5" class="btn btn-sm btn-secondary" type="button" title="" onclick="showCommentForm('<?=$url . '&IsPrivate=Y'?>',$('#comments-form<?=$control_uid?>'), '', '');">
+                        &nbsp; <a tabindex="5" class="btn btn-sm btn-secondary" type="button" title="" onclick="showCommentForm('<?=$url . '&IsPrivate=Y'?>',$('#comments-form<?=$control_uid?>'), '', '', '<?=$control_uid?>');">
                             <i class="icon-comment icon-white"></i> <?=text(2804)?>
                         </a>
                     <? } ?>
@@ -55,7 +55,7 @@
 	var lastForm = $('#comments-form<?=$control_uid?>');
 	var lastFormContent = $(lastForm).html();
 
-	function showCommentForm( url, placeholder, comment_id, parent_id )
+	function showCommentForm( url, placeholder, comment_id, parent_id, control_uid )
 	{
 		formDestroy('<?=$form->getId()?>');
 
@@ -77,7 +77,8 @@
 			dataType: 'html',
 			data: { 
 				'comment': comment_id,
-				'prevcomment': parent_id
+				'prevcomment': parent_id,
+                'control-uid': control_uid
 			},
 			error: function( xhr ) {
 			},

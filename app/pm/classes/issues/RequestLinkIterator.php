@@ -11,8 +11,7 @@ class RequestLinkIterator extends OrderedIterator
 		
 		$target_it = $this->object->getAttributeObject('TargetRequest')->getRegistry()->Query(
 			array (
-                new FilterInPredicate($this->get('TargetRequest')),
-                new StateDurationPersister()
+                new FilterInPredicate($this->get('TargetRequest'))
 			)
 		);
 		$target_it = $target_it->getSpecifiedIt();

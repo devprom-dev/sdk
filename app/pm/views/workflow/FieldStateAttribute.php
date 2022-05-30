@@ -4,17 +4,11 @@ include "FormStateAttributeEmbedded.php";
 class FieldStateAttribute extends FieldForm
 {
  	private $object_it;
-
- 	private $state_it;
+ 	private $attributeObject;
  	
- 	function __construct ( $object_it )
- 	{
- 		$this->object_it = $object_it;
- 	}
- 	
- 	function setStateIt( $state_it )
- 	{
- 	    $this->state_it = $state_it;
+ 	function __construct ( $object_it, $attributeObject ) {
+        $this->object_it = $object_it;
+        $this->attributeObject = $attributeObject;
  	}
  	
  	function render( $view )
@@ -24,11 +18,8 @@ class FieldStateAttribute extends FieldForm
  	
  	function draw( $view = null )
  	{
- 		$state_class = $this->object_it instanceof IteratorBase 
- 			? get_class($this->object_it->object) : get_class($this->object_it);
- 		
 		$anchor = getFactory()->getObject( 'StateAttribute' );
-		$anchor->setAttributeType('State', 'REF_'.$state_class.'Id');
+        $anchor->setAttributeType('State', 'REF_'.$this->attributeObject->getStateClassName().'Id');
 		
 		if ( is_object($this->object_it) && $this->object_it instanceof IteratorBase ) {
             $anchorIt = $anchor->getRegistry()->Query(
@@ -44,6 +35,7 @@ class FieldStateAttribute extends FieldForm
 
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 			$form = new FormStateAttributeEmbedded( $anchorIt, 'State' );
+            $form->setAttributeObject($this->attributeObject);
 	 		$form->setReadonly( $this->readOnly() );
 	 		$form->draw( $view );
  		echo '</div>';

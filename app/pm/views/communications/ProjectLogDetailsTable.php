@@ -2,7 +2,7 @@
 include "ProjectLogDetailsList.php";
 include_once SERVER_ROOT_PATH . "pm/classes/communications/predicates/ChangeLogDocumentFilter.php";
 
-class ProjectLogDetailsTable extends PMPageTable
+class ProjectLogDetailsTable extends PMPageDetailsTable
 {
 	function getList() {
 		return new ProjectLogDetailsList( $this->getObject() );

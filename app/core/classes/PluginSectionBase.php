@@ -106,6 +106,10 @@ class PluginSectionBase
  	{
  	}
 
+    function interceptMethodTableGetNewActions( & $table, & $actions )
+    {
+    }
+
     function interceptMethodFormExtendModel( & $form )
     {
     }
@@ -143,4 +147,8 @@ class PluginSectionBase
  	function interceptMethodListSetupColumns( & $list )
  	{
  	}
+
+    function interceptMethodListGetRenderParms( $list )
+    {
+    }
 }

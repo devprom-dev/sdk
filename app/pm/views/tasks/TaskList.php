@@ -1,8 +1,6 @@
 <?php
-
 include_once "TaskProgressFrame.php";
 include_once "TaskBalanceFrame.php";
-include_once "FieldTaskPlanned.php";
 include_once SERVER_ROOT_PATH.'core/views/c_issue_type_view.php';
 include "TaskChart.php";
 include "TaskPlanFactChart.php";
@@ -10,9 +8,7 @@ include "TaskChartBurndown.php";
 
 class TaskList extends PMPageList
 {
- 	var $has_grouping, $free_states;
-	private $planned_field = null;
-    private $assigneeField = null;
+ 	private $has_grouping;
 
 	function buildRelatedDataCache()
 	{
@@ -32,17 +28,6 @@ class TaskList extends PMPageList
 		$this->request_it = count($ids) > 0 ? $request->getExact($ids) : $request->getEmptyIterator();
 
 		$this->has_grouping = $this->getGroup() != '';
-
-		$this->planned_field = new FieldTaskPlanned();
-		$this->getTable()->buildRelatedDataCache();
-
-        if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Assignee') ) {
-            $this->assigneeField = new FieldReferenceAttribute(
-                $this->getObject()->getEmptyIterator(),
-                'Assignee',
-                getFactory()->getObject('ProjectUser')
-            );
-        }
 	}
 
 	function extendModel()
@@ -80,16 +65,6 @@ class TaskList extends PMPageList
         return $fields;
     }
 
-    function IsNeedToSelect()
-	{
-		return true;
-	}
-	
-	function IsNeedToSelectRow( $object_it )
-	{
-		return true;
-	}
-	
 	function drawRefCell( $entity_it, $object_it, $attr )
 	{
 	    switch( $attr )
@@ -97,16 +72,6 @@ class TaskList extends PMPageList
 			case 'TaskType':
 				echo $object_it->get('TaskTypeDisplayName');
 				break;
-
-            case 'Assignee':
-                if ( is_object($this->assigneeField) ) {
-                    $this->assigneeField->setObjectIt($object_it);
-                    $this->assigneeField->draw($this->getRenderView());
-                }
-                else {
-                    parent::drawRefCell( $entity_it, $object_it, $attr );
-                }
-                break;
 
 			case 'ChangeRequest':
 				$states = array();
@@ -148,30 +113,27 @@ class TaskList extends PMPageList
 	
 	function drawCell( $object_it, $attr )
 	{
-		switch($attr)	
-		{
+		switch($attr) {
 			case 'Progress':
-				if ( $object_it->IsFinished() )
-				{
+				if ( $object_it->IsFinished() ) {
 					$frame = new TaskBalanceFrame( $object_it->get('Planned'), $object_it->get('Fact') );
 				}
-				else
-				{
+				else {
 					$frame = new TaskProgressFrame( $object_it->getProgress() );
 				}
 				$frame->draw();
 				break;
 
-			case 'Planned':
-				echo '<div style="margin-left:36px;">';
-					$this->planned_field->setObjectIt($object_it);
-					$this->planned_field->draw($this->getRenderView());
-				echo '</div>';
-				break;
-
 			case 'IssueTraces':
 				$this->getTable()->drawCell( $object_it, $attr );
 				break;
+
+            case 'IssueState':
+                echo $this->getRenderView()->render('pm/StateColumn.php', array (
+                    'stateIt' => $object_it->getRef('ChangeRequest')->getStateIt(),
+                    'terminal' => false
+                ));
+                break;
 
 			default:
 				parent::drawCell( $object_it, $attr );
@@ -237,5 +199,9 @@ class TaskList extends PMPageList
         }
 
         parent::render($view, $parms);
+    }
+
+    function drawTotal( $object_it, $attr ) {
+        parent::drawCell( $object_it, $attr );
     }
 }

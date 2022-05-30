@@ -22,8 +22,8 @@
       "mapping": [{"submitted":"New"},{"submitted":"Approved"},{"development":"Committed"},{"resolved":"Done"},{"submitted":"*"}]
     },
     "Iteration": {
-      "ReleaseNumber": "fields.System\\.IterationPath",
-      "readonly": "true"
+      "Caption": "fields.System\\.IterationPath",
+    "readonly": "true"
     },
     "ExternalId": {
       ".": "_links.self.href",
@@ -50,7 +50,7 @@
       "mapping": [{"planned":"New"},{"submitted":"Approved"},{"development":"Committed"},{"resolved":"Done"},{"planned":"*"}]
     },
     "Iteration": {
-      "ReleaseNumber": "fields.System\\.IterationPath"
+      "Caption": "fields.System\\.IterationPath"
     }
   }
 }]

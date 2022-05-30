@@ -24,15 +24,27 @@ class ProjectController extends PageController
         return new RedirectResponse('/pm/'.$project_it->get('CodeName'));
     }
 
-    public function whatsnewAction(Request $request) {
+    public function whatsnewAction(Request $request)
+    {
+        if ( $request->get('report') != '' ) {
+            $_REQUEST['report'] = $request->get('report');
+        }
         return $this->responsePage( new \WhatsNewPage() );
     }
 
-    public function listAction(Request $request) {
+    public function listAction(Request $request)
+    {
+        if ( $request->get('report') != '' ) {
+            $_REQUEST['report'] = $request->get('report');
+        }
         return $this->responsePage( new \ProjectDashboardPage() );
     }
 
-    public function roadmapAction(Request $request) {
+    public function roadmapAction(Request $request)
+    {
+        if ( $request->get('report') != '' ) {
+            $_REQUEST['report'] = $request->get('report');
+        }
         return $this->responsePage( new \DeliveryPage() );
     }
 }

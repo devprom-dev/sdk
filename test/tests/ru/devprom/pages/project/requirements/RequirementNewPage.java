@@ -373,7 +373,7 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 	}
 
 	public void clickTraceTab() {
-		clickTab("trace-source-attribute");
+		clickTab("trace");
 	}
 
     public void addSourseWish(Requirement recuirement) {

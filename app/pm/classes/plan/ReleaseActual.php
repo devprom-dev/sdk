@@ -12,10 +12,6 @@ class ReleaseActual extends Metaobject
         return new ReleaseIterator($this);
     }
 
-    function IsDictionary() {
-        return true;
-    }
-
     function getPage() {
         return getSession()->getApplicationUrl($this).'iterations?';
     }

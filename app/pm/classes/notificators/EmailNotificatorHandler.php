@@ -109,7 +109,7 @@ class EmailNotificatorHandler
 							'value' => $object_it->getRef($attribute)->getDisplayName(),
 							'was_value' => $prev_object_it->getRef($attribute)->getDisplayName(),
 							'type' => 'ref'
-					);
+					    );
 				}
 				else 
 				{
@@ -118,7 +118,7 @@ class EmailNotificatorHandler
 							'value' => $now_value,
 							'was_value' => $was_value,
 							'type' => $object_it->object->getAttributeType($attribute)
-					);
+					    );
 				}
 			}
 
@@ -130,7 +130,7 @@ class EmailNotificatorHandler
 							'name' => $attribute_title,
 							'value' => $object_it->getRef($attribute)->getDisplayName(),
 							'type' => 'ref'
-					);
+					    );
 				}
 				else
 				{
@@ -138,7 +138,7 @@ class EmailNotificatorHandler
 							'name' => $attribute_title,
 							'value' => $now_value,
 							'type' => $object_it->object->getAttributeType($attribute)
-					);
+					    );
 				}
 			}
 		}
@@ -225,25 +225,12 @@ class EmailNotificatorHandler
 	protected function isAttributeVisible( $attribute_name, $object_it, $action )
 	{
 		if ( $attribute_name == 'Caption' ) return false;
-		
+
+        $groups = $object_it->object->getAttributeGroups($attribute_name);
+        if ( in_array('skip-notification', $groups) ) return false;
+
 		switch ( $object_it->object->getClassName() )
 		{
-			case 'pm_Participant':
-				if ( $attribute_name == 'Salary' )
-				{
-					return false;
-				}
-				break;
-			
-			case 'pm_Task':
-                switch ( $attribute_name )
-                {
-                    case 'PercentComplete':
-                    case 'Fact':
-                        return false;
-                }
-				break;
-
 			case 'pm_Project':
 				switch ( $attribute_name )
 				{
@@ -261,8 +248,6 @@ class EmailNotificatorHandler
 			case 'pm_ChangeRequest':
                 switch ( $attribute_name )
                 {
-                    case 'Fact':
-                        return false;
                     default:
                         if ( $action == 'add' && $attribute_name == 'ExternalAuthor' && $object_it->get('ExternalAuthor') != '' ) {
                             return true;
@@ -274,7 +259,6 @@ class EmailNotificatorHandler
 		switch ( $attribute_name )
 		{
 			case 'Password':
-            case 'OrderNum':
                 return false;
 
             case 'State':
@@ -300,4 +284,8 @@ class EmailNotificatorHandler
 						$object_it->object->getAttributesByGroup('trace')
 				);
 	}
+
+	public function getEntityIt( $objectIt ) {
+	    return $objectIt;
+    }
 }

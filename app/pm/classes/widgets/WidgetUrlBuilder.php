@@ -39,8 +39,12 @@ class WidgetUrlBuilder
         }
 
         if ( $widgetIt->getId() != '' ) {
+            $ids = array_filter($ids, function($item) {
+                return $item > 0;
+            });
+
             return $widgetIt->getUrl(
-                        $idsKey . '=' . \TextUtils::buildIds($ids),
+                        $idsKey . '=' . (count($ids) < 1 ? '0' : \TextUtils::buildIds($ids)),
                         count($vpds) > 1 && is_object(self::$projectIt) ? self::$projectIt : $projectIt
                     );
         }

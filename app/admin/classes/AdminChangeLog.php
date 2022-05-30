@@ -1,5 +1,4 @@
 <?php
-
 include "AdminChangeLogIterator.php";
 include "persisters/AdminChangeLogPersister.php";
         
@@ -11,6 +10,8 @@ class AdminChangeLog extends Metaobject
 
 		$this->addAttribute( 'ChangeDate', 'DATE', translate('Дата'), false, false );
         $this->addPersister( new AdminChangeLogPersister() );
+        $this->setAttributeEditable( 'SystemUser', false );
+        $this->setAttributeType( 'Content', 'WYSIWYG' );
 
         $this->setSortDefault(
             array(

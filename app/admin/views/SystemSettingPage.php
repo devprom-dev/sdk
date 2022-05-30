@@ -6,12 +6,12 @@ class SettingsPage extends AdminPage
 {
 	var $settings_it;
 
-	function SettingsPage()
+	function __construct()
 	{
 		$settings = getFactory()->getObject('cms_SystemSettings');
 		$this->settings_it = $settings->getAll();
 
-		parent::Page();
+		parent::__construct();
 	}
 
 	function getTable()

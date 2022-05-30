@@ -27,7 +27,9 @@ class TasksReportTable extends PMPageTable
                 new ViewSubmmitedBeforeDateWebMethod(),
                 new FilterObjectMethod(
                     getFactory()->getObject('TaskType'), '', 'tasktype'
-                )
+                ),
+            	new FilterDateIntervalWebMethod(text(2334), 'spentafter'),
+           	new FilterDateIntervalWebMethod(text(2334), 'spentbefore')
             )
         );
     }
@@ -43,7 +45,8 @@ class TasksReportTable extends PMPageTable
                 new FilterSubmittedAfterPredicate($values['submittedon']),
                 new FilterSubmittedBeforePredicate($values['submittedbefore']),
                 new FilterAttributePredicate('TaskType', $values['tasktype']),
-                new FilterAttributePredicate('regionId', $values[REGION_REFNAME])
+                new FilterAttributePredicate('regionId', $values[REGION_REFNAME]),
+		new SpentTimeReportDatePredicate($values['spentafter'], $values['spentbefore'])
             )
         );
     }
@@ -52,11 +55,11 @@ class TasksReportTable extends PMPageTable
     {
         $values = parent::buildFilterValuesByDefault($filters);
 
-        if ( !array_key_exists('submittedon', $values) ) {
-            $values['submittedon'] = strftime('01.%m.%Y', strtotime(SystemDateTime::date('Y-m-d')));
+        if ( !array_key_exists('spentafter', $values) ) {
+            $values['spentafter'] = strftime('01.%m.%Y', strtotime(SystemDateTime::date('Y-m-d')));
         }
-        if ( !array_key_exists('submittedbefore', $values) ) {
-            $values['submittedbefore'] = strftime('%d.%m.%Y',
+        if ( !array_key_exists('spentbefore', $values) ) {
+            $values['spentbefore'] = strftime('%d.%m.%Y',
                 strtotime('-1 day',
                     strtotime('+1 month',
                         strtotime(SystemDateTime::date('Y-m-1')))));

@@ -8,13 +8,11 @@ class WorkerUserRegistry extends ObjectRegistrySQL
         $exactFilters = array_filter($filters, function($value) {
             return $value instanceof FilterInPredicate;
         });
-        $workerPredicate = new UserWorkerPredicate();
-        $workerPredicate->hasTasks(true);
-        return array_merge(
+       return array_merge(
             $filters,
             array (
                 count($exactFilters) > 0 || getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Participant'))
-                    ? $workerPredicate
+                    ? new UserWorkerPredicate()
                     : new FilterInPredicate(getSession()->getUserIt()->getId())
             )
         );

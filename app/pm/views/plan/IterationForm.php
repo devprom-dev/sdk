@@ -9,8 +9,8 @@ class IterationForm extends PMPageForm
     private $realValues = array();
     private $estimationStrategy = null;
 
-	function __construct() {
-		parent::__construct(getFactory()->getObject('Iteration'));
+	function __construct( $object ) {
+		parent::__construct($object);
         $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
         $this->estimationStrategy = $methodology_it->getIterationEstimationStrategy();
 	}
@@ -71,13 +71,13 @@ class IterationForm extends PMPageForm
 		switch($attribute)
         {
 			case 'ActualVelocity':
-                return $this->estimationStrategy->getReleaseVelocityText($this->getObjectIt());
-
+                return \TextUtils::stripAnyTags(
+                            $this->estimationStrategy->getReleaseVelocityText($this->getObjectIt())
+                        );
             case 'Capacity':
             case 'LeftDuration':
             case 'LeftVolume':
                 return $this->realValues[$attribute];
-
 			default:
 				return parent::getFieldValue($attribute);
 		}
@@ -87,8 +87,21 @@ class IterationForm extends PMPageForm
 	{
 		$value = parent::getDefaultValue( $attribute );
 		
-		switch($attribute)
-		{
+		switch($attribute) {
+            case 'Caption':
+                $registry = getFactory()->getObject('Iteration')->getRegistryBase();
+                $registry->setLimit(1);
+                $parms = array(
+                    new SortRecentNumberClause(),
+                    new SortAttributeClause('RecordCreated'),
+                    new FilterVpdPredicate()
+                );
+                $release = $this->getFieldValue('Version');
+                if ( $release != '' ) {
+                    $parms[] = new IterationReleasePredicate($release);
+                }
+                return max(intval($registry->Query($parms)->get('Caption')), 0) + 1;
+
 		    case 'Version':
 		    	if ( $value == '' && getSession()->getProjectIt()->getMethodologyIt()->HasReleases() )
 		    	{
@@ -106,7 +119,7 @@ class IterationForm extends PMPageForm
 				if ( $releaseId != '' ) {
 					return round(getFactory()->getObject('Release')->getExact($releaseId)->getVelocity(),0);
 				}
-				break;
+                return getSession()->getProjectIt()->getTeamVelocity();
 		    	
 		    case 'StartDate':
 		    	$predicates = array( new FilterVpdPredicate() );
@@ -178,6 +191,16 @@ class IterationForm extends PMPageForm
 				}
 				return parent::getFieldDescription( $name );
 
+            case 'StartDate':
+                $object_it = $this->getObjectIt();
+                if ( is_object($object_it) ) {
+                    $offset = $object_it->getStartOffsetDays();
+                    if ( $offset > 0 ) {
+                        return sprintf(text(3122), $object_it->getDateFormatted('EstimatedStartDate'), $offset);
+                    }
+                }
+                return parent::getFieldDescription( $name );
+
 			default:
 				return parent::getFieldDescription( $name );
 		}
@@ -186,7 +209,7 @@ class IterationForm extends PMPageForm
 	function createField( $attr )
 	{
 		$field = parent::createField( $attr );
-		
+
 		switch ( $attr )
 		{
 			case 'FinishDate':
@@ -253,14 +276,25 @@ class IterationForm extends PMPageForm
 
 	function getShortAttributes()
     {
+        if ( array_key_exists('attributesonly', $_REQUEST) ) return parent::getShortAttributes();
         return array_merge(
             array_filter(parent::getShortAttributes(), function( $value ) {
                 return $value != 'Project';
             }),
             array(
-                'StartDate', 'FinishDate', 'Version'
+                'StartDate', 'FinishDate', 'Version', 'ActualVelocity', 'LeftDuration', 'Capacity', 'LeftVolume'
             )
         );
+    }
+
+    function persist()
+    {
+        if ( $_REQUEST['InitialVelocity'] != '' ) {
+            $_REQUEST['InitialVelocity'] =
+                $this->estimationStrategy->convertToNumeric($_REQUEST['InitialVelocity']);
+        }
+
+        return parent::persist();
     }
 
     function drawScripts()
@@ -289,4 +323,4 @@ class IterationForm extends PMPageForm
 		<?php
 		}
 	}
-} 
+}

@@ -1,20 +1,12 @@
 <?php
-include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
 
-class ViewModifiedBeforeDateWebMethod extends FilterDateWebMethod
+class ViewModifiedBeforeDateWebMethod extends FilterDateIntervalWebMethod
 {
-    function getCaption()
-    {
-        return translate('Изменено до');
+    function getCaption() {
+        return translate('Изменено');
     }
 
-    function getStyle()
-    {
-        return 'width:100px;';
-    }
-
-    function getValueParm()
-    {
+    function getValueParm() {
         return 'modifiedbefore';
     }
 }

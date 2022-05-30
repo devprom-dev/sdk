@@ -9,7 +9,7 @@ class IssueAuthorRegistry extends ObjectRegistrySQL
 		$this->data[] = $data;
 	}
 
-	function getQueryClause()
+	function getQueryClause(array $parms)
     {
         $this->data = array();
 

@@ -25,7 +25,7 @@
 				</div>
 			<?php } ?>
 			<div class="row-fluid">
-			    <section id="menu-configurator" class="form-container" style="padding-right: 15px;">
+			    <section id="menu-configurator" style="padding-right: 15px;">
 					<table class="table table-bordered">
 						<tr>
 							<th width="30%">
@@ -68,7 +68,7 @@
 								    <section id="pages">	
 										<form class="filter">
 										    <div class="input-append" style="width:100%;">
-											<input id="appendedInput" class="span11" type="text" placeholder="<?=text(1810)?>"><span class="add-on"><i class="icon-search"></i></span>
+											<input id="appendedInput" class="span11" autocomplete="off" type="text" placeholder="<?=text(1810)?>"><span class="add-on"><i class="icon-search"></i></span>
 										    </div>
 										</form>
 										<div class="pages-content"></div>

@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/methods/ViewLogSubjectWebMethod.php";
 include "WhatsNewPageList.php";
 
 class WhatsNewPageTable extends PMPageTable
@@ -24,7 +25,8 @@ class WhatsNewPageTable extends PMPageTable
                 $this->buildStartFilter(),
                 $this->buildStateFilter(),
                 $this->buildActionsFilter(),
-                $this->buildEntityFilter()
+                $this->buildEntityFilter(),
+                new ViewLogSubjectWebMethod()
             )
         );
 	}
@@ -67,7 +69,8 @@ class WhatsNewPageTable extends PMPageTable
 			new ChangeLogStartFilter( $values['start'] ),
             new ChangeLogVisibilityFilter(),
             new FilterAttributeNotNullPredicate('Caption'),
-            new ChangeLogObjectFilter( $values['entities'] )
+            new ChangeLogObjectFilter( $values['entities'] ),
+			new ChangeLogParticipantFilter( $values['participant'] ),
 		);
 
 		if ( $values['state'] == 'new' ) {

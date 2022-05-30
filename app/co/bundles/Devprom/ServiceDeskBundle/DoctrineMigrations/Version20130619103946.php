@@ -2,7 +2,7 @@
 
 namespace Application\Migrations;
 
-use Doctrine\DBAL\Migrations\AbstractMigration,
+use Doctrine\Migrations\AbstractMigration,
     Doctrine\DBAL\Schema\Schema;
 
 /**
@@ -11,14 +11,14 @@ use Doctrine\DBAL\Migrations\AbstractMigration,
  */
 class Version20130619103946 extends AbstractMigration
 {
-    public function up(Schema $schema)
+    public function up(Schema $schema) : void
     {
         if (!$schema->getTable('cms_ExternalUser')->hasColumn('language')) {
             $this->addSql('ALTER TABLE cms_ExternalUser ADD language VARCHAR(3)');
         }
     }
 
-    public function down(Schema $schema)
+    public function down(Schema $schema) : void
     {
         $this->addSql('ALTER TABLE cms_ExternalUser DROP language');
     }

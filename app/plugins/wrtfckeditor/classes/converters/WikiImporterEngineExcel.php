@@ -1,4 +1,5 @@
 <?php
+use \PhpOffice\PhpSpreadsheet\IOFactory;
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/converters/WikiImporterEngine.php";
 
 class WikiImporterEngineExcel extends WikiImporterEngine
@@ -10,19 +11,23 @@ class WikiImporterEngineExcel extends WikiImporterEngine
         try {
             // detects type of the file
             $supportedFormat = false;
-            foreach (array('Excel2003XML','Excel2007','Excel5') as $type) {
-                $reader = PHPExcel_IOFactory::createReader($type);
-                if ($reader->canRead($filePath)) {
-                    $supportedFormat = true;
-                    break;
+            foreach (array('Xlsx','Xls','Xml','Ods','Csv') as $type) {
+                try {
+                    $reader = IOFactory::createReader($type);
+                    if ($reader->canRead($filePath)) {
+                        $supportedFormat = true;
+                        break;
+                    }
+                }
+                catch(\Exception $e) {
                 }
             }
             if ( !$supportedFormat ) return $content;
 
-            $objPHPExcel = PHPExcel_IOFactory::load($filePath);
+            $objPHPExcel = IOFactory::load($filePath);
             foreach( $objPHPExcel->getAllSheets() as $index => $sheet )
             {
-                $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'HTML');
+                $objWriter = IOFactory::createWriter($objPHPExcel, 'Html');
                 $objWriter->setSheetIndex($index);
 
                 ob_start();
@@ -38,7 +43,7 @@ class WikiImporterEngineExcel extends WikiImporterEngine
                 }
             }
         }
-        catch( Exception $e ) {
+        catch( \Exception $e ) {
             \Logger::getLogger('System')->error($e->getMessage().$e->getTraceAsString());
         }
 

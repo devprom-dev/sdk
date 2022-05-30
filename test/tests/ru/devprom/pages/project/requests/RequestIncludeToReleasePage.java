@@ -20,8 +20,8 @@ public class RequestIncludeToReleasePage extends PageBase {
 	}
 
    public boolean isFieldVisible(String fieldId){
-	   if (driver.findElements(By.xpath("//*[@name='"+fieldId+"']")).isEmpty()) return false;
-	   else return driver.findElement(By.xpath("//*[@name='"+fieldId+"']")).isDisplayed();
+	   if (driver.findElements(By.id(fieldId)).isEmpty()) return false;
+	   else return driver.findElement(By.id(fieldId)).isDisplayed();
    }
 	
    public boolean isFieldRequired(String fieldId){
@@ -30,7 +30,7 @@ public class RequestIncludeToReleasePage extends PageBase {
 	
    public void fillUserStringField(String fieldId, String text) throws Exception{
 	   if (!isFieldVisible(fieldId)) throw new Exception ("The field is not found or not visible");
-	   driver.findElement(By.xpath("//*[@name='"+fieldId+"']")).sendKeys(text);
+	   driver.findElement(By.id(fieldId)).sendKeys(text);
    }
 	
 	public RequestViewPage includeToRelease(String releaseNumber)

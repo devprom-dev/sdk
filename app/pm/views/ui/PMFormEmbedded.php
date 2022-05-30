@@ -11,18 +11,14 @@ class PMFormEmbedded extends FormEmbedded
         	
         $this->customtypes = array();
         $this->customkinds = array();
-        	
-        if ( is_object($object) && getFactory()->getObject('CustomizableObjectSet')->checkObject($object) )
-        {
+
+        if ( is_object($object) ) {
             $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($object);
-            
-            while ( !$it->end() )
-            {
+            while ( !$it->end() ) {
                 $this->customtypes[$it->get('ReferenceName')] = $it->getRef('AttributeType')->get('ReferenceName');
-                	
-                if ( $it->get('ObjectKind') != '' )
+                if ( $it->get('ObjectKind') != '' ) {
                     $this->customkinds[$it->get('ReferenceName')] = $it->get('ObjectKind');
-                	
+                }
                 $it->moveNext();
             }
         }
@@ -33,16 +29,12 @@ class PMFormEmbedded extends FormEmbedded
         switch ( $attr )
         {
             default:
-                foreach ( $this->customtypes as $refname => $type )
-                {
-                    if ( $attr == $refname && $type == 'dictionary' )
-                    {
+                foreach ( $this->customtypes as $refname => $type ) {
+                    if ( $attr == $refname && $type == 'dictionary' ) {
                         return new FieldCustomDictionary( $this->getObject(), $refname );
                     }
                 }
-                
-                if ( $this->getObject()->getAttributeType($attr) == 'wysiwyg')
-                {
+                if ( $this->getObject()->getAttributeType($attr) == 'wysiwyg') {
                     $field = new FieldWYSIWYG();
 
                     $object_it = $this->getObjectIt();
@@ -56,7 +48,6 @@ class PMFormEmbedded extends FormEmbedded
 
                     return $field;
                 }
-                
                 return parent::createField( $attr );
         }
     }

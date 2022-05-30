@@ -9,10 +9,8 @@ class ModelValidatorVelocity extends ModelValidatorInstance
         $this->strategy = $strategy;
     }
 
-	public function validate( Metaobject $object, array & $parms )
-	{
-	    if ( $parms['InitialVelocity'] == '' ) return "";
-        $parms['InitialVelocity'] = $this->strategy->convertToNumeric($parms['InitialVelocity']);
+	public function validate( Metaobject $object, array $parms ) {
+        if ( $parms['InitialVelocity'] == '' ) return '';
 		return !is_numeric($parms['InitialVelocity']) ? text(2514) . $this->strategy->getDimensionText('') : '';
 	}
 }

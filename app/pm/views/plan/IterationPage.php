@@ -26,13 +26,13 @@ class IterationPage extends PMPage
 
                 $object = $this->getFormRef()->getObject();
                 $stage = $this->getObject();
-				$this->addInfoSection( new PageSectionAttributes($object, 'tab-issues',$stage->getAttributeUserName('Issues')));
+				$this->addInfoSection( new PageSectionAttributes($object, 'tabissues',$stage->getAttributeUserName('Issues')));
 				if ( getSession()->IsRDD() ) {
-                    $this->addInfoSection( new PageSectionAttributes($object, 'tab-increments',$stage->getAttributeUserName('Increments')));
+                    $this->addInfoSection( new PageSectionAttributes($object, 'tabincrements',$stage->getAttributeUserName('Increments')));
                 }
-				$this->addInfoSection( new PageSectionAttributes($object,'tab-tasks',translate('Задачи')) );
+				$this->addInfoSection( new PageSectionAttributes($object,'tabtasks',translate('Задачи')) );
                 $this->addInfoSection( new PageSectionAttributes($object,'artefacts',translate('Документация')) );
-                $this->addInfoSection( new PageSectionComments($object_it) );
+                $this->addInfoSection( new PageSectionComments($object_it, $this->getCommentObject()) );
                 $this->addInfoSection( new PMLastChangesSection($object_it) );
 			}
 		}
@@ -43,10 +43,10 @@ class IterationPage extends PMPage
  	}
  	
  	function getTable() {
-		return new IterationTable( $this->getObject() );
+		return new IterationTable($this->getObject());
  	}
  	
  	function getEntityForm() {
-        return new IterationForm();
+        return new IterationForm($this->getObject());
  	}
 }

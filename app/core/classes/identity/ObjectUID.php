@@ -14,15 +14,17 @@ class ObjectUID
  	{
  		$this->setBaseline( $baseline_id );
 
- 		// free letters B J L N U W X Y Z
+ 		// free letters B J L N Y Z
  		$this->map = array(
  			'Request' => 'I',
             'Increment' => 'I',
             'Issue' => 'U',
  			'pm_Task' => 'T',
  			'Requirement' => 'R',
+            'RequirementDoc' => 'R',
  		    'ProjectPage' => 'K',
  		    'HelpPage' => 'D',
+ 			'HelpDoc' => 'D',
  			'pm_Test' => 'E',
 			'pm_TestCaseExecution' => 'E',
  			'pm_Artefact' => 'A',
@@ -31,13 +33,14 @@ class ObjectUID
             'TestPlan' => 'S',
  		    'pm_Project' => 'P',
  			'pm_Question' => 'Q',
- 			'BlogPost' => 'B',
  			'pm_Milestone' => 'M',
  			'pm_Function' => 'F',
  			'Comment' => 'O',
  			'pm_Meeting' => 'G',
  			'pm_SubversionRevision' => 'C',
-			'pm_ReviewRequest' => 'V'
+			'pm_ReviewRequest' => 'V',
+            'ReviewItem' => 'W',
+            'Component' => 'X'
  		);
  		
  		$this->server_url = EnvironmentSettings::getServerUrl().'/pm/';
@@ -176,7 +179,7 @@ class ObjectUID
  		return array_search(strtoupper($type), $this->map);
  	}
  	
- 	function getObjectIt( $uid, $parms = array() )
+ 	function getObjectIt( $uid )
  	{
  	    $objectIt = $this->checkUIDResolvers($uid);
  	    if ( is_object($objectIt) && $objectIt->getId() != '' ) {
@@ -202,13 +205,7 @@ class ObjectUID
             ));
 		}
 
-		return $object_id > 0
-			? $registry->Query(
-					array_merge(
-						$parms, array(new FilterInPredicate($object_id))
-					)
-				)
-			: $object->getEmptyIterator();
+		return $registry->QueryById($object_id);
  	}
 
  	function checkUIDResolvers( $uid ) {

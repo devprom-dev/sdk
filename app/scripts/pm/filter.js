@@ -34,7 +34,7 @@ var filterLocation = {
         for ( var key in this.parms )
         {
             if ( key == '' ) continue;
-            if ($.inArray(key,['viewmode','viewpages','treeoptions','show','hide','group','sort','sort2','sort3','sort4','infosections','color','rows']) >= 0) {
+            if ($.inArray(key,['viewmode','viewpages','treeoptions','show','hide','group','sort','sort2','sort3','sort4','infosections','color','rows','project']) >= 0) {
                 this.location = this.location.replace(new RegExp(key+'=[^\\&]*\\&?', 'i'), '');
                 continue;
             }
@@ -56,6 +56,12 @@ var filterLocation = {
         }
         window.location = this.location;
     },
+
+    filterActive: function( key ) {
+        var re = new RegExp('[\\?\\&]' + key + '=(?:(?!all)(?!hide)([^&]+))', 'gi');
+        return re.exec(this.location);
+    }
+    ,
 
     restoreColumns: function()
     {
@@ -468,7 +474,7 @@ var filterLocation = {
                     })
                 );
 
-                container.find('.row-fluid').fadeTo('fast', 1);
+                container.find('.filter-body').fadeTo('fast', 1);
             }, 1);
         });
     },

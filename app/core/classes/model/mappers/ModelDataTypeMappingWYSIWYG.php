@@ -7,7 +7,7 @@ class ModelDataTypeMappingWYSIWYG extends ModelDataTypeMapping
 		return in_array($type_name, array('wysiwyg'));
 	}
 	
-	public function map( $value ) {
+	public function map( $value, array $groups = array() ) {
 		return trim($value, " \r\n");
 	}
 }

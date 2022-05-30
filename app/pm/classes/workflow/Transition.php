@@ -4,10 +4,10 @@ include "predicates/TransitionObjectPredicate.php";
 include "predicates/TransitionStateClassPredicate.php";
 include "predicates/TransitionSourceStatePredicate.php";
 include "predicates/TransitionWasPredicate.php";
-include "sorts/TransitionSourceStateSort.php";
 include "sorts/TransitionTargetStateSort.php";
 include "predicates/TransitionStateRelatedPredicate.php";
 include "predicates/TransitionCyclicStatePredicate.php";
+include "predicates/TransitionAfterStatePredicate.php";
 
 class Transition extends Metaobject
 {

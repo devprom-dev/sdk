@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/methods/FilterStateTransitionMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/FilterStateMethod.php";
 include "QuestionList.php";
 
@@ -14,7 +13,6 @@ class QuestionTable extends PMPageTable
 	{
 		$filters = array(
 			$this->buildStateFilter(),
-			new FilterStateTransitionMethod( $this->getObject() ),
 			$this->buildTagsFilter(),
 			$this->buildAuthorFilter()
 		);
@@ -23,7 +21,7 @@ class QuestionTable extends PMPageTable
 	}
 
 	protected function buildAuthorFilter() {
-        $filter = new FilterObjectMethod(getFactory()->getObject('ProjectUser'), translate('Автор'), 'author');
+        $filter = new FilterObjectMethod(getFactory()->getObject('WorkerUser'), translate('Автор'), 'author');
         return $filter;
     }
 

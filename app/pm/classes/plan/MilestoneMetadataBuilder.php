@@ -12,7 +12,6 @@ class MilestoneMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Milestone' ) return;
 
         $metadata->setAttributeOrderNum('Caption', 1);
-        $metadata->setAttributeType('Description', 'WYSIWYG');
         $metadata->setAttributeVisible('CompleteResult', false);
 
     	$metadata->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', text(808), true );

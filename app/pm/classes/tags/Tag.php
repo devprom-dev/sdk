@@ -2,6 +2,7 @@
 include_once "TagBase.php";
 include "TagIterator.php";
 include "TagRegistry.php";
+include "predicates/WorkItemTagFilter.php";
 
 class Tag extends TagBase
 {

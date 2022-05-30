@@ -8,9 +8,7 @@ include_once "ModelDataTypeMappingFloat.php";
 include_once "ModelDataTypeMappingReference.php";
 include_once "ModelDataTypeMappingString.php";
 include_once "ModelDataTypeMappingWYSIWYG.php";
-include_once "ModelDataTypeMappingPassword.php";
 include_once "ModelDataTypeMappingFile.php";
-include_once "ModelDataTypeMappingPositives.php";
 
 class ModelDataTypeMapper
 {
@@ -27,7 +25,6 @@ class ModelDataTypeMapper
             new ModelDataTypeMappingFloat(),
             new ModelDataTypeMappingString(),
             new ModelDataTypeMappingWYSIWYG(),
-            new ModelDataTypeMappingPassword(),
             new ModelDataTypeMappingFile()
 		);
 	}
@@ -35,7 +32,6 @@ class ModelDataTypeMapper
 	public function map( Metaobject $object, & $values )
 	{
 		$skip_attributes = $object->getAttributesByGroup('skip-mapper');
-		$multiple_attributes = $object->getAttributesByGroup('multiselect');
 
         foreach ( $object->getPersisters() as $persister ) {
             $persister->map($values);
@@ -43,10 +39,12 @@ class ModelDataTypeMapper
 
 		foreach( $object->getAttributes() as $attribute => $attribute_data )
 		{
-			if ( !array_key_exists($attribute, $values) && !in_array($attribute, $multiple_attributes) ) continue;
-			if ( in_array($attribute, $skip_attributes) ) continue;
+            if ( in_array($attribute, $skip_attributes) ) continue;
+			if ( !array_key_exists($attribute, $values) ) continue;
 
-			$mapped_value = $this->getMapper($object->getAttributeType($attribute))->mapInstance($attribute, $values);
+			$mapped_value = $this->getMapper($object->getAttributeType($attribute))
+                ->mapInstance($attribute, $values, $object->getAttributeGroups($attribute));
+
 			if ( is_null($mapped_value) ) {
 				unset($values[$attribute]);
 			}
@@ -54,9 +52,6 @@ class ModelDataTypeMapper
 				$values[$attribute] = $mapped_value;
 			}
 		}
-
-        $mapper = new ModelDataTypeMappingPositives();
-        $mapper->mapInstance($values);
 	}
 	
 	public function getMapper( $type )

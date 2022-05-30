@@ -13,6 +13,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 	protected $limit = '';
     protected $offset = 0;
 	protected $default_sort = '';
+	protected $wrapSQL = false;
 
 	public function __construct( $object = null, array $persisters = null, array $filters = null, array $sorts = null, array $groups = null )
 	{
@@ -61,10 +62,6 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->sorts = $sorts;
 	}
 
-	public function addSort( $sort ) {
-		$this->sorts[] = $sort;
-	}
-	
 	public function getSorts() {
 		return $this->sorts;
 	}
@@ -84,73 +81,80 @@ class ObjectRegistrySQL extends ObjectRegistry
     public function getOffset() {
         return $this->offset;
     }
-	
-	public function setDefaultSort( $sort_clause ) {
-		$this->default_sort = $sort_clause;
-	}
-	
-	protected function setParameters( $parms )
-	{
-		$filters = array();
-		$sorts = array();
-		$persisters = array();
-		
-		foreach ( $parms as $parameter )
-		{
-			if ( is_a($parameter, 'FilterPredicate') ) $filters[] = $parameter; 
-			if ( is_a($parameter, 'SortClauseBase') ) $sorts[] = $parameter;
-			if ( is_a($parameter, 'ObjectSQLPersister') ) $persisters[] = $parameter;
-		}
-		
-		$this->setFilters($filters);
-		
-		if ( count($sorts) > 0 ) {
-			$this->setSorts($sorts);
-		}
-		else {
-			$this->setSorts($this->getObject()->getSortDefault());
-		}
 
-		if ( count($persisters) > 0 ) {
-			$this->setPersisters(array_merge($this->getPersisters(), $persisters));
-		}
-	}
+    protected function extractSorts( $parms ) {
+        return $this->extractByClass($parms, 'SortClauseBase');
+    }
+
+    protected function extractPredicates( $parms ) {
+        return $this->extractByClass($parms, 'FilterPredicate');
+    }
+
+    protected function extractPersisters( $parms ) {
+        return $this->extractByClass($parms, 'ObjectSQLPersister');
+    }
+
+    protected function extractByClass( $parms, $baseClass )
+    {
+        $items = array();
+        foreach( $parms as $parameter ) {
+            if ( is_a($parameter, $baseClass) ) $items[] = $parameter;
+        }
+        return $items;
+    }
+
+	function setWrapSQLMode( $value = true ) {
+	    $this->wrapSQL = $value;
+    }
 
     public function QueryById( $ids )
     {
-        $ids = \TextUtils::parseItems($ids);
+        $ids = \TextUtils::parseIds($ids);
         if ( count($ids) < 1 ) return $this->getObject()->getEmptyIterator();
 
-        if ( $this->getObject() instanceof MetaobjectCacheable ) {
-            return $this->getObject()->getExact($ids);
-        }
+        $filter = new FilterInPredicate($ids);
+        $filter->setAlias('t');
+        $filter->setObject( $this->getObject() );
 
-        return $this->Query( array(
-           new FilterInPredicate($ids)
-        ));
+        return $this->createSQLIterator(
+            "SELECT {$this->getSelectClause($this->extractPersisters(array()), 't')} 
+                  FROM {$this->getQueryClause(array())} t 
+                 WHERE 1 = 1 {$filter->getPredicate()}"
+        );
     }
 
 	public function Query( $parms = array() )
 	{
-	    if ( !is_array($parms) ) throw new Exception("parms should be array");
-		$this->setParameters( $parms );
-		return $this->getAll();
-	}
-	
-	public function getAll()
-	{
-        foreach( $this->getFilters() as $predicate ) {
+        if ( !is_array($parms) ) throw new Exception("parms should be array");
+
+        $filters = $this->extractPredicates($parms);
+        foreach( $filters as $predicate ) {
             if ( $predicate instanceof FilterEmptyPredicate ) return $this->getObject()->getEmptyIterator();
         }
 
-		$sql = 'SELECT '.$this->getSelectClause('t').' FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate();
+        $alias = 't';
+        if ( $this->wrapSQL ) {
+            $selectClause = $this->getSelectClause($this->extractPersisters($parms), $alias,false);
+            $fields = array($this->getObject()->getIdAttribute(), 'VPD');
+            foreach( $this->getObject()->getAttributesStored() as $attribute ) {
+                if ( preg_match('/\)\s*'.preg_quote($attribute).'\s*,/i', $selectClause) ) continue;
+                $fields[] = $alias . '.' . $attribute;
+            }
+            $fieldsClause = join(', ', $fields);
 
-		$group = $this->getGroupClause('t');
+            $sql = "SELECT t.* FROM ( SELECT {$fieldsClause}, {$selectClause} 
+                      FROM {$this->getQueryClause($parms)} {$alias} ) t";
+        }
+        else {
+            $sql = "SELECT {$this->getSelectClause($this->extractPersisters($parms), $alias)} 
+                      FROM {$this->getQueryClause($parms)} {$alias} ";
+        }
+        $sql .= " WHERE 1 = 1 {$this->getFilterPredicate($filters, $alias)} ";
 
+		$group = $this->getGroupClause($alias);
 		if ( $group != '' ) $sql .= ' GROUP BY '.$group;
-		
-		$sort = $this->getSortClause('t');
-		
+
+		$sort = $this->getSortClause($this->extractSorts($parms), $alias);
 		if ( $sort != '' ) $sql .= ' ORDER BY '.$sort;
 
 		$sql .= $this->getLimitClause();
@@ -158,15 +162,44 @@ class ObjectRegistrySQL extends ObjectRegistry
 
 		return $this->createSQLIterator($sql);
 	}
-	
+
+    public function QueryKeys( $parms = array(), $do_exec = true )
+    {
+        if ( !is_array($parms) ) throw new Exception("parms should be array");
+
+        $filters = $this->extractPredicates($parms);
+        foreach( $filters as $predicate ) {
+            if ( $predicate instanceof FilterEmptyPredicate ) {
+                return $this->getObject()->getEmptyIterator();
+            }
+        }
+
+        $sql = "SELECT t.{$this->getObject()->getIdAttribute()} FROM {$this->getQueryClause($parms)} t
+                 WHERE 1 = 1 {$this->getFilterPredicate($filters,'t')} ";
+
+        $sort = $this->getSortClause($this->extractSorts($parms), 't');
+        if ( $sort != '' ) $sql .= ' ORDER BY '.$sort;
+
+        $sql .= $this->getLimitClause();
+        $sql .= $this->getOffsetClause();
+
+        if ( $do_exec ) {
+            return $this->createSQLIterator($sql);
+        }
+        else {
+            return $sql;
+        }
+    }
+
 	public function Count( $parms = array() )
 	{
-		$this->setParameters( $parms );
-        foreach( $this->getFilters() as $predicate ) {
+		$filters = $this->extractPredicates($parms);
+        foreach( $filters as $predicate ) {
             if ( $predicate instanceof FilterEmptyPredicate ) return 0;
         }
 		return $this->createSQLIterator(
-				'SELECT COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()
+				"SELECT COUNT(1) cnt FROM {$this->getQueryClause($parms)} t 
+                          WHERE 1 = 1 {$this->getFilterPredicate($filters)}"
 			)->get('cnt');
 	}
 
@@ -175,12 +208,16 @@ class ObjectRegistrySQL extends ObjectRegistry
         if ( !preg_match('/[A-Za-z0-1_]/', $attribute) ) {
             return $this->getObject()->getEmptyIterator();
         }
-        $this->setParameters( $parms );
-        foreach( $this->getFilters() as $predicate ) {
+
+        $filters = $this->extractPredicates($parms);
+        foreach( $filters as $predicate ) {
             if ( $predicate instanceof FilterEmptyPredicate ) return 0;
         }
+
         return $this->createSQLIterator(
-            'SELECT t.'.$attribute.', COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()." GROUP BY ".$attribute
+            "SELECT t.{$attribute}, COUNT(1) cnt 
+                       FROM {$this->getQueryClause($parms)} t 
+                      WHERE 1 = 1 {$this->getFilterPredicate($filters)} GROUP BY {$attribute}"
             );
     }
 
@@ -211,11 +248,11 @@ class ObjectRegistrySQL extends ObjectRegistry
 	}
 	
 	// to be protected
-	public function getFilterPredicate( $alias = 't' )
+	public function getFilterPredicate( $filters = array(), $alias = 't' )
 	{
 		$predicate = '';
 
-		foreach( $this->getFilters() as $filter ) {
+		foreach( array_merge($this->getFilters(), $filters) as $filter ) {
 			$filter->setAlias($alias);
 			$filter->setObject( $this->getObject() );
 			$predicate .= $filter->getPredicate();
@@ -224,32 +261,27 @@ class ObjectRegistrySQL extends ObjectRegistry
 	}
 	
 	// to be protected
-	public function getQueryClause()
+	public function getQueryClause(array $parms)
 	{
 	    return $this->getObject()->getEntityRefName();
 	}
 	
 	// to be protected
-	public function getSelectClause( $alias, $select_all = true )
+	public function getSelectClause( $persisters = array(), $alias = 't', $select_all = true )
 	{
-		if( $select_all )
-		{
+		if( $select_all ) {
 			$select_columns = array( $alias != '' ? $alias.".*" : "*" );
 		}
-		else
-		{
+		else {
 			$select_columns = array();
 		}
 
-		foreach( $this->getPersisters() as $persister )
-		{
+		foreach( array_merge($this->getPersisters(), $persisters) as $persister ) {
 			$persister->setObject( $this->getObject() );
-			
 			if ( !is_a( $persister, 'ObjectSQLPersister') ) continue;
 			
 			$persister->setObject( $this->getObject() );
-			
-			$select_columns = array_merge( $select_columns, $persister->getSelectColumns( $alias )); 
+			$select_columns = array_merge( $select_columns, $persister->getSelectColumns( $alias ));
 		}
 		
 		return join(' , ', $select_columns);
@@ -260,34 +292,34 @@ class ObjectRegistrySQL extends ObjectRegistry
 	{
 		$items = array();
 		
-		foreach ( $this->getGroups() as $group )
-		{
+		foreach( $this->getGroups() as $group ) {
 			$group->setObject( $this->getObject() );
-			
 			$group->setAlias( $alias );
-			
 			$clause = $group->clause();
-			
-			if ( $clause != '' ) $items[] = $clause; 
+			if ( $clause != '' ) $items[] = $clause;
 		}
 		
 		return join($items, ', ');
 	}
 	
 	// to be protected
-	public function getSortClause( $alias = 't' )
+	public function getSortClause( $sorts, $alias = 't' )
 	{
 		$items = array();
-		
-		foreach ( $this->getSorts() as $sort )
-		{
+		$useSorts = array();
+        if ( count($sorts) > 0 ) {
+            $useSorts = array_merge($useSorts, $sorts);
+        }
+		if ( count($this->getSorts()) > 0 ) {
+            $useSorts = array_merge($useSorts, $this->getSorts());
+        }
+
+		foreach ( $useSorts as $sort ) {
 			$sort->setObject( $this->getObject() );
-			
 			$sort->setAlias( $alias );
 			
 			$clause = $sort->clause();
-			
-			if ( $clause != '' ) $items[] = $clause; 
+			if ( $clause != '' ) $items[] = $clause;
 		}
 		
 		return count($items) > 0 ? join($items, ', ') : $this->default_sort;
@@ -390,7 +422,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		}
 
 		getFactory()->resetCachedIterator($object);
-		$resultIt = $object->getExact($object_it->getId());
+		$resultIt = $this->getObject()->getExact($object_it->getId());
 
         if ( $object->getNotificationEnabled() ) {
             getFactory()->getEventsManager()->notify_object_modify($object_it->copy(), $resultIt, $data);
@@ -403,11 +435,7 @@ class ObjectRegistrySQL extends ObjectRegistry
     {
         $objectId = $this->getObject()->add_parms($data);
         if ( $objectId < 1 ) return $this->getObject()->getEmptyIterator();
-        return $this->Query(
-            array (
-                new FilterInPredicate($objectId)
-            )
-        );
+        return $this->QueryById($objectId);
     }
 
     public function Merge( array $data, array $alternativeKey = array() )

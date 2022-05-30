@@ -39,10 +39,10 @@ abstract class WikiConverterLibreOffice extends WikiIteratorExport
 
         foreach($options as $option) {
             if ( strpos($option, 'template=') !== false ) {
-                $templateId = array_pop(explode('=', $option));
-                $templatePath = \TextUtils::pathToUnixStyle(
-                    getFactory()->getObject('ExportTemplate')->getExact($templateId)->getFilePath('File')
-                );
+                $templateIt = getFactory()->getObject('ExportTemplate')
+                                ->getExact(array_pop(explode('=', $option)));
+                $templateId = $templateIt->getId();
+                $templatePath = \TextUtils::pathToUnixStyle($templateIt->getFilePath('File'));
             }
         }
 
@@ -60,7 +60,10 @@ abstract class WikiConverterLibreOffice extends WikiIteratorExport
         $info = pathinfo($this->htmlPath);
         $outputFilePath = $this->outputPath . $info['filename'] . $this->getExtension();
         if ( $templateId != '' ) {
-            $this->postProcessByTemplate($templatePath, $outputFilePath);
+            $this->postProcessByTemplate($templatePath, $outputFilePath, array(
+                'bullet' => $templateIt->getHtmlDecoded('BulletListTemplate'),
+                'numbered' => $templateIt->getHtmlDecoded('NumberedListTemplate')
+            ));
         }
 
         $this->getIterator()->moveFirst();
@@ -82,7 +85,7 @@ abstract class WikiConverterLibreOffice extends WikiIteratorExport
         return '';
     }
 
-    protected function postProcessByTemplate( $templatePath, $documentPath ) {
+    protected function postProcessByTemplate( $templatePath, $documentPath, $options = array() ) {
     }
 
     protected function parseContent( &$content )

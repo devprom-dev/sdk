@@ -281,27 +281,6 @@ class ReleaseIterator extends IterationDatesIterator
 		$this->storeMetrics();
 	}
 
-	function getStartDate()
-	{
-		return $this->getDateFormatted('StartDate');
-	}
-	
-	function getFinishDate()
-	{
-		return $this->getDateFormatted('FinishDate');
-	}
-	
-	function getIterationIt()
-	{
-		global $model_factory;
-		$ids = $this->idsToArray();
-		
-		$iteration = $model_factory->getObject('pm_Release');
-		$iteration->defaultsort = 'StartDate ASC';
-		
-		return $iteration->getInArray('Version', $ids);
-	}
-	
 	function IsCurrent()
 	{
         return $this->object->getRegistry()->Count(
@@ -323,7 +302,7 @@ class ReleaseIterator extends IterationDatesIterator
 	function IsFinished() 
 	{
 		return $this->object->createSQLIterator(
-		        " SELECT TO_DAYS(NOW()) - TO_DAYS('".$this->get('EstimatedFinishDate')."') Offset "
+		        " SELECT TO_DAYS(NOW()) - TO_DAYS('".$this->get('EstimatedFinishDate')."') `Offset` FROM dual"
             )->get('Offset') > 0;
 	}
 
@@ -367,12 +346,12 @@ class ReleaseIterator extends IterationDatesIterator
 	
 	function getDuration()
 	{
-	    return round($this->get('PlannedCapacity'), 0);
+	    return round($this->get('PlannedDurationInWorkingDays'), 0);
 	}
 
 	function getLeftDuration()
 	{
-	    return round($this->get('LeftCapacityInWorkingDays'), 0);
+	    return round($this->get('LeftDurationInWorkingDays'), 0);
 	}
 	
 	function getSpentDuration()

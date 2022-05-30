@@ -1,6 +1,7 @@
 <?php
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
+include_once SERVER_ROOT_PATH . "core/classes/project/persisters/ProjectGroupPersister.php";
 
 class ProjectIterator extends OrderedIterator
 {
@@ -23,12 +24,13 @@ class ProjectIterator extends OrderedIterator
 		return $this->get('IsTender') == 'Y' && $this->get('LinkedProject') != '';
 	}
 
+    function IsSubproject()
+    {
+        return $this->get('IsTender') != 'F' && $this->get('LinkedProject') != '';
+    }
+
 	function getParentIt()
     {
-        if ( !class_exists('ProjectLinksPersister') ) {
-            return $this->object->getEmptyIterator();
-        }
-
         $projectIt = $this->object->getRegistryBase()->Query(
             array (
                 new FilterInPredicate($this->getId()),
@@ -58,46 +60,16 @@ class ProjectIterator extends OrderedIterator
         return $portfolioIt;
     }
 
- 	function IsPublic()
- 	{
- 		return $this->get('IsProjectInfo') == 'Y';
- 	}
- 	 
  	function IsActive()
  	{
  		return $this->get('IsClosed') != 'Y';
  	}
  	
- 	function IsInRussian()
- 	{
- 		return $this->get('Language') == 1;
- 	}
- 	
- 	function IsInEnglish()
- 	{
- 		return $this->get('Language') == 2;
- 	}
-
  	function getLeadIt()
  	{
  		return getFactory()->getObject('pm_Participant')->getLeadTeam($this->getId());
  	}
  	
- 	function getVotedIt()
- 	{
- 		return getFactory()->getObject('co_Rating')->getVotedIt($this);
- 	}
-
- 	function getBlogId()
- 	{
- 		return $this->get('Blog');
- 	}
- 	
- 	function getBlogIt()
- 	{
- 		return $this->getRef('Blog');
- 	}
-
  	function getMethodologyIt()
  	{
  		if ( isset($this->methodology_it_cache[$this->getId()]) ) return $this->methodology_it_cache[$this->getId()];

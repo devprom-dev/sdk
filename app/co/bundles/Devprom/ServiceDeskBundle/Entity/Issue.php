@@ -41,7 +41,13 @@ class Issue extends BaseEntity {
     private $description;
 
     /**
-     * @ORM\Column(type="datetime", name="DeliveryDate")
+     * @ORM\Column(type="string", name="UID")
+     * @var string
+     */
+    private $uid;
+
+    /**
+     * @ORM\Column(type="datetime", name="EstimatedFinishDate")
      * @var DateTime
      */
     private $deliveryDate;
@@ -163,6 +169,18 @@ class Issue extends BaseEntity {
      * @var integer
      */
     protected $orderNum;
+
+    /**
+     * @ORM\Column(type="integer", name="Feedback")
+     * @var integer
+     */
+    private $feedback;
+
+    /**
+     * @ORM\Column(type="string", name="FeedbackText")
+     * @var string
+     */
+    private $feedbackText;
 
     function __construct()
     {
@@ -292,6 +310,22 @@ class Issue extends BaseEntity {
     public function getDescription()
     {
         return $this->description;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setUid($value)
+    {
+        $this->uid = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUid()
+    {
+        return $this->uid;
     }
 
     /**
@@ -542,5 +576,33 @@ class Issue extends BaseEntity {
                 )
             )
         )->toArray();
+    }
+
+    /**
+     * @return integer
+     */
+    public function getFeedback() {
+        return $this->feedback;
+    }
+
+    /**
+     * @param integer $value
+     */
+    public function setFeedback( $value ) {
+        $this->feedback = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFeedbackText() {
+        return $this->feedbackText;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setFeedbackText( $value ) {
+        $this->feedbackText = $value;
     }
 }

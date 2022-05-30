@@ -35,24 +35,48 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
  	function add( $object_it ) 
 	{
 		$this->modified_attributes = array();
-		
-		$this->process( $object_it, 'added' );
+		$this->process($object_it, $object_it, 'added');
 	}
 
  	function modify( $prev_object_it, $object_it ) 
 	{
+        $changeLogRegistry = (new Metaobject('ObjectChangeLog'))->getRegistry();
+        $changeLogRegistry->setLimit(1);
+        $logIt = $changeLogRegistry->Query(
+            array(
+                new FilterAttributePredicate('ObjectId', $object_it->getId()),
+                new FilterAttributePredicate('EntityRefName', $object_it->object->getEntityRefName()),
+                new FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
+                new FilterCreatedSinceSecondsPredicate(60),
+                new SortRecentClause()
+            )
+        );
+        $parms = array();
+        if ( $logIt->getId() != '' && $logIt->get('ChangeKind') == 'modified' ) {
+            $data = \JsonWrapper::decode($logIt->getHtmlDecoded('ObjectUrl'));
+            if ( is_array($data) && count($data) > 0 ) {
+                $prev_object_it = $prev_object_it->object->createCachedIterator(array($data));
+                $parms = array_map(
+                    function( $row ) {
+                        return html_entity_decode($row);
+                    }, $logIt->getData()
+                );
+            }
+        }
+        if ( count($parms) < 1 ) {
+            $parms['ObjectUrl'] = \JsonWrapper::encode($prev_object_it->getData());
+        }
+
 		list($content, $this->modified_attributes) = $this->getContent( $prev_object_it, $object_it );
 
-		$content != '' 
-			? $this->process( $object_it, 'modified', $content, $this->default_visibility )
-			: $this->process( $object_it, 'modified', $content, CHLN_VISIBILITY_HIDDEN );
+        $this->process($object_it, $prev_object_it, 'modified',
+            $content, $content != '' ? $this->default_visibility : CHLN_VISIBILITY_HIDDEN, '', $parms);
 	}
 
  	function delete( $object_it ) 
 	{
 		$this->modified_attributes = array();
-		
-		$this->process( $object_it, 'deleted' );
+		$this->process($object_it, $object_it, 'deleted');
 	}
 	
 	function getContent( $prev_object_it, $object_it )
@@ -81,25 +105,31 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 
 	protected function getValue( $objectIt, $attribute )
     {
-        if ( $objectIt->object->getAttributeType($attribute) == 'date' ) {
-            return $objectIt->getDateFormattedShort($attribute);
-        }
-        elseif ( $objectIt->object->getAttributeType($attribute) == 'datetime' ) {
-            return getSession()->getLanguage()->getDateTimeFormatted($objectIt->get($attribute));
-        }
-        elseif ( $objectIt->object->IsReference($attribute) ) {
-            return html_entity_decode($objectIt->getRef($attribute)->getDisplayName());
-        }
-        elseif ( $objectIt->object->getAttributeType($attribute) == 'wysiwyg' ) {
-            return $objectIt->getHtmlDecoded($attribute);
-        }
-        else {
-            $value = $objectIt->get($attribute);
+        switch( $objectIt->object->getAttributeType($attribute) )
+        {
+            case 'date':
+                return $objectIt->getDateFormattedShort($attribute);
+            case 'datetime':
+                return getSession()->getLanguage()->getDateTimeFormatted($objectIt->get($attribute));
+            case 'wysiwyg':
+                return $objectIt->getHtmlDecoded($attribute);
+            case 'float':
+                return getSession()->getLanguage()->formatFloatValue(
+                    $objectIt->get($attribute),
+                    $objectIt->object->getAttributeGroups($attribute)
+                );
+            default:
+                if ( $objectIt->object->IsReference($attribute) && $objectIt->get($attribute) != '' ) {
+                    return $objectIt->getRef($attribute)->getDisplayName();
+                }
+                else {
+                    $value = $objectIt->get($attribute);
 
-            if ( $value == 'Y' ) $value = translate('Да');
-            if ( $value == 'N' ) $value = translate('Нет');
+                    if ( $value == 'Y' ) $value = translate('Да');
+                    if ( $value == 'N' ) $value = translate('Нет');
 
-            return $value;
+                    return $value;
+                }
         }
     }
 
@@ -108,51 +138,62 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
         return $nowValue;
     }
 
-	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())
+	function process($object_it, $prev_object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())
 	{
 		if( !$this->is_active($object_it) ) return;
+        $change_log = getFactory()->getObject('ObjectChangeLog');
+        $change_log->setVpdContext( $object_it );
+        $changeRegistry = new ObjectRegistrySQL($change_log);
 
-		$userIt = getSession()->getUserIt();
+        $userIt = getSession()->getUserIt();
         $userId = $userIt->getId();
 
-		$change_log = getFactory()->getObject('ObjectChangeLog');
-		$change_log->setVpdContext( $object_it );
+        $parms['ChangeKind'] = $kind;
+        $parms['Author'] = $author_email != '' ? $author_email : ($userId < 1 ? $userIt->getHtmlDecoded('Caption') : '');
+        $parms['Content'] = $content;
+        $parms['VisibilityLevel'] = $visibility;
+        $parms['SystemUser'] = $userId;
 
-		$title = '';
-		$uid = new ObjectUID;
-		if ( $uid->hasUid( $object_it ) ) {
-			$title .= $uid->getUidOnly( $object_it );
-		}
-		$title .= html_entity_decode( $object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING );
+		if ( $parms['ObjectChangeLogId'] != '' ) {
+		    unset($parms['RecordModified']);
+            unset($parms['RecordVersion']);
+            unset($parms['Transaction']);
 
-		$class_name = strtolower(get_class($object_it->object));
-		$parms['Caption'] = $title;
-		$parms['ObjectId'] = $object_it->getId();
-		$parms['ClassName'] = $class_name == 'metaobject' ? $object_it->object->getClassName() : $class_name;
-		$parms['EntityRefName'] = $object_it->object->getEntityRefName();
-		$parms['EntityName'] = translate($object_it->object->getDisplayName());
-		$parms['ChangeKind'] = $kind;
-		$parms['Author'] = $author_email != '' ? $author_email : ($userId < 1 ? $userIt->getHtmlDecoded('Caption') : '');
-		$parms['Content'] = $content;
-		$parms['VisibilityLevel'] = $visibility;
-		$parms['SystemUser'] = $userId;
-        $parms['UserName'] = $userIt->getHtmlDecoded('Caption');
-        if ( $object_it->get('VPD') != '' ) $parms['VPD'] = $object_it->get('VPD');
-		if ( $parms['AccessClassName'] == '' ) $parms['AccessClassName'] = $parms['ClassName'];
+            $changeRegistry->Store($changeRegistry->QueryById($parms['ObjectChangeLogId']), $parms);
+            $id = $parms['ObjectChangeLogId'];
+        }
+		else {
+            $title = '';
+            $uid = new ObjectUID;
+            if ( $uid->hasUid( $object_it ) ) {
+                $title .= $uid->getUidOnly( $object_it );
+            }
+            $title .= html_entity_decode( $object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING );
 
-		$id = $change_log->add_parms($parms);
-		
+            $class_name = strtolower(get_class($object_it->object));
+            $parms['Caption'] = $title;
+            $parms['ObjectId'] = $object_it->getId();
+            $parms['ClassName'] = $class_name == 'metaobject' ? $object_it->object->getClassName() : $class_name;
+            $parms['EntityRefName'] = $object_it->object->getEntityRefName();
+            $parms['EntityName'] = translate($object_it->object->getDisplayName());
+            $parms['UserName'] = $userIt->getHtmlDecoded('Caption');
+            if ( $object_it->get('VPD') != '' ) $parms['VPD'] = $object_it->get('VPD');
+            if ( $parms['AccessClassName'] == '' ) $parms['AccessClassName'] = $parms['ClassName'];
+
+            $id = $changeRegistry->Create($parms)->getId();
+        }
+
 		$log_attribute = getFactory()->getObject('ObjectChangeLogAttribute');
         $log_attribute->setNotificationEnabled(false);
-		foreach( $this->modified_attributes as $attribute )
-		{
+        $attributeRegistry = $log_attribute->getRegistry();
+		foreach( $this->modified_attributes as $attribute ) {
 		    if ( in_array($attribute, array('RecordModified','RecordCreated')) ) continue;
-			$log_attribute->add_parms(
+            $attributeRegistry->Merge(
                 array (
                     'ObjectChangeLogId' => $id,
                     'Attributes' => $attribute
                 )
-			);
+            );
 		}
 	}
 	

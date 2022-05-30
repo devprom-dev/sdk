@@ -30,7 +30,7 @@ include('c_iterator.php');
 	
 	function hasAttribute( $name )
 	{
-		return array_key_exists($name, $this->attributes);
+		return $name != '' && array_key_exists($name, $this->attributes);
 	}
 	
  	function addAttribute( $ref_name, $type, $caption, $b_visible = true, $b_stored = false, $description = '', $ordernum = 999 )
@@ -141,7 +141,9 @@ include('c_iterator.php');
 	
 	function getAttributeGroups( $name )
 	{
-		return $this->attributes[$name]['groups'];
+		return is_array($this->attributes[$name]['groups'])
+            ? $this->attributes[$name]['groups']
+            : array();
 	}
 	
 	function getAttributesByGroup( $group )
@@ -168,7 +170,7 @@ include('c_iterator.php');
 
 	 function getAttributeByCaption( $caption ) {
 		 $attributes = array_filter( $this->attributes, function($value) use ($caption) {
-			 return $value['caption'] == $caption;
+			 return mb_strtolower($value['caption']) == mb_strtolower($caption);
 		 });
 		 return array_shift(array_keys($attributes));
 	 }
@@ -179,6 +181,32 @@ include('c_iterator.php');
 		 });
 		 return array_keys($attributes);
 	 }
+
+     function getAttributesEditable() {
+         $attributes = array_filter( $this->attributes, function($value) {
+             return $value['editable'] === true;
+         });
+         return array_keys($attributes);
+     }
+
+     function getAttributesReadonly() {
+         $attributes = array_filter( $this->attributes, function($value) {
+             return $value['editable'] === false;
+         });
+         return array_keys($attributes);
+     }
+
+     function getAttributesByEntity( $entityReferenceName )
+     {
+         $attributes = array();
+         foreach( $this->attributes as $attribute => $data ) {
+             if ( !$this->IsReference($attribute) ) continue;
+             $attributeObject = $this->getAttributeObject($attribute);
+             if ( $attributeObject->getEntityRefName() != $entityReferenceName) continue;
+             $attributes[] = $attribute;
+         }
+         return $attributes;
+     }
 
  	//----------------------------------------------------------------------------------------------------------
 	function getAttributeOrigin( $name ) 
@@ -313,6 +341,15 @@ include('c_iterator.php');
 		return $this->attributes;
 	}
 
+     function getAttributesOrdered()
+     {
+         $attributes = $this->attributes;
+         uasort($attributes, function($left, $right) {
+             return $left['ordernum'] > $right['ordernum'] ? 1 : -1;
+         });
+         return array_keys($attributes);
+     }
+
     function getAttributesVisible()
 	{
 		 return array_keys(
@@ -335,6 +372,18 @@ include('c_iterator.php');
              )
          );
     }
+
+     function getAttributesStored()
+     {
+         return array_keys(
+             array_filter(
+                 $this->attributes,
+                 function($attribute) {
+                     return $attribute['stored'];
+                 }
+             )
+         );
+     }
 
  	function setAttributes( $attributes )
 	{

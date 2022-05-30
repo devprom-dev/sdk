@@ -6,13 +6,13 @@
  *
  * @depends: js-cookie or jquery-cookie
  *
- * Copyright (c) 2008-2020, Martin Wendt (https://wwWendt.de)
+ * Copyright (c) 2008-2021, Martin Wendt (https://wwWendt.de)
  *
  * Released under the MIT license
  * https://github.com/mar10/fancytree/wiki/LicenseInfo
  *
- * @version 2.35.0
- * @date 2020-03-27T22:41:58Z
+ * @version 2.38.0
+ * @date 2021-02-09T20:03:49Z
  */
 
 (function(factory) {
@@ -35,37 +35,48 @@
 	 * Private functions and variables
 	 */
 	var cookieStore = null,
-		localStorageStore = window.localStorage
-			? {
-					get: function(key) {
-						return window.localStorage.getItem(key);
-					},
-					set: function(key, value) {
-						window.localStorage.setItem(key, value);
-					},
-					remove: function(key) {
-						window.localStorage.removeItem(key);
-					},
-			  }
-			: null,
-		sessionStorageStore = window.sessionStorage
-			? {
-					get: function(key) {
-						return window.sessionStorage.getItem(key);
-					},
-					set: function(key, value) {
-						window.sessionStorage.setItem(key, value);
-					},
-					remove: function(key) {
-						window.sessionStorage.removeItem(key);
-					},
-			  }
-			: null,
+		localStorageStore = null,
+		sessionStorageStore = null,
 		_assert = $.ui.fancytree.assert,
 		ACTIVE = "active",
 		EXPANDED = "expanded",
 		FOCUS = "focus",
 		SELECTED = "selected";
+
+	// Accessing window.xxxStorage may raise security exceptions (see #1022)
+	try {
+		_assert(window.localStorage && window.localStorage.getItem);
+		localStorageStore = {
+			get: function(key) {
+				return window.localStorage.getItem(key);
+			},
+			set: function(key, value) {
+				window.localStorage.setItem(key, value);
+			},
+			remove: function(key) {
+				window.localStorage.removeItem(key);
+			},
+		};
+	} catch (e) {
+		$.ui.fancytree.warn("Could not access window.localStorage", e);
+	}
+
+	try {
+		_assert(window.sessionStorage && window.sessionStorage.getItem);
+		sessionStorageStore = {
+			get: function(key) {
+				return window.sessionStorage.getItem(key);
+			},
+			set: function(key, value) {
+				window.sessionStorage.setItem(key, value);
+			},
+			remove: function(key) {
+				window.sessionStorage.removeItem(key);
+			},
+		};
+	} catch (e) {
+		$.ui.fancytree.warn("Could not access window.sessionStorage", e);
+	}
 
 	if (typeof Cookies === "function") {
 		// Assume https://github.com/js-cookie/js-cookie
@@ -212,7 +223,7 @@
 	 */
 	$.ui.fancytree.registerExtension({
 		name: "persist",
-		version: "2.35.0",
+		version: "2.38.0",
 		// Default options for this extension.
 		options: {
 			cookieDelimiter: "~",

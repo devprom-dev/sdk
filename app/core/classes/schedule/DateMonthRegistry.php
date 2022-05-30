@@ -2,7 +2,7 @@
 
 class DateMonthRegistry extends ObjectRegistrySQL
 {
-	public function getAll()
+	public function Query($parms = array())
 	{
  		$this->items = array();
  		
@@ -21,7 +21,7 @@ class DateMonthRegistry extends ObjectRegistrySQL
  		
  		foreach ( array_keys($this->items) as $key )
  		{
-			$this->items[$key]['entityId'] = $key + 1;
+			$this->items[$key]['entityId'] = strval($key + 1);
  			$this->items[$key]['Caption'] = translate($this->items[$key]['Caption']); 
  		}
  		

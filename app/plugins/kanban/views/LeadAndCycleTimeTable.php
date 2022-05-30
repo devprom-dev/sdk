@@ -58,7 +58,7 @@ class LeadAndCycleTimeTable extends PMPageTable
 
     protected function buildFilterOwner() {
         return new FilterObjectMethod(
-            getFactory()->getObject('ProjectUser'),
+            getFactory()->getObject('WorkerUser'),
             translate($this->getObject()->getAttributeUserName('Owner')),
             'owner'
         );

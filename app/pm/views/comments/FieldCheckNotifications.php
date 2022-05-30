@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH . "pm/classes/model/validators/ModelNotificationValidator.php";
 
 class FieldCheckNotifications extends FieldCheck
 {
@@ -34,8 +33,4 @@ class FieldCheckNotifications extends FieldCheck
             }
         }
  	}
-
- 	function getValidator() {
-        return new ModelNotificationValidator();
-    }
 }

@@ -66,13 +66,13 @@ public class SearchTest extends ProjectTestBase {
 		SearchResultItem foundRequirement = null;
 		SearchResultItem foundTask = null;
 		for (SearchResultItem item:results){
-			if (item.getId().equals(testRequest.getId())){
+			if (item.getId().contains(testRequest.getId())){
 				foundRequest = item;
 			}
-            if (item.getId().equals(testRequirement.getId())){
+            if (item.getId().contains(testRequirement.getId())){
             	foundRequirement = item;
             }
-            if (item.getId().equals(testTask.getId())){
+            if (item.getId().contains(testTask.getId())){
             	foundTask = item;
 			}
 		}
@@ -96,10 +96,10 @@ public class SearchTest extends ProjectTestBase {
 		foundRequest = null;
 		foundRequirement = null;
 		for (SearchResultItem item:results){
-			if (item.getId().equals(testRequest.getId())){
+			if (item.getId().contains(testRequest.getId())){
 				foundRequest = item;
 			}
-			if (item.getId().equals(testRequirement.getId())){
+			if (item.getId().contains(testRequirement.getId())){
 				foundRequirement = item;
 			}
 		}

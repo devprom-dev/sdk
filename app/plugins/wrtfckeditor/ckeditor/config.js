@@ -11,7 +11,7 @@ CKEDITOR.editorConfig = function( config ) {
 	// For the complete reference:
 	// http://docs.ckeditor.com/#!/api/CKEDITOR.config
 
-    config.extraPlugins = 'tableresize2,undo,includepage,imagemulti,linkex,embedhtml,plantuml,texttemplates,searchartifacts,includeartifacts,productivity' + devpromOpts.extraPlugins;
+    config.extraPlugins = 'clipboard,toolbar,tableresize2,undo,includepage,imagemulti,linkex,embedhtml,plantuml,diagrams,texttemplates,searchartifacts,includeartifacts,productivity' + devpromOpts.extraPlugins;
     config.embed_provider = '//ckeditor.iframe.ly/api/oembed?url={url}&callback={callback}';
     config.autoEmbed_widget = 'customEmbed';
 	config.allowedContent = true;
@@ -32,4 +32,5 @@ CKEDITOR.editorConfig = function( config ) {
 	config.codeSnippet_languages = {ones:"1C",apache:"Apache",bash:"Bash",coffeescript:"CoffeeScript",cpp:"C++",cs:"C#",css:"CSS",diff:"Diff",html:"HTML",http:"HTTP",ini:"INI",java:"Java",javascript:"JavaScript",json:"JSON",lua:"Lua",makefile:"Makefile",markdown:"Markdown",nginx:"Nginx",objectivec:"Objective-C",perl:"Perl",php:"PHP",python:"Python",ruby:"Ruby",sql:"SQL",vbscript:"VBScript",xhtml:"XHTML",xml:"XML"};
     config.codeSnippet_theme = 'github';
 	config.undoStackSize = 35;
+	config.skin = 'moono-lisa'
 };

@@ -6,7 +6,7 @@ class TransitionReasonTypeRegistry extends ObjectRegistrySQL
 	const Visible = 'I';
 	const Required = 'Y';
 
-	public function getAll()
+	public function Query($parms = array())
 	{
 		return $this->createIterator(
 		    array (

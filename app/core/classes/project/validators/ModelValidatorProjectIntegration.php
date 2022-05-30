@@ -3,7 +3,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorInsta
 
 class ModelValidatorProjectIntegration extends ModelValidatorInstance
 {
-	public function validate( Metaobject $object, array & $parms )
+	public function validate( Metaobject $object, array $parms )
 	{
 	    if ( $parms['DemoData'] != 'I' ) return '';
 	    if ( !class_exists(getFactory()->getClass('IntegrationTracker')) ) return '';

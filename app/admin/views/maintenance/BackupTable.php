@@ -1,11 +1,9 @@
 <?php
-
-include ('BackupList.php');
+include 'BackupList.php';
 
 class BackupTable extends PageTable
 {
-	function getList()
-	{
+	function getList() {
 		return new BackupList( $this->object );
 	}
 
@@ -13,8 +11,7 @@ class BackupTable extends PageTable
 	{
 	}
 	
-	function getActions()
-	{
+	function getActions() {
 		return array();
 	}
 	
@@ -27,11 +24,15 @@ class BackupTable extends PageTable
 			),
 			array()
 		);
-		
+
 		return $actions;
 	}
 
 	function getCaption() {
         return translate('Резервные копии');
+    }
+
+    function getSortDefault($sort_parm = 'sort') {
+        return 'RecordCreated.D';
     }
 }

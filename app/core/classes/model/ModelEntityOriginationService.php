@@ -142,6 +142,10 @@ class ModelEntityOriginationService
 			case 'ObjectChangeLogAttribute':
             case 'ObjectChangeNotification':
             case 'pm_AttributeValue':
+            case 'pm_FinancingType':
+            case 'co_WebhookLog':
+            case 'co_ProjectGroup':
+            case 'pm_Searchable':
 				return '';
 				
 			default:

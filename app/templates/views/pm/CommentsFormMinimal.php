@@ -1,3 +1,7 @@
+<?php if ( $warning != '' ) { ?>
+    <div class="alert alert-error form_warning"><?=$warning?></div>
+<?php } ?>
+
 <?php foreach( $attributes as $key => $attribute ) { if ( $attribute['visible'] ) continue; ?>
     <input id="<?=$attribute['id']?>" type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>">
 <?php

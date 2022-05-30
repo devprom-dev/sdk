@@ -8,19 +8,18 @@ class MethodologyIterator extends OrderedIterator
         $this->setObject( new Methodology() );
     }
 
- 	function HasTasks()
- 	{
+ 	function HasTasks() {
  		return $this->get('IsTasks') == 'Y';
  	}
  	
- 	function HasPlanning()
- 	{
+ 	function HasPlanning() {
  		return $this->get('IsPlanningUsed') == 'Y';
  	}
+
+    function UsePlanningByTasks() {
+        return $this->get('IsTasks') == 'Y' && $this->get('TaskEstimationUsed') == 'Y';
+    }
  	
-	function UserInProject() {
-		return $this->get('IsUserInProject') == 'Y';
-	}
 	function HasFixedRelease() {
 		return $this->get('IsFixedRelease') == 'Y';
 	}

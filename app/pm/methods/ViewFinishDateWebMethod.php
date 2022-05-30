@@ -9,10 +9,6 @@ class ViewFinishDateWebMethod extends FilterDateWebMethod
         $this->setCaption(translate($title));
     }
 
-    function getStyle() {
-        return 'width:100px;';
-    }
-
     function getValueParm() {
         return 'finish';
     }

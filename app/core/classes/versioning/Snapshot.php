@@ -20,16 +20,25 @@ class Snapshot extends Metaobject
 	{
 		return translate('Версия');
 	}
-	
+
+    function getDefaultAttributeValue( $attr )
+    {
+        switch( $attr )
+        {
+            case 'SystemUser':
+                return getSession()->getUserIt()->getId();
+            default:
+                return parent::getDefaultAttributeValue( $attr );
+        }
+    }
+
 	/*
 	 * makes a snapshot with caption $caption of $items of class $classname,
 	 * adds values with reference names in $attributes array 
 	 */
-	function freeze( $snapshot_id, $classname, $items, $attributes )
+	function freeze( $snapshot_id, $anchor, $items, $attributes )
 	{
 		// get records to be snapshot items
-		$anchor = getFactory()->getObject($classname);
-		
 	 	if ( $anchor instanceof WikiPage && count($items) == 1 )
  		{
  			$anchor_it = $anchor->getRegistry()->Query( array (
@@ -50,7 +59,8 @@ class Snapshot extends Metaobject
 			$item_id = $snapshotitem->add_parms( array ( 
 					'Snapshot' => $snapshot_id,
 					'ObjectId' => $anchor_it->getId(),
-					'ObjectClass' => $classname 
+					'DataHash' => $anchor_it->get('DataHash'),
+					'ObjectClass' => get_class($anchor)
 			));
 
 			// freeze values of each item

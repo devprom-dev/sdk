@@ -21,7 +21,7 @@ class FlotChartBurndownWidget extends FlotChartWidget
 		if ( $sectionMode ) {
 			?>
 			<script type="text/javascript">
-                bindTabHandler('burndownsection', function () {
+                bindTabHandler('burndownsection', $("#<?=$chart_id?>"), function () {
                     $("#<?=$chart_id?>").css({
                         width: '100%',
                         height: $(window).height() * 0.5

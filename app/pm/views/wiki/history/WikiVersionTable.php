@@ -71,7 +71,7 @@ class WikiVersionTable extends PMPageTable
     }
 
     function getSortAttributeClause($field) {
-        return new SortReverseKeyClause();
+        return new SortKeyClause('DESC');
     }
 
     function getRenderParms( $parms )

@@ -1,7 +1,8 @@
 <?php
 include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
-include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
+include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorEmbeddedForm.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
 
 class TransitionStateMethod extends WebMethod
 {
@@ -158,8 +159,6 @@ class TransitionStateMethod extends WebMethod
 
  	function execute( $transition_id, $object_id, $class, $required = array(), $doEvents = true )
  	{
- 		getSession()->addBuilder( new WorkflowModelBuilder() );
- 		
  		$object = getFactory()->getObject($class);
 		$object_it = $object->getExact( $object_id );
         $this->setObjectIt($object_it);
@@ -182,22 +181,21 @@ class TransitionStateMethod extends WebMethod
 		}
 
         $required['WasRecordVersion'] = $object_it->get('RecordVersion');
-		$object_it->object->modify_parms($object_it->getId(), $required);
 
-        if ( $doEvents ) {
-            getFactory()->getEventsManager()->
-                executeEventsAfterBusinessTransaction(
-                    $object_it->object->getExact($object_it->getId()),
-                    'WorklfowMovementEventHandler',
-                    $required
-                );
+        $model_builder = new WorkflowTransitionAttributesModelBuilder(
+            $transition_it,
+            array_merge(
+                $object_it->getData(), $_REQUEST
+            )
+        );
+        $model_builder->build($object_it->object);
+        $validators = array();
+
+		if ( $_REQUEST['form'] == 'TaskForm' ) {
+            $object_it->object->setAttributeEditable('Fact', false);
+            $validators[] = new ModelValidatorEmbeddedForm('Fact');
         }
+
+        getFactory()->modifyEntity($object_it, array_merge($_REQUEST, $required), $validators);
     }
- }
- 
- 
- ///////////////////////////////////////////////////////////////////////////////////////
-
- ///////////////////////////////////////////////////////////////////////////////////////
-
-
+}

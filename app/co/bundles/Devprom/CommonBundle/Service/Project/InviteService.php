@@ -168,7 +168,7 @@ class InviteService
             array (
                 'Participant' => $participant_it->getId(),
                 'ProjectRole' => $role_it->getId(),
-                'Capacity' => '1',
+                'Capacity' => '8',
                 'Project' => $project_it->getId(),
                 'VPD' => $project_it->get('VPD')
             ),

@@ -30,7 +30,7 @@ class WysiwygTwigExtention extends \Twig_Extension
                 $html = array();
                 while( !$objectIt->end() ) {
                     $parser = new \WrtfCKEditorSupportParser($objectIt->copy(), $container->get('router'));
-                    $html[] = '<br/><h4>'.$objectIt->getHtmlDecoded('Caption').'</h4>';
+                    $html[] = '<br/><h4 id="'.$objectIt->getId().'">'.$objectIt->getHtmlDecoded('Caption').'</h4>';
 
                     $filesHtml = array();
                     $fileIt = $fileRegistry->Query(

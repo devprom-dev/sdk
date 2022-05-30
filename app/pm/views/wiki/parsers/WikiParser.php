@@ -2,7 +2,7 @@
 use Devprom\ProjectBundle\Service\Wiki\WikiBaselineService;
 define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9{])\[?([A-Z]{1}-[0-9]+)/mi' );
 define( 'REGEX_INCLUDE_PAGE', '/\{\{([^}]+)\}\}/si' );
-define( 'REGEX_INCLUDE_REVISION', '/\{\{([^}]+):([\d-]+)\}\}/si' );
+define( 'REGEX_INCLUDE_REVISION', '/\{\{([^:]+):([\d-]+)\}\}/si' );
 define( 'REGEX_UPDATE_UID', '/(http|https):\/\/[^\/]+\/pm\/[^\/]+\/[A-Z]{1}-[0-9]+/i' );
 
 class WikiParser
@@ -19,7 +19,7 @@ class WikiParser
 	private $display_hints = false;
     private $maxIncludePageDepth = 4;
     private $includePageDepth = 0;
-    private $inlineSectionNumbering = false;
+    private $inlineSectionNumbering = true;
  	
 	function __construct( $wiki_it )
 	{
@@ -285,21 +285,15 @@ class WikiParser
 			}
 		}
 
-		if ( is_subclass_of($file_object_it->object, 'BlogPost') )
+        if ( is_subclass_of($file_object_it->object, 'WikiPage') )
 		{
-			$wiki_file = $model_factory->getObject('BlogPostFile');
-			$wiki_file->addFilter( new BlogPostFilePostFilter($file_object_it->getId()) );
-			$field_name = 'ContentExt';
-		}
-		else if ( is_subclass_of($file_object_it->object, 'WikiPage') )
-		{
-			$wiki_file = $model_factory->getObject('WikiPageFile');
+			$wiki_file = getFactory()->getObject('WikiPageFile');
 			$wiki_file->addFilter( new FilterAttributePredicate('WikiPage', $file_object_it->getId()) );
 			$field_name = 'ContentExt';
 		}
 		else
 		{
-			$wiki_file = $model_factory->getObject('pm_Attachment');
+			$wiki_file = getFactory()->getObject('pm_Attachment');
 			$wiki_file->addFilter( new AttachmentObjectPredicate($file_object_it) );
 			$field_name = 'FileExt';
 		}
@@ -310,7 +304,7 @@ class WikiParser
 		if ( $it->count() < 1 )
 		{
 			// try to get temporary stored filed (ajaxed file upload)
-			$temp = $model_factory->getObject('cms_TempFile');
+			$temp = getFactory()->getObject('cms_TempFile');
 			$temp->addSort( new SortRecentClause() );
 			
 			$it = $temp->getByRef('LCASE(FileName)', strtolower(trim($parts[count($parts) - 1])) );
@@ -339,14 +333,6 @@ class WikiParser
 				
 				break;
 				
-			case 'BlogPost':
-				$file_class = 'BlogPostFile';
-				$file_attribute = 'ContentExt';
-				
-			    $predicates[] = new BlogPostFilePostFilter($object_it->getId());
-				
-				break;
-
 			default:
 				$file_class = 'pm_Attachment';
 				$file_attribute = 'FileExt';
@@ -588,15 +574,14 @@ class WikiParser
         }
 
         $count = 0;
-        $content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $object_it->getHtmlDecoded($contentAttribute), -1, $count);
+        $content = preg_replace_callback(REGEX_INCLUDE_PAGE,
+                    array($this, 'parseIncludePageCallback'),
+                        $this->parse($object_it->getHtmlDecoded($contentAttribute)), -1, $count);
 
         if ( $object_it->object instanceof WikiPage )
         {
             $containerIt = $this->getObjectIt();
-            $registry = new WikiPageRegistryContent($object_it->object);
-
-            $registry->setPersisters(array());
-            $pageIt = $registry->Query(
+            $pageIt = (new WikiPageRegistryContent($object_it->object))->Query(
                 array(
                     $object_it->object instanceof \TestScenario
                         ? new FilterInPredicate($object_it->getId())
@@ -629,7 +614,7 @@ class WikiParser
                     $baselineIt = $baselineService->getComparableBaselineIt($object_it->getRef('DocumentId'), $traceIt->get('Baseline'));
 
                     $compareToPageIt = $baselineService->getComparedPageIt($object_it, $baselineIt);
-                    $baselineContent = $compareToPageIt->getHtmlDecoded('Content');
+                    $baselineContent = $this->parse($compareToPageIt->getHtmlDecoded('Content'));
 
                     $pageIt->moveFirst();
                     while ( !$pageIt->end() ) {
@@ -674,7 +659,7 @@ class WikiParser
         $content .= preg_replace_callback(
                         REGEX_INCLUDE_PAGE,
                         array($this, 'parseIncludePageCallback'),
-                        $pageIt->getHtmlDecoded($contentAttribute),
+                        $this->parse($pageIt->getHtmlDecoded($contentAttribute)),
                         -1,
                         $itemCount
                     );
@@ -806,7 +791,7 @@ class WikiParser
         if ( preg_match('/\/plantuml\/img\//', $match[1], $result) )
 		{
 			$url_components = parse_url($match[1]);
-			$server_components = defined('PLANTUML_SERVER_URL') ? parse_url(PLANTUML_SERVER_URL) : parse_url('http://plantuml.com');
+			$server_components = parse_url(EnvironmentSettings::getPlantUMLServer());
 
 			$url_components['scheme'] = $server_components['scheme'];
 			$url_components['host'] = $server_components['host'];

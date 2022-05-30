@@ -18,12 +18,9 @@ class FunctionsPage extends PMPage
  		{
  		    if ( $this->getFormRef() instanceof FunctionForm ) {
                 $this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'hierarchy', translate('Декомпозиция')));
-                $this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'additional', translate('Дополнительно')));
-                $this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'trace', translate('Трассировки')));
-
                 $object_it = $this->getObjectIt();
                 if( is_object($object_it) && $object_it->getId() > 0 ) {
-                    $this->addInfoSection( new PageSectionComments($object_it) );
+                    $this->addInfoSection( new PageSectionComments($object_it, $this->getCommentObject()) );
                     $this->addInfoSection( new PMLastChangesSection ( $object_it ) );
                     $this->addInfoSection( new NetworkSection($object_it) );
                 }
@@ -42,7 +39,9 @@ class FunctionsPage extends PMPage
  	function getEntityForm()
  	{
  	    if ( $_REQUEST['BindIssue'] != '' ) {
-            return new FunctionSearchIssueForm( $this->getObject() );
+ 	        $object = $this->getObject();
+            $object->resetAttributeGroup('Request', 'trace');
+            return new FunctionSearchIssueForm($object);
         }
         else {
             return new FunctionForm( $this->getObject() );
@@ -59,15 +58,33 @@ class FunctionsPage extends PMPage
 
     function buildExportIterator( $object, $ids, $iteratorClassName, $queryParms )
     {
-        $registry = $object->getRegistry();
-        return $registry->Query(
+        $iterator = $object->getRegistry()->Query(
             array_merge(
                 array(
                     new ParentTransitiveFilter($ids),
-                    new SortFeatureHierarchyClause()
+                    new SortObjectHierarchyClause()
                 ),
                 $queryParms
             )
         );
+
+        if ( is_subclass_of($iteratorClassName, 'WikiIteratorExport') ) {
+            $data = array();
+            while( !$iterator->end() ) {
+                $data[] = array(
+                    'WikiPageId' => $iterator->getId(),
+                    'Caption' => $iterator->getDisplayName(),
+                    'Content' => $iterator->getHtmlDecoded('Description'),
+                    'ContentEditor' => getSession()->getProjectIt()->get('WikiEditorClass'),
+                    'UID' => 'F-' . $iterator->getId(),
+                    'IsNoIdentity' => 'N',
+                    ''
+                );
+                $iterator->moveNext();
+            }
+            return getFactory()->getObject('WikiPage')->createCachedIterator($data);
+        }
+
+        return $iterator;
     }
 }

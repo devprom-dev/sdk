@@ -7,9 +7,9 @@ class CustomAttributeObjectPredicate extends FilterPredicate
  	    if ( !$filter instanceof IteratorBase ) return " AND 1 = 2 ";
  	    if ( !is_numeric($filter->getId()) ) return " AND 1 = 2 ";
 
- 	    if ( $filter->object->getEntityRefName() == 'pm_ChangeRequest' ) {
+ 	    if ( $filter->object instanceof Request || $filter->object instanceof Increment ) {
             $classNames = array(
-                'Request', 'Issue', 'Increment'
+                'Request', 'Increment'
             );
         }
  	    else {
@@ -17,9 +17,10 @@ class CustomAttributeObjectPredicate extends FilterPredicate
  	            get_class($filter->object)
             );
         }
+        $idsParm = join(',',$filter->idsToArray());
  		return " AND t.EntityReferenceName IN ('".join("','", $classNames)."') 
  		         AND EXISTS (SELECT 1 FROM pm_AttributeValue av 
- 		                      WHERE av.ObjectId = ".$filter->getId()."
+ 		                      WHERE av.ObjectId IN ({$idsParm})
  		                        AND av.CustomAttribute = t.pm_CustomAttributeId) ";
 	}
 }

@@ -1,19 +1,19 @@
 <?php
-
 namespace Devprom\ServiceDeskBundle\Controller;
-
+use Composer\Installer\PackageEvent;
 use Devprom\ServiceDeskBundle\Entity\IssueComment;
 use Devprom\ServiceDeskBundle\Service\IssueAttachmentService;
 use Devprom\ServiceDeskBundle\Service\IssueService;
 use Devprom\ServiceDeskBundle\Util\TextUtil;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Devprom\ServiceDeskBundle\Entity\Issue;
+use Devprom\ServiceDeskBundle\Form\Type\IssueFormType;
+use Devprom\ServiceDeskBundle\Form\Type\IssueFeedbackFormType;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
-use Devprom\ServiceDeskBundle\Entity\Issue;
-use Devprom\ServiceDeskBundle\Form\Type\IssueFormType;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Issue controller.
@@ -39,14 +39,15 @@ class IssueController extends Controller
 
     	$issue = new Issue();
         $form = $this->createForm( IssueFormType::class, $issue, array(
-                'vpds' => $vpds,
-                'user' => $this->getUser(),
-                'allowAttachment' => true
-            ));
+                    'vpds' => $vpds,
+                    'user' => $this->getUser(),
+                    'allowAttachment' => true,
+                    'allow_extra_fields' => true
+                ));
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->getIssueService()->saveIssue($issue, $this->getUser());
+            $this->getIssueService()->saveIssue($issue, $this->getUser(), $request->request->all());
             if ($issue->getNewAttachment()) {
                 $this->getAttachmentService()->save($issue->getNewAttachment(), $issue);
             }
@@ -188,7 +189,7 @@ class IssueController extends Controller
 
         $editForm = $this->createForm( IssueFormType::class, $issue, array(
                 'method' => 'put',
-                'vpds' => $this->getProjectVpds(),
+                'vpds' => array($issue->getVpd()),
                 'user' => $this->getUser(),
                 'allowAttachment' => false
             ));
@@ -196,18 +197,67 @@ class IssueController extends Controller
         $editForm->handleRequest($request);
 
         if ($editForm->isValid()) {
-            $this->getIssueService()->saveIssue($issue, $this->getUser());
+            $this->getIssueService()->saveIssue($issue, $this->getUser(), $request->request->all());
             return $this->redirect($this->generateUrl('issue_show', array('id' => $id)));
         }
         else {
             $this->get('logger')->err((string) $editForm->getErrors(true, false));
             throw new \LogicException('Form is not valid.');
         }
+    }
 
-        return array(
+    /**
+     * Displays a form to edit an existing Issue entity.
+     *
+     * @Route("/issue/{id}/feedback/{estimation}", name="issue_feedback")
+     * @Method("GET")
+     * @Template()
+     */
+    public function feedbackAction($id, $estimation = 5)
+    {
+        if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
+
+        $issue = $this->getIssueService()->getIssueById($id);
+        if (!$issue) {
+            throw new \LogicException('Unable to find Issue entity.');
+        }
+
+        $this->checkUserIsAuthorized($issue);
+        $issue->setFeedback($estimation);
+
+        $editForm = $this->createForm(IssueFeedbackFormType::class, $issue, array());
+        $this->getIssueService()->clearNotifications($issue, $this->getUser());
+
+        return $this->render('Issue/feedback.html.twig', array(
             'issue' => $issue,
-            'form' => $editForm->createView(),
-        );
+            'edit_form' => $editForm->createView(),
+        ));
+    }
+
+    /**
+     * Displays a form to edit an existing Issue entity.
+     *
+     * @Route("/issue/{id}/feedback", name="issue_feedback_put")
+     * @Method("PUT")
+     * @Template()
+     */
+    public function feedbackStoreAction(Request $request, $id)
+    {
+        if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
+
+        $issue = $this->getIssueService()->getIssueById($id);
+        if (!$issue) {
+            throw new \LogicException('Unable to find Issue entity.');
+        }
+        $this->checkUserIsAuthorized($issue);
+
+        $editForm = $this->createForm(IssueFeedbackFormType::class, $issue, array(
+                'method' => 'put'
+            ));
+        $editForm->handleRequest($request);
+        $this->getIssueService()->updateIssue($issue, $this->getUser(), array());
+
+        return $this->redirect($this->generateUrl('issue_show', array('id' => $id)));
     }
 
     /**
@@ -247,21 +297,23 @@ class IssueController extends Controller
      * @Method("GET")
      * @Template()
      */
-    public function indexAction($filter, $state, $sortColumn, $sortDirection)
+    public function indexAction(Request $request, $filter, $state, $sortColumn, $sortDirection)
     {
     	if ( !is_object($this->getUser()) ) throw $this->createAccessDeniedException();
 
         $company = $this->getUser()->getCompany();
+        $page = $request->query->getInt('page', 1);
+
     	if ( $filter == 'my' || (is_object($company) && $company->getSeeCompanyIssues() != 'Y') )
     	{
-	        $issues = $this->getIssueService()->getIssuesByAuthor(
-	            $this->getUser()->getEmail(), $sortColumn, $sortDirection, $state
+	        list($issues, $pagesCount) = $this->getIssueService()->getIssuesByAuthor(
+	            $this->getUser()->getEmail(), $sortColumn, $sortDirection, $state, $page
 	        );
     	}
     	else
     	{
-	        $issues = $this->getIssueService()->getIssuesByCompany(
-	            $this->getUser()->getEmail(), $sortColumn, $sortDirection, $state
+            list($issues, $pagesCount) = $this->getIssueService()->getIssuesByCompany(
+	            $this->getUser()->getEmail(), $sortColumn, $sortDirection, $state, $page
 	        );
     	}
 
@@ -270,7 +322,9 @@ class IssueController extends Controller
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
             'issuesFilter' => $filter,
-            'state' => $state
+            'state' => $state,
+            'pagesCount' => $pagesCount,
+            'page' => $page
         ));
     }
 
@@ -279,7 +333,6 @@ class IssueController extends Controller
      *
      * @Route("/products", name="select_product")
      * @Method("GET")
-     * @Template("DevpromServiceDeskBundle:Issue:product.html.twig")
      */
     public function productAction()
     {
@@ -292,9 +345,9 @@ class IssueController extends Controller
                 array('importance' => 'ASC', 'name' => 'ASC')
             );
 
-        return array(
+        return $this->render('Issue/product.html.twig', array(
             'projects' => $projects
-        );
+        ));
     }
 
     protected function getProjectVpds()
@@ -302,7 +355,7 @@ class IssueController extends Controller
     	$customer_vpds = array();
     	if ( is_object($this->getUser()) && $this->getUser()->getCompany() ) {
 	    	foreach($this->getUser()->getCompany()->getProjects() as $project_ref) {
-	    		$customer_vpds[] = $project_ref->getProject()->getVpd();
+                $customer_vpds[] = $project_ref->getProject()->getVpd();
 	    	}
     	}
         if ( count($customer_vpds) > 0 ) return $customer_vpds;
@@ -344,11 +397,20 @@ class IssueController extends Controller
     protected function checkUserIsAuthorized(Issue $issue)
     {
         if (!is_object($this->getUser())) throw new HttpException(403);
-        if (!is_object($issue->getCustomer())) throw new HttpException(403);
 
-        if ($issue->getCustomer()->getEmail() == $this->getUser()->getEmail()) return;
+        $authorEmail = '';
+        if (is_object($issue->getCustomer())) {
+            $authorEmail = $issue->getCustomer()->getEmail();
+        }
+        else if(is_object($issue->getAuthor())) {
+            $authorEmail = $issue->getAuthor()->getEmail();
+        }
+        if ( $authorEmail == '' ) throw new HttpException(403);
+
+        if ($authorEmail == $this->getUser()->getEmail()) return;
+
         $service = $this->container->get('user_service');
-        if ( $service->isCollegues($issue->getCustomer()->getEmail(), $this->getUser()->getEmail()) ) return;
+        if ( $service->isCollegues($authorEmail, $this->getUser()->getEmail()) ) return;
         
         throw new HttpException(403);
     }

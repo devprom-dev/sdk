@@ -56,7 +56,7 @@ class DeliveryChartTable extends PMPageTable
 		$method = new FilterObjectMethod( getFactory()->getObject('DeliveryProduct'), translate('Детализация'), 'type');
 		$method->setIdFieldName( 'ReferenceName' );
 		$method->setHasNone(false);
-        $method->setDefaultValue('Feature');
+        $method->setDefaultValue('Feature,Request,Featurefeature');
 		return $method;
 	}
 	
@@ -98,7 +98,8 @@ class DeliveryChartTable extends PMPageTable
     protected function getFamilyModules( $module )
     {
         return array (
-            'project-plan-hierarchy'
+            'project-plan-hierarchy',
+            'features-list'
         );
     }
 

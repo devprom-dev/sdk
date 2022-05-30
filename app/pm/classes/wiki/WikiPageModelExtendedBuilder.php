@@ -31,9 +31,11 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
 		$object->addPersister( new WatchersPersister(array('Watchers')) );
 
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
+        $object->addAttributeGroup('RecentComment', 'non-form');
 		$object->addPersister( new CommentRecentPersister() );
 
-        $object->addAttribute('UsedBy', 'REF_PMWikiPageId', text(2154), true, false, text(2155), 205);
+        $className = get_class($object);
+        $object->addAttribute('UsedBy', "REF_{$className}Id", text(2154), true, false, text(2155), 205);
         $object->setAttributeEditable('UsedBy', false);
         $object->addAttributeGroup('UsedBy', 'trace');
         $object->addAttributeGroup('UsedBy', 'trace-reuse');

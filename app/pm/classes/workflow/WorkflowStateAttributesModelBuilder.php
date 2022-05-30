@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 
 class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder 
@@ -18,6 +17,7 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
     	if ( ! $object instanceof MetaobjectStatable ) return;
  	    if ( $object->getStateClassName() == '' ) return;
         $visibleAttributes = array();
+        $skipAttributes = $object->getAttributesByGroup('system');
 
  	    if ( count($this->attributes) > 0 )
  	    {
@@ -36,19 +36,18 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 			}
  	    }
 
-		// use attributes settings for the first state
-		$firstStateAttributeIt = WorkflowScheme::Instance()->getStateAttributeIt($object);
 		// apply attributes settings for the given state
-        $stateAttributeIt = WorkflowScheme::Instance()->getStateAttributeIt($object, $this->state_it->get('ReferenceName'));
+        $attribute_it = WorkflowScheme::Instance()->getStateAttributeIt(
+            $object, $this->state_it->get('ReferenceName'));
 
-        $attribute_it = $firstStateAttributeIt->object->createCachedIterator(
-            array_values(array_merge(
-                $firstStateAttributeIt->getRowset(), $stateAttributeIt->getRowset()
-            ))
-        );
 		while( !$attribute_it->end() )
 		{
-			$object->setAttributeRequired( 
+            if ( in_array($attribute_it->get('ReferenceName'), $skipAttributes) ) {
+                $attribute_it->moveNext();
+                continue;
+            }
+
+			$object->setAttributeRequired(
 					$attribute_it->get('ReferenceName'), $attribute_it->get('IsRequired') == 'Y' 
 				);
 			$object->setAttributeVisible(
@@ -61,21 +60,18 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
                 );
             }
             if ( $attribute_it->get('IsVisible') == 'Y' ) {
-                $visibleAttributes[] = $attribute_it->get('ReferenceName');
                 $object->resetAttributeGroup($attribute_it->get('ReferenceName'), 'form-column-skipped');
             }
 
             if ( $attribute_it->get('IsMainTab') == 'Y' ) {
-                $groups = $object->getAttributeGroups($attribute_it->get('ReferenceName'));
-                if ( is_array($groups) ) {
-                    $groups = array_diff($groups, array('additional','deadlines','trace','sla'));
-                    $object->setAttributeGroups($attribute_it->get('ReferenceName'),$groups);
-                }
+                $object->addAttributeGroup($attribute, 'tab-main');
             }
             if ( $attribute_it->get('IsVisibleOnEdit') == 'Y' ) {
                 $object->addAttributeGroup($attribute_it->get('ReferenceName'), 'form-column-skipped');
             }
-
+            if ( $attribute_it->get('DefaultValue') != '' ) {
+                $object->setAttributeDefault($attribute_it->get('ReferenceName'), $attribute_it->get('DefaultValue'));
+            }
 			$attribute_it->moveNext();
 		}
 		$object->addAttribute('TransitionComment', 'WYSIWYG', text(1197), false, false,

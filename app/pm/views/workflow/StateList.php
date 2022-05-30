@@ -24,12 +24,14 @@ class StateList extends PMPageList
                     $object_it->object->setVpdContext($object_it);
 
 			        $method = new ObjectModifyWebMethod($transition_it);
+                    $method->setRedirectUrl('function() {window.location.reload();}');
                     $actions[] = array (
                         'url' => $method->getJSCall(),
                         'name' => $method->getCaption()
                     );
 
                 	$method = new DeleteObjectWebMethod($transition_it);
+                    $method->setRedirectUrl('function() {window.location.reload();}');
 					if ( $method->hasAccess() ) {
 						$actions[] = array();
 					    $actions[] = array(
@@ -100,6 +102,7 @@ class StateList extends PMPageList
         $object->setVpdContext($object_it);
 
         $method = new ObjectCreateNewWebMethod($object);
+        $method->setRedirectUrl('function() {window.location.reload();}');
         if ( $method->hasAccess() ) {
 			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
         	$actions[] = array (

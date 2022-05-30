@@ -15,10 +15,10 @@ class RequestDueDatesPersister extends ObjectSQLPersister
 
      function map( & $parms )
      {
+         if ( array_key_exists('Caption', $parms) ) return;
          if ( !array_key_exists('DueWeeks', $parms) ) return;
 
-         if ( $this->getObject()->getAttributeType('LeadTimeSLA') != '' )
-         {
+         if ( $this->getObject()->getAttributeType('LeadTimeSLA') != '' ) {
              $value_it = getFactory()->getObject('DeadlineSwimlane')->getExact($parms['DueWeeks']);
              if ( $value_it->getId() == '' ) return;
              $parms['Estimation'] = $value_it->get('Days') * 24;
@@ -27,13 +27,17 @@ class RequestDueDatesPersister extends ObjectSQLPersister
 
      function modify( $object_id, $parms )
      {
+        if ( array_key_exists('Caption', $parms) ) return;
         if ( !array_key_exists('DueWeeks', $parms) ) return;
+
         $this->setDueDate( $object_id, $parms['DueWeeks'] );
      }
 
      function add($object_id, $parms)
      {
+        if ( array_key_exists('Caption', $parms) ) return;
         if ( !array_key_exists('DueWeeks', $parms) ) return;
+
         $this->setDueDate( $object_id, $parms['DueWeeks'] );
      }
 

@@ -12,8 +12,6 @@ class TaskBulkForm extends BulkForm
     {
         switch( $attribute )
         {
-            case 'RemoveTag':
-                return false;
             default:
                 return parent::IsAttributeVisible( $attribute );
         }
@@ -36,7 +34,6 @@ class TaskBulkForm extends BulkForm
  		switch ( $attr )
  		{
  			case 'Release':
- 			case 'Project':
             case 'Tag':
  				return 'custom';
  				
@@ -69,16 +66,6 @@ class TaskBulkForm extends BulkForm
 				$field->draw();
 				break;
 				
- 			case 'Project':
- 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessibleActive'));
-				$field->SetId($attribute);
-				$field->SetName($attribute);
-				$field->SetValue($value);
-				$field->SetTabIndex($tab_index);
-				$field->SetRequired(true);
-				$field->draw();
-				break;
-
             case 'Tag':
                 $field = new FieldAutoCompleteObject( getFactory()->getObject('Tag') );
                 $field->SetId($attribute);

@@ -48,14 +48,10 @@ class BulkDeleteWebMethod extends WebMethod
 		$object_it = $object->getRegistry()->Query($parms);
 
         if ( $object instanceof Project ) {
-            echo JsonWrapper::encode(
-                array (
-                    'state' => 'redirect',
-                    'message' => '',
-                    'object' => '/admin/backups.php?action=backupdatabase&parms=project,'. join('-',$object_it->idsToArray())
-                )
+            $this->redirect(
+                '/admin/backups.php?action=backupdatabase&parms=project,'. join('-',$object_it->idsToArray())
             );
-            exit();
+            return;
         }
 
 		while ( !$object_it->end() ) {

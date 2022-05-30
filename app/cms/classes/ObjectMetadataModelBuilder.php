@@ -68,7 +68,10 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 				'description' => '',
 				'ordernum' => $latest += 10,
 				'origin' => ORIGIN_METADATA,
-				'required' => true
+				'required' => true,
+                'groups' => array(
+                    'skip-notification'
+                )
 			);
 		}
 

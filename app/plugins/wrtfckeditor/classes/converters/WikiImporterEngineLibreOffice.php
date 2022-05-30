@@ -5,6 +5,8 @@ class WikiImporterEngineLibreOffice extends WikiImporterEngine
 {
     protected function getHtml( $filePath )
     {
+        $options = $this->getOptions();
+
         $outputPath = SERVER_FILES_PATH . 'tmp/' . md5(uniqid('libreofficeoutput'));
         mkdir($outputPath, 0777, true);
 
@@ -36,9 +38,42 @@ class WikiImporterEngineLibreOffice extends WikiImporterEngine
 
         FileSystem::rmdirr($outputPath);
 
-        return \TextUtils::getValidHtml(
-                    \TextUtils::getCleansedHtml(
-                        \TextUtils::getUnstyledHtml($content)
+        if ( $options['ResetStyles'] != '' ) {
+            $result = \TextUtils::getUnstyledHtml(
+                            \TextUtils::getValidHtml(
+                                \TextUtils::getCleansedHtml(
+                                    $content)
+                                )
+                            );
+            return $result;
+        }
+
+        $styleSheets = array();
+        $styleNodes = explode('<style type="text/css">', $content);
+        array_shift($styleSheets);
+        foreach( $styleNodes as $node ) {
+            $parts = explode('</style>', $node);
+            $styleSheets[] = $parts[0];
+        }
+
+        $htmldoc = new \InlineStyle\InlineStyle($content);
+        $htmldoc->applyStylesheet($styleSheets);
+
+        return preg_replace(
+                    array (
+                        '/(<table[^>]+)/i',
+                        '/(<\/?span[^>]*>)/i',
+                        '/(&nbsp;|\xC2\xA0)/i'
+                    ),
+                    array (
+                        '$1 border="1"',
+                        '',
+                        ' '
+                    ),
+                    \TextUtils::getValidHtml(
+                        \TextUtils::getCleansedHtml(
+                            $htmldoc->getHTML()
+                        )
                     )
                 );
     }

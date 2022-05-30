@@ -2,7 +2,7 @@
 
 class DateYearQuarterRegistry extends ObjectRegistrySQL
 {
-	public function getQueryClause()
+	public function getQueryClause(array $parms)
 	{
 		return " ( SELECT DISTINCT
                           YEAR(i.StartDate) * 10 + QUARTER(i.StartDate) entityId,

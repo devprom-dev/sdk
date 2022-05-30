@@ -8,7 +8,7 @@ class ModelDataTypeMappingDateTime extends ModelDataTypeMapping
 		return in_array($type_name, array('datetime'));
 	}
 	
-	public function map( $value )
+	public function map( $value, array $groups = array() )
 	{
 		if ( $value == '' ) return '';
 		if ( strpos($value, '0000-00-00') !== false ) return '';

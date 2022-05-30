@@ -13,14 +13,14 @@ class PMUserSettingsExportRegistry extends ObjectRegistrySQL
 		);
 	}
 	
-	function getQueryClause()
+	function getQueryClause(array $parms)
     {
         return " 
             (SELECT * 
-               FROM ".parent::getQueryClause()."
+               FROM ".parent::getQueryClause($parms)."
               WHERE (Participant, Setting, VPD) IN (
                         SELECT MAX(t2.Participant) Participant, t2.Setting, t2.VPD
-                          FROM ".parent::getQueryClause()." t2
+                          FROM ".parent::getQueryClause($parms)." t2
                           GROUP BY t2.Setting, t2.VPD
                     )
              ) ";

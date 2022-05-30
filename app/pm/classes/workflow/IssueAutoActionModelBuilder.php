@@ -9,6 +9,12 @@ class IssueAutoActionModelBuilder extends ObjectModelBuilder
 
         $importantAttributes = array('State', 'Project');
         $this->subject = getFactory()->getObject($object->getSubjectClassName());
+        $tabGroups = array_merge(
+            (new PageFormTabGroup())->getAll()->fieldToArray('ReferenceName'),
+            array(
+                'tab-main'
+            )
+        );
 
         foreach( $object->getActionAttributes() as $attribute ) {
             $groups = $this->subject->getAttributeGroups($attribute);
@@ -27,8 +33,8 @@ class IssueAutoActionModelBuilder extends ObjectModelBuilder
                 false
             );
             if ( is_array($groups) ) {
-                $object->setAttributeGroups($attribute, array_filter($groups, function($group) {
-                    return !in_array($group, array('workflow'));
+                $object->setAttributeGroups($attribute, array_filter($groups, function($group) use($tabGroups) {
+                    return !in_array($group, array_merge($tabGroups, array('workflow')));
                 }));
             }
             $object->setAttributeOrigin($attribute, $object->getAttributeOrigin($attribute));

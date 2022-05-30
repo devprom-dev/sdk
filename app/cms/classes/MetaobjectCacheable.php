@@ -47,30 +47,6 @@ class MetaobjectCacheable extends Metaobject
 	
 	function getCachedQuery( $getter, $getter_handler )
 	{
-		$filters = $this->getFilters();
-		
-		$sort = $this->getSortClause();
-
-		if ( $sort != '' )
-		{
-			if ( ALLOW_DEBUG )
-			{
-				getFactory()->debug( 'Skip cache "'.get_class($this).'" ('.$this->getClassName().') on '.$getter.': custom sort' );
-			}
-		    
-			return call_user_func($getter_handler);
-		}
-		
-		if ( count($filters) > 0 )
-		{
-			if ( ALLOW_DEBUG )
-			{
-				getFactory()->debug( 'Skip cache "'.get_class($this).'" ('.$this->getClassName().') on '.$getter.': custom filters' );
-			}
-		    
-			return call_user_func($getter_handler);
-		}
-		
 		if ( !$this->check_is_cacheable )
 		{
 			if ( ALLOW_DEBUG )
@@ -113,33 +89,18 @@ class MetaobjectCacheable extends Metaobject
 	{
 	    $parent_getter = array($this, 'StoredObjectDB::getAll');
 
-	    $iterator = $this->getCachedQuery( GETTER_ALL, function() use($parent_getter) 
-	    { 
+	    $iterator = $this->getCachedQuery( GETTER_ALL, function() use($parent_getter)  {
 	        return call_user_func($parent_getter); 
 	    });
 	    
-		$vpds = $this->getVpds();
-		
-		if ( count($vpds) > 1 )
-		{
-			$values = array_filter($iterator->getRowset(), function( $value ) use ( $vpds ) {
-			    return in_array($value['VPD'], $vpds);
-			});
-			
-			return $this->createCachedIterator( $values );
-		}
-		else
-		{
-		    return $iterator;
-		}
+        return $iterator;
 	}
 
  	function getLatest( $limit = 10, $offset = 0 ) 
 	{
 	    $parent_getter = array($this, 'StoredObjectDB::getLatest');
 
-	    return $this->getCachedQuery( GETTER_LATEST, function() use($parent_getter, $limit, $offset) 
-	    { 
+	    return $this->getCachedQuery( GETTER_LATEST, function() use($parent_getter, $limit, $offset) {
 	        return call_user_func($parent_getter, $limit, $offset); 
 	    });
 	}
@@ -148,8 +109,7 @@ class MetaobjectCacheable extends Metaobject
 	{
 	    $parent_getter = array($this, 'StoredObjectDB::getFirst');
 
-	    return $this->getCachedQuery( GETTER_FIRST, function() use($parent_getter, $limit, $sorts) 
-	    { 
+	    return $this->getCachedQuery( GETTER_FIRST, function() use($parent_getter, $limit, $sorts) {
 	        return call_user_func($parent_getter, $limit, $sorts); 
 	    });
 	}
@@ -158,8 +118,7 @@ class MetaobjectCacheable extends Metaobject
 	{
 	    $parent_getter = array($this, 'StoredObjectDB::getCount');
 
-	    return $this->getCachedQuery( GETTER_COUNT, function() use($parent_getter) 
-	    { 
+	    return $this->getCachedQuery( GETTER_COUNT, function() use($parent_getter) {
 	        return call_user_func($parent_getter); 
 	    });
 	}
@@ -180,15 +139,13 @@ class MetaobjectCacheable extends Metaobject
 	    if ( count($ids) == 1 )
 	    {
 	    	$iterator->moveToId($ids[0]);
-	    	
 	    	return $iterator->copy();
 	    }
 	    
 		$id_key = $this->getClassName().'Id';
 
 		$data = array();
-		foreach( $iterator->getRowset() as $key => $value )
-		{
+		foreach( $iterator->getRowset() as $key => $value ) {
 			if ( in_array($value[$id_key], $ids) ) $data[] = $value;
 		}
 

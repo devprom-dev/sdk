@@ -2,7 +2,7 @@
 
 class ModelDataTypeMappingPositives
 {
-	public function mapInstance( &$values )
+	public function map( $object, &$values )
     {
         if ( $values['OrderNum'] != '' ) {
             $values['OrderNum'] = abs($values['OrderNum']);

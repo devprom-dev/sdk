@@ -183,13 +183,8 @@
 		global $_REQUEST;
 		$offset = $_REQUEST['offset'];
 		$search = $_REQUEST['search'];
-		
-		if($search != '') {
-    		$this->it = $object->getLike($search);
-		}
-		else {
-    		$this->it = $object->getAll();
-		}
+
+        $this->it = $object->getAll();
     	$this->it->moveToPos( $offset );
 		
 		parent::Selector( $object, $field );
@@ -353,57 +348,4 @@
         </table>
 	<?	
 	}
-	
-	function drawTreeItem( $i, $it, $levelnum )
-	{
-		static $layer_id = 0;
-		$children = $it->getChildren();
-		
-		$layer = "level_".$layer_id;
-		$layer_id++;
-	?>
-      	<tr>
-			<td>
-				<table cellpadding=0 cellspacing=0 width=100% style="border-collapse:collapse;">
-					<tr>
-						<td width=20 align=right style="background:#eaeaea;border:.5pt solid #d5d5df;padding:4pt;border-top:none;">
-						</td>
-            			<td width="<? echo (($levelnum+1)*15); ?>" valign=top align=right style="padding-top:5pt;border-bottom:.5pt solid #d5d5df;">
-            			<?
-            				if( $children->count() > 0)
-            				{
-            			?>
-            				<a href="javascript: { toggleTreeItem ('<? echo $layer; ?>'); }">
-            					<img id="<? echo 'img'.$layer; ?>" border=0 src="<? echo '/images/treeplus.png'; ?>">
-            				</a>
-            			<?
-            				}
-            			?>
-            			</td>
-                   		<td style="padding-left:4pt;border:.5pt solid #d5d5df;padding:4pt;border-left:none;border-top:none;">
-            				<? $this->drawItem( $it->getId(), $it->getDisplayName() ); ?>
-                   		</td>
-					</tr>
-				</table>
-			</td>
-       	</tr>
-		<tr id="<? echo $layer; ?>" style="display:none;">
-			<td>
-				<table width=100% cellpadding=0 cellspacing=0 style="margin-top:-1pt;border-collapse:collapse;">
-            	<?
-            		for( $j = 0; $j < $children->count(); $j++) 
-					{
-						//echo $children->getId();
-            			$this->drawTreeItem( $j, $children, $levelnum + 1 );
-						//echo $children->getId();
-            			$children->moveNext();
-            		}
-            	?>
-				</table>
-			</td>
-		</tr>
-	<?
-	}
  }
- 
-?>

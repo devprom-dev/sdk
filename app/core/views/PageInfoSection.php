@@ -5,10 +5,12 @@
  	 private $page;
  	 private $async_load;
 	 private $placement = 'right';
- 	
- 	function InfoSection() 
+     private $id = '';
+
+ 	function __construct()
  	{
- 		$this->async_load = true;
+        $this->async_load = true;
+        $this->id = strtolower(get_class($this));
  	}
 
    	function __destruct()
@@ -78,9 +80,13 @@
 	
 	function getId()
 	{
-		return strtolower(get_class($this));
+		return $this->id;
 	}
-	
+
+    function setId( $id ) {
+         $this->id = $id;
+    }
+
 	function getParameters()
 	{
 		return array();
@@ -139,6 +145,14 @@
 	}
 
 	function hasAccess() {
- 	    return true;
+ 	    return getFactory()->getAccessPolicy()->can_read(
+ 	            getFactory()->getObject('Module')->createCachedIterator(
+                    array(
+                        array(
+                            'cms_PluginModuleId' => 'section:'.strtolower(get_class($this))
+                        )
+                    )
+                )
+        );
     }
  }

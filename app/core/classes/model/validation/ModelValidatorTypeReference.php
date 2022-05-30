@@ -3,12 +3,11 @@ include_once "ModelValidatorType.php";
 
 class ModelValidatorTypeReference extends ModelValidatorType
 {
-	public function applicable( $type_name )
-	{
+	public function applicable( $type_name ) {
 		return strpos($type_name, "ref_") !== false;
 	}
 	
-	public function validate( & $value )
+	public function validate( & $value, array $groups = array() )
 	{
         $ids = \TextUtils::parseItems($value);
 		return $value == '' || is_array($ids);

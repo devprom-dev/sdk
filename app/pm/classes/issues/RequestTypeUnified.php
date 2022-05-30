@@ -10,4 +10,8 @@ class RequestTypeUnified extends MetaobjectCacheable
  	public function getIdAttribute() {
         return 'ReferenceName';
     }
+
+    function IsPersistable() {
+        return false;
+    }
 }

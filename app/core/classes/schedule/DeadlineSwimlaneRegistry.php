@@ -2,7 +2,7 @@
 
 class DeadlineSwimlaneRegistry extends ObjectRegistrySQL
 {
- 	function getAll()
+ 	function Query($parms = array())
  	{
         $now = strtotime(SystemDateTime::date());
  		return $this->createIterator(

@@ -1,11 +1,10 @@
 <?php
-include "BackupRegistry.php";
+include "BackupFileSystemRegistry.php";
 
-class Backup extends MetaobjectCacheable
+class Backup extends Metaobject
 {
-	function __construct()
-	{
-		parent::__construct('cms_Backup', new BackupRegistry($this));
+	function __construct( $registry = null ) {
+		parent::__construct('cms_Backup', $registry);
 		$this->defaultsort = 'RecordModified DESC';
 	}
 	
@@ -14,8 +13,8 @@ class Backup extends MetaobjectCacheable
 		$it = $this->getExact( $id );
 			
 		if ( $it->getId() != '' ) {
-			unlink(SERVER_BACKUP_PATH.$it->get('Caption'));
-			FileSystem::rmdirr(SERVER_BACKUP_PATH.basename($it->get('Caption'), '.zip'));
+			unlink(SERVER_BACKUP_PATH.$it->get('BackupFileName'));
+			FileSystem::rmdirr(SERVER_BACKUP_PATH.basename($it->get('BackupFileName'), '.zip'));
 
             DAL::Instance()->Query(
                 "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, ObjectId, ObjectClass) ".
@@ -23,11 +22,7 @@ class Backup extends MetaobjectCacheable
             );
 		}
 		
-		$it = $this->getByRefArray( array(
-		    'BackupFileName' => $it->get('Caption')
-		));
-		
-		return $it->count() > 0 ? parent::delete( $id ) : 1;
+		return parent::delete( $id );
 	}
 }
 

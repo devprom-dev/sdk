@@ -7,18 +7,16 @@ class FeatureStateFilter extends FilterPredicate
 		switch ( $filter )
 		{
 			case 'closed':
-				return " AND EXISTS (SELECT 1 FROM pm_ChangeRequest r WHERE r.Function = t.pm_FunctionId)
-				         AND NOT EXISTS (
-				            SELECT 1 FROM pm_ChangeRequest r 
-				             WHERE r.Function = t.pm_FunctionId
-				               AND r.FinishDate IS NULL ) ";
+				return " AND EXISTS (
+				            SELECT 1 FROM pm_Function pa 
+				             WHERE pa.ParentPath LIKE CONCAT('%,',t.pm_FunctionId,',%') 
+				               AND pa.DeliveryDate < CURDATE() 
+				               ) ";
 			case 'open':
-                return " AND (
-                            NOT EXISTS (SELECT 1 FROM pm_ChangeRequest r WHERE r.Function = t.pm_FunctionId)
-				            OR EXISTS (
-                                SELECT 1 FROM pm_ChangeRequest r 
-                                 WHERE r.Function = t.pm_FunctionId
-                                   AND r.FinishDate IS NULL )
+                return " AND EXISTS (
+                            SELECT 1 FROM pm_Function pa
+                             WHERE pa.ParentPath LIKE CONCAT('%,',t.pm_FunctionId,',%')
+                               AND pa.DeliveryDate >= CURDATE()
                          ) ";
 
 			default:

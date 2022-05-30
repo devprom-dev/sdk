@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 include_once "persisters/RequestTagsPersister.php";
@@ -7,9 +6,9 @@ include_once "persisters/RequestTasksPersister.php";
 include_once "persisters/RequestDetailsPersister.php";
 include_once "persisters/RequestOwnerPersister.php";
 include_once "persisters/RequestMilestonesPersister.php";
-include_once "persisters/RequestFeaturePersister.php";
 include_once "persisters/RequestQuestionsPersister.php";
 include_once "persisters/RequestColorsPersister.php";
+include "persisters/RequestComponentsPersister.php";
 include "persisters/RequestTypePersister.php";
 
 class RequestMetadataBuilder extends ObjectMetadataEntityBuilder 
@@ -20,11 +19,10 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 
 		$metadata->addPersister( new WatchersPersister(array('Watchers')) );
 		$metadata->addPersister( new RequestOwnerPersister() );
-        $metadata->addPersister( new RequestFeaturePersister() );
         $metadata->addPersister( new RequestColorsPersister() );
 
-        $metadata->setAttributeOrderNum('State', 25);
-        $metadata->setAttributeOrderNum('Priority', 5);
+        $metadata->setAttributeEditable('EstimatedStartDate', false);
+        $metadata->setAttributeEditable('EstimatedFinishDate', false);
 
     	$metadata->setAttributeType('Author', 'REF_IssueAuthorId');
 		$metadata->setAttributeRequired('Author', false);
@@ -33,11 +31,10 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		if ( $methodology_it->IsTimeTracking() )
 		{
-			$metadata->addAttributeGroup('Fact', 'nonbulk');
 			$metadata->addAttributeGroup('FactTasks', 'system');
 		}
 
-		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true);
+        $metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true);
 		$metadata->addAttribute('Tags', 'REF_TagId', translate('Тэги'), true, false, '');
 		$metadata->addPersister( new RequestTagsPersister(array('Tags')) );
 
@@ -50,7 +47,6 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addPersister( new RequestQuestionsPersister() );
 
 		$metadata->setAttributeVisible( 'PlannedRelease', true );
-		$metadata->setAttributeOrderNum( 'PlannedRelease', 75 );
 
 		$metadata->setAttributeVisible( 'Owner', true );
 	    if ( $methodology_it->HasTasks() ) {
@@ -82,19 +78,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 
 	    $metadata->setAttributeCaption('SubmittedVersion', text(1335));
 	    $metadata->setAttributeCaption('ClosedInVersion', text(1334));
-
-		$metadata->setAttributeType( 'Description', 'wysiwyg' );
 		$metadata->setAttributeType( 'Function', 'REF_FeatureId' );
-
-		$strategy = $methodology_it->getEstimationStrategy();
-		if ( $methodology_it->RequestEstimationUsed() && $strategy->hasEstimationValue() ) {
-			$title = translate($metadata->getAttributeCaption('Estimation'));
-			if ( strpos($title, ',') === false ) {
-				$metadata->setAttributeCaption( 
-					'Estimation', $strategy->getDimensionText($title.',') 
-				);
-			}
-		}
 
         if ( $methodology_it->HasMilestones() ) {
             $metadata->addAttribute('Deadlines', 'REF_pm_MilestoneId', text(2264), true, false, '', 180);
@@ -107,29 +91,25 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addAttributeGroup('Watchers', 'additional');
 
         $metadata->setAttributeCaption('DeliveryDate', text(2289));
+        $metadata->setAttributeType('DeliveryDate', 'date');
+        $metadata->setAttributeEditable('DeliveryDate', false);
 		$metadata->setAttributeDescription('DeliveryDate', text(2113));
 		$metadata->setAttributeDescription('StartDate', text(1839));
 		$metadata->setAttributeDescription('FinishDate', text(1840));
-		foreach ( array('StartDate','FinishDate', 'PlannedRelease', 'Iteration', 'DeliveryDate', 'DueWeeks') as $attribute ) {
+        $metadata->setAttributeEditable('StartDate', false);
+        $metadata->setAttributeEditable('FinishDate', false);
+        foreach ( array('StartDate','FinishDate', 'PlannedRelease', 'Iteration', 'DeliveryDate', 'DueWeeks') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'deadlines');
 		}
-		$index = 190;
-		$metadata->setAttributeOrderNum('StartDate', $index);
-		$metadata->setAttributeOrderNum('FinishDate', $index+5);
-		$metadata->setAttributeOrderNum('DeliveryDate', $index+10);
 
 		$metadata->addAttribute('TypeBase', 'REF_RequestTypeUnifiedId', translate('Тип'), false);
 		$metadata->addAttributeGroup('TypeBase', 'system');
         $metadata->addAttributeGroup('Type', 'type');
+        $metadata->addAttributeGroup('Type', 'customattribute-descriptor');
 		$metadata->addPersister(new RequestTypePersister(array('Type')));
 
-		$index = 210;
-		$metadata->setAttributeOrderNum('Environment', $index);
-		$metadata->setAttributeOrderNum('SubmittedVersion', $index+5);
-		$metadata->setAttributeOrderNum('ClosedInVersion', $index+10);
-		$metadata->setAttributeOrderNum('Author', $index+20);
-
         $metadata->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
+        $metadata->addAttributeGroup('RecentComment', 'non-form');
 
 		foreach( array('Type','Function','ClosedInVersion','Author','Fact','OrderNum') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'additional');
@@ -149,29 +129,43 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
         foreach ( array('Tags','Watchers','Tasks', 'OpenTasks') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'skip-chart');
         }
-		foreach ( array('Environment','Caption','Description','Estimation','Attachment') as $attribute ) {
+		foreach ( array('Environment','Caption','Description','Attachment') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'nonbulk');
 		}
 
-        $dates_attributes = array( 'EstimationLeft', 'Fact' );
+        $dates_attributes = array( 'EstimationLeft', 'Fact', 'FactToday' );
         foreach ( $dates_attributes as $attribute ) {
+            $metadata->setAttributeEditable($attribute, false);
             $metadata->addAttributeGroup($attribute, 'workload');
             $metadata->addAttributeGroup($attribute, 'hours');
         }
         $metadata->addAttributeGroup('Estimation', 'workload');
 
+        foreach ( array('Fact', 'DeliveryDate') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'card-basement');
+        }
+
         foreach( array('DeliveryDateMethod', 'EstimationLeft', 'SupportChannelEmail', 'EmailMessageId') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'system');
         }
 
+        $strategy = $methodology_it->getEstimationStrategy();
         if ( $strategy instanceof EstimationHoursStrategy ) {
             $metadata->resetAttributeGroup('EstimationLeft', 'system');
+            $metadata->addAttributeGroup('Estimation', 'workload');
+            $metadata->addAttributeGroup('Estimation', 'hours');
+        }
+
+        foreach( array('Fact','FactToday') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'nonbulk');
+            $metadata->addAttributeGroup($attribute, 'skip-notification');
         }
 
         $permission_attributes = array(
             'Author',
             'ClosedInVersion',
             'Fact',
+            'FactToday',
             'Caption',
             'Description',
             'Owner',
@@ -188,7 +182,8 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
             'Tags',
             'Links',
             'DeliveryDate',
-            'RecentComment'
+            'RecentComment',
+            'Deadlines'
         );
         foreach ( $permission_attributes as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'permissions');
@@ -200,7 +195,6 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
             'Estimation',
             'OrderNum',
             'PlannedRelease',
-            'SubmittedVersion',
             'Iteration',
             'Owner'
         );
@@ -221,6 +215,48 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
         $priorityIt = $priority->getByRef('IsDefault', 'Y');
         if ( $priorityIt->getId() != '' ) {
             $metadata->setAttributeDefault('Priority', $priorityIt->getId());
+        }
+
+        if ( $methodology_it->getId() > 0 ) {
+            if ( $methodology_it->RequestEstimationUsed() ) {
+                if ( !$strategy->hasEstimationValue() ) {
+                    $metadata->addAttributeGroup('Estimation', 'system');
+                }
+            }
+            else {
+                $metadata->addAttributeGroup('Estimation', 'system');
+            }
+        }
+
+        if ( $methodology_it->getId() > 0 && !$methodology_it->HasFeatures() ) {
+            $metadata->addAttributeGroup('Function', 'system');
+        }
+
+        $metadata->addAttribute('ExternalId', 'VARCHAR', text(3210), false, true);
+        $metadata->addAttributeGroup('ExternalId', 'alternative-key');
+
+        $metadata->setAttributeOrderNum('Description', 3);
+        $metadata->setAttributeOrderNum('Priority', 5);
+        $metadata->setAttributeOrderNum('State', 25);
+        $metadata->setAttributeOrderNum('Fact', 35);
+        $metadata->setAttributeOrderNum('Tags', 40);
+        $metadata->setAttributeOrderNum( 'PlannedRelease', 75 );
+        $index = 190;
+        $metadata->setAttributeOrderNum('StartDate', $index);
+        $metadata->setAttributeOrderNum('FinishDate', $index+5);
+        $metadata->setAttributeOrderNum('DeliveryDate', $index+10);
+        $index = 210;
+        $metadata->setAttributeOrderNum('Environment', $index);
+        $metadata->setAttributeOrderNum('SubmittedVersion', $index+5);
+        $metadata->setAttributeOrderNum('ClosedInVersion', $index+10);
+        $metadata->setAttributeOrderNum('Author', $index+20);
+
+        $metadata->addAttribute( 'Components', 'REF_ComponentId', text(3316), true);
+        $metadata->addPersister(new RequestComponentsPersister());
+        $metadata->addAttributeGroup('Components', 'trace');
+
+        if ( !$methodology_it->HasReleases() ) {
+            $metadata->addAttributeGroup('PlannedRelease', 'system');
         }
     }
 }

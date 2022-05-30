@@ -46,11 +46,9 @@ class BackupComplete extends MaintenanceCommand
 	            $reason = text(1304);
 	    }
 	    	
-	    $backup_cls = getFactory()->getObject('cms_Backup');
-	    
-	    $backup_cls->add_parms( array (
-	            'Caption' => $reason,
-	            'BackupFileName' => $backup->getBackupFileName()
+        getFactory()->getObject('cms_Backup')->add_parms( array (
+            'Caption' => $reason,
+            'BackupFileName' => $backup->getBackupFileName()
 	    ));
 	     
 		$this->replyRedirect( $redirect_url );

@@ -72,8 +72,13 @@ class UpdateUpload extends MaintenanceCommand
 		$strategy = new StrategyUpdate($pathinfo['basename']);
 		
 		$this->checkRequiredVersion( $strategy->getUpdate() );
-		
-		$url_to_continue = 'backups.php?action=backupdatabase&parms=update,'.$pathinfo['basename'];
+
+		if ( defined('SKIP_BACKUP_BEFORE_UPDATE') && SKIP_BACKUP_BEFORE_UPDATE ) {
+            $url_to_continue = '/admin/updates.php?action=updateapplication&parms='.$pathinfo['basename'];
+        }
+		else {
+            $url_to_continue = '/admin/backups.php?action=backupdatabase&parms=update,'.$pathinfo['basename'];
+        }
 
 		$this->replyRedirect( $url_to_continue, text(1256) );
 	}

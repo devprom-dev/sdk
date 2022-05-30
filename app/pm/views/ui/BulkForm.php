@@ -39,6 +39,8 @@ class BulkForm extends BulkFormBase
 
 			case 'Watchers':
             case 'TransitionNotification':
+            case 'RemoveTag':
+            case 'Project':
 				return 'custom';
 				
 			default:
@@ -124,6 +126,50 @@ class BulkForm extends BulkFormBase
                 $field->SetId($attribute);
                 $field->SetName($attribute);
                 $field->SetTabIndex($tab_index);
+                $field->draw();
+                break;
+
+            case 'Project':
+                $field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessibleActive'));
+                $field->SetId($attribute);
+                $field->SetName($attribute);
+                $field->SetValue($value);
+                $field->SetTabIndex($tab_index);
+                $field->SetRequired(true);
+                $field->draw();
+                break;
+
+            case 'RemoveTag':
+                $it = $this->getIt();
+                switch( $it->object->getEntityRefName() ) {
+                    case 'pm_ChangeRequest':
+                        $tags = array_unique(getFactory()->getObject('RequestTag')->getRegistry()->Query(
+                                        array(
+                                            new FilterAttributePredicate('Request', $it->idsToArray())
+                                        )
+                                    )->fieldToArray('Tag'));
+                        break;
+                    case 'WikiPage':
+                        $tags = array_unique(getFactory()->getObject('WikiTag')->getRegistry()->Query(
+                                        array(
+                                            new FilterAttributePredicate('Wiki', $it->idsToArray())
+                                        )
+                                    )->fieldToArray('Tag'));
+                        break;
+                    default:
+                        $tags = array_unique(getFactory()->getObject('CustomTag')->getRegistry()->Query(
+                            array(
+                                new FilterAttributePredicate('ObjectClass', strtolower(get_class($it->object)))
+                            )
+                        )->fieldToArray('Tag'));
+                }
+
+                $tagIt = getFactory()->getObject('Tag')->getExact($tags);
+                $field = new FieldDictionary($tagIt);
+                $field->setId($attribute);
+                $field->setName($attribute);
+                $field->setTabIndex($tab_index);
+                $field->setMultiple(true);
                 $field->draw();
                 break;
 

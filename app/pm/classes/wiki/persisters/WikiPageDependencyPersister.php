@@ -98,7 +98,8 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
                 if ( $refId == $object_it->getId() ) {
                     $usedby_it->object->modify_parms($usedby_it->getId(),
                         array (
-                            'Content' => $object_it->getHtmlDecoded('Content')
+                            'Content' => $object_it->getHtmlDecoded('Content'),
+                            'Includes' => 'NULL'
                         )
                     );
                     $this->copyTraces($object_it, $usedby_it->getId());

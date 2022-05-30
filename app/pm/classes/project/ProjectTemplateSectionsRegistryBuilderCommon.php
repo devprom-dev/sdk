@@ -52,6 +52,8 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
             getFactory()->getObject('pm_IssueType'),
             getFactory()->getObject('TaskType'),
             getFactory()->getObject('TextTemplate'),
+            getFactory()->getObject('ExportTemplate'),
+            getFactory()->getObject('ComponentType')
         );
 
         $registry->addSection($registry, 'Dictionaries', $items, true, text(2844));
@@ -68,7 +70,7 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
    		
 	 	// navigation settings
 	 	$workspace = getFactory()->getObject('Workspace');
-	 	$workspace_it = $workspace->getRegistry()->getDefault();
+	 	$workspace_it = $workspace->getRegistry()->getDefault(getSession()->getProjectIt());
 	 	$workspace->addFilter( new FilterInPredicate($workspace_it->idsToArray()) );
 	 	$items[] = $workspace;
 
@@ -95,9 +97,9 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
     private function buildPermissions( & $registry )
     {
 	 	$items = array (
-	 			getFactory()->getObject('pm_AccessRight')
+            getFactory()->getObject('ProjectRole'),
+            getFactory()->getObject('pm_AccessRight')
 	 	);
-
  		$registry->addSection($registry, 'Permissions', $items, true, text(739));
    }
 
@@ -108,7 +110,6 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	 		getFactory()->getObject('pm_State'),
 	 		getFactory()->getObject('pm_Transition'),
 	 		getFactory()->getObject('pm_TransitionRole'),
-	 		getFactory()->getObject('pm_TransitionAttribute'),
 	 		getFactory()->getObject('pm_TransitionPredicate'),
 	 		getFactory()->getObject('pm_TransitionResetField'),
             getFactory()->getObject('pm_TransitionAction'),
@@ -121,12 +122,9 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 
     private function buildKnowledgebase( & $registry )
     {
-        $projectpage = getFactory()->getObject('ProjectPage');
-        $projectpage->addFilter( new WikiSectionFilter() );
-        $projectpage->addSort( new SortDocumentClause() );
-        $items[] = $projectpage;
-
-        $registry->addSection($registry, 'Knowledgebase', $items, true, text(2836));
+        $registry->addSection($registry, 'Knowledgebase', array(
+                getFactory()->getObject('ProjectPage')
+            ), true, text(2836));
     }
 
 	private function buildArtefacts( & $registry )
@@ -135,8 +133,8 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  			getFactory()->getObject('Release'),
  			getFactory()->getObject('Iteration'),
  			getFactory()->getObject('Milestone'),
- 			getFactory()->getObject('PMBlogPost'),
- 			getFactory()->getObject('Tag')
+ 			getFactory()->getObject('Tag'),
+ 			getFactory()->getObject('Component')
  		);
 
 		$registry->addSection($registry, 'ProjectArtefacts', $items, true, text(1834));

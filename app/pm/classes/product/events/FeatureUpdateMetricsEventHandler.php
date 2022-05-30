@@ -12,25 +12,23 @@ class FeatureUpdateMetricsEventHandler extends SystemTriggersBase
 	    
 	    $was_data = $this->getWasData();
 	    $ids = array_filter(
-		    		array_merge(
-		    				preg_split('/,/',$object_it->get('ParentPath')), 
-		    				preg_split('/,/',$was_data['ParentPath'])
-		    		), function($value) {
-		    				return $value > 0;
-		    		}
+                array_merge(
+                    preg_split('/,/',$object_it->get('ParentPath')),
+                    preg_split('/,/',$was_data['ParentPath'])
+                ),
+                function($value) {
+                    return $value > 0;
+                }
 	    	);
 	    if ( count($ids) < 1 ) return;
 
-        register_shutdown_function(function() use ( $ids ) {
-                $service = new StoreMetricsService();
-                $service->storeFeatureMetrics(
-                    getFactory()->getObject('Feature')->getRegistry(),
-                    array (
-                        new FilterInPredicate($ids),
-                        new FeatureMetricsPersister()
-                    )
-                );
-            }
+        $service = new StoreMetricsService();
+        $service->storeFeatureMetrics(
+            getFactory()->getObject('Feature')->getRegistryBase(),
+            array (
+                new FilterInPredicate($ids),
+                new FeatureMetricsPersister()
+            )
         );
 	}
 }

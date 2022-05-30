@@ -10,8 +10,8 @@ class EstimationTShirtStrategy extends EstimationStrategy
 
 	function getDimensionText( $value )
 	{
-		if ( $value === '' ) return text(2299);
-		if ( !is_numeric($value) ) return str_replace("%1", $value, text(2207));
+		//if ( $value === '' ) return text(2299);
+		if ( !is_numeric($value) ) return $value;
 		$label = '';
 		$xSizes = floor($value / 8);
 		$value -= $xSizes * 8;

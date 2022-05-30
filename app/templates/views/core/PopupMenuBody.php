@@ -91,7 +91,7 @@ $itemsCount = count($items);
         $hasSearchOption = true;
 	    ?>
 		<li uid="search" class="dropdown-item-search">
-			<input class="" type="text" placeholder="<?=text(2186)?>">
+			<input class="" type="text" placeholder="<?=text(2186)?>" autocomplete="off">
 		</li>
 		<li class="divider"></li>
 	    <?php
@@ -128,7 +128,7 @@ $itemsCount = count($items);
     		    
     		    <?php } else { ?>
     			
-    			<a id="<?=$action['uid']?>" class="<?=$class?>" radio-group="<?=$action['radio-group']?>" onkeydown="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
+    			<a id="<?=$action['uid']?>" class="<?=$class?>" radio-group="<?=$action['radio-group']?>" href="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
     			
     			<?php } ?>
     			

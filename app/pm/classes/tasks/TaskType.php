@@ -50,7 +50,7 @@ class TaskType extends MetaobjectCacheable
 
 	function modify_parms( $id, $parms )
 	{
-		if ( $parms['ReferenceName'] == '' ) {
+		if ( $parms['ReferenceName'] == '' && $parms['ParentTaskType'] > 0 ) {
 			$base_it = getFactory()->getObject('TaskTypeBase')->getExact($parms['ParentTaskType']);
 			$parms['ReferenceName'] = $base_it->get('ReferenceName');
 		}

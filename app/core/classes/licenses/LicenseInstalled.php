@@ -1,5 +1,4 @@
 <?php
-
 include_once "LicenseIterator.php";
 include_once "LicenseInstalledRegistry.php";
 include_once "persisters/LicenseBaseUIDPersister.php";
@@ -14,8 +13,7 @@ class LicenseInstalled extends Metaobject
  		$this->addPersister( new LicenseBaseUIDPersister() );
 	}
 	
-	function createIterator()
-	{
+	function createIterator() {
 		return new LicenseIterator( $this );
 	}
 }

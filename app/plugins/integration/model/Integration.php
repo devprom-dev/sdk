@@ -1,5 +1,6 @@
 <?php
 include 'IntegrationIterator.php';
+include 'mappers/IntegrationQueueModelMapper.php';
 
 class Integration extends Metaobject
 {
@@ -19,5 +20,15 @@ class Integration extends Metaobject
 
     public function createIterator() {
         return new IntegrationIterator($this);
+    }
+
+    function getMappers()
+    {
+        return array_merge(
+            parent::getMappers(),
+            array(
+                new IntegrationQueueModelMapper
+            )
+        );
     }
 }

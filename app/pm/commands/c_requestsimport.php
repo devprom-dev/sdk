@@ -1,9 +1,9 @@
 <?php
-include_once SERVER_ROOT_PATH . 'core/classes/model/validation/ModelValidator.php';
 
 class RequestsImportBase extends CommandForm
 {
      private $fileName = '';
+     private $uidService = null;
 
  	function getObject()
  	{
@@ -15,6 +15,11 @@ class RequestsImportBase extends CommandForm
 
     function getFileName() {
         return $this->fileName;
+    }
+
+    function getUidService() {
+         if ( is_object($this->uidService) ) return $this->uidService;
+         return $this->uidService = new \ObjectUID;
     }
  	
  	function getLines()
@@ -41,8 +46,7 @@ class RequestsImportBase extends CommandForm
  	function getFields()
  	{
  		$object = $this->getObject();
- 		return array_merge(
-				array_diff(
+ 		$fields = array_diff(
 					array_keys($object->getAttributes()),
                     array_diff(
                         $object->getAttributesByGroup('system'),
@@ -51,14 +55,18 @@ class RequestsImportBase extends CommandForm
                         )
                     ),
 					$object->getAttributesByGroup('trace'),
+                    $object->getAttributesReadonly(),
                     array(
                         'OrderNum'
                     )
-				),
-				array (
-					'ContentEditor'
-				)
-		);
+				);
+        if ( $object->hasAttribute('ContentEditor') ) {
+            $fields[] = 'ContentEditor';
+        }
+        if ( $this->getUidService()->hasUidObject($object) ) {
+            $fields[] = 'UID';
+        }
+        return array_values($fields);
  	}
  	
 	function getCaptions()
@@ -67,7 +75,10 @@ class RequestsImportBase extends CommandForm
 		$object = $this->getObject();
 		
 		foreach( $this->getFields() as $key => $attr ) {
-			$captions[$attr] = translate($this->sanitizeData($object->getAttributeUserName($attr)));
+            $fieldTitle = translate($this->sanitizeData($object->getAttributeUserName($attr)));
+            if ( $fieldTitle == '' ) $fieldTitle = $attr;
+            if ( in_array($fieldTitle, $captions) ) continue;
+			$captions[$attr] = $fieldTitle;
 		}
 		return $captions;
 	}
@@ -111,7 +122,9 @@ class RequestsImportBase extends CommandForm
 			{
                 $fieldName = $field_names[$j];
                 $cellName = $fields[$fieldName];
-				$value = $line[$cellName];
+
+                $value = $line[$cellName];
+                if ( $value == '' ) continue;
 				
 				if ( $object->IsReference($fieldName) )
 				{
@@ -120,27 +133,32 @@ class RequestsImportBase extends CommandForm
 						default:
 							$id = '';
 							
-							if ( !array_key_exists($fieldName, $refs) )
-							{
-								$ref = $object->getAttributeObject($fieldName);
-								$refs[$fieldName] = $ref->getAll();
-							}
-							
-							if ( $fieldName == 'ParentPage' )
-							{
+							if ( $fieldName == 'ParentPage' ) {
 								$new_value_row = array_filter( $result, function($result_value) use ($value) {
-										return $result_value['Caption'] == trim($value); 
-								});
+                                        return $result_value['Caption'] == trim($value);
+                                    });
 								if ( count($new_value_row) > 0 ) $id = 'Undefined:'.$this->getAltKey(array_shift($new_value_row));
 							}
 
-							if ( $id == '' )
-							{
-								$id = $this->getId(
-										$refs[$fieldName],
-										trim($value), 
-										'Undefined:'.trim($value)
-								);
+							if ( $id == '' ) {
+                                $ref = $object->getAttributeObject($fieldName);
+                                if ( $this->getUidService()->hasUidObject($ref) ) {
+                                    $nameParts = explode(' ', $value);
+                                    $objectIt = $this->getUidService()->getObjectIt(trim($nameParts[0], ' []'));
+                                    if ( $objectIt->getId() != '' ) $id = $objectIt->getId();
+
+                                }
+
+                                if ( $id == '' ) {
+                                    if (!array_key_exists($fieldName, $refs)) {
+                                        $refs[$fieldName] = $this->getObjectIt($ref);
+                                    }
+                                    $id = $this->getId(
+                                        $refs[$fieldName],
+                                        trim($value),
+                                        'Undefined:' . trim($value)
+                                    );
+                                }
 							}
 								
 							$parms = array_merge($parms, array( $fieldName => $id ) );
@@ -191,7 +209,8 @@ class RequestsImportBase extends CommandForm
                         case 'date':
                         case 'datetime':
                             if ( $value != '' && is_numeric($value) ) {
-                                $value = getLanguage()->getPhpDateTime(PHPExcel_Shared_Date::ExcelToPHP($value));
+                                $value = getLanguage()->getPhpDateTime(
+                                    \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($value));
                             }
                             break;
 
@@ -214,21 +233,31 @@ class RequestsImportBase extends CommandForm
         return md5($parms['SectionNumber'].$parms['ParentPage'].$parms['Caption']);
     }
 
+    function getObjectIt( $object )
+    {
+        return count($object->getVpds()) > 0
+            ? $object->getRegistry()->Query(
+                array(
+                    new FilterBaseVpdPredicate()
+                )
+            )
+            : $object->getAll();
+    }
+
 	function getId( $object_it, $value, $default )
 	{
+	    $ids = array();
 		$object_it->moveFirst();
 		while ( !$object_it->end() ) {
-			if ( mb_stripos($value, $object_it->getHtmlDecoded('Caption')) !== false ) {
-				return $object_it->getId();
-			}
+		    foreach( explode(',',$value) as $valueItem) {
+                if ( $object_it->getHtmlDecoded('Caption') == $valueItem ) {
+                    $ids[] = $object_it->getId();
+                }
+            }
 			$object_it->moveNext();
 		}
+		if ( count($ids) > 0 ) return join(',', $ids);
 		return $value == '' ? $value : $default;
-	}
-	
-	function useNotification()
-	{
-		return true;
 	}
 	
  	function buildStateIterator( $object )
@@ -254,10 +283,7 @@ class RequestsImportBase extends CommandForm
  	function create()
 	{
 		$this->request = $this->getObject();
-
-		if ( !$this->useNotification() ) {
-			$this->request->removeNotificator( 'EmailNotificator' );
-		}
+		$this->request->removeNotificator( 'EmailNotificator' );
 
 		$result = $this->parse();
 		$comments = array();
@@ -273,6 +299,7 @@ class RequestsImportBase extends CommandForm
                 if ( $this->request->IsReference($field) )
                 {
                     $object = $this->request->getAttributeObject($field);
+                    $object->removeNotificator('EmailNotificator');
                     getFactory()->resetCachedIterator( $object );
 
                     if ( preg_match('/^Undefined:(.+)$/si', $value, $match) )
@@ -290,7 +317,7 @@ class RequestsImportBase extends CommandForm
                                     })
                                 );
                                 $id = $undefined[$parentRow['Id']];
-                                if ( $id == '' ) $id = $this->getId($object->getAll(), $parentRow, '');
+                                if ( $id == '' ) $id = $this->getId($this->getObjectIt($object), $parentRow, '');
                                 if ( $id == '' && in_array($field, array('Author')) ) $id = $parentId;
                             }
                             $result[$i][$field] = $id;
@@ -298,7 +325,7 @@ class RequestsImportBase extends CommandForm
                         else {
                             // other references
                             $self = $this;
-                            $objectIt = $object->getAll();
+                            $objectIt = $this->getObjectIt($object);
                             $valueObject = $object instanceof Tag || $object instanceof Watcher || $object instanceof User;
 
                             $result[$i][$field] = join(',', array_filter(
@@ -313,21 +340,26 @@ class RequestsImportBase extends CommandForm
                                 }
                             ));
                         }
-                    }
-
+                   }
                     if ( $result[$i][$field] > 0 ) {
                         if ( $object instanceof Project ) {
                             $result[$i]['VPD'] = $object->getExact($result[$i][$field])->get('VPD');
                         }
                     }
                     elseif ( $result[$i][$field] != '' ) {
-                        $refId = $object->add_parms(
-                            array(
-                                'Caption' => $result[$i][$field]
-                            )
-                        );
-                        if ( $refId > 0 ) {
-                            $result[$i][$field] = $refId;
+                        $resultValue = array();
+                        foreach( explode(',', $result[$i][$field]) as $resultItem ) {
+                            $refId = $object->add_parms(
+                                array(
+                                    'Caption' => $resultItem
+                                )
+                            );
+                            if ( $refId > 0 ) {
+                                $resultValue[] = $refId;
+                            }
+                        }
+                        if ( count($resultValue) > 0 ) {
+                            $result[$i][$field] = join(',',$resultValue);
                         }
                         else {
                             unset($result[$i][$field]);
@@ -352,13 +384,17 @@ class RequestsImportBase extends CommandForm
 
             try {
                 $parms = $result[$i];
-                $request_id = getFactory()->createEntity($this->request, $parms)->getId();
-                if ( $request_id > 0 ) $imported++;
+
+                $request_id = getFactory()->mergeEntity($this->request, $parms)->getId();
+                if ( $request_id > 0 ) {
+                    $undefined[$result[$i]['Id']] = $request_id;
+                    $imported++;
+                }
 
                 $commentObject = getFactory()->getObject('Comment');
                 foreach( array_reverse($comments) as $key => $comment ) {
                     if ( $comment == '' ) continue;
-                    getFactory()->createEntity($commentObject, array(
+                    getFactory()->mergeEntity($commentObject, array(
                         'ObjectId' => $request_id,
                         'ObjectClass' => get_class($this->request),
                         'AuthorId' => getSession()->getUserIt()->getId(),
@@ -399,11 +435,12 @@ class RequestsImportBase extends CommandForm
 		$xml .= '<tr>';
 		$xml .= '<th>'.translate('№').'</th>';
 		
-		for ( $i = 0; $i < count($fields); $i++ )
+		foreach ( $fields as $field )
 		{
-			if ( $rows > 0 && !array_key_exists($fields[$i], $result[0]) ) continue;
-			
-			$xml .= '<th>'.translate($object->getAttributeUserName($fields[$i])).'</th>';
+			if ( $rows > 0 && !array_key_exists($field, $result[0]) ) continue;
+            $title = translate($object->getAttributeUserName($field));
+            if ( $title == '' ) $title = $field;
+			$xml .= '<th>'.$title.'</th>';
 		}
 		$xml .= '</tr>';
 
@@ -414,49 +451,71 @@ class RequestsImportBase extends CommandForm
 			$xml .= '<tr>';
 			$xml .= '<td>'.($i+1).'</td>';
 
-			for ( $j = 0; $j < count($fields); $j++ )
+			foreach ( $fields as $field )
 			{
-				if ( $rows > 0 && !array_key_exists($fields[$j], $result[0]) ) continue;
+				if ( $rows > 0 && !array_key_exists($field, $result[0]) ) continue;
 				
-				if ( $object->IsReference($fields[$j]) )
+				if ( $object->IsReference($field) )
 				{
-					$ref = $object->getAttributeObject($fields[$j]);
+					$ref = $object->getAttributeObject($field);
 
-                    $parts = preg_split('/:/', $result[$i][$fields[$j]]);
+                    $parts = preg_split('/:/', $result[$i][$field]);
                     if ( $parts[0] == 'Undefined' ) {
-                        $parentId = array_pop($parts);
-                        $foundRow = array_shift(
-                            array_filter($result, function($item) use($parentId) {
-                                return $item['Id'] == $parentId;
-                            })
-                        );
-                        $value = is_array($foundRow) ? htmlentities($foundRow['Caption']) : $parentId;
+                        $parentIds = explode(',',array_pop($parts));
+                        $foundRows = array_filter($result, function($item) use($parentIds) {
+                            return in_array($item['Id'], $parentIds);
+                        });
+                        $value = count($foundRows) > 0
+                            ? join(',',
+                                array_map(function($item) {
+                                        return htmlentities($item['Caption']);
+                                    }, $foundRows ))
+                            : join(',',$parentIds);
                     }
                     else {
-                        $value = $result[$i][$fields[$j]];
-                        $default_value = $object->getDefaultAttributeValue($fields[$j]);
+                        $value = $result[$i][$field];
+                        $default_value = $object->getDefaultAttributeValue($field);
 
                         if ( $value == '' ) $value = $default_value;
+                        if ( $value != '' ) {
+                            if ( $ref instanceof \MetaobjectCacheable ) {
+                                $ref_it = $ref->getExact($value);
+                            }
+                            else {
+                                $ref_it = $ref->getRegistryBase()->Query(array(
+                                    new FilterInPredicate(explode(',',$value)),
+                                    new FilterBaseVpdPredicate()
+                                ));
+                                if ( $ref_it->count() < 1 && $ref->getAttributeType('Caption') != '' ) {
+                                    $ref_it = $ref->getRegistryBase()->Query(array(
+                                        new FilterAttributePredicate('Caption', explode(',',$value)),
+                                        new FilterBaseVpdPredicate()
+                                    ));
+                                }
+                            }
+                        }
+                        else {
+                            $ref_it = $ref->getEmptyIterator();
+                        }
 
-                        $ref_it = is_numeric($value)
-                            ? $ref->getExact( $value )
-                            : ($ref->getAttributeType('Caption') != ''
-                                ? $ref->getByRef('Caption', $value)
-                                : $ref->getEmptyIterator());
+                        if ( $ref_it->getId() < 1 ) {
+                            $ref_it = $ref->getExact( $default_value );
+                        }
 
-                        if ( $ref_it->getId() < 1 ) $ref_it = $ref->getExact( $default_value );
-
-                        $value = $ref_it->getId() > 0
-                            ? $ref_it->getDisplayName()
-                            : '';
+                        $valueItems = array();
+                        while( !$ref_it->end() ) {
+                            $valueItems[] = $ref_it->getDisplayName();
+                            $ref_it->moveNext();
+                        }
+                        $value = join(', ', $valueItems);
                     }
 				}
 				else
 				{
-					switch ( $fields[$j] )
+					switch ( $field )
 					{
 						case 'ObjectChangeLog':
-							$changes = $result[$i][$fields[$j]];
+							$changes = $result[$i][$field];
 							$value = '';
 	
 							foreach ( $changes as $change )
@@ -467,7 +526,7 @@ class RequestsImportBase extends CommandForm
 							break;
 	
 						case 'Attachments':
-							$attachments = $result[$i][$fields[$j]];
+							$attachments = $result[$i][$field];
 							$value = '';
 	
 							foreach ( $attachments as $attachment )
@@ -478,21 +537,21 @@ class RequestsImportBase extends CommandForm
 	
 						case 'State':
 						    if ( is_object($state_it) ) {
-						        $state_it->moveTo('ReferenceName', $result[$i][$fields[$j]]);
+						        $state_it->moveTo('ReferenceName', $result[$i][$field]);
 						        $value = $state_it->get('Caption');
 						    }
 						    break;
 						    
 						default:
-							$value = $result[$i][$fields[$j]];
+							$value = $result[$i][$field];
 							if ( $value == '' ) {
-								$value = $object->getDefaultAttributeValue($fields[$j]);
+								$value = $object->getDefaultAttributeValue($field);
 							}
 							$value = nl2br(htmlentities($value));
 					}
 				}
 				
-				$xml .= '<td id="'.$fields[$j].'">'.$value.'</td>';
+				$xml .= '<td id="'.$field.'">'.$value.'</td>';
 			}
 			$xml .= '</tr>';
 		}

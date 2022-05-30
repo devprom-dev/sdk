@@ -2,6 +2,7 @@
 include "PMCustomAttributeIterator.php";
 include "predicates/CustomAttributeEntityPredicate.php";
 include "predicates/CustomAttributeValuePredicate.php";
+include "predicates/CustomAttributeDateIntervalPredicate.php";
 include "predicates/CustomAttributeObjectPredicate.php";
 include_once "persisters/CustomAttributesPersister.php";
 
@@ -17,8 +18,9 @@ class PMCustomAttribute extends MetaobjectCacheable
  		));
  		
  		$this->setAttributeType('AttributeType', 'REF_CustomAttributeTypeId');
+        $this->setAttributeEditable('AttributeType', false);
         $this->setAttributeDescription('Groups', text(2645));
- 		
+
  		foreach( array('ObjectKind', 'AttributeTypeClassName', 'Capacity') as $field ) {
 			$this->addAttributeGroup($field, 'system');
 		}
@@ -56,27 +58,13 @@ class PMCustomAttribute extends MetaobjectCacheable
  		if ( $kind == '' ) {
 			return $ref->getDisplayName();
  		}
- 		else
- 		{
- 			switch ( $ref->getEntityRefName() )
- 			{
- 				case 'pm_ChangeRequest':
- 					$type_it = getFactory()->getObject('pm_IssueType')->getByRef('ReferenceName', $kind);
- 					break;
- 					
- 				case 'pm_Task':
- 					$type_it = getFactory()->getObject('pm_TaskType')->getByRef('ReferenceName', $kind);
- 					return $ref->getDisplayName().': '.$type_it->getDisplayName();
-
- 				case 'WikiPage':
- 					$type_it = getFactory()->getObject('WikiPageType')->getByRef('ReferenceName', $kind);
- 					break;
- 					
- 				default:
- 					return '';
- 			}
- 			
- 			return $type_it->getDisplayName();
+ 		else {
+            $attributes = $ref->getAttributesByGroup('customattribute-descriptor');
+            if ( count($attributes) > 0 ) {
+                $type_it = $ref->getAttributeObject($attributes[0])->getByRef('ReferenceName', $kind);
+                return $type_it->getDisplayName();
+            }
+            return '-';
  		}
  	}
 
@@ -258,9 +246,8 @@ class PMCustomAttribute extends MetaobjectCacheable
 
 		$persister = new CustomAttributesPersister();
 		$persister->setObject($registry->getObject());
-		$registry->setPersisters(array($persister));
 
-		$object_it = $registry->getAll();
+		$object_it = $registry->Query(array($persister));
 		while( !$object_it->end() ) {
 			$data = $object_it->getData();
 
@@ -275,4 +262,14 @@ class PMCustomAttribute extends MetaobjectCacheable
 			$object_it->moveNext();
 		}
 	}
+
+    function getValidators()
+    {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new ModelValidatorUnique(array('Caption', 'EntityReferenceName'))
+            )
+        );
+    }
 }

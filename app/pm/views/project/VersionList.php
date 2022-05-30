@@ -4,11 +4,13 @@ include_once SERVER_ROOT_PATH . "pm/classes/plan/sorts/SortStageClause.php";
 include_once SERVER_ROOT_PATH . 'pm/views/issues/IssuesProgressFrame.php';
 include_once SERVER_ROOT_PATH . 'pm/views/plan/ReleaseForm.php';
 include_once SERVER_ROOT_PATH . 'pm/views/plan/IterationForm.php';
-include "PlanChart.php";
+include_once SERVER_ROOT_PATH . 'pm/views/project/MilestoneForm.php';
 
 class VersionList extends PMPageList
 {
- 	var $release_it, $iteration_it;
+ 	private $release_it;
+ 	private $iteration_it;
+ 	private $milestone_it;
 
     function getIt( $object_it )
 	{
@@ -40,6 +42,20 @@ class VersionList extends PMPageList
 			$this->release_it->moveToId($object_it->getId());
 			return $this->release_it->getCurrentIt();
 		}
+
+        if ( $object_it->get('State') == 'Milestone' )
+        {
+            if ( !is_object($this->milestone_it) ) {
+                $this->milestone_it = getFactory()->getObject('Milestone')->getRegistry()->Query(
+                    array(
+                        new FilterVpdPredicate(),
+                        new CommentRecentPersister()
+                    )
+                );
+            }
+            $this->milestone_it->moveToId($object_it->getId());
+            return $this->milestone_it->getCurrentIt();
+        }
 		
 		return $object_it;
 	}
@@ -52,8 +68,6 @@ class VersionList extends PMPageList
 
 	function drawCell( $source_it, $attr )
 	{
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-
 		$object_it = $this->getIt( $source_it );
 		if ( $object_it->getId() == '' ) return;
 
@@ -117,77 +131,9 @@ class VersionList extends PMPageList
                 $frame->draw();
                 return;
 		}
-		
-
-        switch ( $object_it->object->getClassName() )
-        {
-            case 'pm_Version':
-                if ( $attr == 'Deadlines' )
-                {
-                    $start_date = $object_it->get('StartDate');
-                    $finish_date = $object_it->get('FinishDate');
-
-                    if ( $methodology_it->HasStatistics() )
-                    {
-                        $estimated_start = $object_it->get('EstimatedStartDate');
-                        $estimated_finish = $object_it->get('EstimatedFinishDate');
-
-                        if ( $start_date != $estimated_start || $finish_date != $estimated_finish )
-                        {
-                            echo translate('По плану').':<br/>';
-                            $this->drawDates($start_date,$finish_date);
-
-                            echo '<br/>'.translate('Фактические').':<br/>';
-                            $this->drawDates($estimated_start,$estimated_finish);
-
-                            $offset = $object_it->getFinishOffsetDays();
-                            if ( $offset > 0 )
-                            {
-                                echo '<br/><span style="color:red;">'.translate('Отклонение от графика').': '.$offset.' '.translate('дн.').'</span>';
-                            }
-                        }
-                        else {
-                            $this->drawDates($start_date,$finish_date);
-                        }
-                    }
-                    else if ( $start_date != '' || $finish_date != '' ) {
-                        $this->drawDates($start_date,$finish_date);
-                    }
-                    return;
-                }
-                break;
-
-            case 'pm_Release':
-                if ( $attr == 'Deadlines' )
-                {
-                    $offset = $object_it->getFinishOffsetDays();
-                    if ( $offset > 0 )
-                    {
-                        echo translate('По плану').':<br/>';
-                        $this->drawDates($object_it->get('StartDate'),$object_it->get('FinishDate')).'<br/>';
-
-                        echo '<br/><br/>'.translate('Фактические').':<br/>';
-                        $this->drawDates($object_it->get('EstimatedStartDate'),$object_it->get('EstimatedFinishDate'));
-
-                        echo '<br/><span style="color:red;">'.translate('Отклонение от графика').': '.$offset.' '.translate('дн.').'</span>';
-                    }
-                    else {
-                        $this->drawDates($object_it->get('StartDate'),$object_it->get('FinishDate'));
-                    }
-                    return;
-                }
-                break;
-        }
 
         parent::drawCell( $source_it, $attr );
 	}
-
-	protected function drawDates( $start, $finish )
-    {
-        echo getSession()->getLanguage()->getDateFormattedShort($start);
-        echo '&nbsp;:&nbsp;';
-        echo getSession()->getLanguage()->getDateFormattedShort($finish);
-    }
 
 	function getItemActions( $column_name, $object_it )
 	{
@@ -220,7 +166,7 @@ class VersionList extends PMPageList
 				    ));
 				}
 				
-	            $module_it = getFactory()->getObject('PMReport')->getExact('assignedtasks');
+	            $module_it = getFactory()->getObject('PMReport')->getExact('tasksbyassignee');
 	            if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 	            {
 					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
@@ -256,7 +202,7 @@ class VersionList extends PMPageList
 					));
 				}
 
-                $task_list_it = getFactory()->getObject('PMReport')->getExact('assignedtasks');
+                $task_list_it = getFactory()->getObject('PMReport')->getExact('tasksbyassignee');
 	            if ( getFactory()->getAccessPolicy()->can_read($task_list_it) )
 	            {
 					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
@@ -334,11 +280,14 @@ class VersionList extends PMPageList
 		switch ( $it->object->getClassName() )
 		{
 			case 'pm_Version':
-				$form = new ReleaseForm();
+				$form = new ReleaseForm($it->object);
 				break;
 			case 'pm_Release':
-				$form = new IterationForm();
+				$form = new IterationForm($it->object);
 				break;
+            case 'pm_Milestone':
+                $form = new MilestoneForm($it->object);
+                break;
 		}
 		
 	    $form->show($it);
@@ -355,8 +304,6 @@ class VersionList extends PMPageList
  		switch ( $attr ) {
  			case 'Progress':
  				return 160;
- 			case 'Deadlines':
- 				return 210;
  			default:
  				return parent::getColumnWidth( $attr );
  		}
@@ -378,22 +325,5 @@ class VersionList extends PMPageList
 
     function getItemClass($it) {
         return get_class($this->getIt($it)->object);
-    }
-
-    function render($view, $parms)
-    {
-        echo '<div class="hie-chart">';
-            $planChart = new PlanChart();
-            $planChart->setTable($this->getTable());
-            $planChart->retrieve();
-            $planChart->render($view, $parms);
-        echo '</div>';
-
-        if ( $_REQUEST['dashboard'] != '' ) return;
-
-        $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
-        if ( $methodologyIt->HasPlanning() || $methodologyIt->HasReleases() ) {
-            parent::render($view, $parms);
-        }
     }
 }

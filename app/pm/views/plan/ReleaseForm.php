@@ -141,7 +141,7 @@ class ReleaseForm extends PMPageForm
 			case 'ActualVelocity':
                 $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
                 $strategy = $methodology_it->getEstimationStrategy();
-				return $strategy->getReleaseVelocityText($this->getObjectIt());
+				return \TextUtils::stripAnyTags($strategy->getReleaseVelocityText($this->getObjectIt()));
 
             case 'Capacity':
             case 'LeftDuration':
@@ -223,10 +223,11 @@ class ReleaseForm extends PMPageForm
 
     function getShortAttributes()
     {
+        if ( array_key_exists('attributesonly', $_REQUEST) ) return parent::getShortAttributes();
         return array_merge(
             parent::getShortAttributes(),
             array(
-                'StartDate', 'FinishDate'
+                'StartDate', 'FinishDate', 'ActualVelocity', 'LeftDuration', 'LeftVolume', 'Capacity'
             )
         );
     }

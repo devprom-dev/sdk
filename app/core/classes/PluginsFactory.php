@@ -343,39 +343,26 @@ class PluginsFactory
  		{
 	 		foreach ( $namespace as $plugin )
 	 		{
-	 			switch ( $section )
-	 			{
+	 			switch ( $section ) {
 	 				case 'pm':
 	 					$base_url = '/pm/'.getSession()->getProjectIt()->get('CodeName').'/module/'.$plugin->getNamespace().'/';
 	 					break;
-	 					
 	 				default:
 	 					$base_url = '/'.$section.'/module/'.$plugin->getNamespace().'/';
 	 			}
 		 					
-	 			if ( is_subclass_of($plugin, $this->_getPluginClass4Section( $section ) ) )
-	 			{
-		 			$plugin_tabs = $plugin->getHeaderTabs();
-
-		 			foreach ( $plugin_tabs as $tab )
-		 			{
+	 			if ( is_subclass_of($plugin, $this->_getPluginClass4Section( $section ) ) ) {
+		 			foreach ( $plugin->getHeaderTabs() as $tab ) {
 		 				$tab['url'] = $base_url.$tab['module'].$tab['url'];
 						if ( $tab['uid'] == '' ) $tab['uid'] = $tab['module'];
-		 				$skip = false;
-		 				
-		 				if ( is_array($tab['items']) )
-		 				{
-			 				foreach ( array_keys($tab['items']) as $key )
-			 				{
+
+		 				if ( is_array($tab['items']) ) {
+			 				foreach ( array_keys($tab['items']) as $key ) {
 			 					if ( $tab['items'][$key]['url'] != '' ) continue;
 			 					$tab['items'][$key]['url'] = $base_url.$tab['items'][$key]['module'];
 			 				}
 		 				}
-
-						if ( !$skip )
-						{
-		 					array_push( $tabs, $tab );
-						}
+                       array_push( $tabs, $tab );
 		 			}
 	 			}
 	 		}

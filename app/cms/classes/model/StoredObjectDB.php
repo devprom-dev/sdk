@@ -13,6 +13,8 @@ include "predicates/FilterInPredicate.php";
 include "predicates/FilterNotInPredicate.php";
 include "predicates/FilterModifiedAfterPredicate.php";
 include "predicates/FilterModifiedSinceSecondsPredicate.php";
+include "predicates/FilterCreatedSinceSecondsPredicate.php";
+include "predicates/FilterModifiedMoreThanSecondsPredicate.php";
 include "predicates/FilterModifiedBeforePredicate.php";
 include "predicates/FilterNextSiblingsPredicate.php";
 include "predicates/FilterNextKeyPredicate.php";
@@ -41,7 +43,7 @@ include "sorts/SortOrderedClause.php";
 include "sorts/SortIndexClause.php";
 include "sorts/SortRecentClause.php";
 include "sorts/SortKeyClause.php";
-include "sorts/SortReverseKeyClause.php";
+include "sorts/SortUIDClause.php";
 include "sorts/SortRevOrderedClause.php";
 include "sorts/SortVPDClause.php";
 include "sorts/SortRecentModifiedClause.php";
@@ -57,13 +59,13 @@ class StoredObjectDB extends AbstractObject
  	var $default_sorts = array();
  	private $registry = null;
  	private $persisters = array();
+ 	private $filters = array();
 	
 	//----------------------------------------------------------------------------------------------------------
 	function StoredObjectDB( ObjectRegistrySQL $registry = null ) 
 	{
 		$this->setRegistry(is_object($registry) ? $registry : new ObjectRegistrySQL());
 		$this->resetFilters();
-		$this->resetSortClause();
 		$this->resetAggregates();
 		$this->resetPersisters();
 		$this->resetGroupClause();
@@ -170,26 +172,18 @@ class StoredObjectDB extends AbstractObject
 		
 	function setVpdContext( $context = null )
 	{
-		global $model_factory;
-		
-		if ( is_string($context) )
-		{
+		if ( is_string($context) ) {
 			$this->vpd_context = $context;
 			return; 
 		}
-		
-		if ( is_a($context, 'OrderedIterator') )
-		{
+		if ( is_a($context, 'OrderedIterator') ) {
 			$this->vpd_context = $context->get('VPD');
 			return; 
 		}
-		
-		if ( is_a($context, 'SotredObjectDB') )
-		{
+		if ( is_a($context, 'SotredObjectDB') ) {
 			$this->vpd_context = $context->getVpdValue();
 			return; 
 		}
-		
 		$this->vpd_context = '';
 	}
 	
@@ -236,60 +230,35 @@ class StoredObjectDB extends AbstractObject
         return $sql;
 	}
 
-	//----------------------------------------------------------------------------------------------------------
-	function getRecordCount( $alias = 't' ) 
-	{
-		global $model_factory;
-		
-		$sql = 'SELECT COUNT(1) cnt FROM '.$this->getRegistry()->getQueryClause().' '.$alias.' WHERE 1 = 1 ';
-		
-		$sql .= $this->getVpdPredicate($alias).' '.$this->getFilterPredicate();
-		
-		$this->checkSelectOnly($sql);
-
-		$it = $this->createSQLIterator($sql);
-		
-		return $it->get('cnt');
+	function getRecordCount( $alias = 't' ) {
+	    return $this->getRegistry()->Count();
 	}
-	
-	//----------------------------------------------------------------------------------------------------------
-	function getCount() 
-	{
-		$sql = 'SELECT COUNT(1) Count FROM '.$this->getRegistry()->getQueryClause().' t WHERE 1 = 1 '.$this->getVpdPredicate().$this->getFilterPredicate();
-
-		return $this->createSQLIterator($sql);
-	}	
 	
 	//----------------------------------------------------------------------------------------------------------
 	function getExact( $objectid ) 
 	{
         $objectid = \TextUtils::parseItems($objectid);
 	    if ( count($objectid) < 1 ) return $this->getEmptyIterator();
-        return $this->getRegistry()->Query(
-            array(
-                new FilterInPredicate($objectid)
-            )
-        );
+        return $this->getRegistry()->QueryById($objectid);
 	}
 
 	public function setRegistry( $registry )
 	{
 		$this->registry = $registry;
-
 		$this->registry->setObject($this);
 	}
 	
 	public function getRegistry()
 	{
 		if ( !is_object($this->registry) ) return $this->registry;
-		
-		$registry = clone $this->registry;
-		$registry->setObject($this);
-		$registry->setFilters(array());
-		$registry->setGroups(array());
-		$registry->setSorts(array()); 
-		$registry->setPersisters( $this->persisters );
-		return $registry;
+
+        $registry = clone $this->registry;
+        $registry->setObject($this);
+        $registry->setFilters($this->getFilters());
+        $registry->setSorts($this->getSortDefault());
+        $registry->setPersisters( $this->persisters );
+
+        return $registry;
 	}
 
     public function getRegistryBase()
@@ -300,52 +269,23 @@ class StoredObjectDB extends AbstractObject
         $registry->setObject($this);
         $registry->setFilters(array());
         $registry->setGroups(array());
-        $registry->setSorts(array());
+        $registry->setSorts($this->getSortDefault());
         $registry->setPersisters(array_filter($this->persisters, function($persister) {
             return $persister->IsPersisterImportant();
         }));
         return $registry;
     }
 
-	// to be removed
-	public function getRegistryDefault()
-	{
-		$registry = clone $this->registry;
-		
-		$registry->setObject($this);
-		
-	    $filters = array();
-
-		$vpds = $this->getVpds();
-
-	    if ( count($vpds) > 0 ) $filters[] = new FilterVPDPredicate($vpds);
-
-		$registry->setFilters(array_merge($registry->getFilters(), $filters));
-
-	    $sorts = array();
-	    
-	    if ( count($sorts) < 1 ) $sorts = $this->default_sorts;
-
-		$registry->setSorts(array_merge($registry->getSorts(), $sorts));
-
-		$registry->setPersisters( $this->persisters );
-		
-		$registry->setLimit( $this->registry->getLimit() );
-		
-		$registry->setDefaultSort( $this->defaultsort );
-		
-		return $registry;
-	}
-	
 	function createSQLIterator( $sql )
 	{
 		return $this->registry->createSQLIterator( $sql );
 	}
 	
 	// to be removed
-	function getAll() 
-	{
-		return $this->getRegistryDefault()->getAll();
+	function getAll() {
+		return $this->getRegistry()->Query(array(
+		    new FilterVpdPredicate()
+        ));
 	}
 
 	//----------------------------------------------------------------------------------------------------------
@@ -357,7 +297,7 @@ class StoredObjectDB extends AbstractObject
 	//----------------------------------------------------------------------------------------------------------
 	function getByRef2( $reference_field, $reference_object, $reference_field2, $reference_object2) 
 	{
-		return $this->getByRefArray( 
+		return $this->getByRefArray(
 			array( $reference_field => $reference_object,
 				   $reference_field2 => $reference_object2 ) );
 	}
@@ -464,7 +404,7 @@ class StoredObjectDB extends AbstractObject
 			$sql .= $this->getVpdPredicate($alias);
 		}
 
-		$sql .= $this->getFilterPredicate();
+		$sql .= $this->registry->getFilterPredicate(array());
 
 		return $sql;
 	}
@@ -472,7 +412,7 @@ class StoredObjectDB extends AbstractObject
 	//----------------------------------------------------------------------------------------------------------
 	function getByRefArray( $field_values, $limited_records = 0, $offset_page = 0) 
 	{
-		$sql = 'SELECT '.$this->getRegistry()->getSelectClause('t').' FROM '.$this->getRegistry()->getQueryClause().' t WHERE ';
+		$sql = 'SELECT '.$this->getRegistry()->getSelectClause(array(), 't').' FROM '.$this->getRegistry()->getQueryClause(array()).' t WHERE ';
 		$sql .= $this->getByRefArrayWhere( $field_values, $limited_records );
 		
 		$limited_records = DAL::Instance()->Escape($limited_records);
@@ -485,7 +425,7 @@ class StoredObjectDB extends AbstractObject
 			$sql .= ' GROUP BY '.$group;
 		}
 		
-		$sort = $this->getSortClause('t');
+		$sort = $this->registry->getSortClause(array(), 't');
 		
 		if ( $sort != '' )
 		{
@@ -504,7 +444,7 @@ class StoredObjectDB extends AbstractObject
 	//----------------------------------------------------------------------------------------------------------
 	function getByRefArrayCount( $field_values, $alias = 't' ) 
 	{
-		$sql = 'SELECT COUNT(1) FROM '.$this->getRegistry()->getQueryClause().' '.$alias.' WHERE ';
+		$sql = 'SELECT COUNT(1) FROM '.$this->getRegistry()->getQueryClause(array()).' '.$alias.' WHERE ';
 
 		$sql .= $this->getByRefArrayWhere( $field_values, 0, $alias );
 
@@ -522,166 +462,48 @@ class StoredObjectDB extends AbstractObject
 		return $this->getByRefArray( $field_values, 1 );
 	}
 	 
-	//----------------------------------------------------------------------------------------------------------
-	function getByRefArrayEarliest( $field_values)
-	{
-		$this->defaultsort = 'RecordModified ASC';
-		return $this->getByRefArray( $field_values, 1 );
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getBetween( $reference_field, $bound_a, $bound_b ) 
-	{
-		$bound_a = DAL::Instance()->Escape($bound_a);
-		$bound_b = DAL::Instance()->Escape($bound_b);
-		
-		$sql = 'SELECT '.$this->getRegistry()->getSelectClause('t').' FROM '.$this->getRegistry()->getQueryClause().' t WHERE '.
-			$reference_field.' BETWEEN '.$bound_a.' AND '.$bound_b;
-			
-		$sql .= $this->getVpdPredicate();
-		
-		if(isset($this->defaultsort)) $sql .= ' ORDER BY '.$this->defaultsort;
-
-		return $this->createSQLIterator($sql);
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getIds() 
-	{
-		$sql = 'SELECT '.$this->getEntityRefName().'Id FROM '.$this->getRegistry()->getQueryClause().' WHERE 1 = 1 ';
-        
-		$sql .= $this->getVpdPredicate();
-
-		$predicate = $this->getDataPredicate('ids');
-		if($predicate != '') $sql .= ' AND '.$predicate.' ';
-
-		if(isset($this->defaultsort)) $sql .= ' ORDER BY '.$this->defaultsort;
-
-		return $this->createSQLIterator($sql);
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getIn( $reference_field, $object_it ) 
-	{
-		$in_values = array();
-		$object_it->moveFirst();
-		for($i = 0; $i < $object_it->count(); $i++) {
-			array_push($in_values, $object_it->getId());
-			$object_it->moveNext();
-		}
-		$object_it->moveFirst();
-		
-		return $this->getInArray( $reference_field, $in_values);
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getInArray( $reference_field, $in_values ) 
-	{
-		if ( !is_array($in_values) || count($in_values) < 1 ) 
-		{
-			$in_values = array(0);
-		}
-		
-		if ( $this->isString($reference_field) ) 
-		{
-			for($i = 0; $i < count($in_values); $i++) {
-				$in_values[$i] = "'".DAL::Instance()->Escape($in_values[$i])."'";
-			}
-		}
-		else
-		{
-			for($i = 0; $i < count($in_values); $i++) {
-				$in_values[$i] = $in_values[$i] == '' ? 0 : DAL::Instance()->Escape($in_values[$i]);
-			}
-		}
-		
-		$sql = 'SELECT '.$this->getRegistry()->getSelectClause('t').' FROM '.$this->getRegistry()->getQueryClause().' t WHERE t.'.
-			$reference_field.' IN ('.join(',',$in_values).') ';
-			
-		$sql .= $this->getVpdPredicate();
-        
-		if(isset($this->defaultsort)) $sql .= ' ORDER BY '.$this->defaultsort;
-
-		return $this->createSQLIterator($sql);
-	}
-	
-	//----------------------------------------------------------------------------------------------------------
-	function getLike( $text, $like_field = 'Caption' )
-	{
-		$text = DAL::Instance()->Escape( $text );
-		
-		$sql = 'SELECT '.$this->getRegistry()->getSelectClause('').' FROM '.$this->getRegistry()->getQueryClause().' WHERE '.$like_field." LIKE '%".$text."%' ";
-        
-		$sql .= $this->getVpdPredicate();
-        
-		$predicate = $this->getDataPredicate('like');
-		if($predicate != '') $sql .= ' AND '.$predicate.' ';
-		$sql = $sql."ORDER BY ".$like_field;
-
-		return $this->createSQLIterator($sql);
-	}
-
 	// to be removed
 	function getFirst( $limit = 1, $sorts = null )
 	{
-		$registry = $this->getRegistryDefault();
-		
-		$registry->addSort( new SortAttributeClause('RecordCreated') );
-		
+		$registry = $this->getRegistry();
 		$registry->setLimit( $limit );
 		
-		return $registry->getAll();
+		return $registry->Query(array(
+            new SortAttributeClause('RecordCreated'),
+            new FilterVpdPredicate()
+        ));
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
 	function getLatest( $limit = 10, $offset = 0 )
 	{
-		$registry = $this->getRegistryDefault();
-		
-		$registry->setDefaultSort('');
-		
-		$registry->setSorts( array(new SortRecentClause()) );
-		
+		$registry = $this->getRegistry();
 		$registry->setLimit( $limit );
-		
-		return $registry->getAll();
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getEarliest( $limit = 1 )
-	{
-		$sql = 'SELECT '.$this->getRegistry()->getSelectClause('t').' FROM '.$this->getRegistry()->getQueryClause().' t WHERE 1 = 1 ';
-		
-		$sql .= $this->getVpdPredicate('t');
-        
-		$group = $this->getGroupClause('t');
-
-		if ( $group != '' )
-		{
-			$sql .= ' GROUP BY '.$group;
-		}
-		
-		$sql = $sql." ORDER BY t.RecordModified ASC LIMIT ".$limit;
-
-		return $this->createSQLIterator($sql);
+		return $registry->Query(array(
+                    new SortRecentClause(),
+                    new FilterVpdPredicate()
+                ));
 	}
 
 	function getAggregated( $alias = 't', $sorts = array(), $persisters = array() )
 	{
 		$aggs = $this->getAggregateObjects();
 
-		if ( count($persisters) < 1 ) $persisters = $this->getPersisters();
-		
 		$outer_columns = array();
 		$inner_columns = array();
 		$agg_attrs = array();
 		$agg_columns = array();
 
 		$usedPersisters = array();
+        $registry = $this->getRegistry();
+        $persisters = array_merge($registry->getPersisters(), $persisters);
+        $filters = $registry->getFilters();
+
 		foreach ( $aggs as $aggregate )
 		{
 			foreach( $persisters as $persister ) {
 				if ( !$persister instanceof ObjectPersister ) continue;
+                if ( $persister->IsPersisterImportant() ) continue;
 				if ( count(array_intersect(array($aggregate->getAggregatedAttribute(), $aggregate->getAttribute()), $persister->getAttributes())) < 1 ) continue;
 				$usedPersisters[get_class($persister)] = $persister;
 			}
@@ -704,12 +526,12 @@ class StoredObjectDB extends AbstractObject
 			$alias = $aggregate->getAlias();
 		}
 
-		$registry = $this->getRegistryDefault();
-		$registry->setPersisters($usedPersisters);
+		$registry = $this->getRegistryBase();
+        $registry->setFilters($filters);
 
 		$inner_columns = array_unique(array_merge( array_unique($inner_columns), array_unique($agg_attrs) ));
 		
-		$select_clause = $registry->getSelectClause($alias, false);
+		$select_clause = $registry->getSelectClause($usedPersisters, $alias, false);
 		foreach( $inner_columns as $key => $column ) {
 			$column = str_replace($alias.'.', '', $column);
 			if ( strpos( $select_clause, ') '.$column.' ' ) > 0 || strpos( $select_clause, '`'.$column.'`' ) > 0 ) {
@@ -717,20 +539,20 @@ class StoredObjectDB extends AbstractObject
 			} 
 		}
 
-		$sort_clause = $this->getSortClause($alias);
-		
-		$inner_select = ($select_clause != '' 
+		$sort_clause = $registry->getSortClause($sorts, $alias);
+
+		$inner_select = ($select_clause != ''
 			? join(',', array_merge($inner_columns, array($select_clause))) 
 			: join(',', $inner_columns));
 
-		$predicate = $this->getFilterPredicate();
+		$predicate = $registry->getFilterPredicate(array());
 		if ( strpos($predicate, 'VPD') === false ) {
 			$vpdFilter = $this->isVpdEnabled() && $this->getVpdValue() != '' ? " AND t.VPD IN ('".join("','",$this->getVpds())."') " : "";
 		}
 
 		$sql = " SELECT ".join(',', $outer_columns).", ".join(',', $agg_columns).
 			   "   FROM (SELECT ".$inner_select.
-			   "		   FROM ".$registry->getQueryClause()." t, (SELECT @row_num:=0) foo " .
+			   "		   FROM ".$registry->getQueryClause(array())." t, (SELECT @row_num:=0) foo " .
 			   "          WHERE 1 = 1 ".$predicate.$vpdFilter.
 			   ($sort_clause != '' ? " ORDER BY ".$sort_clause : "").
 			   "		) t ".
@@ -806,28 +628,6 @@ class StoredObjectDB extends AbstractObject
             $sql .= " LIMIT ".$this->registry->getLimit();
         }
 		return $this->createSQLIterator( $sql );
-	}
-
-	//----------------------------------------------------------------------------------------------------------
-	function getHashTable( $attributes )
-	{
-		$all_it = $this->getAll();
-		$iterator = new HashIterator( $this, $attributes, $all_it);
-		
-		return $iterator;
-	}
-	
-	//----------------------------------------------------------------------------------------------------------
-	function getChildren( $objectid )
-	{
-		$sql = 'SELECT '.$this->getRegistry()->getSelectClause('').' FROM '.$this->getRegistry()->getQueryClause().
-			' WHERE Parent'.$this->getEntityRefName().'Id = '.DAL::Instance()->Escape($objectid);
-			
-		$sql .= $this->getVpdPredicate();
-
-		if(isset($this->defaultsort)) $sql .= ' ORDER BY '.$this->defaultsort;
-
-		return $this->createSQLIterator($sql);
 	}
 
 	//----------------------------------------------------------------------------------------------------------
@@ -955,6 +755,10 @@ class StoredObjectDB extends AbstractObject
 	    return array();
     }
 
+    function getMappers() {
+        return array();
+    }
+
 	//----------------------------------------------------------------------------------------------------------
  	function add_parms( $parms )
 	{
@@ -1039,7 +843,7 @@ class StoredObjectDB extends AbstractObject
 			}
 
 			$defaultValue = $this->getDefaultAttributeValue($keys[$i]);
-			if ( $parms[$keys[$i]] == '' && $defaultValue != '' ) {
+			if ( !array_key_exists($keys[$i], $parms) && $defaultValue != '' ) {
 				$parms[$keys[$i]] = $defaultValue;
 			}
 
@@ -1101,11 +905,7 @@ class StoredObjectDB extends AbstractObject
 		if ( $this->getNotificationEnabled() && $id > 0 )
 		{
             getFactory()->resetCachedIterator($this);
-    		$new_object_it = $this->getRegistryBase()->Query(
-    		    array(
-    		        new FilterInPredicate($id)
-                )
-            );
+    		$new_object_it = $this->getRegistry()->QueryById($id);
     		if ( $new_object_it->getId() > 0 ) {
     			getFactory()->getEventsManager()->notify_object_add($new_object_it, $parms);
     		}
@@ -1200,11 +1000,12 @@ class StoredObjectDB extends AbstractObject
 
 		if ( $id instanceof OrderedIterator ) {
 			$prev_object_it = $id;
-			$id = $prev_object_it->getId();
 		}
 		else {
 			$prev_object_it = $this->getExact($id);
-			if ( $prev_object_it->getId() == '' ) throw new Exception('There is no object "'.$id.'" of the entity "'.get_class($this).'"');
+			if ( $prev_object_it->getId() == '' ) {
+			    throw new Exception('There is no object "'.$id.'" of the entity "'.get_class($this).'"');
+            }
 		}
 
 		$imageattributes = array();
@@ -1225,7 +1026,7 @@ class StoredObjectDB extends AbstractObject
 			}
 		}
 
-        $now_object_it = $this->getRegistryDefault()->Store( $prev_object_it, $parms );
+        $now_object_it = $this->getRegistry()->Store( $prev_object_it, $parms );
 		
 		if ( count($imageattributes) > 0 || count($fileattributes) > 0 ) {
 		    foreach( $imageattributes as $attribute ) {
@@ -1242,14 +1043,13 @@ class StoredObjectDB extends AbstractObject
 	//----------------------------------------------------------------------------------------------------------
 	function modify( $object_id ) 
 	{
-		global $_REQUEST;
 		return $this->modify_parms($object_id, $_REQUEST);
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
 	function formatValueForDB( $name, $value )
 	{
-		if ( in_array($value, array('', 'null', 'NULL')) ) return 'NULL';
+		if ( \TextUtils::isNullValue($value) ) return 'NULL';
 		
 		switch ( $name )
 		{
@@ -1339,36 +1139,22 @@ class StoredObjectDB extends AbstractObject
 	function addFilter( $filter )
 	{
 		if ( !$filter->defined($filter->getValue()) ) return;
-		
-		$filters = $this->registry->getFilters();
-		
-		$filter->setObject( $this );
-
-		$filters[] = $filter;
-
-		$this->registry->setFilters($filters);
+		$this->filters[] = $filter;
 	}
 	
 	function resetFilters()
 	{
-		$empty = array();
-		
-		$this->registry->setFilters($empty);
+        $this->filters = array();
 	}
 	
 	function getFilters()
 	{
-		return $this->registry->getFilters();
+		return $this->filters;
 	}
 	
 	function setFilters( $filters )
 	{
-		$this->registry->setFilters($filters);
-	}
-	
-	function getFilterPredicate( $alias = 't' )
-	{
-		return $this->registry->getFilterPredicate($alias);
+        $this->filters = $filters;
 	}
 	
 	function setSortDefault( $clause )
@@ -1405,40 +1191,6 @@ class StoredObjectDB extends AbstractObject
 		$sorts[] = $clause;
 		
 		$this->registry->setSorts($sorts);
-	}
-	
-	function getSortClause( $alias = 't', $sorts = null )
-	{
-		return $this->registry->getSortClause( $alias );
-	}
-	
-	function resetSortClause()
-	{
-		$empty = array();
-		
-		$this->registry->setSorts($empty);
-	}
-	
-	function getSort()
-	{
-		$sort = $this->getSortClause();
-		if ( $sort != '' )
-		{
-			return " ORDER BY ".$sort;
-		}
-		
-		return "";
-	}
-	
- 	function addGroup( $clause )
-	{
-		$groups = $this->registry->getGroups();
-		
-		$clause->setObject( $this );
-		
-		$groups[] = $clause;
-		 
-		$this->registry->setGroups($groups);
 	}
 	
  	function getGroupClause( $alias = 't' )
@@ -1508,6 +1260,43 @@ class StoredObjectDB extends AbstractObject
 		if ( !is_numeric( $this->limit ) ) return;
 		if ( $this->limit > 0 ) return ' LIMIT '.$this->limit;
 	}
+
+    public function getBulkAttributes()
+    {
+        $nonBulkAttributes = array_diff(
+            array_merge(
+                $this->getAttributesByGroup('system'),
+                $this->getAttributesByGroup('nonbulk'),
+                $this->getAttributesByGroup('astronomic-time'),
+                $this->getAttributesByType('wysiwyg'),
+                $this->getAttributesByType('text'),
+                $this->getAttributesByType('varchar'),
+                $this->getAttributesByType('datetime'),
+                $this->getAttributesByType('image'),
+                $this->getAttributesByType('file'),
+                array (
+                    'OrderNum'
+                )
+            ),
+            $this->getAttributesByGroup('bulk')
+        );
+        $attributes = array_diff(
+            $this->getAttributesOrdered(),
+            $nonBulkAttributes
+        );
+        foreach( $attributes as $key => $attribute ) {
+            if ( !$this->getAttributeEditable($attribute) ) {
+                unset($attributes[$key]);
+            }
+            if ( !$this->IsAttributePersisted($attribute) ) {
+                unset($attributes[$key]);
+            }
+            if ( !getFactory()->getAccessPolicy()->can_modify_attribute($this,$attribute) ) {
+                unset($attributes[$key]);
+            }
+        }
+        return array_values($attributes);
+    }
 
 	public function __sleep()
 	{

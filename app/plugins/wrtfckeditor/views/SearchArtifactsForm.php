@@ -15,11 +15,17 @@ class SearchArtifactsForm extends PMPageForm
         $pluggableEntities = array(
             'Requirement', 'TestScenario', 'HelpPage'
         );
+        if ( getSession()->IsRDD() ) {
+            $pluggableEntities[] = 'Issue';
+            $pluggableEntities[] = 'Increment';
+        }
+        else {
+            $pluggableEntities[] = 'Request';
+        }
         $this->artifactFields = array_merge(
             $pluggableEntities,
             array (
                 'ProjectPage',
-                'Request',
                 'Task',
                 'Feature',
                 'Question'
@@ -48,7 +54,7 @@ class SearchArtifactsForm extends PMPageForm
 
     function process()
     {
-        if ($this->getAction() != 'add') return '[]';
+        if ($this->getAction() != 'add') return false;
 
         $this->extendModel();
         $uid = new ObjectUID();
@@ -67,14 +73,14 @@ class SearchArtifactsForm extends PMPageForm
                     'Url' => '<a class="uid" href="'.$info['url'].'">['.$info['uid'].'] '.$info['caption'].'</a>'
                 )
             );
-            exit();
+            return true;
         }
         echo json_encode(
             array(
                 'Id' => 0, 'Url' => ''
             )
         );
-        exit();
+        return true;
     }
 
     function getRenderParms()

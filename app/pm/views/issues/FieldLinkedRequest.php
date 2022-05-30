@@ -20,7 +20,7 @@ class FieldLinkedRequest extends FieldForm
  		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 	 		$form = new FormLinkedEmbedded( $link->getRegistry()->Query(
 	 		    array(
-                    new RequestLinkedFilter( is_object($this->object_it) ? $this->object_it->getId() : 0)
+                    new RequestLinkedFilter( is_object($this->object_it) ? $this->object_it->getId() : '-1')
                 )
             ), 'SourceRequest', $this->getName() );
 	 		

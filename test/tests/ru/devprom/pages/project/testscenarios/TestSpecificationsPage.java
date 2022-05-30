@@ -29,7 +29,7 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
         @FindBy(xpath = "//a[@uid='compare-actions']")
 	protected WebElement handleBtn;
         
-        @FindBy(xpath = "//a[contains(.,'Восстановить покрытие')]")
+        @FindBy(xpath = "//a[@id='restore-consistency']")
 	protected WebElement repairItem;
         
         //Пункт Начать тестирование меню действий строки

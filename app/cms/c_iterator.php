@@ -1,7 +1,7 @@
 <?php
-
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
+use Devprom\ProjectBundle\Service\Model\ModelService;
 
 class IteratorBase
 {
@@ -405,12 +405,43 @@ class IteratorBase
 		return $caption;
 	}
 
-    function getDisplayNameExt( $prefix = '' ) {
-        return $prefix . $this->getDisplayName();
+    function getDisplayNameExt( $prefix = '' )
+    {
+        $displayAttributes = array(
+            $prefix, $this->getDisplayName()
+        );
+        foreach( $this->object->getAttributesByGroup('display-name') as $attribute ) {
+            if ( $this->get($attribute) == '' ) continue;
+            if ( in_array('computed', $this->object->getAttributeGroups($attribute)) ) {
+                $result = ModelService::computeFormula(
+                    $this->copy(), $this->object->getDefaultAttributeValue($attribute)
+                );
+                $lines = array();
+                foreach ($result as $computedItem) {
+                    if (!is_object($computedItem)) {
+                        $lines[] = TextUtils::stripAnyTags($computedItem);
+                    } else {
+                        $lines[] = $computedItem->getDisplayName();
+                    }
+                }
+                $result = join(', ', $lines);
+                $displayAttributes[] = "[<span att-ref=\"{$attribute}\" title=\"{$this->object->getAttributeUserName($attribute)}\">{$result}</span>]";
+
+            }
+            else {
+                $value = $this->get($attribute);
+                $groups = $this->object->getAttributeGroups($attribute);
+                if ( in_array('astronomic-time', $groups) ) {
+                    $value = getSession()->getLanguage()->getDurationWording(abs($value), 24);
+                }
+                $displayAttributes[] = "[<span att-ref=\"{$attribute}\" title=\"{$this->object->getAttributeUserName($attribute)}\">{$value}</span>]";
+            }
+        }
+        return join(' ', $displayAttributes);
     }
 
     function getDisplayNameSearch( $prefix = '' ) {
-        return $prefix . $this->getDisplayName();
+        return trim($prefix . ' ' . $this->getDisplayName());
     }
 
 	function getDescription() {
@@ -518,7 +549,11 @@ class IteratorBase
 		    $object = $this->object->getAttributeObject( $attribute );
 		    if ( is_null($object) ) return $this->object->getEmptyIterator();
 		}
-		return $object->getRegistry()->QueryById($this->data[$attribute]);
+        if ( trim($this->data[$attribute]) == '' ) {
+            return $object->getEmptyIterator();
+        }
+        $ids = \TextUtils::parseItems($this->data[$attribute]);
+		return $object->getExact(count($ids) > 1 ? $ids : $this->data[$attribute]);
 	}
 	
 	function modify( $parms ) 
@@ -789,11 +824,6 @@ class IteratorBase
  // итератор по дереву
  class TreeIterator extends OrderedIterator
  {
- 	function getChildren()
-	{
-		return $this->object->getChildren( $this->getId() );
-	}
-	
 	function getParentId()
 	{
 		return $this->get('parent'.$this->object->getClassName().'id');

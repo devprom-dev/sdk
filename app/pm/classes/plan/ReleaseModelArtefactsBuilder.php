@@ -14,7 +14,7 @@ class ReleaseModelArtefactsBuilder extends ObjectModelBuilder
         else {
             $object->addAttribute('Issues', 'REF_pm_ChangeRequestId', text(808), false, false, '', 90);
         }
-		$object->addAttributeGroup('Issues', 'tab-issues');
+		$object->addAttributeGroup('Issues', 'tabissues');
 
 		$object->addPersister( new ReleaseArtefactsPersister() );
     }

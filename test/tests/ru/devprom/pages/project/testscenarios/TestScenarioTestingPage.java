@@ -166,11 +166,11 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
         driver.findElement(By.xpath(".//div[contains(@class,'test-pagination')]//a[" + String.valueOf(i) + "]")).click();
     }
 
-    public void fillCell(String row, String coloumn, String text) {
+    public void fillCell(String row, String coloumn, String text)
+    {
     	try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	By editableLocator = By.xpath("//div[contains(@id,'pm_TestCaseExecutionContent') and @contenteditable='true']");
@@ -179,15 +179,31 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
         WebElement cell = editableArea.findElement(By.xpath(".//table/tbody/tr["+row+"]/td["+coloumn+"]"));
         cell.click();
         editableArea.sendKeys(text);
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
     
-    public void pasteToCell(String row, String coloumn) {
+    public void pasteToCell(String row, String coloumn)
+    {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
      	By editableLocator = By.xpath("//div[contains(@id,'pm_TestCaseExecutionContent') and @contenteditable='true']");
     	(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(editableLocator));
         WebElement editableArea = driver.findElement(editableLocator);
         WebElement cell = editableArea.findElement(By.xpath(".//table/tbody/tr["+row+"]/td["+coloumn+"]"));
         cell.click();
         editableArea.sendKeys(Keys.LEFT_CONTROL + "v");
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
      
     public ScrumTaskNewPage createTask() {

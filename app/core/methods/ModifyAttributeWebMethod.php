@@ -2,7 +2,6 @@
 include_once "WebMethod.php";
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectAffectedDatePersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/common/CustomAttributesModelBuilder.php";
 
 class ModifyAttributeWebMethod extends WebMethod
 {
@@ -61,7 +60,8 @@ class ModifyAttributeWebMethod extends WebMethod
  	private function buildMethodScript()
  	{
  		if ( getSession()->getSite() == 'pm' ) {
- 			$project_code = is_object($this->object_it) ? $this->object_it->get('ProjectCodeName') : $this->project;
+ 			$project_code = is_object($this->object_it) && $this->object_it->getId() != ''
+                                ? $this->object_it->get('ProjectCodeName') : $this->project;
             $project_code .= '/';
  		}
  		 
@@ -118,6 +118,7 @@ class ModifyAttributeWebMethod extends WebMethod
  	
  	function execute_request()
  	{
+ 	    if ( $_REQUEST['objects'] != '' ) $_REQUEST['object'] = \TextUtils::parseIds($_REQUEST['objects']);
 		if ( $_REQUEST['class'] == '' || $_REQUEST['attribute'] == '' || $_REQUEST['object'] == '' )
 		{
 			echo JsonWrapper::encode(array(
@@ -130,18 +131,6 @@ class ModifyAttributeWebMethod extends WebMethod
 		if ( $object instanceof WikiPage ) {
 			$object->setRegistry( new WikiPageRegistryContent() );
 		}
-
-		// extend attributes defined by users
-        if ( is_numeric($_REQUEST['object']) && $_REQUEST['object'] > 0 ) {
-            $builder = new CustomAttributesModelBuilder($object->createCachedIterator(
-                array(
-                    array(
-                        $object->getIdAttribute() => $_REQUEST['object']
-                    )
-                )
-            ));
-            $builder->build($object);
-        }
 
 		$object_it = $object->getExact($_REQUEST['object']);
 
@@ -183,11 +172,6 @@ class ModifyAttributeWebMethod extends WebMethod
                 ));
 				return;
 			}
-
-            if ( $attr_object instanceof Release || $attr_object instanceof Iteration ) {
-                $refIt = $attr_object->getExact($_REQUEST['value']);
-                $parms['Project'] = $refIt->get('Project');
-            }
 		}
 		
 		if ( !array_key_exists('OrderNum', $parms) ) {
@@ -278,7 +262,6 @@ class ModifyAttributeWebMethod extends WebMethod
 
 		if ( $has_changes )	{
             try {
-                $parms['WasRecordVersion'] = $object_it->get('RecordVersion');
                 getFactory()->modifyEntity($object_it, $parms);
             }
             catch( \Exception $e ) {

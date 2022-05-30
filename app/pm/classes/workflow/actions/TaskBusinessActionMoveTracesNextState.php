@@ -12,13 +12,14 @@ class TaskBusinessActionMoveTracesNextState extends BusinessActionWorkflow
  	{
  	    $traceIt = getFactory()->getObject('TaskTraceWikiPage')->getRegistry()->Query(
  	        array(
- 	            new FilterAttributePredicate('Task', $object_it->getId())
+ 	            new FilterAttributePredicate('Task', $object_it->getId()),
+                new FilterAttributePredicate('ObjectClass', array('Requirement', 'TestScenario', 'HelpPage'))
             )
         );
 
  	    while( !$traceIt->end() ) {
  	        $pageIt = $traceIt->getObjectIt();
- 	        if ( $pageIt->object->getStateClassName() != '' ) {
+ 	        if ( $pageIt->object instanceof \MetaobjectStatable && $pageIt->object->getStateClassName() != '' ) {
                 $stateIt = workflowScheme::Instance()->getStateIt($pageIt);
                 $stateIt->moveTo('ReferenceName', $pageIt->get('State'));
                 $stateIt->moveNext();

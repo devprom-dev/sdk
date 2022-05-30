@@ -49,8 +49,15 @@ $restoreAction = array_shift($actions);
         <div id="result<?=$form_id?>"></div>
         
       <div class="enter">
-        <div>
-            <button type="submit" class="btn btn-lg btn-primary" onclick="<?="javascript: $('#action').val('".$form_action."');"?>" ><?=translate('Войти')?></button>
+        <div class="btn-group">
+            <div class="btn">
+                <button type="submit" class="btn btn-lg btn-primary" onclick="<?="javascript: $('#action').val('".$form_action."');"?>" ><?=translate('Войти')?></button>
+            </div>
+            <?php if ( defined('AUTH_OPENID_USED') ) { ?>
+            <div class="btn">
+                <a class="btn btn-lg btn-warning" href="/openid"><?=translate('sso.button')?></a>
+            </div>
+            <?php } ?>
         </div>
       </div>
 

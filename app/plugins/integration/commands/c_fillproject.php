@@ -1,13 +1,12 @@
 <?php
-include_once SERVER_ROOT_PATH . 'core/classes/model/validation/ModelValidator.php';
 include_once SERVER_ROOT_PATH . 'plugins/integration/classes/IntegrationService.php';
+include_once SERVER_ROOT_PATH . "core/classes/sprites/UserPicSpritesGenerator.php";
 
 class FillProject extends CommandForm
 {
     private $appIt = null;
     private $projectIt = null;
     private $object = null;
-    private $limit = 300;
 
  	function validate()
  	{
@@ -41,7 +40,9 @@ class FillProject extends CommandForm
 
         $_REQUEST['VPD'] = $this->projectIt->get('VPD');
         $_REQUEST['Project'] = $this->projectIt->getId();
-        $_REQUEST['MappingSettings'] = file_get_contents(SERVER_ROOT_PATH . $this->appIt->get('ReferenceName'));
+        if (  $_REQUEST['MappingSettings'] == '' ) {
+            $_REQUEST['MappingSettings'] = file_get_contents(SERVER_ROOT_PATH . $this->appIt->get('ReferenceName'));
+        }
 
 	    $objectIt = $this->object->getRegistry()->Create($_REQUEST);
 
@@ -65,12 +66,48 @@ class FillProject extends CommandForm
         try {
             $appender = $this->setupLogger();
 
+            if ( $this->appIt->getId() == 'jirarest' ) {
+                // delete all states and transitions
+                getFactory()->getObject('RequestState')->deleteAll();
+                getFactory()->getObject('TaskState')->deleteAll();
+                getFactory()->getObject('Release')->deleteAll();
+                getFactory()->getObject('Iteration')->deleteAll();
+                getFactory()->getObject('RequestType')->deleteAll();
+            }
+
             ob_start();
             $service = new IntegrationService($objectIt, \Logger::getLogger('Commands'));
-            $service->setItemsToProcess($this->limit);
+            $service->setDoMigration();
+            $service->setItemsToProcess(120);
             $service->process();
-
             $log_content = ob_get_contents();
+
+            // make transitions across states
+            if ( $this->appIt->getId() == 'jirarest' ) {
+                getFactory()->resetCache();
+                $transitionRegistry = getFactory()->getObject('Transition')->getRegistry();
+                foreach (array('IssueState', 'TaskState') as $stateClass) {
+                    $objectState = getFactory()->getObject($stateClass);
+                    $stateIt = $objectState->getAll();
+                    $stateIds = $stateIt->idsToArray();
+                    foreach ($stateIds as $stateId) {
+                        $stateIt->moveFirst();
+                        while (!$stateIt->end()) {
+                            if ($stateIt->getId() != $stateId) {
+                                $transitionRegistry->Create(
+                                    array(
+                                        'Caption' => $stateIt->getDisplayName(),
+                                        'SourceState' => $stateId,
+                                        'TargetState' => $stateIt->getId(),
+                                    )
+                                );
+                            }
+                            $stateIt->moveNext();
+                        }
+                    }
+                }
+            }
+
             Logger::getLogger('Commands')->removeAppender($appender);
             ob_end_clean();
         }
@@ -93,7 +130,11 @@ class FillProject extends CommandForm
             );
         }
 
-		$this->replyRedirect( '/pm/'.$this->projectIt->get('CodeName'), str_replace('%1',$this->limit,text('integration26')) );
+        $generator = new UserPicSpritesGenerator();
+        $generator->storeSprites();
+
+		$this->replyRedirect( '/pm/'.$this->projectIt->get('CodeName'),
+            str_replace('%1',$requestsCount,text('integration26')) );
 	}
 
     protected function setupLogger() {

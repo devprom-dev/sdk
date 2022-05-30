@@ -2,6 +2,8 @@
 
 class ChangeLogAggregatePersister extends ObjectSQLPersister
 {
+    const CONTENT_SEPARATOR = '$baeb4a9ac4e7d1d$';
+
  	function getSelectColumns( $alias )
  	{
  		$columns = array(
@@ -26,7 +28,7 @@ class ChangeLogAggregatePersister extends ObjectSQLPersister
             " MAX(t.EntityRefName) EntityRefName " );
 
         array_push( $columns,
-            " GROUP_CONCAT(DISTINCT t.ObjectUrl) ObjectUrl " );
+            " GROUP_CONCAT(DISTINCT t.ObjectUrl SEPARATOR '".self::CONTENT_SEPARATOR."') ObjectUrl " );
 
  		array_push( $columns,
  			" MAX(t.RecordCreated) RecordCreated " );
@@ -35,13 +37,16 @@ class ChangeLogAggregatePersister extends ObjectSQLPersister
  			" MIN(t.VisibilityLevel) VisibilityLevel " );
 
         array_push( $columns, 
- 			" CONCAT('<p>',GROUP_CONCAT(DISTINCT t.Content ORDER BY t.ObjectChangeLogId ASC SEPARATOR '</p><p>'),'</p>') Content " );
+ 			" CONCAT('<p>',GROUP_CONCAT(DISTINCT t.Content ORDER BY t.ObjectChangeLogId DESC SEPARATOR '</p><p>'),'</p>') Content " );
         
         array_push( $columns, 
  			" GROUP_CONCAT(t.ObjectChangeLogId) ObjectChangeLogId " );
 
         array_push( $columns,
             " GROUP_CONCAT(t.Transaction) Transaction " );
+
+        array_push( $columns,
+            "(SELECT MAX(r.pm_ProjectId) FROM pm_Project r WHERE r.VPD = t.VPD) Project " );
 
 		$columns[] =
 			" UNIX_TIMESTAMP(MAX(t.RecordModified)) * 100000 + (SELECT IFNULL(MAX(co_AffectedObjectsId),0) ".

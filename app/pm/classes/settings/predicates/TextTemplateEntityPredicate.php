@@ -10,13 +10,21 @@ class TextTemplateEntityPredicate extends FilterPredicate
                 'Request'
             )
         );
-        if ( !in_array($filter, $classes) ) return " AND 1 = 2 ";
 
+        $foundClasses = array_intersect(
+            array(
+                $filter, get_parent_class($filter)
+            ),
+            $classes
+        );
+        if ( count($foundClasses) < 1 ) return " AND 1 = 2 ";
+
+        $className = array_shift($foundClasses);
         if ( $filter == 'Request' ) {
-            return " AND t.ObjectClass IN ('".$filter."', 'Increment') ";
+            return " AND t.ObjectClass IN ('{$className}', 'Increment') ";
         }
         else {
-            return " AND t.ObjectClass = '".$filter."' ";
+            return " AND t.ObjectClass = '{$className}' ";
         }
  	}
 }

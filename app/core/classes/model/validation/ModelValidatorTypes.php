@@ -31,7 +31,7 @@ class ModelValidatorTypes extends ModelValidatorInstance
 		);
 	}
 	
-	public function validate( Metaobject $object, array & $parms )
+	public function validate( Metaobject $object, array $parms )
 	{
 		$attributes = count($this->attributes) < 1 
 				? array_keys($object->getAttributes()) : $this->attributes;
@@ -42,15 +42,22 @@ class ModelValidatorTypes extends ModelValidatorInstance
 			if ( !$object->IsAttributeStored($attribute) ) continue;
 
 			$validator = $this->getTypeValidator( $object->getAttributeType($attribute) );
-			if ( !$validator->validate($parms[$attribute]) )
+			if ( !$validator->validate($parms[$attribute], $object->getAttributeGroups($attribute)) )
 			{
 				$result = $validator->getMessage();
 				if ( $result == '' ) {
 					$result = translate('Вы указали некорректное значение поля').' "'.
 						translate($object->getAttributeUserName($attribute)).'" ['.$attribute.']';
-					if ( $object->getAttributeTypeName($attribute) != '' )
-					{
-						$result .= ' ('.$object->getAttributeTypeName($attribute).")";
+
+                    $typeName = $object->getAttributeTypeName($attribute);
+					if ( $typeName != '' ) {
+                        if ( in_array('hours', $object->getAttributeGroups($attribute)) ) {
+                            $typeName = text(3306);
+                        }
+                        if ( in_array('daily-hours', $object->getAttributeGroups($attribute)) ) {
+                            $typeName = sprintf(text(3305), defined('MAX_DAILY_HOURS') ? MAX_DAILY_HOURS : 24);
+                        }
+						$result .= " ({$typeName})";
 					}
 					$result .= ': '.$parms[$attribute];
 				}
@@ -63,11 +70,9 @@ class ModelValidatorTypes extends ModelValidatorInstance
 	
 	private function getTypeValidator( $type )
 	{
-		foreach( $this->type_validators as $validator )
-		{
+		foreach( $this->type_validators as $validator )	{
 			if ( $validator->applicable( strtolower($type) ) ) return $validator; 
 		}
-		
 		return new ModelValidatorTypeNull();
 	}
 

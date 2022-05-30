@@ -3,11 +3,11 @@
 class WikiPageRegistryComparison extends ObjectRegistrySQL
 {
 	public function setPageIt($page_it)	{
-		$this->page_it = $page_it;
+		$this->page_it = $page_it->copy();
 	}
 	
 	public function setBaselineIt($baseline_it)	{
-		$this->baseline_it = $baseline_it;
+		$this->baseline_it = $baseline_it->copy();
 	}
 	
 	function Query( $parms = array() )
@@ -16,7 +16,6 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 
 		$query_filters = array();
 		$registry = $this->page_it->object->getRegistry();
-
 		if ( $this->baseline_it->get('Type') == 'document' )
 		{
 			$document_id = $this->baseline_it->get('ObjectId');

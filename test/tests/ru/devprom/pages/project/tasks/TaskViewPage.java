@@ -144,7 +144,7 @@ public class TaskViewPage extends SDLCPojectPageBase {
 	
 	public String readRequest(){
 		try {
-		return driver.findElement(By.id("pm_TaskChangeRequest")).getText();
+		return driver.findElement(By.name("pm_TaskChangeRequest")).getText();
 		}
 		catch (NoSuchElementException e) {
 			return "No Requests";

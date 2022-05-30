@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH . "pm/methods/FilterStateTransitionMethod.php";
 include_once SERVER_ROOT_PATH . "pm/methods/FilterStateMethod.php";
 include_once SERVER_ROOT_PATH . "pm/methods/WikiFilterActualLinkWebMethod.php";
 include "PMWikiList.php";
@@ -8,8 +7,8 @@ include "PMWikiChart.php";
 class PMWikiTable extends PMPageTable
 {
     private $state_object = null;
-    
     private $form = null;
+    private $compareto_it = null;
     
  	function __construct( $object, $state_object, $form )
  	{
@@ -80,10 +79,16 @@ class PMWikiTable extends PMPageTable
 		}
 		$filters[] = $this->buildTagsFilter();
 		$filters[] = new FilterObjectMethod(
-			getFactory()->getObject('ProjectUser'), translate($this->getObject()->getAttributeUserName('Author')), 'author'
+			getFactory()->getObject('WorkerUser'),
+            translate($this->getObject()->getAttributeUserName('Author')),
+            'author'
 		);
         $filters[] = $this->buildFunctionFilter();
-        $filters[] = $this->buildAffirmationFilter();
+
+        $type_it = $this->getObject()->getTypeIt();
+        if ( is_object($type_it) ) {
+            $filters[] = $this->buildTypeFilter($type_it);
+        }
 
 		return $filters;
 	}
@@ -100,7 +105,7 @@ class PMWikiTable extends PMPageTable
 	function getFilters()
 	{
 		$object = $this->getObject();
-		
+
 		$filters = array( $this->buildFilterDocument() );
 
 		$filters[] = $this->buildByDateFilter();
@@ -113,21 +118,6 @@ class PMWikiTable extends PMPageTable
 
 		$parent_filter = new FilterReferenceWebMethod($object, translate('Входит в'), 'parent');
 		$filters[] = $parent_filter;
-
-		$type_it = $this->object->getTypeIt();
-		if ( is_object($type_it) ) {
-			$filter = $this->buildTypeFilter($type_it);
-			if ( is_array($filter) ) {
-				$filters = array_merge($filters, $filter);
-			}
-			else {
-				$filters[] = $filter;
-			}
-		}
-
-		if ( $this->getObject()->IsStatable() ) {
-			$filters[] = new FilterStateTransitionMethod($this->getObject());
-		}
 
 		$filter = $this->buildCompareBaselineFilter();
 		if ( is_object($filter) ) $filters[] = $filter;
@@ -142,7 +132,6 @@ class PMWikiTable extends PMPageTable
 	function getCommonPredicates( $values )
     {
         return array (
-            new AffirmationStateFilter($values['affirmation']),
             new WikiPageFeaturePredicate($values['feature']),
             new PMWikiStageFilter( $values['version'] ),
             new StatePredicate( $values['state'] ),
@@ -152,7 +141,8 @@ class PMWikiTable extends PMPageTable
             new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
             $this->buildLinkStateFilter($values),
             new WikiPageBranchFilter($values['branch']),
-            new WikiPageBaselineFilter($values['baseline'])
+            new WikiPageBaselineFilter($values['baseline']),
+            $this->getTypePredicate($values)
         );
     }
 
@@ -161,25 +151,22 @@ class PMWikiTable extends PMPageTable
 		$predicates = array_merge(
 		    $this->getCommonPredicates($values),
             array(
-                new FilterAttributePredicate( 'PageType', $values['type'] ),
                 new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
                 $this->buildLinkStateFilter($values)
             )
         );
-
-		if ( $this->Statable($this->getObject()) ) {
-		    $predicates[] = new TransitionObjectPredicate($this->getObject(), $values['transition']);
-		}
-
 		if ( !in_array($values['bydate'], array('','all','hide')) ) {
 			$persister = new WikiPageHistoryPersister();
 			$persister->setSinceDate($values['bydate']);
 			$this->getObject()->addPersister( $persister );
 			$predicates[] = new FilterSubmittedBeforePredicate($values['bydate']);
 		}
-
 		return array_merge(parent::getFilterPredicates( $values ), $predicates);
 	}
+
+    function getTypePredicate( $values ) {
+        return new FilterAttributePredicate( 'PageType', $values['type'] );
+    }
 
 	function buildLinkStateFilter( $values ) {
         return new PMWikiLinkedStateFilter( $values['linkstate'] );
@@ -287,21 +274,12 @@ class PMWikiTable extends PMPageTable
         return $filter;
     }
 
-    function buildAffirmationFilter() {
-        $filter = new FilterObjectMethod(getFactory()->getObject('AffirmationState'), translate('Согласование'), 'affirmation');
-        $filter->setIdFieldName('ReferenceName');
-        $filter->setHasNone(false);
-        $filter->setHasAny(false);
-        $filter->setType('singlevalue');
-        return $filter;
-    }
-
     function buildCompareBaselineFilter() {
         $filter = new FilterObjectMethod($this->getBaselineObject(), text(1566), 'compareto');
         $filter->setHasAny(false);
         $filter->setHasAll(false);
-        $filter->setIdFieldName('Caption');
         $filter->setType( 'singlevalue' );
+        $filter->setIdFieldName('CompareToSnapshotId');
         $filter->setLazyLoad(true);
         return $filter;
     }
@@ -317,7 +295,8 @@ class PMWikiTable extends PMPageTable
     }
 
     function buildBaselineFilter() {
-        return new FilterObjectMethod($this->getBaselineObject(), '', 'baseline');
+        $filter = new FilterObjectMethod($this->getBaselineObject(), '', 'baseline');
+        return $filter;
     }
 
     function getSortFields()
@@ -387,4 +366,45 @@ class PMWikiTable extends PMPageTable
             new FilterInPredicate($objectIt->idsToArray())
         );
     }
+
+    function getCompareToSnapshot( $values )
+    {
+        if ( is_object($this->compareto_it) ) return $this->compareto_it->copy();
+        return $this->compareto_it = $this->buildCompareToSnapshot($values);
+    }
+
+    function buildCompareToSnapshot($values)
+    {
+        $documentIt = $this->getObject()->getEmptyIterator();
+
+        $branchIds = \TextUtils::parseIds($values['branch']);
+        if ( count($branchIds) > 0 ) {
+            $branchIt = $this->getBaselineObject()->getRegistry()->Query(
+                array(
+                    new FilterAttributePredicate('Type', 'branch'),
+                    new FilterInPredicate($branchIds)
+                )
+            );
+            $documentIt = $this->getObject()->getExact($branchIt->get('ObjectId'));
+        }
+
+        $comparedIds = \TextUtils::parseItems($values['compareto']);
+        if ( count($comparedIds) > 0 ) {
+            $snapshot = new WikiPageComparableSnapshot($documentIt);
+            return $snapshot->getExact($comparedIds);
+        }
+        return $this->getObject()->getEmptyIterator();
+    }
+
+    function getFilterParms()
+    {
+        return array_merge(
+            parent::getFilterParms(),
+            array(
+                'TraceSourceRequirement',
+                'TraceTargetRequirement'
+            )
+        );
+    }
+
 }

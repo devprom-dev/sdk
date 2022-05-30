@@ -122,7 +122,7 @@ public class TimetablePage extends SDLCPojectPageBase {
 	}
 	
 	public void setFilterRole(int value) {
-		setFilter("role", Integer.toString(value));
+		setFilter("userrole", Integer.toString(value));
 	}
 	
 	public void setFilterParticipant(int value) throws InterruptedException {

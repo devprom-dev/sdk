@@ -31,7 +31,6 @@ class SessionBase
     protected $builders;
     protected $language_uid = '';
     protected $language = null;
-    protected $auth_factory_it;
     protected $builders_cache = array();
     protected $accessibleVpds = array();
     protected $userPicTimestamp = 0;
@@ -68,7 +67,7 @@ class SessionBase
  	function __sleep() {
         return array (
             'id', 'user_it', 'factory', 'cache_engine', 'factories', 'active_tab',
-            'builders', 'auth_factory_it', 'builders_cache', 'accessibleVpds', 'language_uid'
+            'builders', 'auth_factory_it', 'builders_cache', 'accessibleVpds', 'language_uid', 'userPicTimestamp'
         );
     }
 
@@ -382,8 +381,7 @@ class SessionBase
  	    }
  	}
  	
- 	public function getSite()
- 	{
+ 	public function getSite() {
  		return 'co';
  	}
 

@@ -5,6 +5,7 @@ include "predicates/ActivityOtherIterationsPredicate.php";
 include "predicates/ActivityRequestPredicate.php";
 include "predicates/ActivityReportYearPredicate.php";
 include "predicates/ActivityReportMonthPredicate.php";
+include "predicates/SpentTimeReportDatePredicate.php";
 
 class Activity extends Metaobject
 {
@@ -16,6 +17,7 @@ class Activity extends Metaobject
 		$this->setAttributeCaption('Capacity', translate('Затрачено'));
 		$this->setAttributeOrderNum('Capacity', 3);
 		$this->setAttributeDescription('Capacity', text(2116));
+        $this->addAttributeGroup('Capacity', 'daily-hours');
 
 		foreach( array('Caption', 'Iteration') as $attribute ) {
 		    $this->addAttributeGroup($attribute, 'system');
@@ -23,14 +25,12 @@ class Activity extends Metaobject
         foreach( array('Issue', 'Task') as $attribute ) {
             $this->addAttributeGroup($attribute, 'trace');
         }
-        foreach( array_keys($this->getAttributes()) as $attribute ) {
-            $this->addAttributeGroup($attribute, 'nonbulk');
-        }
 
         $permission_attributes = array(
             'Capacity',
             'Participant',
-            'Caption'
+            'Caption',
+            'ReportDate'
         );
         foreach ( $permission_attributes as $attribute ) {
             $this->addAttributeGroup($attribute, 'permissions');
@@ -113,5 +113,14 @@ class Activity extends Metaobject
 
 	function IsDeletedCascade($object) {
         return $object instanceof Task || $object instanceof Request;
+    }
+
+    function getDefaultAttributeValue($name)
+    {
+        switch( $name ) {
+            case 'ReportDate':
+                return date('Y-m-j');
+        }
+        return parent::getDefaultAttributeValue($name);
     }
 }

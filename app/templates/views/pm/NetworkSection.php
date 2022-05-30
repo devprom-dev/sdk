@@ -5,7 +5,7 @@
 
 <script type="text/javascript">
     var data = [];
-    bindTabHandler('networksection', function () {
+    bindTabHandler('networksection', $('#<?=$id?>'), function () {
         $.getJSON('<?=$networkUrl?>', function(json) {
             var data = {
                 nodes: new vis.DataSet(json.nodes),

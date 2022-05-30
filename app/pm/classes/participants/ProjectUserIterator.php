@@ -4,20 +4,12 @@ class ProjectUserIterator extends UserIterator
 {
     function getDisplayNameExt( $prefix = '' )
     {
-        if ( defined('SKIP_WELCOME_PAGE') && SKIP_WELCOME_PAGE ) return parent::getDisplayNameExt();
+        if ( defined('UI_EXTENSION') && !UI_EXTENSION ) return parent::getDisplayNameExt();
 
         $title = parent::getDisplayNameExt();
 
-        if ( $prefix != '' ) {
-            $iterationIt = getFactory()->getObject('Iteration')->getExact($prefix);
-            $leftWork = $iterationIt->getLeftWorkParticipant( $this->getId() );
-            $capacity = $iterationIt->getLeftDuration() * $this->get('Capacity');
-            if ( $capacity > $leftWork ) {
-                return $title . sprintf(text(2495), round($capacity - $leftWork, 0));
-            }
-            else {
-                return $title . sprintf(text(2496), round($leftWork - $capacity, 0));
-            }
+        if ( $this->get('FreeWorkingDate') > date('Y-m-d') ) {
+            return $title . sprintf(text(2495), getSession()->getLanguage()->getDateFormattedShort($this->get('FreeWorkingDate')));
         }
 
         return $title;

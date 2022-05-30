@@ -67,11 +67,14 @@ class IntegrationTask extends TaskCommand
 			$service->setItemsToProcess($itemsToProcess);
 			$service->process();
 
-            $maxLogLength = 1 * 1024 * 1024;
+            $logger = Logger::getLogger('Commands');
+            $logger->removeAllAppenders();
+
+            $maxLogLength = min(filesize($logFilePath) - 100, 1 * 1024 * 20);
 			$integration_it->object->modify_parms(
 				$integration_it->getId(),
 				array (
-					'Log' => file_get_contents($logFilePath, null, null, -$maxLogLength, $maxLogLength)
+					'Log' => file_get_contents($logFilePath, null, null, -$maxLogLength)
 				)
 			);
 			$integration_it->moveNext();

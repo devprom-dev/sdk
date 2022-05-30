@@ -144,14 +144,14 @@ public class ReportsTest extends TestBase {
         ulp = ulp.addNewUser(user, false);
 		FILELOG.debug("Created: " + user.getUsername());
 		
-		page =  (SDLCPojectPageBase) page.gotoSDLCProject(project.getName());		
+		page =  (SDLCPojectPageBase) page.gotoSDLCProject(project);
 		ProjectMembersPage pmp = page.gotoMembers();
 		pmp = pmp.gotoAddMember().addUserToProject(user, "Тестировщик", 2,
 				"Дайджест об изменениях в проекте: ежедневно");
 		
 		LoginPage lp = pmp.logOut();
 		lp.loginAs(user.getUsername(), user.getPass());
-		page =  (SDLCPojectPageBase) page.gotoSDLCProject(project.getName());		
+		page =  (SDLCPojectPageBase) page.gotoSDLCProject(project);
 		page.gotoCustomReport("favs", "", reportName);
 		filtered = page.readFilterCaption("state");
 		Assert.assertTrue(filtered.contains("В релизе"), "Фильтр Состояние не содержит В релизе");

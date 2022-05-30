@@ -1,10 +1,16 @@
 <?php
+include "ObjectHierarchyIterator.php";
+include "sorts/SortObjectHierarchyClause.php";
+include "predicates/ObjectRootFilter.php";
 include SERVER_ROOT_PATH.'cms/classes/model/ModelFactoryBase.php';
+include SERVER_ROOT_PATH.'core/classes/model/classes.php';
 include_once "ModelEntityOriginationService.php";
 include_once "ModelProjectOriginationService.php";
-include SERVER_ROOT_PATH."core/classes/model/classes.php";
-include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
-include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.php';
+include 'validation/ModelValidator.php';
+include 'mappers/ModelMapper.php';
+include 'mappers/ModelDataTypeMappingPositives.php';
+include 'mappers/ModelDefaultValuesMapping.php';
+include 'mappers/ModelPasswordMapping.php';
 
 class ModelFactory extends ModelFactoryBase
 {
@@ -75,6 +81,7 @@ class ModelFactory extends ModelFactoryBase
             'pm_attributevalue'  => array('PMCustomAttributeValue'),
 			'cms_tempfile' => array( 'TempFile' ),
             'pm_tasktype' => array('TaskTypeBase'),
+            'pm_projectrole' => array('ProjectRoleBase'),
             'emailqueue' => array('EmailQueue')
 		);
 	}
@@ -183,12 +190,26 @@ class ModelFactory extends ModelFactoryBase
         );
     }
 
-	public function transformEntityData( $object, &$parms, $validators = array(), $mappers = array() )
+    protected function getModelMappers() {
+ 	    return array(
+ 	        new \ModelDataTypeMappingPositives(),
+            new \ModelDefaultValuesMapping(),
+            new \ModelPasswordMapping()
+        );
+    }
+
+	public function transformEntityData( $object, &$parms, $data = array(), $validators = array(), $mappers = array() )
     {
-        $alternativeKeyAttributes = $object->getAttributesByGroup('alternative-key');
-        if ( count($alternativeKeyAttributes) > 0 ) {
-            $validators[] = new ModelValidatorUnique($alternativeKeyAttributes);
-        }
+        $mapper = new \ModelMapper(
+            array_merge(
+                array(
+                    new \ModelDataTypeMapper() // convert data into database format
+                ),
+                $object->getMappers(),
+                $this->getModelMappers()
+            )
+        );
+        $mapper->map($object, $parms);
 
         $validator = new \ModelValidator(
             array_merge(
@@ -199,12 +220,9 @@ class ModelFactory extends ModelFactoryBase
         );
 
         // validate field values
-        $message = $validator->validate( $object, $parms );
+        $data = array_merge($data, $parms);
+        $message = $validator->validate( $object, $data );
         if ( $message != '' ) throw new \Exception($message);
-
-        // convert data into database format
-        $mapper = new \ModelDataTypeMapper();
-        $mapper->map($object, $parms);
     }
 
 	public function createEntity( $object, $parms, $validators = array(), $mappers = array() )
@@ -213,12 +231,20 @@ class ModelFactory extends ModelFactoryBase
             throw new \Exception("There is no permission to create entity of class " . get_class($object));
         }
 
-        $this->transformEntityData($object, $parms, $validators, $mappers);
+        $alternativeKeyAttributes = $object->getAttributesByGroup('alternative-key');
+        if ( count($alternativeKeyAttributes) > 0 ) {
+            $validators[] = new ModelValidatorUnique($alternativeKeyAttributes);
+        }
+
+        $this->transformEntityData($object, $parms, array(), $validators, $mappers);
 
         $id = $object->add_parms($parms);
         if ( $id < 1 ) throw new \Exception("Unable create entity of class " . get_class($object));
 
-        return $object->getExact($id);
+        $objectIt = $object->getExact($id);
+        $this->notifyWorkflowChanges($objectIt);
+
+        return $objectIt;
     }
 
     public function mergeEntity( $object, $parms, $validators = array(), $mappers = array() )
@@ -227,29 +253,76 @@ class ModelFactory extends ModelFactoryBase
             throw new \Exception("There is no permission to merge entity of class " . get_class($object));
         }
 
-        $this->transformEntityData($object, $parms, $validators, $mappers);
+        $this->transformEntityData($object, $parms, array(), $validators, $mappers);
 
         $alternativeKeyAttributes = $object->getAttributesByGroup('alternative-key');
-        if ( count($alternativeKeyAttributes) > 0 ) {
-            return $object->getRegistry()->Merge($parms, $alternativeKeyAttributes);
+        foreach( $alternativeKeyAttributes as $index => $key ) {
+            if ( $parms[$key] == '' ) unset($alternativeKeyAttributes[$index]);
+        }
+        if ( count($alternativeKeyAttributes) > 0 )
+        {
+            $modifiedIt = $object->getRegistry()->Merge($parms, $alternativeKeyAttributes);
+            if ( $parms['Transition'] != '' || $parms['State'] != '' ) {
+                $this->notifyWorkflowChanges($modifiedIt);
+            }
+            return $modifiedIt;
         }
         else {
-            return $object->getRegistry()->Create($parms);
+            $objectIt = $object->getRegistry()->Create($parms);
+            $this->notifyWorkflowChanges($objectIt);
+            return $objectIt;
         }
     }
 
     public function modifyEntity( $objectIt, $parms, $validators = array(), $mappers = array() )
     {
-        if ( !$this->getAccessPolicy()->can_modify($objectIt) ) {
+        if ( $parms['Transition'] != '' && $objectIt->object instanceof \MetaobjectStatable ) {
+            if ( !$this->getAccessPolicy()->can_modify_attribute($objectIt->object, 'State') ) {
+                throw new \Exception("There is no permission to modify entity of class " . get_class($objectIt->object));
+            }
+        }
+        else if ( !$this->getAccessPolicy()->can_modify($objectIt) ) {
             throw new \Exception("There is no permission to modify entity of class " . get_class($objectIt->object));
         }
 
-        $this->transformEntityData($objectIt->object, $parms, $validators, $mappers);
+        $alternativeKeyAttributes = $objectIt->object->getAttributesByGroup('alternative-key');
+        if ( count($alternativeKeyAttributes) > 0 ) {
+            $parms[$objectIt->object->getIdAttribute()] = $objectIt->getId();
+            $validators[] = new ModelValidatorUnique($alternativeKeyAttributes);
+        }
+
+        $this->transformEntityData($objectIt->object, $parms, $objectIt->getData(), $validators, $mappers);
 
         if ( $objectIt->object->modify_parms($objectIt->getId(), $parms) < 1 ) {
             throw new \Exception("Unable modify entity of class " . get_class($objectIt->object) . ' id ' . $objectIt->getId());
         }
-        return $objectIt->object->getExact($objectIt->getId());
+
+        getFactory()->resetCache();
+        $modifiedIt = $objectIt->object->getExact($objectIt->getId());
+
+        if ( $parms['Transition'] != '' || $objectIt->get('State') != $modifiedIt->get('State') ) {
+            $this->notifyWorkflowChanges($modifiedIt);
+        }
+
+        return $modifiedIt;
+    }
+
+    public function getEntities( $object, $objectId ) {
+        return $object->getExact($objectId);
+    }
+
+    protected function notifyWorkflowChanges( $objectIt )
+    {
+        $data = array();
+        foreach( $objectIt->getData() as $key => $value ) {
+            if ( $objectIt->object->IsAttributeVisible($key) ) {
+                $data[$key] = $value;
+            }
+        }
+        getFactory()->getEventsManager()
+            ->executeEventsAfterBusinessTransaction(
+                $objectIt->copy(), 'WorklfowMovementEventHandler', $data
+            );
     }
 }
 

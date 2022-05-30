@@ -1,10 +1,8 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/views/ui/ObjectTraceFormEmbedded.php";
 
 class FieldIssueTrace extends FieldForm
 {
- 	private $task_it = null;
  	private $trace = null;
  	private $type = '';
  	

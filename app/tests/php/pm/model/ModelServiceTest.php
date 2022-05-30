@@ -43,19 +43,11 @@ class ModelServiceTest extends DevpromDummyTestCase
 
         $this->issueAuthor = $this->getMockBuilder(IssueAuthor::class)
             ->setConstructorArgs(array())
-            ->setMethods(['getRegistry'])
+            ->setMethods(['getExact'])
             ->getMock();
 
-        $issueAuthorRegistry = $this->getMockBuilder(ObjectRegistrySQL::class)
-            ->setConstructorArgs(array($this->issueAuthor))
-            ->setMethods(['QueryById'])
-            ->getMock();
-
-        $this->issueAuthor->expects($this->any())->method('getRegistry')
-            ->will($this->returnValue($issueAuthorRegistry));
-
-        $issueAuthorRegistry->expects($this->any())->method('QueryById')->will(
-            $this->returnValueMap(
+        $this->issueAuthor->expects($this->any())->method('getExact')
+            ->will($this->returnValueMap(
                 array(
                     array(1, $this->issueAuthor->createCachedIterator(
                         array(
@@ -75,8 +67,7 @@ class ModelServiceTest extends DevpromDummyTestCase
                     )),
                     array('', $this->issueAuthor->getEmptyIterator())
                 )
-            )
-        );
+            ));
 
         $this->request = $this->getMockBuilder(Request::class)
             ->setConstructorArgs(array())

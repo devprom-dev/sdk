@@ -15,7 +15,7 @@ class InvitationForm extends PageForm
 	function process()
 	{
 		if ( $this->getAction() != 'add' ) return parent::process();
-    	if ( $_REQUEST['Addressee'] == '' ) return;
+    	if ( $_REQUEST['Addressee'] == '' ) return false;
 
 		try {
 			$service = new InviteService($this->controller, getSession());
@@ -29,12 +29,14 @@ class InvitationForm extends PageForm
 					)
 				)
 			));
+			return true;
 		}
 		catch( \Exception $e )
     	{
     		$this->setRequiredAttributesWarning();
     		$this->setWarningMessage($e->getMessage());
     		$this->edit('');
+    		return false;
     	}
 	}
 	

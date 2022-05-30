@@ -11,7 +11,7 @@
                 <?php foreach( $filter_buttons as $button ) { ?>
                     <td width="1%">
                         <div class="btn-group">
-                            <a class="btn btn-sm btn-info btn-filter" uid="<?=$button['name']?>" href="javascript: filterLocation.showPopover();">
+                            <a class="btn btn-sm btn-info btn-filter" uid="<?=$button['name']?>" href="javascript: filterLocation.showPopover();" title="<?=htmlentities($button['caption'].': '.$button['value'])?>">
                                 <?=$button['caption'].':'.trim($button['value'], ' ,')?>
                             </a>
                             <a class="btn btn-sm btn-info btn-close" aria-hidden="true" parm-name="<?=$button['name']?>">&times;</a>
@@ -20,8 +20,7 @@
                 <?php } ?>
                 <td id="search-area">
                     <?php if ( $filter_search['searchable'] ) { ?>
-                        <input type="text" class="search" placeholder="<?=text(2908)?>" value="<?=htmlentities($filter_search['value'])?>"
-                               onchange="<?=$filter_search['script']?>" onkeydown="filterLocation.hidePopover()">
+                        <input type="text" class="search" placeholder="<?=text(2908)?>" value="<?=htmlentities($filter_search['value'])?>" autocomplete="off">
                     <?php } ?>
                 </td>
                 <td width="1%">

@@ -29,4 +29,8 @@ class Stage extends Metaobject
 	function IsUpdatedCascade( $object ) {
 		return false;
 	}
+
+    function getVpdValue() {
+        return '';
+    }
 }

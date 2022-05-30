@@ -13,8 +13,16 @@ class PMPageBoard extends PageBoard
         $this->projectIt = $this->buildProjectIt();
         if ( !is_object($this->projectIt) ) $this->projectIt = getSession()->getProjectIt();
 
-        $object = new MetaobjectStatable($this->getObject()->getEntityRefName());
-        $object->addFilter( new FilterVpdPredicate($this->projectIt->fieldToArray('VPD')) );
+        $object = getFactory()->getObject(get_class($this->getObject()));
+        $predicates = array_merge(
+            $this->getBoardNamesPredicates(),
+            array(
+                new FilterVpdPredicate($this->projectIt->fieldToArray('VPD'))
+            )
+        );
+        foreach( $predicates as $predicate ) {
+            $object->addFilter($predicate);
+        }
         $object->disableVpd();
 
         $count_aggregate = new AggregateBase( 'State' );
@@ -49,6 +57,10 @@ class PMPageBoard extends PageBoard
         }
     }
 
+    function getBoardNamesPredicates() {
+        return array();
+    }
+
     function buildItemsCount($registry, $predicates)
     {
         $predicates = array_filter($predicates, function($predicate) {
@@ -60,10 +72,6 @@ class PMPageBoard extends PageBoard
             $countByIt->moveNext();
         }
         return parent::buildItemsCount($registry, $predicates);
-    }
-
-    function getReportUrl() {
-        return $this->report_url;
     }
 
 	function getGroupFields()
@@ -205,7 +213,7 @@ class PMPageBoard extends PageBoard
                             $times++;
                         }
                         else {
-                            $lines[] = $computedItem;
+                            $lines[] = is_numeric($computedItem) ? round($computedItem, 1) : $computedItem;
                         }
                     }
                     if ( count($lines) > 0 ) {
@@ -223,6 +231,22 @@ class PMPageBoard extends PageBoard
         {
             case 'Project':
                 return $this->getProjectIt();
+            case 'State':
+                if ( $this->getObject() instanceof MetaobjectStatable ) {
+                    $stateIt = \WorkflowScheme::Instance()->getStateIt($this->getObject());
+                    $idAttribute = $this->getObject()->getIdAttribute();
+                    $data = array();
+                    while( !$stateIt->end() ) {
+                        $data[] = array(
+                            $idAttribute => $stateIt->get('ReferenceName'),
+                            'Caption' => $stateIt->getDisplayName(),
+                            'VPD' => $stateIt->get('VPD')
+                        );
+                        $stateIt->moveNext();
+                    }
+                    return $this->getObject()->createCachedIterator($data);
+                }
+                return parent::buildGroupIt();
             default:
                 return parent::buildGroupIt();
         }
@@ -237,19 +261,12 @@ class PMPageBoard extends PageBoard
     {
         $values = $this->getTable()->getPredicateFilterValues();
 
-        foreach( $this->getTable()->getFilterPredicates($values) as $filter ) {
-            if ( $filter instanceof FilterVpdPredicate ) {
-                $vpd_filter = $filter;
-            }
+        if ( count(\TextUtils::parseFilterItems($values['target'])) < 1 ) {
+            $vpd_filter = new ProjectVpdPredicate(join(',',$this->getObject()->getVpds()));
         }
-        if ( !is_object($vpd_filter) ) {
-            $vpd_filter = new FilterVpdPredicate(join(',',$this->getObject()->getVpds()));
-        }
-
         $groupFilter = in_array($values['target'],PageTable::FILTER_OPTIONS) ? '' : $values['target'];
 
-        $registry = getFactory()->getObject('Project')->getRegistry();
-        $registry->setPersisters(array());
+        $registry = getFactory()->getObject('Project')->getRegistryBase();
         return $registry->Query(
             array (
                 $groupFilter != ''
@@ -269,7 +286,7 @@ class PMPageBoard extends PageBoard
 		$iterator = $this->getBoardAttributeIterator();
 		$iterator->moveTo('ReferenceName', $board_value);
 
-		if ( $iterator->getId() != '' && $this->getProjectIt()->count() == 1 )
+		if ( $iterator->getId() != '' && !$iterator->object instanceof StateMeta )
 		{
 			$method = new ObjectModifyWebMethod($iterator);
 			if ( $method->hasAccess() ) {
@@ -336,7 +353,7 @@ class PMPageBoard extends PageBoard
             while( !$projectIt->end() ) {
                 $items[] = array(
                     'name' => $projectIt->getDisplayName(),
-                    'url' => $widgetIt->getUrl('', $projectIt)
+                    'url' => $widgetIt->getUrl('&target='.$projectIt->getId(), $projectIt)
                 );
                 $projectIt->moveNext();
             }

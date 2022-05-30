@@ -12,7 +12,7 @@ class AttributeGroupRegistry extends ObjectRegistrySQL
 		);
 	}
 	
-	function getAll()
+	function Query($parms = array())
 	{
 		$this->add('system', translate('Системные'));
 

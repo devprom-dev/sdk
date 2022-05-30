@@ -18,6 +18,8 @@ class AutoActionForm extends PMPageForm
         $object = $this->getObject();
 		$object->setAttributeVisible('Actions', false);
         $object->setAttributeType('Actions', 'AutoActions');
+        $object->setAttributeVisible('Recurring', true);
+        $object->setAttributeOrderNum('Conditions', 5);
     }
 
 	function createFieldObject( $name )
@@ -55,7 +57,7 @@ class AutoActionForm extends PMPageForm
                 foreach( $attributes as $attribute ) {
                     if ( $this->subject->IsAttributeRequired($attribute) ) continue;
                     if ( !$this->subject->getAttributeEditable($attribute) ) continue;
-                    if ( !$this->subject->IsAttributeStored($attribute) ) continue;
+                    if ( !$this->subject->IsAttributePersisted($attribute) ) continue;
                     $rowset[] = array(
                         'entityId' => $attribute,
                         'Caption' => $this->subject->getAttributeUserName($attribute)
@@ -79,20 +81,16 @@ class AutoActionForm extends PMPageForm
 		}
 	}
 
-	function getShortAttributes()
+	function createField($name)
     {
-        $attributes = array(
-            'Type', 'Priority'
-        );
-        foreach( $this->subject->getAttributes() as $attribute => $value ) {
-            if ( in_array($this->subject->getAttributeType($attribute), array('integer','float')) ) {
-                $attributes[] = $attribute;
-            }
+        $field = parent::createField($name);
+        switch( $name ) {
+            case 'WebhookURL':
+                $field->setRows(1);
+                return $field;
+            default:
+                return $field;
         }
-        return array_merge(
-            parent::getShortAttributes(),
-            $attributes
-        );
     }
 
     function IsAttributeVisible( $attr )
@@ -110,8 +108,59 @@ class AutoActionForm extends PMPageForm
         switch( $field ) {
             case 'Project':
                 return;
+            case 'WebhookPayload':
+                return \JsonWrapper::encode(
+                    array(
+                        'timestamp' => '{{timestamp}}',
+                        'entity' => '{{entity}}',
+                        'text' => '{{text}}',
+                        'user' => '{{user}}',
+                        'changelog' => array(
+                            'items' => '{{item}}'
+                        ),
+                        'comment' => '{{comment}}',
+                        'webhookEvent' => '{{event}}'
+                    )
+                );
             default:
                 return parent::getDefaultValue( $field );
         }
+    }
+
+    function getFieldDescription($field_name)
+    {
+        switch ($field_name) {
+            case 'Recurring':
+                $moduleIt = getFactory()->getObject('Module')->getExact('dicts-recurring');
+                return sprintf(text(3104), $moduleIt->getUrl());
+        }
+        return parent::getFieldDescription($field_name);
+    }
+
+    function drawScripts()
+    {
+        parent::drawScripts();
+
+        ?>
+        <script type="text/javascript">
+            $(document).ready( function() {
+                showRecurring($('#pm_AutoActionEventType').val() == '<?=AutoActionEventRegistry::Schedule?>');
+
+                $('#pm_AutoActionEventType').change( function() {
+                    showRecurring($(this).val() == '<?=AutoActionEventRegistry::Schedule?>');
+                });
+                function showRecurring(visible) {
+                    if ( visible ) {
+                        $('#RecurringText').show();
+                        $('#RecurringText').parent().prev('label').show();
+                    }
+                    else {
+                        $('#RecurringText').hide();
+                        $('#RecurringText').parent().prev('label').hide();
+                    }
+                }
+            });
+        </script>
+        <?php
     }
 }

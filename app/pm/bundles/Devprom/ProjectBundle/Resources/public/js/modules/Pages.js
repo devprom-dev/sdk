@@ -97,8 +97,8 @@ App.module("Pages", function(Pages, App, Backbone, Marionette, $, _){
 		    }else if(filterOnTyping){
 			$(this).trigger('change');
 		    }
-		});
-	    }
+			});
+		}
 	});
     
     Pages.pagesView = new PagesView({});

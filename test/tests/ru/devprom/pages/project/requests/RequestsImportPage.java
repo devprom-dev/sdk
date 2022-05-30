@@ -34,7 +34,7 @@ public class RequestsImportPage extends SDLCPojectPageBase {
 	
 	public RequestsImportPage clickImport(){
 		driver.findElement(By.xpath("//input[@value='Импортировать']")).click();
-		new WebDriverWait(driver, waiting).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//form//div[contains(@class,'alert-success')]")));
+		new WebDriverWait(driver, waiting).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'alert-success')]")));
 		return new RequestsImportPage(driver);
 	}
 	

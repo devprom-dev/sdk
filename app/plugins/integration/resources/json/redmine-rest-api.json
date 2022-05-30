@@ -58,7 +58,7 @@
     "ObjectId": "{parentId}",
     "Caption": "notes"
   },
-  "ActivityRequest": {
+  "Activity": {
     "url": "/time_entries/{id}.json",
     "link": "/time_entries/{id}",
     "Participant": {"Caption":"time_entry.user.name"},

@@ -26,7 +26,7 @@ class HourController extends RestController
 	{
 		$parms = array();
 		if ( $request->get('class') == 'issues' ) {
-			$parms['Task'] = $request->get('object');
+			$parms['Issue'] = $request->get('object');
 		}
 		else {
 			$parms['Task'] = $request->get('object');

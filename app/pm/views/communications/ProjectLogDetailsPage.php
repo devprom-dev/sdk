@@ -10,18 +10,20 @@ class ProjectLogDetailsPage extends PMPage
     function getTable() {
  		return new ProjectLogDetailsTable( $this->getObject() );
  	}
- 	
+
  	function getEntityForm() {
  		return null;
  	}
 
 	function getRecentChangedObjectIds( $filters )
 	{
-         return $this->getObject()->getRegistry()->Query(
+	    $registry = $this->getObject()->getRegistry();
+        $registry->setSorts(array());
+        return $registry->QueryKeys(
 				array (
-                    new FilterModifiedSinceSecondsPredicate(5 * 60),
-						new FilterVpdPredicate(),
-						new SortChangeLogRecentClause()
+                    new FilterCreatedSinceSecondsPredicate(5 * 60),
+                    new FilterVpdPredicate(),
+                    new SortKeyClause('DESC')
 				)
 			 )->idsToArray();
  	}

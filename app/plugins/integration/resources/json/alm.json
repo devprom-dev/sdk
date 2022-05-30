@@ -1,0 +1,272 @@
+[{
+  "Iteration": {
+    "url": "/pm/{project}/api/latest/iterations",
+    "link": "/pm/{project}/iterations?pm_ReleaseId={id}",
+    "Caption": "Caption",
+    "StartDate": "StartDate",
+    "FinishDate": "FinishDate"
+  },
+  "Request": {
+    "url": "/pm/{project}/api/latest/issues",
+    "link": "/pm/{project}/I-{id}",
+    "Caption": "Caption",
+    "Description": "Description",
+    "Priority": {
+      "Id": "Priority.Id"
+    },
+    "Estimation": "Estimation",
+    "Fact": "Fact",
+    "Iteration": {
+      "reference": "Iteration",
+      "type": "Iteration"
+    },
+    "Owner": {
+      "Email": "Owner.Email"
+    },
+    "State": "State",
+    "Type": {
+      "ReferenceName": "Type.ReferenceName"
+    },
+    "OrderNum": "OrderNum"
+  },
+  "RequestComment": {
+    "url": "/pm/{project}/api/latest/comment/items",
+    "link": "/pm/{project}/O-{id}",
+    "Caption": "Caption",
+    "ObjectId": {
+      "reference": "ObjectId",
+      "type": "Request"
+    },
+    "PrevComment": {
+      "reference": "PrevComment",
+      "type": "RequestComment"
+    },
+    "AuthorId": {
+      "Email": "AuthorId.Email"
+    }
+  },
+  "Task": {
+    "url": "/pm/{project}/api/latest/tasks",
+    "link": "/pm/{project}/T-{id}",
+    "Caption": "Caption",
+    "Priority": {
+      "Id": "Priority.Id"
+    },
+    "Planned": "Planned",
+    "ChangeRequest": {
+      "reference": "ChangeRequest",
+      "type": "Request"
+    },
+    "Release": {
+      "reference": "Release",
+      "type": "Iteration"
+    },
+    "Assignee": {
+      "Email": "Owner.Email"
+    },
+    "State": "State",
+    "TaskType": {
+      "ReferenceName": "TaskType.ReferenceName"
+    },
+    "OrderNum": "OrderNum"
+  },
+  "TaskComment": {
+    "url": "/pm/{project}/api/latest/comment/items",
+    "link": "/pm/{project}/O-{id}",
+    "Caption": "Caption",
+    "ObjectId": {
+      "reference": "ObjectId",
+      "type": "Task"
+    },
+    "PrevComment": {
+      "reference": "PrevComment",
+      "type": "TaskComment"
+    },
+    "AuthorId": {
+      "Email": "AuthorId.Email"
+    }
+  },
+  "Activity": {
+    "url": "/pm/{project}/api/latest/activity/items",
+    "link": "/pm/{project}/O-{id}",
+    "Participant": {
+      "Email": "Participant.Email"
+    },
+    "Task": {
+      "reference": "Task",
+      "type": "Task"
+    },
+    "Issue": {
+      "reference": "Issue",
+      "type": "Request"
+    },
+    "Description": "Description",
+    "Capacity": "Capacity",
+    "ReportDate": "ReportDate"
+  },
+  "RequestAttachment": {
+    "url": "/pm/{project}/api/latest/attachment/items",
+    "ObjectId": {
+      "reference": "ObjectId",
+      "type": "Request"
+    },
+    "FileMime": "FileMime",
+    "FileExt": "FileExt",
+    "File": "File"
+  },
+  "TaskAttachment": {
+    "url": "/pm/{project}/api/latest/attachment/items",
+    "ObjectId": {
+      "reference": "ObjectId",
+      "type": "Task"
+    },
+    "FileMime": "FileMime",
+    "FileExt": "FileExt",
+    "File": "File"
+  },
+  "Requirement": {
+    "url": "/pm/{project}/api/latest/requirement/items",
+    "OrderNum": "OrderNum",
+    "Caption": "Caption",
+    "Content": "Content",
+    "ParentPage": {
+      "reference": "ParentPage",
+      "type": "Requirement"
+    },
+    "Author": {
+      "Email": "Author.Email"
+    },
+    "Modifier": {
+      "Email": "Modifier.Email"
+    },
+    "State": "State",
+    "PageType": {
+      "ReferenceName": "PageType.ReferenceName"
+    },
+    "SectionNumber": "SectionNumber",
+    "IsDocument": "IsDocument",
+    "Estimation": "Estimation",
+    "Importance": {
+      "ReferenceName": "Importance.ReferenceName"
+    }
+  },
+  "RequirementAttachment": {
+    "url": "/pm/{project}/api/latest/wikipagefile/items",
+    "WikiPage": {
+      "reference": "WikiPage",
+      "type": "Requirement"
+    },
+    "ContentMime": "ContentMime",
+    "ContentExt": "ContentExt",
+    "Content": "Content"
+  },
+  "RequirementComment": {
+    "url": "/pm/{project}/api/latest/comment/items",
+    "link": "/pm/{project}/O-{id}",
+    "Caption": "Caption",
+    "ObjectId": {
+      "reference": "ObjectId",
+      "type": "Requirement"
+    },
+    "PrevComment": {
+      "reference": "PrevComment",
+      "type": "RequirementComment"
+    },
+    "AuthorId": {
+      "Email": "AuthorId.Email"
+    }
+  },
+  "TestScenario": {
+    "url": "/pm/{project}/api/latest/testscenario/items",
+    "OrderNum": "OrderNum",
+    "Caption": "Caption",
+    "Content": "Content",
+    "ParentPage": {
+      "reference": "ParentPage",
+      "type": "TestScenario"
+    },
+    "Author": {
+      "Email": "Author.Email"
+    },
+    "Modifier": {
+      "Email": "Modifier.Email"
+    },
+    "State": "State",
+    "PageType": {
+      "ReferenceName": "PageType.ReferenceName"
+    },
+    "SectionNumber": "SectionNumber",
+    "IsDocument": "IsDocument"
+  },
+  "TestScenarioAttachment": {
+    "url": "/pm/{project}/api/latest/wikipagefile/items",
+    "WikiPage": {
+      "reference": "WikiPage",
+      "type": "TestScenario"
+    },
+    "ContentMime": "ContentMime",
+    "ContentExt": "ContentExt",
+    "Content": "Content"
+  },
+  "TestScenarioComment": {
+    "url": "/pm/{project}/api/latest/comment/items",
+    "link": "/pm/{project}/O-{id}",
+    "Caption": "Caption",
+    "ObjectId": {
+      "reference": "ObjectId",
+      "type": "TestScenario"
+    },
+    "PrevComment": {
+      "reference": "PrevComment",
+      "type": "TestScenarioComment"
+    },
+    "AuthorId": {
+      "Email": "AuthorId.Email"
+    }
+  },
+  "HelpPage": {
+    "url": "/pm/{project}/api/latest/helppage/items",
+    "OrderNum": "OrderNum",
+    "Caption": "Caption",
+    "Content": "Content",
+    "ParentPage": {
+      "reference": "ParentPage",
+      "type": "HelpPage"
+    },
+    "Author": {
+      "Email": "Author.Email"
+    },
+    "Modifier": {
+      "Email": "Modifier.Email"
+    },
+    "State": "State",
+    "SectionNumber": "SectionNumber",
+    "IsDocument": "IsDocument"
+  },
+  "HelpPageAttachment": {
+    "url": "/pm/{project}/api/latest/wikipagefile/items",
+    "WikiPage": {
+      "reference": "WikiPage",
+      "type": "HelpPage"
+    },
+    "ContentMime": "ContentMime",
+    "ContentExt": "ContentExt",
+    "Content": "Content"
+  },
+  "HelpPageComment": {
+    "url": "/pm/{project}/api/latest/comment/items",
+    "link": "/pm/{project}/O-{id}",
+    "Caption": "Caption",
+    "ObjectId": {
+      "reference": "ObjectId",
+      "type": "HelpPage"
+    },
+    "PrevComment": {
+      "reference": "PrevComment",
+      "type": "HelpPageComment"
+    },
+    "AuthorId": {
+      "Email": "AuthorId.Email"
+    }
+  }
+}]

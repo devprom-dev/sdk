@@ -2,7 +2,7 @@
 include_once SERVER_ROOT_PATH."core/views/PageSectionLastChanges.php";
 include_once SERVER_ROOT_PATH."pm/views/ui/FieldWYSIWYG.php";
 
-class PMLastChangesSection extends LastChangesSection
+class PMLastChangesSection extends PageSectionLastChanges
 {
     function __construct( $object )
     {
@@ -37,7 +37,16 @@ class PMLastChangesSection extends LastChangesSection
 
     function getBodyRenderParms()
     {
-        return parent::getRenderParms();
+        $parms = parent::getRenderParms();
+        $className = strtolower(get_class($this->object->object));
+
+        return array_merge( $parms, array (
+            'moreUrl' => count($parms['rows']) >= 5
+                ? getFactory()->getObject('PMReport')->getExact('project-log')->getUrl(
+                    'entities='.$className.'&'.$className.'='.$this->object->getId().'&start='.$this->object->getDateFormatted('RecordCreated')
+                )
+                : ''
+        ));
     }
 
     function renderBody( $view, $parms = array() )
@@ -49,6 +58,8 @@ class PMLastChangesSection extends LastChangesSection
     }
 
     function hasAccess() {
-        return getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Module')->getExact('project-log'));
+        return parent::hasAccess() &&
+            getFactory()->getAccessPolicy()->can_read(
+                getFactory()->getObject('Module')->getExact('project-log'));
     }
 }

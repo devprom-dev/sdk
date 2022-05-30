@@ -3,7 +3,7 @@
 class TaskIssueArtefactsPersister extends ObjectSQLPersister
 {
     function getAttributes() {
-        return array('IssueFeature', 'IssueTraces', 'IssueDescription', 'IssueVersion', 'IssueState', 'IssueAttachment');
+        return array('IssueFeature', 'IssueTraces', 'IssueDescription', 'IssueState', 'IssueAttachment');
     }
 
     function getSelectColumns( $alias )
@@ -15,8 +15,6 @@ class TaskIssueArtefactsPersister extends ObjectSQLPersister
 			"      AND l.ObjectClass NOT IN ('Task') ) IssueTraces ",
 
 			" ( SELECT r.Description FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueDescription ",
-
-            " ( SELECT r.ClosedInVersion FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueVersion ",
 
             " ( SELECT r.Function FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueFeature ",
 

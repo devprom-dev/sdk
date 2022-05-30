@@ -88,11 +88,8 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $setting = new ReportSetting('tasksefforts');
         $setting->setGroup('Assignee');
         $setting->setVisibleColumns(
-            array_merge(
-                $visible,
-                array(
-                    'Planned', 'Fact', 'LeftWork'
-                )
+            array(
+                'UID', 'Priority', 'Caption', 'State', 'Planned', 'Fact', 'LeftWork', 'Progress'
             )
         );
         $settings->add( $setting );

@@ -13,7 +13,7 @@ class TaskUsedByPersister extends ObjectSQLPersister
 			     FROM WikiPage ub 
 			    WHERE ub.ReferenceName = ".WikiTypeRegistry::KnowledgeBase."
 			      AND ub.Dependency IS NOT NULL
-			      AND LOCATE(CONCAT('".$this->getObject()->getEntityRefName().":',".$this->getPK($alias)."),ub.Dependency)) ProjectPage "
+			      AND FIND_IN_SET(CONCAT('".$this->getObject()->getEntityRefName().":',".$this->getPK($alias)."),ub.Dependency)) > 0 ProjectPage "
 		);
  	}
 }

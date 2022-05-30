@@ -1,6 +1,6 @@
 <?php 
-
 $columns_info = array();
+
 foreach( $columns as $key => $attr )
 {
 	if ( !$list->getColumnVisibility($attr) ) {
@@ -15,8 +15,15 @@ foreach( $columns as $key => $attr )
 }
 $columns_number = count($columns_info);
 
-$uid = new ObjectUID();
-$hasUid = $uid->hasUidObject($list->getObject());
+$title_column_index = 0;
+foreach( array_values($columns) as $key => $attr ) {
+    if ( $attr == 'Caption' ) {
+        $title_column_index = $key;
+        break;
+    }
+}
+$title_column_index++; // numbers at first column
+$title_column_index++; // selection per row
 
 if ( $message != '' ) {
     echo '<div class="alert alert-hint">' . $message . '</div>';
@@ -98,7 +105,7 @@ if ( $message != '' ) {
             dataUrl: "<?=$jsonUrl?>",
             table: {
                 indentation: 20,      // indent 20px per node level
-                nodeColumnIdx: <?=($hasUid ? '3' : '2')?>,     // render the node title into the 2nd column
+                nodeColumnIdx: <?=$title_column_index?>,     // render the node title into the 2nd column
             },
             persist: {
                 expandLazy: true,
@@ -115,7 +122,8 @@ if ( $message != '' ) {
                     data: {
                         mode: "children",
                         roots: node.data.id,
-                        rootclass: node.data.class
+                        rootclass: node.data.class,
+                        search: ''
                     },
                     cache: false
                 };
@@ -125,6 +133,11 @@ if ( $message != '' ) {
                     var attribute = $(this).attr('uid');
                     if ( attribute != 'caption' && data.node.data[attribute] ) {
                         $(this).html(data.node.data[attribute]);
+                    }
+                    if ( attribute == 'checkbox-field' ) {
+                        if ( $(this).parent('tr').prev().find('td>input').is(':checked') ) {
+                            $(this).find('input').attr('checked', 'checked');
+                        }
                     }
                 });
 
@@ -143,6 +156,12 @@ if ( $message != '' ) {
                 loading: "<?=text(1708)?>",
                 loadError: "<?=text(677)?>",
                 noData: "<?=text(2649)?>"
+            },
+            init: function(event, data) {
+                if ( !data.status ) return;
+                if ( data.tree.rootNode.children.length < 1 ) return;
+                var item = data.tree.rootNode.children[0];
+                $(document).trigger('trackerItemSelected', [item.data.id, false, item.data.class]);
             }
         });
         /* Handle custom checkbox clicks */

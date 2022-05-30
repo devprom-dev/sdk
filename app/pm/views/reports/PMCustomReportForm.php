@@ -115,6 +115,5 @@ class PMCustomReportForm extends PMPageForm
                 'Url' => $moduleIt->getUrl('') . '/' . $object_it->getId()
             )
         );
-        exit();
 	}
 }

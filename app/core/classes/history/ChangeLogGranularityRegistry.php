@@ -34,12 +34,12 @@ class ChangeLogGranularityRegistry extends ChangeLogRegistry
 		);
 	}
 	
-	public function getQueryClause()
+	public function getQueryClause(array $parms)
 	{
-		return " (SELECT t.*, ".
-			   "		 (SELECT GROUP_CONCAT(DISTINCT a.Attributes ORDER BY a.Attributes) ".
-			   "		    FROM ObjectChangeLogAttribute a WHERE a.ObjectChangeLogId = t.ObjectChangeLogId) Attributes ".
-			   "	FROM ObjectChangeLog t WHERE 1 = 1 ".$this->getFilterPredicate().") ";
+		return " (SELECT t.*, 
+		                 (SELECT GROUP_CONCAT(DISTINCT a.Attributes ORDER BY a.Attributes) 
+		                    FROM ObjectChangeLogAttribute a WHERE a.ObjectChangeLogId = t.ObjectChangeLogId) Attributes 
+			     	FROM ObjectChangeLog t WHERE 1 = 1 {$this->getFilterPredicate($this->extractPredicates($parms))}) ";
 	}
 	
 	public function setGranularity( $granularity )
@@ -47,8 +47,8 @@ class ChangeLogGranularityRegistry extends ChangeLogRegistry
 		$this->granularity = $granularity;
 	}
 
-	public function getSelectClause( $alias, $select_all = true ) {
-		return parent::getSelectClause($alias, false);
+	public function getSelectClause( $persisters = array(), $alias = 't', $select_all = true ) {
+		return parent::getSelectClause( $persisters, $alias, false);
 	}
 
 	private $granularity = 1;

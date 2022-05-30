@@ -10,6 +10,7 @@ class MailBox
 	private $attachments = array();
 	private $text = '';
 	private $messageId = '';
+	private $parameters = '';
 	
 	function __construct() {
 		$this->to_address = array();
@@ -49,6 +50,10 @@ class MailBox
 	function setFrom( $from_address ) {
 		$this->from_address = $from_address;
 	}
+
+	function setParameters( $parms ) {
+        $this->parameters = $parms;
+    }
 
 	protected function getSystemEmail()
     {
@@ -95,7 +100,13 @@ class MailBox
                 ),
  				'MailboxClass' => get_class($this),
                 'Attachments' => serialize($this->attachments),
-                'EmailMessageId' => $this->messageId
+                'EmailMessageId' => $this->messageId,
+                'Parameters' => $this->parameters,
+                'Recipient' => array_shift(array_values($this->to_address))
+            ),
+            array(
+                'EmailMessageId',
+                'Recipient'
             )
         );
 
@@ -220,12 +231,12 @@ class HtmlMailBox extends MailBox
         $this->body .= "Content-Type: text/html; charset=UTF-8\r\n";
         $this->body .= "Content-Transfer-Encoding: base64\r\n";
         $this->body .= "\r\n";
-		$this->body .= base64_encode($this->applyStyles(
+		$this->body .= base64_encode(
 		    '<html>'.PHP_EOL.
 		    '<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /></head>'.PHP_EOL.
-		    '<body>'.preg_replace('/[\r\n]+/', '', $body).'</body>'.PHP_EOL.
+		    '<body>'.$body.'</body>'.PHP_EOL.
 		    '</html>'
-		));
+		);
         $this->body .= "\r\n";
 
         $this->body .= $images_body;

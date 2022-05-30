@@ -33,6 +33,8 @@ return array(
     'issue_comments' => 'Комментарии',
 	'issue_version' => 'Версия',
 	'issue_type_name' => 'Проблема',
+    'issue_feedback' => 'Оценка выполнения запроса',
+    'issue_feedback_text' => 'Комментарий к оценке выполнения запроса',
 
     'issue_state_all' => 'Все',
     'issue_state_open' => 'В работе',

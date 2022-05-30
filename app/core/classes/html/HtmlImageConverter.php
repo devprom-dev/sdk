@@ -58,7 +58,6 @@ class HtmlImageConverter
     static function replaceExternalImageCallback( $match )
     {
         $attributes = $match[1];
-        $match[0] = preg_replace('/style\s*=/', 'preservedhtmlattribute=', $match[0]);
 
         if ( preg_match( '/src="([^"]+)"/i', $attributes, $attrs ) ) $url = $attrs[1];
         if ( $url == '' ) return $match[0];

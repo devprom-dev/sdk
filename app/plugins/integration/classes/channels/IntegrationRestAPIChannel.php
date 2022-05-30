@@ -39,6 +39,10 @@ abstract class IntegrationRestAPIChannel extends IntegrationChannel
                             )
                         );
                     }
+                    elseif( strpos($field, 'join(') !== false ) {
+                        $field = trim(str_replace('join', '', $field),'()');
+                        $value = join(',',$value[$field]);
+                    }
                     else {
                         $value = $value[$field];
                     }
@@ -80,12 +84,15 @@ abstract class IntegrationRestAPIChannel extends IntegrationChannel
                         list($key, $keyValue) = preg_split('/=/', trim($shift, '()'));
                         $value = array( $field => array(array_merge(array( $key => $keyValue), $value)) );
                     }
+                    elseif( strpos($field, 'join(') !== false ) {
+                        $field = trim(str_replace('join', '', $field),'()');
+                        $value = array( $field => explode(',', $value) );
+                    }
                     else {
                         $value = array( $field => $value );
                     }
-                    if ( $field == $this->getUserEmailAttribute() ) {
+                    if ( $field == $this->getUserEmailAttribute() && $emails_map[$value[$field]] != '' ) {
                         $value['name'] = $emails_map[$value[$field]];
-                        if ( $value['name'] == '' ) return array();
                     }
                 }
                 return $value;

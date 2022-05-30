@@ -28,8 +28,6 @@ class ModifyStateWebMethod extends TransitionStateMethod
     {
         global $session;
 
-        getSession()->addBuilder( new WorkflowModelBuilder() );
-
         $class_name = getFactory()->getClass($parms['class']);
         if ( !class_exists($class_name) ) throw new Exception('Unknown class name: '.$parms['class']);
 
@@ -57,26 +55,18 @@ class ModifyStateWebMethod extends TransitionStateMethod
                     return;
                 }
             }
-
-            $attributeObject = $object_it->object->getAttributeObject($parms['attribute']);
-            if ( $attributeObject instanceof Release || $attributeObject instanceof Iteration ) {
-                $refIt = $attributeObject->getExact($parms['value']);
-                $parms['Project'] = $refIt->get('Project');
-            }
         }
 
         try {
-            if ( $parms['attribute'] == 'Project' ) {
-                $session = new PMSession(
-                    getFactory()->getObject('Project')->getByRef('VPD', $object_it->get('VPD')),
-                    getSession()->getAuthenticationFactory()
-                );
+            $session = new PMSession(
+                getFactory()->getObject('Project')->getByRef('VPD', $object_it->get('VPD')),
+                getSession()->getAuthenticationFactory()
+            );
 
-                ob_start();
-                $method = new ModifyAttributeWebMethod();
-                $method->execute_request($parms);
-                \Logger::getLogger('System')->info(ob_get_contents());
-                ob_end_clean();
+            if ( $parms['attribute'] == 'Project' ) {
+                $object_it = getFactory()->modifyEntity($object_it, array(
+                    'Project' => $parms['value']
+                ));
 
                 $session = new PMSession(
                     getFactory()->getObject('Project')->getExact($parms['value']),
@@ -92,11 +82,7 @@ class ModifyStateWebMethod extends TransitionStateMethod
             return;
         }
 
-        getFactory()->resetCache();
-        $object_it = getFactory()->getObject($class_name)->getExact($parms['object']);
-
-        if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, 'State') )
-        {
+        if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, 'State') ) {
             $result = array (
                 "message" => "denied",
                 "description" => text(707)
@@ -229,18 +215,35 @@ class ModifyStateWebMethod extends TransitionStateMethod
             }
             else
             {
-                $method = new TransitionStateMethod( $transition_it, $object_it );
+                $alerts = $transition_it->getUserAlerts();
+                if ( count($alerts) > 0 && !array_key_exists('suppress-alert',$_REQUEST) ) {
+                    echo JsonWrapper::encode(array (
+                        "message" => "alert",
+                        "description" => sprintf(text(3312), ' - '.join('<br/> - ',$alerts))
+                    ));
+                    return;
+                }
 
-                unset($parms['class']);
-                unset($parms['object']);
-                unset($parms['target']);
-                unset($parms['source']);
+                try {
+                    $method = new TransitionStateMethod( $transition_it, $object_it );
 
-                $method->execute(
-                    $transition_it->getId(), $object_it->getId(), get_class($object_it->object), $parms
-                );
+                    unset($parms['class']);
+                    unset($parms['object']);
+                    unset($parms['target']);
+                    unset($parms['source']);
 
-                echo '{"message":"ok"}';
+                    $method->execute(
+                        $transition_it->getId(), $object_it->getId(), get_class($object_it->object), $parms
+                    );
+
+                    echo '{"message":"ok"}';
+                }
+                catch( \Exception $e ) {
+                    echo JsonWrapper::encode(array (
+                            "message" => "denied",
+                            "description" => $e->getMessage()
+                        ));
+                }
                 return;
             }
 

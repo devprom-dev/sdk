@@ -4,10 +4,13 @@ class IterationTitlePersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 		$columns = array();
- 		
-  		$columns[] = "IFNULL((SELECT CONCAT(v.Caption, '.', t.ReleaseNumber) FROM pm_Version v WHERE v.pm_VersionId = t.Version), t.ReleaseNumber) ShortCaption ";
-
- 		return $columns;
+ 		return array(
+            "IFNULL((SELECT CONCAT(v.Caption, '.', t.Caption) 
+                       FROM pm_Version v WHERE v.pm_VersionId = t.Version), t.Caption) FullCaption "
+        );
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }

@@ -14,28 +14,37 @@ class CustomTagFilter extends FilterPredicate
  	{
  		$class = strtolower(get_class($this->object));
  		$idfield = $this->object->getClassName().'Id';
+ 		$sqls = array();
 
- 		$clauses = array();
- 		if ( strpos($filter, 'none') !== false ) {
-            $clauses[] =
-                " NOT EXISTS (SELECT 1 FROM pm_CustomTag rt " .
-                "   		   WHERE rt.ObjectId = t." .$idfield.
-                "				 AND rt.ObjectClass = '".$class."') ";
+        if ( in_array('none', TextUtils::parseItems($filter)) ) {
+            $sqls[] = " NOT EXISTS (
+                            SELECT 1 FROM pm_CustomTag rt 
+                             WHERE rt.ObjectId = t.{$idfield} 
+                               AND rt.ObjectClass = '{$class}') ";
+        }
+
+        if ( in_array('any', TextUtils::parseItems($filter)) ) {
+            $sqls[] = " EXISTS (
+                            SELECT 1 FROM pm_CustomTag rt 
+                             WHERE rt.ObjectId = t.{$idfield} 
+                               AND rt.ObjectClass = '{$class}') ";
         }
 
         $tag = getFactory()->getObject('Tag');
         $tag_it = $tag->getExact( TextUtils::parseIds($filter) );
 
-        if ( $tag_it->count() > 0 )
-        {
-            $clauses[] =
-                " EXISTS (SELECT 1 FROM pm_CustomTag rt " .
-                "   	   WHERE rt.ObjectId = t." .$idfield.
-                "            AND rt.ObjectClass = '".$class."' ".
-                "            AND rt.Tag IN (".join($tag_it->idsToArray(),',').")) ";
+        if ( $tag_it->count() > 0 ) {
+            $sqls[] =
+                " EXISTS (
+                    SELECT 1 FROM pm_CustomTag rt 
+                     WHERE rt.ObjectId = t.{$idfield}
+                       AND rt.ObjectClass = '{$class}' 
+                       AND rt.Tag IN (".join($tag_it->idsToArray(),',').")) ";
         }
 
-		return count($clauses) < 1 ? " AND 1 = 2 " : " AND (".join(" OR ", $clauses).") ";
+        if ( count($sqls) < 1 ) return " AND 1 = 2 ";
+
+		return " AND (" . join(" OR ", $sqls) . ") ";
  	}
  	
  	function get( $filter )

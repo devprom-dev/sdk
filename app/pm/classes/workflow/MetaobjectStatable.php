@@ -204,15 +204,13 @@ class MetaobjectStatable extends Metaobject
 		{
 			$comment = getFactory()->getObject('Comment');
 			$comment->setNotificationEnabled(false);
-			$comment_id = $comment->add_parms(
-				array (
-					'ObjectId' => $object_it->getId(),
-					'ObjectClass' => get_class($this),
-					'AuthorId' => getSession()->getUserIt()->getId(),
-					'Caption' => $parms['TransitionComment'],
-                    'IsPrivate' => $parms['IsPrivate']
-				)
-			);
+
+			$commentIt = getFactory()->createEntity($comment, array_merge($parms, array (
+                'ObjectId' => $object_it->getId(),
+                'ObjectClass' => get_class($this),
+                'AuthorId' => getSession()->getUserIt()->getId(),
+                'Caption' => $parms['TransitionComment']
+            )));
 		}
 
         $objectstate = getFactory()->getObject('pm_StateObject');
@@ -262,6 +260,7 @@ class MetaobjectStatable extends Metaobject
                 'Transition' => $parms['Transition'],
                 'CommentObject' => $comment_id,
                 'Author' => getSession()->getUserIt()->getId(),
+                'ReviewItem' => $object_it->get('ArtefactReviewItem'),
                 'VPD' => $object_it->get('VPD')
             )
         );

@@ -89,7 +89,7 @@ class WorkflowScheme
 			);
 		}
 		$stateId = $states[$state]['pm_StateId'];
-		if ( $stateId == '' ) $stateId = 0;
+		if ( $stateId < 1 ) return $this->stateAttribute->getEmptyIterator();
 		return $this->stateAttribute->getRegistry()->Query(
 		    array(
 		        new FilterAttributePredicate('State', $stateId)

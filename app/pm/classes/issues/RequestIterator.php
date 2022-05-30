@@ -29,14 +29,6 @@ class RequestIterator extends StatableIterator
                     $this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getDimensionText($this->get($attribute)).
                     '</span>';
             }
-            elseif ( in_array($attribute, array('TasksPlanned')) ) {
-                $displayAttributes[] = '<span class="label label-success">'.
-                    $this->getRef('Project')->getMethodologyIt()->getIterationEstimationStrategy()->getDimensionText($this->get($attribute)).
-                    '</span>';
-            }
-            else {
-                $displayAttributes[] = '['.$this->get($attribute).']';
-            }
         }
         if ( count($displayAttributes) > 0 ) {
             $prefix = $prefix . join(' ', $displayAttributes) . ' ';
@@ -62,7 +54,11 @@ class RequestIterator extends StatableIterator
         return $title;
     }
 
-    function getObjectDisplayName() {
+    function getObjectDisplayName()
+    {
+        if ( getSession()->IsRDD() && $this->get('Type') == '' ) {
+            return translate('Пожелание');
+        }
         return $this->get('TypeName') != '' ? $this->get('TypeName') : parent::getObjectDisplayName();
     }
 

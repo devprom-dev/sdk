@@ -14,6 +14,7 @@ class AutoActionPage extends PMPage
             if ( $methodologyIt->HasTasks() ) {
                 $this->addInfoSection( new PageSectionAttributes($this->getObject(),'task',text(2478)) );
             }
+            $this->addInfoSection( new PageSectionAttributes($this->getObject(),'webhook','Webhook') );
         }
     }
 

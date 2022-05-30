@@ -28,9 +28,6 @@ class WikiDocumentSettingBuilder extends PageSettingBuilder
                 )
             );
         }
-        if ( count(\TextUtils::parseFilterItems($_REQUEST['affirmation'])) > 0 ) {
-            $columns[] = 'Workflow';
-        }
         $setting->setVisibleColumns($columns);
         $settings->add( $setting );
         

@@ -56,21 +56,41 @@ class ReportsCommonBuilder extends ReportsBuilder
                 'query' => 'state=all&group=Function',
                 'module' => $module_it->getId()
             ));
-		}
+
+            $object->addReport( array(
+                'name' => 'assignedissues',
+                'title' => text(3115),
+                'query' => 'state='.join(',',$nonterminal),
+                'category' => FUNC_AREA_MANAGEMENT,
+                'module' => $module_it->getId()
+                ));
+        }
 		
  		$module_it = $module->getExact('issues-board');
-		
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
-			if ( !$project_it->IsPortfolio() ) {
-				if ( $project_it->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) {
-					$object->addReport(
-						array ( 'name' => 'issuesboard',
-							'category' => FUNC_AREA_MANAGEMENT,
-							'module' => $module_it->getId() )
-					);
-				}
-			}
+            if ( $project_it->IsProgram() || $project_it->IsSubproject() || $project_it->IsPortfolio() ) {
+                if ( getFactory()->getObject('SharedObjectSet')->sharedInProject(new Request(), $project_it) ) {
+                    $object->addReport( array (
+                        'name' => 'commonissuesboard',
+                        'title' => text(3127),
+                        'category' => FUNC_AREA_MANAGEMENT,
+                        'query' => 'group=Project',
+                        'module' => $module_it->getId()
+                    ));
+                }
+            }
+
+            if ( !$project_it->IsPortfolio() ) {
+                if ( $project_it->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) {
+                    $object->addReport(
+                        array ( 'name' => 'issuesboard',
+                            'category' => FUNC_AREA_MANAGEMENT,
+                            'module' => $module_it->getId() )
+                    );
+                }
+            }
+
             if ( $methodology_it->HasReleases() ) {
                 $object->addReport(
                     array (
@@ -204,6 +224,15 @@ class ReportsCommonBuilder extends ReportsBuilder
                 }
 
                 $object->addReport(
+                    array ( 'name' => 'assignedtasks',
+                        'title' => text(3110),
+                        'description' => text(3111),
+                        'query' => $query_common.'&taskassignee=user-id&iteration=all&state='.join(',',$non_terminal_states),
+                        'category' => FUNC_AREA_MANAGEMENT,
+                        'module' => $task_list_it->getId() )
+                );
+
+                $object->addReport(
                     array ( 'name' => 'currenttasks',
                         'title' => text(1356),
                         'description' => text(1417),
@@ -231,24 +260,16 @@ class ReportsCommonBuilder extends ReportsBuilder
                 );
             }
 
-            $worker_it = getFactory()->getObject('User')->getRegistry()->Query(
-                array (
-                    new FilterInPredicate(getSession()->getUserIt()->getId()),
-                    new UserWorkerPredicate()
-                )
-            );
-            if ( $worker_it->count() > 0 ) {
-                $object->addReport( array (
-                        'name' => 'mytasks',
-                        'title' => translate('Мои задачи'),
-                        'description' => text(1406),
-                        'query' => 'group=Release&taskassignee=user-id',
-                        'category' => FUNC_AREA_MANAGEMENT,
-                        'module' => $task_list_it->getId() )
-                );
-            }
             $object->addReport( array (
-                    'name' => 'assignedtasks',
+                    'name' => 'mytasks',
+                    'title' => text(3112),
+                    'description' => text(1406),
+                    'query' => 'group=Release&taskassignee=user-id',
+                    'category' => FUNC_AREA_MANAGEMENT,
+                    'module' => $task_list_it->getId() )
+            );
+            $object->addReport( array (
+                    'name' => 'tasksbyassignee',
                     'title' => text(2303),
                     'description' => text(2668),
                     'query' => 'group=Assignee',
@@ -289,19 +310,7 @@ class ReportsCommonBuilder extends ReportsBuilder
                     'module' => $task_list_it->getId()
                 )
             );
-            $object->addReport(
-                array (
-                    'name' => 'workitemchart',
-                    'title' => text(2680),
-                    'category' => FUNC_AREA_MANAGEMENT,
-                    'query' => 'assignee=user-id',
-                    'type' => 'chart',
-                    'module' => $task_list_it->getId()
-                )
-            );
-
 		}
-
 
 		$task_chart_it = $module->getExact('tasks-board');
         if ( $methodology_it->HasTasks() ) {
@@ -322,7 +331,7 @@ class ReportsCommonBuilder extends ReportsBuilder
                             'module' => $task_chart_it->getId())
                     );
                 }
-                if ( count($task->getVpds()) == 1 && $methodology_it->HasPlanning() ) {
+                if ( count($task->getVpds()) == 1 && $methodology_it->HasPlanning() && $methodology_it->UsePlanningByTasks() ) {
                     $object->addReport(
                         array (
                             'name' => 'tasksplanningboard',
@@ -534,7 +543,7 @@ class ReportsCommonBuilder extends ReportsBuilder
             ));
 		}
 
-        $module_it = $module->getExact('worklog');
+        $module_it = $module->getExact('worklog-chart');
         if ( getFactory()->getAccessPolicy()->can_read($module_it) )
         {
             $object->addReport(
@@ -555,7 +564,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 		{
 			$object->addReport(
 				array ( 'name' => 'projectplan',
-						'title' => text(1721),
+						'title' => text(3120),
 				        'description' => text(1389),
 						'category' => FUNC_AREA_MANAGEMENT,
 				        'module' => $module_it->getId() )

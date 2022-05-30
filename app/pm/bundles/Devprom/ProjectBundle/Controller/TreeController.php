@@ -5,10 +5,9 @@ use Devprom\CommonBundle\Controller\PageController;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Devprom\ProjectBundle\Service\TreeviewModel\FeatureService;
+use Devprom\ProjectBundle\Service\TreeviewModel\HierarchyService;
 use Devprom\ProjectBundle\Service\TreeviewModel\WikiService;
 use Devprom\ProjectBundle\Service\TreeGridViewModel\TreeGridService;
-
 include_once SERVER_ROOT_PATH."pm/views/ui/Common.php";
 include_once SERVER_ROOT_PATH."pm/views/product/FunctionsPage.php";
 include_once SERVER_ROOT_PATH."pm/views/project/VersionPage.php";
@@ -21,14 +20,26 @@ class TreeController extends PageController
     		throw $this->createNotFoundException('Class name is undefined but required');
     	}
 
-    	if ( in_array(strtolower($request->get('classname')), array('feature','featureterminal')) ) {
-    		$service = new FeatureService($request->get('root'), $request->get('selectableClass'));
+        $object = getFactory()->getObject($request->get('classname'));
+        if ( $object instanceof \WikiPage ) {
+            $service = new WikiService(
+                $request->get('classname'),
+                $request->get('root'),
+                $request->query->has('crossProject')
+            );
+            return new JsonResponse($service->getData());
+        }
+
+    	if ( count($object->getAttributesByGroup('hierarchy-parent')) > 0 ) {
+    		$service = new HierarchyService(
+                $object,
+                $request->get('root'),
+                $request->get('selectableClass')
+            );
+            return new JsonResponse($service->getData());
     	}
-    	else {
-    		$service = new WikiService($request->get('classname'), $request->get('root'), $request->query->has('crossProject'));
-    	}
-    	
-    	return new JsonResponse($service->getData());
+
+    	return new JsonResponse(array());
     }
 
     public function gridAction(Request $request)

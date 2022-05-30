@@ -21,16 +21,20 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 
 	    if ( $value == 'NULL' ) {
             DAL::Instance()->Query(
-                " UPDATE ".$table_name." SET FinishDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId()
+                " UPDATE {$table_name} SET FinishDate = {$value} WHERE {$table_name}Id = {$object_it->getId()}"
             );
         }
         else {
             DAL::Instance()->Query(
-                " UPDATE ".$table_name." SET FinishDate = ".$value." WHERE FinishDate IS NULL AND ".$table_name."Id = ".$object_it->getId()
+                " UPDATE {$table_name} SET FinishDate = {$value}, 
+                         EstimatedFinishDate = {$value}, 
+                         EstimatedStartDate = LEAST(EstimatedStartDate, {$value})
+                   WHERE FinishDate IS NULL AND {$table_name}Id = {$object_it->getId()}"
             );
         }
         DAL::Instance()->Query(
-            " UPDATE ".$table_name." SET StartDate = FinishDate WHERE StartDate IS NULL AND FinishDate IS NOT NULL AND ".$table_name."Id = ".$object_it->getId()
+            " UPDATE {$table_name} SET StartDate = FinishDate 
+               WHERE StartDate IS NULL AND FinishDate IS NOT NULL AND {$table_name}Id = {$object_it->getId()}"
         );
 	}
 
@@ -62,12 +66,12 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 
         if ( $value == 'NULL' ) {
             DAL::Instance()->Query(
-                " UPDATE ".$table_name." SET StartDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId()
+                " UPDATE {$table_name} SET StartDate = {$value} WHERE {$table_name}Id = {$object_it->getId()}"
             );
         }
         else if ( $value != '' ) {
             DAL::Instance()->Query(
-                " UPDATE ".$table_name." SET StartDate = ".$value." WHERE StartDate IS NULL AND ".$table_name."Id = ".$object_it->getId()
+                " UPDATE {$table_name} SET StartDate = {$value} WHERE StartDate IS NULL AND {$table_name}Id = {$object_it->getId()}"
             );
         }
 	}

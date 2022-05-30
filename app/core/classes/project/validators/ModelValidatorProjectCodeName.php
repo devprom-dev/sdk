@@ -3,7 +3,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorInsta
 
 class ModelValidatorProjectCodeName extends ModelValidatorInstance
 {
-	public function validate( Metaobject $object, array & $parms )
+	public function validate( Metaobject $object, array $parms )
 	{
 	    if ( !array_key_exists('CodeName', $parms) ) return "";
 

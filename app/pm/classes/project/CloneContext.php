@@ -12,6 +12,8 @@ class CloneContext
     private $resetUids = false;
     private $restoreFromTemplate = true;
     private $reuseProject = false;
+    private $raiseExceptions = false;
+    private $resetBaseline = false;
     
     function getIdsMap()
     {
@@ -103,5 +105,21 @@ class CloneContext
 
     function getReuseProject() {
         return $this->reuseProject;
+    }
+
+    function setRaiseExceptions($value) {
+        $this->raiseExceptions = $value;
+    }
+
+    function getRaiseExceptions() {
+        return $this->raiseExceptions;
+    }
+
+    function setResetBaseline($flag) {
+        $this->resetBaseline = $flag;
+    }
+
+    function getResetBaseline() {
+        return $this->resetBaseline;
     }
 }

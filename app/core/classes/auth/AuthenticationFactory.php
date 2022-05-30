@@ -61,31 +61,30 @@ class AuthenticationFactory
         $stored_session->defaultsort = 'RecordModified DESC';
 
         $prev_logon_it = $stored_session->getByRefArray(
-            array( 'Participant' => $this->getUser()->getId(),
-                'SessionHash' => $session_hash ), 1 );
+            array(
+                'Participant' => $this->getUser()->getId(),
+                'SessionHash' => $session_hash
+            ), 1
+        );
 
         // store the user has accessed into the system
         // if there was access in the past just modify it
         $parms = array(
-            'Timezone' => EnvironmentSettings::getClientTimeZone()->getName()
+            'Timezone' => EnvironmentSettings::getClientTimeZone()->getName(),
+            'SessionHash' => $session_hash
         );
-
-        if ( $prev_logon_it->count() > 0 )
-        {
+        if ( $prev_logon_it->count() > 0 ) {
             $parms['PrevLoginDate'] = $prev_logon_it->get('RecordModified');
             $stored_session->getRegistry()->Store($prev_logon_it, $parms);
         }
-        else
-        {
+        else {
             // store new access record
             $parms['Participant'] = $this->getUser()->getId();
-            $parms['SessionHash'] = $session_hash;
             $stored_session->add_parms($parms);
         }
     }
  	
- 	function getToken()
- 	{
+ 	function getToken() {
  		return md5($this->getUser()->getId().EnvironmentSettings::getServerSalt());
  	}
 

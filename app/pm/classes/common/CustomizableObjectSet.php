@@ -1,23 +1,22 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/common/PMObjectCacheable.php";
-include "CustomizableObjectRegistry.php";
-include "CustomizableObjectIterator.php";
+include_once "CustomizableObjectRegistry.php";
+include_once "CustomizableObjectIterator.php";
 
 class CustomizableObjectSet extends PMObjectCacheable
 {
  	function __construct() 
  	{
- 		parent::__construct('entity', new CustomizableObjectRegistry($this));
+ 	    $registry = new CustomizableObjectRegistry($this);
+        $registry->useTypes();
+ 		parent::__construct('entity', $registry);
  	}
  	
- 	function checkObject( $object )
- 	{
+ 	function checkObject( $object ) {
  		return in_array(strtolower(get_class($object)), $this->getAll()->fieldToArray('ReferenceName'));
  	}
 
-	function createIterator()
-	{
+	function createIterator() {
 		return new CustomizableObjectIterator($this);
 	}
 }

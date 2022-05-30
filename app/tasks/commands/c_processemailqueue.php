@@ -53,12 +53,20 @@ class ProcessEmailQueue extends TaskCommand
 		$parameters = $job_it->getParameters();
 		$process_items = $parameters['limit'] > 0 ? $parameters['limit'] : 10;
 
-		$queue_it = $queue->getLatest($process_items);
+		$queueRegistry = $queue->getRegistry();
+        $queueRegistry->setLimit($process_items);
+		$queue_it = $queueRegistry->Query(
+		    array(
+                new SortRecentClause(),
+                new FilterModifiedMoreThanSecondsPredicate(60)
+            )
+        );
 		$this->getLogger()->info('Emails to be processed: '.$queue_it->count());
 
 		while ( !$queue_it->end() )
 		{
 		    $bodyData = \JSONWrapper::decode($queue_it->getHtmlDecoded('Description'));
+
 			$body = $bodyData['native'];
 			$bodyText = $bodyData['text'];
 
@@ -86,7 +94,11 @@ class ProcessEmailQueue extends TaskCommand
                         ->setSubject($queue_it->getHtmlDecoded('Caption'))
                         ->setReplyTo($from_email, $from_name != '' ? $from_name : null);
 
-                    if ( $queue_it->getHtmlDecoded('EmailMessageId') != '' ) {
+                    if ( defined('EMAIL_BCC') && EMAIL_BCC != '' ) {
+                        $messageToBeSent->setBcc(array(EMAIL_BCC));
+                    }
+
+                    if ( $queue_it->get('EmailMessageId') != '' ) {
                         $messageToBeSent->setId(uniqid($queue_it->getId()) . EMAIL_MSG_ID_SEPARATOR
                             . trim($queue_it->getHtmlDecoded('EmailMessageId'),'<>'));
                     }

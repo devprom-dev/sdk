@@ -63,6 +63,14 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $modules[] = $item;
 
         $item = array();
+        $item['cms_PluginModuleId'] = 'worklog-chart';
+        $item['Caption'] = text(2492);
+        $item['AccessEntityReferenceName'] = 'pm_Activity';
+        $item['Url'] = 'worklog/chart';
+        $item['Icon'] = 'icon-signal';
+        $modules[] = $item;
+
+        $item = array();
         $item['cms_PluginModuleId'] = 'project-question';
         $item['Caption'] = text(2805);
         $item['AccessEntityReferenceName'] = 'pm_Question';
@@ -131,7 +139,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'issues-board';
-        $item['Caption'] = getSession()->getProjectIt()->IsPortfolio() ? text(1843) : text(1340);
+        $item['Caption'] = getSession()->IsRDD() ? text(3131) : text(1340);
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/board';
         $item['Icon'] = 'icon-th-large';

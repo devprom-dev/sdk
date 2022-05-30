@@ -45,7 +45,59 @@ class TooltipProjectService extends TooltipService
     				)
     	));
     }
-    
+
+    public function getHtmlRep( $skipTitle = false, $traceAttributes = array() )
+    {
+        $data = $this->getData();
+        $html = '';
+
+        ob_start();
+        if ( $skipTitle ) {
+            echo $data['type']['uid'];
+            echo '<br/>';
+            echo '<br/>';
+        }
+
+        foreach($data as $key => $section ) {
+            switch( $key ) {
+                case 'attributes':
+                    foreach( $section as $attribute ) {
+                        if ( $skipTitle && $attribute['name'] == 'Caption' ) continue;
+                        if ( in_array($attribute['name'], $traceAttributes) ) continue;
+
+                        echo '<b>'.$attribute['title'].'</b>: ';
+                        switch( $attribute['type'] ) {
+                            case 'wysiwyg':
+                                echo $attribute['text'];
+                                echo '<br/><br/>';
+                                break;
+                            default:
+                                if ( $attribute['name'] == 'Caption' ) {
+                                    echo $data['type']['uid'].' ';
+                                }
+                                echo $attribute['text'];
+                                echo '<br/>';
+                        }
+                    }
+                    break;
+                case 'lifecycle':
+                    echo '<b>'.$section['name'].'</b>: ';
+                    echo $section['data']['state'];
+                    echo '<br/>';
+                    break;
+                case 'type':
+                    echo '<b>'.translate('Тип').'</b>: ';
+                    echo $section['name'];
+                    break;
+            }
+        }
+
+        $html = ob_get_contents();
+        ob_end_clean();
+
+        return $html;
+    }
+
     protected function extendModel( $object )
     {
     	$object->addPersister( new \AttachmentsPersister() );

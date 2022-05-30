@@ -36,6 +36,10 @@ _admin_systemplates:
     path:  /admin/systemtemplates/
     defaults: { _controller: AdministrativeBundle:SystemTemplate:index }
     
+_admin_webhooklogs:
+    path:  /admin/webhooklogs/
+    defaults: { _controller: AdministrativeBundle:WebhookLog:index }
+
 _admin_ldap:
     path:  /admin/ldap/
     defaults: { _controller: AdministrativeBundle:Ldap:index }

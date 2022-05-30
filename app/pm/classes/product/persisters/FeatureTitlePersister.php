@@ -11,4 +11,8 @@ class FeatureTitlePersister extends ObjectSQLPersister
             " (SELECT i.RelatedColor FROM pm_Importance i WHERE i.pm_ImportanceId = t.Importance) ImportanceColor "
  		);
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }

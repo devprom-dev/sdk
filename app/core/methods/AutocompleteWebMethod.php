@@ -104,7 +104,7 @@ class AutocompleteWebMethod extends WebMethod
         if ( $className == 'Build' ) $className = 'BuildActual';
 
  		$object = getFactory()->getObject($className);
- 		$queryParms = array();
+ 		$queryParms = $object->getSortDefault();
 
 		if ( $object->getVpdValue() != '' ) {
             $queryParms[] = in_array('cross', $attributes)
@@ -123,13 +123,13 @@ class AutocompleteWebMethod extends WebMethod
 			$queryParms[] = new SortProjectSelfFirstClause();
 			$queryParms[] = new SortProjectImportanceClause();
 		}
-		$registry = $object->getRegistry();
+		$registry = $object->getRegistryBase();
  		
  		$key = 'term';
      	
      	$_REQUEST[$key] = trim(array_pop(
      	    array_filter(
-     	        preg_split('/[,;:]/', $_REQUEST[$key]),
+     	        preg_split('/[,;:\\/]/', $_REQUEST[$key]),
                 function($value) {
      	            return $value != "";
                 }
@@ -166,7 +166,7 @@ class AutocompleteWebMethod extends WebMethod
 					array_unique(
 					    array_merge(
                             array_intersect(
-                                array_keys($object->getAttributes()),
+                                $object->getAttributesStored(),
                                 array_merge(
                                     $attributes,
                                     preg_split('/,/', $_REQUEST['additional']),

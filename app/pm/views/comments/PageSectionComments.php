@@ -7,17 +7,18 @@ class PageSectionComments extends InfoSection
  	
  	private $baseline = '';
 	private $title = '';
-	private $id = '';
     private $options = array();
+    private $commentObject = null;
 
- 	function __construct( $object_it, $baseline = '' )
+ 	function __construct( $object_it, $commentObject = null, $baseline = '' )
  	{
 		parent::__construct();
-
  		$this->object_it = $object_it;
  		$this->baseline = $baseline;
+        $this->commentObject = is_object($commentObject)
+            ? $commentObject
+            : getFactory()->getObject('Comment');
 		$this->setCaption(translate('Комментарии'));
-		$this->setId( parent::getId() );
 		$this->setPlacement('bottom');
  	}
 
@@ -28,14 +29,6 @@ class PageSectionComments extends InfoSection
  	function getCaption() {
  		return $this->title;
  	}
-
-	function setId( $id ) {
-		$this->id = $id;
-	}
-
-	function getId() {
-		return $this->id;
-	}
 
 	function setOptions( $options ) {
 	    $this->options = $options;
@@ -56,14 +49,13 @@ class PageSectionComments extends InfoSection
 		));
 	}
  	
- 	function getTemplate()
-	{
+ 	function getTemplate() {
 		return 'pm/PageSectionComments.php';
 	}
  	
  	function render( $view, $parms = array() )
  	{
-		$comment_list = new CommentsThread( $this->object_it, $this->baseline );
+		$comment_list = new CommentsThread( $this->object_it, $this->commentObject, $this->baseline, $this->getId() );
         if ( array_key_exists('autorefresh', $this->options) ) {
             $comment_list->setAutoRefresh($this->options['autorefresh']);
         }

@@ -10,7 +10,9 @@ include "actions/TaskBusinessActionMoveIssueNextState.php";
 include "actions/TaskBusinessActionMoveIssueNextStateExt.php";
 include "actions/TaskBusinessActionMoveIssuePrevState.php";
 include "actions/TaskBusinessActionMoveTracesNextState.php";
+include "actions/TaskBusinessActionMoveIssue.php";
 include "actions/BusinessActionTaskIssueAutoActionWorkflow.php";
+include "actions/TaskBusinessActionMoveIssueNextStateByTaskTypes.php";
 
 class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
 {
@@ -29,6 +31,8 @@ class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
         $set->registerRule( new TaskBusinessActionMoveIssueNextStateExt() );
         $set->registerRule( new TaskBusinessActionMoveIssuePrevState() );
         $set->registerRule( new TaskBusinessActionMoveTracesNextState() );
+        $set->registerRule( new TaskBusinessActionMoveIssueNextStateByTaskTypes() );
+        $set->registerRule( new TaskBusinessActionMoveIssue() );
 
         $it = getFactory()->getObject('IssueAutoAction')->getRegistry()->Query(
             array(

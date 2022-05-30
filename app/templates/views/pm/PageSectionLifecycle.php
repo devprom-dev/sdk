@@ -65,7 +65,7 @@ foreach( $rows as $row ) {
 }
 $uml .= "@enduml";
 
-$url = trim(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : 'http://plantuml.com', "/ ");
+$url = trim(EnvironmentSettings::getPlantUMLServer(), "/ ");
 $url .= '/plantuml/img/'.encode64(gzdeflate($uml, 9));
 
 echo '<img class="workflow-image" src="'.$url.'">';

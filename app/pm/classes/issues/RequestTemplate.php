@@ -3,13 +3,11 @@ include_once SERVER_ROOT_PATH."core/classes/templates/ObjectTemplate.php";
 
 class RequestTemplate extends ObjectTemplate
 {
-	public function getListName()
-	{
+	public function getListName() {
 		return 'template-'.$this->getTypeName();
 	}
 	
-	public function getTypeName()
-	{
+	public function getTypeName() {
 		return 'request'; 
 	}
 	
@@ -36,13 +34,11 @@ class RequestTemplate extends ObjectTemplate
 		return $attributes;
 	}
 	
-	function getDisplayName()
-	{
+	function getDisplayName() {
 		return getSession()->IsRDD() ? text(3007) : text(1520);
 	}
 	
-	function getClassName()
-	{
+	function getClassName()	{
 		return get_class($this);
 	}
 	

@@ -38,7 +38,7 @@ class ProjectLinkedRegistry extends ObjectRegistrySQL
 		return array_merge( $filters,
 			array (
 				new FilterInPredicate($projects),
-                new FilterVpdPredicate($vpds)
+                new ProjectVpdPredicate($vpds)
 			)
 		);
 	}

@@ -1,5 +1,4 @@
 <?php
-
 include "TaskTraceBaseIterator.php";
 include "TaskInversedTraceBaseIterator.php";
 include "predicates/TaskTraceObjectPredicate.php";
@@ -24,8 +23,7 @@ class TaskTraceBase extends Metaobject
         $this->setAttributeRequired('OrderNum', false);
  	}
  	
- 	function createIterator() 
- 	{
+ 	function createIterator() {
  		return new TaskTraceBaseIterator( $this );
  	}
 
@@ -33,33 +31,21 @@ class TaskTraceBase extends Metaobject
 		return 'Baseline';
 	}
 
- 	function getObjectClass()
- 	{
+ 	function getObjectClass() {
  		return '';
  	}
 
-	function getTaskIt( $object_it )
-	{
-		global $model_factory;
-		
-		$it = $this->getByRef('ObjectId', $object_it->getId());
-		
-		$task = $model_factory->getObject('pm_Task');
-		
-		if ( $it->count() < 1 ) return $task->getEmptyIterator(); 
-		
-		return $task->getInArray('pm_TaskId', $it->fieldToArray('Task'));
-	}
-	
+    function duplicateInRelatedRequest() {
+         return true;
+    }
+
 	function getObjectIt( $task_it )
 	{
-		global $model_factory;
-		
 		$it = $this->getByRefArray(
 			array( 'Task' => $task_it->getId() ) 
 			);
 
-		$object = $model_factory->getObject( $this->getObjectClass() );
+		$object = getFactory()->getObject( $this->getObjectClass() );
 		
 		$object->defaultsort = ' RecordCreated DESC ';
 		
@@ -99,10 +85,8 @@ class TaskTraceBase extends Metaobject
 		$task = getFactory()->getObject('pm_Task');
 		$task_it = $task->getExact( $parms['Task'] );
 		
-		if ( $task_it->get('ChangeRequest') > 0 && $this->getObjectClass() != '' )
+		if ( $this->duplicateInRelatedRequest() && $task_it->get('ChangeRequest') > 0 && $this->getObjectClass() != '' )
 		{
-			if ( $this->getObjectClass() == 'PreceedingTask' ) return $id;
-
 			$req_trace = getFactory()->getObject('RequestTraceBase');
 			$cnt = $req_trace->getByRefArrayCount(
 				array( 'ChangeRequest' => $task_it->get('ChangeRequest'),
@@ -110,8 +94,7 @@ class TaskTraceBase extends Metaobject
 					   'ObjectClass' => $this->getObjectClass() )
 				);
 
-			if ( $cnt < 1 )
-			{
+			if ( $cnt < 1 ) {
 				$req_trace->add_parms( array(
 						'ChangeRequest' => $task_it->get('ChangeRequest'),
 					  	'ObjectId' => $parms['ObjectId'],

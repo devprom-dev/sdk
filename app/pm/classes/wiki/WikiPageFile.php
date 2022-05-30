@@ -1,5 +1,4 @@
 <?php
-
 include "WikiFileIterator.php";
 include "predicates/WikiFileReferenceFilter.php";
 

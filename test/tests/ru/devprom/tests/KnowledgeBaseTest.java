@@ -67,7 +67,7 @@ public class KnowledgeBaseTest extends ProjectTestBase {
 		String p = DataProviders.getUniqueString();
 		User member = new User("KBUser"+p,"1", "KBUser"+p, p+"test@email.com", false, true);
 		ulp = ulp.addNewUser(member, false);
-		favspage = ulp.gotoSDLCProject(webTest.getName());
+		favspage = ulp.gotoSDLCProject(webTest);
 		ProjectMembersPage pmp = favspage.gotoMembers();
 		AddMemberPage amp = pmp.gotoAddMember();
 		pmp = amp.addUserToProject(member, "Заказчик",  2, "");
@@ -77,7 +77,7 @@ public class KnowledgeBaseTest extends ProjectTestBase {
 		
 		//login and go to Knowledge Base
 		FavoritesPage fp  = loginpage.loginAs(member.getUsername(), member.getPass());
-		favspage = fp.gotoSDLCProject(webTest.getName());
+		favspage = fp.gotoSDLCProject(webTest);
 		kbp = favspage.gotoKnowledgeBase();
 		//Check if the KB articles are invisible for this user
 		Assert.assertFalse(kbp.isKBExists(kb.getName()));
@@ -89,7 +89,7 @@ public class KnowledgeBaseTest extends ProjectTestBase {
 			
 		//login with the main user 
 		fp  = loginpage.loginAs(username, password);
-		favspage = fp.gotoSDLCProject(webTest.getName());
+		favspage = fp.gotoSDLCProject(webTest);
 	}
 	
 	

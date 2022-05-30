@@ -12,16 +12,6 @@ include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
 
 class RequestForm extends RequestFormBase
 {
-	private $template_it;
-
-	function __construct( $object ) 
-	{
-		parent::__construct($object);
-        if ( $_REQUEST['template'] > 0 ) {
-            $this->setTemplate($_REQUEST['template']);
-        }
-	}
-
     protected function extendModel()
     {
         parent::extendModel();
@@ -41,16 +31,8 @@ class RequestForm extends RequestFormBase
         ));
     }
 
-    public function setTemplate( $templateId )
-    {
-        $template_it = getFactory()->getObject('RequestTemplate')->getRegistry()->Query(
-            array(
-                new FilterInPredicate($templateId),
-                new ObjectTemplatePersister()
-            )
-        );
-        if ( $template_it->getId() < 1 ) return;
-        $this->template_it = $template_it;
+    function getTemplateObject() {
+        return getFactory()->getObject('RequestTemplate');
     }
 
 	public function buildMethods() {
@@ -93,10 +75,6 @@ class RequestForm extends RequestFormBase
    		return $value;
    	}
 
-    function getDiscriminatorField() {
- 		return 'Type';
- 	}
-	
 	function getCaption()
 	{
 		if ( is_object($this->getObjectIt()) && $this->getObjectIt()->get('TypeName') != ''  ) {
@@ -143,6 +121,15 @@ class RequestForm extends RequestFormBase
         return array('PlannedRelease', 'Iteration', 'State', 'Priority', 'Function');
     }
 
+    function process()
+    {
+        if ( in_array($this->getAction(), array('add','modify')) ) {
+            unset($_REQUEST['Fact']); // filled by embedded form instead of attribute
+            $this->getObject()->setAttributeEditable('Fact', false);
+        }
+        return parent::process();
+    }
+
     function persist()
     {
         if ( $this->getAction() == 'add' && $_REQUEST['template'] == 'true' )
@@ -173,14 +160,6 @@ class RequestForm extends RequestFormBase
         }
 
         return parent::persist();
-    }
-
-    function getFieldValue( $attr )
-    {
-        if (is_object($this->template_it) && $this->template_it->get($attr) != '') {
-            return $this->template_it->get($attr);
-        }
-        return parent::getFieldValue( $attr );
     }
 
     function getSameItemsText() {

@@ -7,7 +7,7 @@ class ModelDataTypeMappingDate extends ModelDataTypeMapping
 		return in_array($type_name, array('date'));
 	}
 	
-	public function map( $value )
+	public function map( $value, array $groups = array() )
 	{
 	    list($date, $time) = preg_split('/\s+/', $value);
 		if ( $date == '' ) return '';

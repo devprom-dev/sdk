@@ -48,6 +48,9 @@ public class UserAddNewPage extends AdminPageBase {
 	@FindBy(name = "LicensePermissionqa")
 	private WebElement licenseQACheckbox;
 
+	@FindBy(name = "LicensePermissionfin")
+	private WebElement licenseFinCheckbox;
+
 	@FindBy(name = "LicensePermissiondocs")
 	private WebElement licenseDocsCheckbox;
 
@@ -92,6 +95,7 @@ public class UserAddNewPage extends AdminPageBase {
 		licenseDevCheckbox.click();
 		licenseDocsCheckbox.click();
 		licenseQACheckbox.click();
+		licenseFinCheckbox.click();
 		submitDialog(createBtn);
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='email' and contains(.,'" + user.getEmail() + "')]")));
 		user.id = Integer.parseInt(
@@ -114,6 +118,7 @@ public class UserAddNewPage extends AdminPageBase {
 		licenseDevCheckbox.click();
 		licenseDocsCheckbox.click();
 		licenseQACheckbox.click();
+		licenseFinCheckbox.click();
 		for (String group : user.getGroups()) {
 			(new WebDriverWait(driver, waiting)).until(ExpectedConditions
 					.visibilityOf(addGroupLink));
@@ -149,6 +154,7 @@ public class UserAddNewPage extends AdminPageBase {
 		licenseDevCheckbox.click();
 		licenseDocsCheckbox.click();
 		licenseQACheckbox.click();
+		licenseFinCheckbox.click();
 		submitDialog(createBtn);
 	}
 

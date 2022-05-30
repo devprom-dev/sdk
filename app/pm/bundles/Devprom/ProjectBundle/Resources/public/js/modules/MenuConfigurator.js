@@ -179,14 +179,24 @@ App.on("start", function()
 
 		    MenuConfigurator.menuGroupAdder.render();
 
-		    functionalAreasView.children.each(function(view)
-		    {
+		    functionalAreasView.children.each(function(view) {
 		    	if( $(view.el).has('a[uid="'+App.module('MenuConfigurator').currentArea+'"]').length > 0 )
 		    	{
 		    		view.select();
 		    	};
 		    });
-		}});
+
+			if ( devpromOpts.uiExtensionsEnabled ) {
+				setTimeout(function() {
+					$('.pages-column, .menu-colum').each(function() {
+						var scrollbar = new PerfectScrollbar($(this).get(0), {
+							suppressScrollX: false
+						});
+					});
+				}, 500);
+			}
+
+			}});
 	    }
         });
     });

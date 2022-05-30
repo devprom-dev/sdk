@@ -124,7 +124,7 @@ class WikiConverterMPdf
         if( in_array('numbering', $this->options) && $parent_it->get('SectionNumber') != '' ) {
             $title .= $parent_it->get('SectionNumber').'.&nbsp; ';
         }
-        if ( in_array('uid', $this->options) ) {
+        if ( in_array('uid', $this->options) && $parent_it->get('IsNoIdentity') == 'N' ) {
             $info = $this->uid->getUIDInfo($parent_it);
             $title .= $info['uid'] . '&nbsp; ';
         }

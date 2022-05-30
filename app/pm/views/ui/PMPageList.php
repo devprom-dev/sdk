@@ -10,11 +10,6 @@ class PMPageList extends PageList
     private $visibleColumnsCache = array();
     private $priorityField = null;
 	
-    function PMPageList( $object )
-    {
-        parent::PageList($object);
-    }
-
     function extendModel()
     {
         parent::extendModel();
@@ -88,9 +83,14 @@ class PMPageList extends PageList
                 break;
 
             case 'State':
-            	echo $this->getRenderView()->render('pm/StateColumn.php', array (
-                    'stateIt' => $object_it->getStateIt()
-                ));
+                if ( $object_it->object instanceof MetaobjectStatable ) {
+                    echo $this->getRenderView()->render('pm/StateColumn.php', array (
+                        'stateIt' => $object_it->getStateIt()
+                    ));
+                }
+                else {
+                    parent::drawCell( $object_it, $attr );
+                }
                 break;
     
 			case 'RecentComment':
@@ -123,8 +123,17 @@ class PMPageList extends PageList
 				));
 				break;
 
+            case 'UID':
+                parent::drawCell( $object_it, $attr );
+                break;
+
             default:
-                if ( $attr != 'UID' && in_array('computed', $object_it->object->getAttributeGroups($attr)) ) {
+                if ( in_array('computed', $object_it->object->getAttributeGroups($attr)) ) {
+                    if ( $object_it->object->getAttributeType($attr) == 'float' && $object_it->get($attr) > 0 ) {
+                        parent::drawCell( $object_it, $attr );
+                        break;
+                    }
+
                     $lines = array();
                     $times = 0;
                     $result = ModelService::computeFormula($object_it, $object_it->object->getDefaultAttributeValue($attr));
@@ -140,9 +149,16 @@ class PMPageList extends PageList
                             $lines[] = $computedItem;
                         }
                     }
+
+                    $value = '';
                     if ( count($lines) > 0 ) {
-                        echo join('<br/>', $lines);
+                        $value = join('<br/>', $lines);
                     }
+                    if ( $object_it->object->getAttributeType($attr) == 'float' ) {
+                        $value = number_format(floatval($value),
+                            \EnvironmentSettings::getFloatPrecision(), ',', ' ');
+                    }
+                    echo $value;
                     break;
                 }
 
@@ -271,12 +287,6 @@ class PMPageList extends PageList
 			return $value != 'State';
 		});
 
-		$skip = array_merge($skip,
-            array_filter($object->getAttributesByGroup('trace'), function($value) use ($object) {
-                return $object->getAttributeOrigin($value) != ORIGIN_CUSTOM;
-            })
-        );
-
 		return array_diff(parent::getGroupFields(), $skip );
 	}
 
@@ -289,7 +299,12 @@ class PMPageList extends PageList
 	 		$set = getFactory()->getObject('SharedObjectSet');
 		    if ( $set->sharedInProject($this->getObject(), getSession()->getProjectIt()) )
 		    {
-		        $ids = getSession()->getLinkedIt()->idsToArray();
+		        $ids = array_filter(
+		            getSession()->getLinkedIt()->idsToArray(),
+		            function( $item ) {
+		                $item > 0;
+                    }
+                );
 		        if ( count($ids) > 0 ) return 'Project';
 		    }
  		}
@@ -325,4 +340,35 @@ class PMPageList extends PageList
         return $_REQUEST['dashboard'] == '';
     }
 
+    function getBulkAttributes() {
+        return array_diff(
+            parent::getBulkAttributes(),
+            array(
+                'Priority'
+            )
+        );
+    }
+
+    function getTotalRowset()
+    {
+        $rowset = parent::getTotalRowset();
+
+        $object = $this->getObject();
+        $attributes = array_intersect(
+            $this->getObject()->getAttributesByGroup('computed'),
+            $this->getObject()->getAttributesByType('float')
+        );
+        if ( count($attributes) < 1 ) return $rowset;
+
+        $rowset = array_map(function($row) use ($object, $attributes) {
+                $objectIt = $object->createCachedIterator(array($row));
+                foreach( $attributes as $attribute ) {
+                    $row[$attribute] = join('', ModelService::computeFormula(
+                        $objectIt, $object->getDefaultAttributeValue($attribute)));
+                }
+                return $row;
+            }, $rowset);
+
+        return $rowset;
+    }
 }

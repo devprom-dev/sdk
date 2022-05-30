@@ -11,9 +11,9 @@ class DeliveryChart extends PMPageChart
 				array_merge(
 					$this->getTable()->getFilterPredicates($this->getTable()->getPredicateFilterValues()),
 					array (
-							new SortAttributeClause('Project'),
-							new SortAttributeClause('FinishDate'),
-							new SortAttributeClause('SortIndex')
+                        new SortAttributeClause('Project'),
+                        new SortAttributeClause('FinishDate'),
+                        new SortAttributeClause('SortIndex')
 					)
 				)
 		);
@@ -51,4 +51,8 @@ class DeliveryChart extends PMPageChart
 	function drawLegend( $data, & $aggs )
 	{
 	}
+
+    function getDetailsPaneVisible() {
+        return true;
+    }
 }

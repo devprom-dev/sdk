@@ -2,7 +2,7 @@
 
 class RequestTypeRegistry extends ObjectRegistrySQL
 {
-    function getQueryClause()
+    function getQueryClause(array $parms)
     {
         $hasIncrements = getSession()->IsRDD();
 

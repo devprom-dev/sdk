@@ -4,20 +4,21 @@ hljs.configure({
 });
 hljs.initHighlightingOnLoad();
 var mentions = [];
+var editorPersister = null;
 
 var ALM_toolbars = {
 	"MiniToolbar": [
 		{ name: 'clipboard', items : ['Paste','PasteText' ] },
 		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','RemoveFormat','TextColor','BGColor' ] },
 		{ name: 'paragraph', items : [ 'Outdent','Indent','NumberedList','BulletedList','Blockquote' ] },
-		{ name: 'insert', items : [ 'InsertMultipleImages','searchArtifact','Table','EmbedHTML','Embed','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
+		{ name: 'insert', items : [ 'Table','InsertMultipleImages','Diagrams', 'Plantuml', 'Mathjax', 'CodeSnippet','Link','searchArtifact',,'EmbedHTML','Embed' ] },
 		{ name: 'tools', items : [ 'Maximize','Source','-','Undo','Redo' ] },
 		{ name: 'styles', items : [ 'Format','Font','FontSize','Markdown' ] }
 	],
 	"FullToolbar": [
 		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','-','Subscript','Superscript','-', 'TextColor','BGColor','-','CopyFormatting','RemoveFormat' ] },
 		{ name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','Blockquote' ] },
-		{ name: 'insert', items : [ 'InsertMultipleImages','searchArtifact','includeArtifact','Table','EmbedHTML','Embed','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
+		{ name: 'insert', items : [ 'Table','InsertMultipleImages','Diagrams', 'Plantuml', 'Mathjax','CodeSnippet','Link','searchArtifact','includeArtifact','EmbedHTML','Embed' ] },
 		{ name: 'clipboard', items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo' ] },
 		{ name: 'editing', items : [ 'Scayt' ] },
 		{ name: 'tools', items : [ 'Maximize', 'ShowBlocks' ] },
@@ -29,7 +30,7 @@ var ALM_toolbars = {
 	"": []
 };
 var removePlugins = 'autogrow,elementspath,autoembed,tableresize';
-var removePluginsEmptyToolbar = 'pastefromword,pastetext,includepage,clipboard,notificationaggregator,notification,mathjax,image2,embed,embedbase,codesnippet,widget,toolbar,' + removePlugins;
+var removePluginsEmptyToolbar = 'pastefromword,pastetext,includepage,pastetools,clipboard,notificationaggregator,notification,mathjax,diagrams,image2,embed,embedbase,codesnippet,widget,toolbar,' + removePlugins;
 
 CKEDITOR.disableAutoInline = true;
 
@@ -64,6 +65,7 @@ function setupEditor( editor )
 	editor.on( 'focus', function( e ) {
 		$('.wysiwyg-welcome[for-id='+e.editor.custom.id+']').hide();
 		$('.wysiwyg-hover').removeClass('wysiwyg-hover');
+		return true;
 	});
     editor.on( 'key', function( event ) {
         if ( event.data.keyCode == 13 ) {
@@ -77,7 +79,7 @@ function setupEditor( editor )
 		var edt = $(this.editable().$);
 		if ( editor.custom.objectclass == 'TestScenario' || editor.custom.objectclass == 'TestCaseExecution' ) {
 			var skip = false;
-			edt.find('table tr > td:nth-child(1)').each(function(index) {
+			edt.find('table').first().find('>tbody>tr').children('td:nth-child(1)').each(function(index) {
 				if ( index == 0 ) {
 					skip = $(this).text() != "1";
 				}
@@ -107,7 +109,10 @@ function setupEditor( editor )
         });
     } );
     $('.wysiwyg-welcome:not(.armed)').click(function() {
-        $('#' + $(this).attr('for-id')).focus();
+		var editor = CKEDITOR.instances[$(this).attr('for-id')];
+		if ( editor ) {
+			(new CKEDITOR.focusManager(editor)).focus();
+		}
         $(this).addClass('armed');
     });
 }
@@ -201,7 +206,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, appVersion, p
 
             var editableElement = $(e.editor.editable().$);
             buildPastable(editableElement);
-			makeupEditor(e.editor, editableElement, 'body', project, $('#cke_'+editor_id+' .cke_wysiwyg_frame').offset());
+			makeupEditor(e.editor, editableElement, 'body', $('#cke_'+editor_id+' .cke_wysiwyg_frame').offset());
 
 			if ( !$.browser.msie ) {
 				e.editor.updateElement();
@@ -231,10 +236,12 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, appVersion, p
 			if ( typeof $(element).attr('objectClass') == 'undefined' ) {
 				$('#'+$(element).attr('id')+'Value').val( editorInstance.getData() );
 			}
-			else if ( editorInstance.checkDirty() )
+			else if ( editorInstance.checkDirty() && !editorPersister )
 			{
 				try {
-					$.ajax({
+					var editorData = editorInstance.getData();
+					if ( editorData == '' && $(element).attr('attributeName') == 'Caption' ) return;
+					editorPersister = $.ajax({
 						type: "POST",
 						url: modify_url,
 						dataType: "html",
@@ -243,7 +250,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, appVersion, p
 							'object': $(element).attr('objectId'),
 							'attribute': $(element).attr('attributeName'),
 							'version': $(element).attr('version'),
-							'value': editorInstance.getData(),
+							'value': editorData,
 							'parms': {ContentEditor: 'WikiRtfCKEditor'}
 						},
 						proccessData: false,
@@ -258,22 +265,29 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, appVersion, p
 									$(element).parents('[modified]').attr('modified', resultJson.modified);
 								}
 								if (typeof resultJson.version != 'undefined') {
-									$('.wysiwyg-text[version][objectid='+$(element).attr('objectid')+']').each(function(){
+									$('.cke_editable[version][objectid='+$(element).attr('objectid')+']').each(function(){
 										$(this).attr('version', resultJson.version);
 									});
 									$(element).attr('version', resultJson.version);
 									$(element).parents('[object-id]')
-										.find('.wysiwyg-text[version]')
+										.find('.cke_editable[version]')
 										.attr('version', resultJson.version);
+
 								}
-								editorInstance.resetDirty();
+								if ( editorData == editorInstance.getData() ) {
+									// reset dirty state if data was not changed during persistance
+									editorInstance.resetDirty();
+								}
 							}
 							catch(e) {
-								reportError(e);
+								reportError(e.toString());
 							}
 						},
 						error: function (xhr, status, error) {
 							reportError(ajaxErrorExplain(xhr, error));
+						},
+						complete: function(xhr, status, error) {
+							editorPersister = null;
 						},
 						statusCode: {
 							500: function (xhr) {
@@ -288,22 +302,20 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, appVersion, p
 			}
 		};
 
-		editor.on('change', function(e) {
-			if ( typeof e.editor.purgeTimeout == 'number' ) {
-				clearTimeout(e.editor.purgeTimeout);
-			}
-			e.editor.purgeTimeout = setTimeout(function() { e.editor.persist(true); }, 1560);
-		});
+		editor.persisterInterval = setInterval(
+			function(e) {
+				e.persist(true);
+			},
+			1500, editor
+		);
 
 		editor.on('instanceReady', function(e)
 		{
-	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() {
-		      	e.editor.persist(true);
-		      	return true;
+	      	registerBeforeUnloadHandler('global', function() {
+				if ( e.editor.checkDirty() ) return text('form-modified');
 	      	});
 	    			
-			if ( $(element).hasClass('wysiwyg-field') || $(element).parents('.embedded_form').length > 0 )
-			{
+			if ( $(element).hasClass('wysiwyg-field') || $(element).parents('.embedded_form').length > 0 ) {
 		      	registerFormValidator($(element).parents('form').attr('id'), function() {
 					e.editor.persist(true);
 		      		return true;
@@ -317,8 +329,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, appVersion, p
 			$(element).attr('title', '');
             $(element).removeAttr('style');
 			
-			$(element).find('a[href]').click( function(e) 
-			{
+			$(element).find('a[href]').click( function(e) {
 				e.stopImmediatePropagation();
 				window.location = $(this).attr('href');
 			});
@@ -329,15 +340,10 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, appVersion, p
 
 			var editor = $(e.editor.editable().$);
 			buildPastable(editor);
-            makeupEditor(e.editor, editor, 'body', project);
+            makeupEditor(e.editor, editor, 'body');
 		});
 
-		editor.on('destroy', function(e) {
-			e.editor.persist(true);
-		});
-
-		editor.on('panelShow', function(e)
-		{
+		editor.on('panelShow', function(e) {
 			var panelElement = $(e.data.element.$);
 			var stickedParent = panelElement.parents('.sticked');
 			if (stickedParent.length < 1) return;
@@ -410,11 +416,15 @@ function pasteImage(ev, data)
     originalImage.src = data.dataURL;
 }
 
-function makeupEditor( editor, e, container, project, offset )
+function makeupEditor( editor, e, container, offset )
 {
+	var project = editor.element.getAttribute('project');
+	var objectClass = editor.element.getAttribute('objectclass');
+
 	var templates = [];
-	var templatesUrl = '/pm/'+editor.element.getAttribute('project')+'/module/wrtfckeditor/searchtexttemplate?export=list&objectclass='
-		+ editor.element.getAttribute('objectclass');
+	var templatesUrl = '/pm/'+project+
+		'/module/wrtfckeditor/searchtexttemplate?export=list&objectclass=' + objectClass;
+	var mentionsUrl = '/pm/'+project+'/mentions?class=' + objectClass;
 
     editor.dataProcessor.htmlFilter.addRules( {
         elements: {
@@ -426,7 +436,7 @@ function makeupEditor( editor, e, container, project, offset )
 
 	makeupAnnotations(e);
 
-    if ( e.attr('objectclass') == 'TestCaseExecution' ) {
+    if ( objectClass == 'TestCaseExecution' ) {
         e.find('table tr > th').each(function(index) {
             if ( $(this).hasClass('readonly-on-run') ) {
                 e.find('table tr > td:nth-child('+(index+1)+')').attr('contenteditable', 'false');
@@ -434,38 +444,39 @@ function makeupEditor( editor, e, container, project, offset )
         });
     }
 
-    if ( !Array.isArray(mentions[project]) ) {
-        mentions[project] = [];
+	var mentionsKey = project + objectClass;
+    if ( !Array.isArray(mentions[mentionsKey]) ) {
+        mentions[mentionsKey] = [];
 	}
 
     e.textcomplete([
 		{ // mentions
-			mentions: mentions[project],
+			mentions: mentions[mentionsKey],
 			match: /\B@([^\s]*)\s?$/,
 			search: function (term, callback) {
-				if ( mentions[project].length < 1 ) {
-					$.getJSON('/pm/'+project+'/mentions', function(data) {
-                        mentions[project] = data;
-						callback($.map(mentions[project], function (mention) {
+				if ( mentions[mentionsKey].length < 1 ) {
+					$.getJSON(mentionsUrl, function(data) {
+                        mentions[mentionsKey] = data;
+						callback($.map(mentions[mentionsKey], function (mention) {
 							return mention.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? mention.Caption : null;
 						}));
 					});
 				}
 				else {
-					callback($.map(mentions[project], function (mention) {
+					callback($.map(mentions[mentionsKey], function (mention) {
 						return mention.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? mention.Caption : null;
 					}));
 				}
 			},
 			index: 1,
 			replace: function (selectedMention) {
-				var selected = $.map(mentions[project], function (mention) {
+				var selected = $.map(mentions[mentionsKey], function (mention) {
 					return mention.Caption == selectedMention ? mention.Id : null;
 				});
 				return '@' + selected.shift();
 			},
 			template: function (value) {
-				var selected = $.map(mentions[project], function (mention) {
+				var selected = $.map(mentions[mentionsKey], function (mention) {
 					return mention.Caption == value ? mention : null;
 				});
 				if ( selected[0].PhotoColumn < 0 && selected[0].PhotoRow < 0 ) {

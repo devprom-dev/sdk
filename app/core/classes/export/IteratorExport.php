@@ -123,8 +123,7 @@ class IteratorExport extends IteratorBase
 					$names = array();
 					while( !$entity_it->end() ) {
                         $info = $this->uidService->getUidInfo($entity_it);
-                        $title = ($info['uid'] != '' ? '['.$info['uid'].'] ' : '') . $entity_it->getHtmlDecoded('Caption');
-                        if ( $title == '' ) $title = $entity_it->getDisplayNameSearch();
+                        $title = $entity_it->getDisplayNameSearch($info['uid'] != '' ? '['.$info['uid'].'] ' : '');
                         if ( $info['state_name'] != '' ) $title .= ' ('.$info['state_name'].')';
                         $names[] = $title;
 						$entity_it->moveNext();
@@ -149,7 +148,8 @@ class IteratorExport extends IteratorBase
                             );
 
                         case 'float':
-                            return str_replace(',', '.', round($this->iterator->get($fieldName), 2));
+                            return str_replace(',', '.',
+                                round($this->iterator->get($fieldName), \EnvironmentSettings::getFloatPrecision()));
 
                         case 'integer':
                             return str_replace(',', '.', round($this->iterator->get($fieldName), 0));

@@ -435,7 +435,7 @@ public class RequestsBoardPage extends SDLCPojectPageBase {
     	r.setVersion(version);
     	r.setClosedVersion(versionCompleted);
     	r.setRelease(release);
-    	r.setEstimation(Double.parseDouble(estimation));
+    	r.setEstimation(convertToDouble(estimation));
     	 if (!"".equals(tags)) {
     		 String[] tt = tags.split(","); 
     		 for (String t:tt){

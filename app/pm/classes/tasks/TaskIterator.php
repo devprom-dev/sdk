@@ -14,11 +14,6 @@ class TaskIterator extends StatableIterator
             $title .= ' ['.$this->get('TaskAssigneePhotoTitle').']';
         }
 
-        $stateIt = $this->getStateIt();
-        if ( $stateIt->get('Caption') != '' ) {
-            $title .= ' ('.$stateIt->get('Caption').')';
-        }
-
         return $title;
     }
 
@@ -40,15 +35,6 @@ class TaskIterator extends StatableIterator
                 return ' <span class="label label-info label-tag">'.$value.'</span> ';
             }, preg_split('/,/', $this->get('TagNames')));
             $prefix = join('',$tags) . $prefix;
-        }
-
-        $displayAttributes = array();
-        foreach( $this->object->getAttributesByGroup('display-name') as $attribute ) {
-            if ( $this->get($attribute) == '' ) continue;
-            $displayAttributes[] = '['.$this->get($attribute).']';
-        }
-        if ( count($displayAttributes) > 0 ) {
-            $prefix = $prefix . join(' ', $displayAttributes) . ' ';
         }
 
         return parent::getDisplayNameExt($prefix);

@@ -27,7 +27,7 @@ class SecurityController extends PageController
 
         $url_parts = parse_url($redirect);
         $path = trim($url_parts['path'],'/');
-        if ( in_array($path, array('login','logoff')) ) {
+        if ( in_array($path, array('login','logoff','openid')) ) {
             $redirect = '';
         }
         elseif( $path == 'auth' ) {
@@ -42,13 +42,17 @@ class SecurityController extends PageController
                 $redirect .= '&' . http_build_query($query_parts);
             }
             $redirect = \SanitizeUrl::parseUrl($redirect);
+
+            if ( defined('AUTH_OPENID_ONLY') ) {
+                return $this->openidAction($request);
+            }
         }
 
         if ( getSession()->getUserIt()->getId() > 0 ) {
-            return new RedirectResponse('/logoff');
+            return new RedirectResponse($_SERVER['ENTRY_URL']);
         }
 
-        $user_it = getFactory()->getObject('User')->getRegistry()->getAll();
+        $user_it = getFactory()->getObject('User')->getRegistry()->Query(array());
         if ( $user_it->count() < 1 ) {
             return new RedirectResponse('/install');
         }
@@ -254,5 +258,20 @@ class SecurityController extends PageController
             '/reset?key='.$participant_it->getRef('SystemUser')->getResetPasswordKey().
             '&redirect='.urlencode('/profile?redirect=/pm/'.$participant_it->getRef('Project')->get('CodeName'))
         );
+    }
+
+    public function openidAction(Request $request)
+    {
+        getSession()->setAuthenticationFactory(null);
+        $userIt = getSession()->getUserIt();
+
+        if ( $userIt->getId() < 1 ) {
+            return new RedirectResponse('/login?redirect=openid');
+        }
+
+        getSession()->open( $userIt->copy() );
+        \SessionBuilder::Instance()->persist(getSession());
+
+        return new RedirectResponse($_SERVER['ENTRY_URL']);
     }
 }

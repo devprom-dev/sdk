@@ -148,9 +148,9 @@ class EnvironmentSettings
 
     static public function getClientTimeZone()
     {
-    	return $_COOKIE['devprom-client-tz'] != '' 
+    	return $_COOKIE['devprom-client-tz'] != ''
     			? new DateTimeZone($_COOKIE['devprom-client-tz']) 
-    			: new DateTimeZone('UTC');
+    			: new DateTimeZone("UTC");
     }
     
     static public function setClientTimeZone( $tz_name )
@@ -247,5 +247,33 @@ class EnvironmentSettings
             'kanban_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4770.html#4645'),
             'scrumban_ru.xml' => \EnvironmentSettings::getHelpDocsUrl('4770.html#4644')
         );
+    }
+
+    static public function getPlantUMLServer()
+    {
+        $url = defined('PLANTUML_SERVER_URL')
+                    ? PLANTUML_SERVER_URL : 'http://plantuml.myalm.ru';
+        $parts = parse_url(self::getServerUrl());
+        return str_replace('http://', $parts['scheme'].'://', $url);
+    }
+
+    static public function getMathJaxServer()
+    {
+        $url = defined('MATH_TEX_IMG')
+                    ? MATH_TEX_IMG : '//mathjax.myalm.ru/?math=';
+        $parts = parse_url(self::getServerUrl());
+        return str_replace('http://', $parts['scheme'].'://', $url);
+    }
+
+    static public function getDiagramsServer()
+    {
+        $url = defined('DIAGRAMS_SERVER_URL')
+                    ? DIAGRAMS_SERVER_URL : 'https://embed.diagrams.net/';
+        $parts = parse_url(self::getServerUrl());
+        return str_replace('http://', $parts['scheme'].'://', $url);
+    }
+
+    static public function getFloatPrecision() {
+        return 1;
     }
 }

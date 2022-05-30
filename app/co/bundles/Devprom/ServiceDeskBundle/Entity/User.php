@@ -54,6 +54,12 @@ class User extends BaseUser implements LdapUserInterface {
     private $notifications;
 
     /**
+     * @ORM\Column(type="string", name="Description")
+     * @var string
+     */
+    protected $description;
+
+    /**
      * @param int $id
      */
     public function setId($id)
@@ -104,9 +110,25 @@ class User extends BaseUser implements LdapUserInterface {
     /**
      * @param string $value
      */
-    public function setDn($value)
+    public function setDn(string $dn)
     {
-        $this->dn = $value;
+        $this->dn = $dn;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription() : ?string
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setDescription(string $value)
+    {
+        $this->description = $value;
     }
 
     /**

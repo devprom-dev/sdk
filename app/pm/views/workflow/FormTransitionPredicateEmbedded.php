@@ -10,6 +10,7 @@ class FormTransitionPredicateEmbedded extends PMFormEmbedded
  		switch ( $attribute )
  		{
  			case 'Predicate':
+            case 'IsNotifyUser':
  				return true;
 
  			default:
@@ -34,10 +35,14 @@ class FormTransitionPredicateEmbedded extends PMFormEmbedded
 		switch( $attr_name )
 		{
 			case 'Predicate':
-				$object = getFactory()->getObject('StateBusinessRule');
-				$object->addFilter( new StateBusinessEntityFilter($this->entity) );
-				return new FieldDictionary( $object	);
-
+				return new FieldDictionary(
+                    getFactory()->getObject('StateBusinessRule')
+                        ->getRegistry()->Query(
+                            array(
+                                new StateBusinessEntityFilter($this->entity)
+                            )
+                        )
+                );
 			default:
 				return parent::createField( $attr_name );
 		}

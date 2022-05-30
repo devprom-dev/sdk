@@ -6,8 +6,8 @@ class SpentTimeTable extends PMPageTable
 {
 	function getList($mode = '')
     {
-        switch ( $this->getReportBase() ) {
-            case 'activitieschart':
+        switch ( $mode ) {
+            case 'chart':
                 return new SpentTimeChart($this->getObject());
             default:
                 return new SpentTimeList($this->getObject());
@@ -48,14 +48,15 @@ class SpentTimeTable extends PMPageTable
     }
 
     function buildParticipantFilter() {
-	    return new FilterObjectMethod(getFactory()->getObject('ProjectUser'));
+	    return new FilterObjectMethod(getFactory()->getObject('WorkerUser'));
     }
 
     function buildFilterValuesByDefault(&$filters)
     {
         $values = parent::buildFilterValuesByDefault($filters);
-        if ( !array_key_exists('start', $values) ) {
-            $values['start'] = getSession()->getLanguage()->getPhpDate(strtotime('-3 weeks', strtotime(date('Y-m-j'))));
+        if ( !array_key_exists('start', $values) && $_REQUEST['ids'] == '' ) {
+            $values['start'] = getSession()->getLanguage()->getPhpDate(
+                strtotime('-3 weeks', strtotime(date('Y-m-j'))));
         }
         return $values;
     }
@@ -73,5 +74,9 @@ class SpentTimeTable extends PMPageTable
         return array(
             'project-spenttime'
         );
+    }
+
+    protected function getChartsModuleName() {
+        return 'worklog-chart';
     }
 }

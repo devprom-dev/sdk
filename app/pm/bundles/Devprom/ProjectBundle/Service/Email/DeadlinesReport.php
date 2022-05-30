@@ -2,6 +2,7 @@
 namespace Devprom\ProjectBundle\Service\Email;
 
 use Devprom\CommonBundle\Service\Emails\RenderService;
+
 include_once SERVER_ROOT_PATH.'cms/c_mail.php';
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelBuilder.php";
 
@@ -61,9 +62,10 @@ class DeadlinesReport
             $builder->build($object);
         }
 
+        $maxDays = defined('DEADLINE_REPORT_DUE_DAYS') ? DEADLINE_REPORT_DUE_DAYS : 4;
         $uid = new \ObjectUID();
         $now = strtotime(\SystemDateTime::date());
-        $dateTime = strftime('%Y-%m-%d', strtotime('4 days', $now));
+        $dateTime = strftime('%Y-%m-%d', strtotime("{$maxDays} days", $now));
         $minTime = strftime('%Y-%m-%d', strtotime('-14 days', $now));
 
         $objectIt = $object->getRegistry()->Query(

@@ -132,13 +132,14 @@ class ObjectMetadata
     }
 
 	public function getAttributeType($attribute) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return '';
 		return $this->attributes[$attribute]['type'];
 	}
 
 	public function hasAttributesOfType( $type ) {
 		return count(array_filter($this->attributes, function($attribute) use($type) {
-			return strtolower($attribute['type']) == strtolower($type);
-		}));
+			    return strtolower($attribute['type']) == strtolower($type);
+		    })) > 0;
 	}
 
     public function setAttributeCaption($attribute, $caption)
@@ -146,58 +147,54 @@ class ObjectMetadata
     	$this->attributes[$attribute]['caption'] = $caption;
     }
     
-    public function getAttributeCaption($attribute)
-    {
+    public function getAttributeCaption($attribute) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return '';
     	return $this->attributes[$attribute]['caption'];
     }
     
-    public function setAttributeRequired($attribute, $required = true)
-    {
+    public function setAttributeRequired($attribute, $required = true) {
     	$this->attributes[$attribute]['required'] = $required;
     }
     
-    public function getAttributeRequired($attribute)
-    {
+    public function getAttributeRequired($attribute) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return '';
     	return $this->attributes[$attribute]['required'];
     }
 
-    public function setAttributeDefault($attribute, $defaultValue)
-    {
+    public function setAttributeDefault($attribute, $defaultValue) {
         $this->attributes[$attribute]['default'] = $defaultValue;
     }
 
-    public function getAttributeDefault($attribute)
-    {
+    public function getAttributeDefault($attribute) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return '';
         return $this->attributes[$attribute]['default'];
     }
 
-    public function setAttributeDescription($attribute, $text)
-    {
+    public function setAttributeDescription($attribute, $text) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return '';
     	$this->attributes[$attribute]['description'] = $text;
     }
     
-    public function getAttributeDescription($attribute)
-    {
+    public function getAttributeDescription($attribute) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return '';
     	return $this->attributes[$attribute]['description'];
     }
     
-    public function setAttributeOrderNum($attribute, $ordernum)
-    {
+    public function setAttributeOrderNum($attribute, $ordernum) {
     	$this->attributes[$attribute]['ordernum'] = $ordernum;
     }
     
-    public function getAttributeOrderNum($attribute)
-    {
+    public function getAttributeOrderNum($attribute) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return '';
     	return $this->attributes[$attribute]['ordernum'];
     }
 
-    public function setAttributeEditable($attribute, $editable = true)
-    {
+    public function setAttributeEditable($attribute, $editable = true) {
         $this->attributes[$attribute]['editable'] = $editable;
     }
 
-    public function getAttributeEditable($attribute)
-    {
+    public function getAttributeEditable($attribute) {
+        if ( !array_key_exists($attribute, $this->attributes) ) return true;
         return $this->attributes[$attribute]['editable'];
     }
 
@@ -215,14 +212,19 @@ class ObjectMetadata
     
 	function getAttributesByGroup( $group )
 	{
-		$attributes = array_filter( $this->attributes, function($value) use ($group) 
-		{
+		$attributes = array_filter( $this->attributes, function($value) use ($group) {
 			return is_array($value['groups']) && in_array($group, $value['groups']);
 		});
-		
 		return array_keys($attributes);
 	}
-	
+
+    function getAttributesByType( $type ) {
+        $attributes = array_filter( $this->attributes, function($value) use ($type) {
+            return strcasecmp($value['type'], $type) === 0;
+        });
+        return array_keys($attributes);
+    }
+
 	function addAttributeGroup( $name, $group )
 	{ 
 		if ( !array_key_exists($name, $this->attributes) ) return;
@@ -231,6 +233,15 @@ class ObjectMetadata
 		}
 		$this->attributes[$name]['groups'][] = $group;
 	}
+
+	function getAttributeGroups( $name ) {
+        if ( !array_key_exists($name, $this->attributes) ) return '';
+	    return $this->attributes[$name]['groups'];
+    }
+
+    function setAttributeGroups( $name, $groups ) {
+        $this->attributes[$name]['groups'] = $groups;
+    }
 
 	function resetAttributeGroup( $name, $group )
 	{
@@ -242,6 +253,7 @@ class ObjectMetadata
 	
 	function getAttributeClass( $attribute )
 	{
+        if ( !array_key_exists($attribute, $this->attributes) ) return '';
 		return strpos($this->attributes[$attribute]['type'], 'REF_') !== false
 				? substr($this->attributes[$attribute]['type'], 4, strlen($this->attributes[$attribute]['type']) - 6)
 				: '';

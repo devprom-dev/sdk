@@ -2,7 +2,7 @@
 
 class DateWeekdayRegistry extends ObjectRegistrySQL
 {
- 	function getAll()
+ 	function Query($parms = array())
  	{
  		$this->items = array();
  		
@@ -16,7 +16,7 @@ class DateWeekdayRegistry extends ObjectRegistrySQL
  		
  		foreach ( array_keys($this->items) as $key )
  		{
- 			$this->items[$key]['entityId'] = $key;
+ 			$this->items[$key]['entityId'] = strval($key);
  			$this->items[$key]['Caption'] = translate($this->items[$key]['Caption']); 
  		}
  		

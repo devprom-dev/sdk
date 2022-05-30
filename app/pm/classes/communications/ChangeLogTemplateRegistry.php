@@ -7,7 +7,11 @@ class ChangeLogTemplateRegistry extends ChangeLogRegistry
 		return array_merge(
 				parent::getFilters(),
 				array (
-						new ChangeLogObjectFilter('request,task,pmblogpost,milestone,build,environment')
+                    new ChangeLogObjectFilter('request,task,milestone,build,environment'),
+                    new ChangeLogStartFilter(
+                        getSession()->getLanguage()->getPhpDate(
+                            strtotime('-1 week', strtotime(date('Y-m-j'))))
+                    )
 				)
 		);
 	}

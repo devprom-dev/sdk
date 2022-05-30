@@ -3,33 +3,25 @@ include "WhatsNewPageTable.php";
 
 class WhatsNewPage extends PMPage
 {
-    function __construct()
-    {
-        parent::__construct();
-    }
-    
-	function getObject()
-	{
- 		return getFactory()->getObject('ChangeLogWhatsNew');
+	function getObject() {
+	    return getFactory()->getObject('ChangeLogWhatsNew');
 	}
     
-    function getTable() 
- 	{
+    function getTable() {
  		return new WhatsNewPageTable( $this->getObject() );
  	}
  	
- 	function getEntityForm()
- 	{
+ 	function getEntityForm() {
  		return null;
  	}
  	
  	function getRecentChangedObjectIds( $filters )
  	{
-         return $this->getObject()->getRegistry()->Query(
+         return $this->getObject()->getRegistry()->QueryKeys(
          		array (
-                    new FilterModifiedSinceSecondsPredicate(5 * 60),
+                    new FilterCreatedSinceSecondsPredicate(5 * 60),
                     new FilterVpdPredicate(),
-                    new SortChangeLogRecentClause()
+                    new SortKeyClause('DESC')
          		)
 	         )->idsToArray();
  	}

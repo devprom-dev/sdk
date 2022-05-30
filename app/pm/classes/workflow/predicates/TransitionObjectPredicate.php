@@ -2,37 +2,23 @@
 
 class TransitionObjectPredicate extends FilterPredicate
 {
- 	var $object;
- 	
- 	function TransitionObjectPredicate( $object, $filter )
- 	{
+ 	private $object;
+
+ 	function TransitionObjectPredicate( $object, $filter ) {
  		$this->object = $object;
  		parent::__construct( $filter );
  	}
  	
  	function _predicate( $filter )
  	{
- 		global $model_factory;
+ 		$ids = \TextUtils::parseFilterItems($filter);
+ 		if ( count($ids) < 1 ) return " AND 1 = 1 ";
  		
- 		switch ( $filter )
- 		{
- 			case 'all':
- 				return "";
- 				
- 			default:
-		 		$transition = $model_factory->getObject('Transition');
-		 		$transition_it = $transition->getExact( preg_split('/,/', $filter) );
-		 		
-		 		if ( $transition_it->count() > 0 )
-		 		{
-		 			return " AND EXISTS (SELECT 1 FROM pm_StateObject so " .
-		 				   "  			  WHERE so.pm_StateObjectId = t.StateObject ".
-		 				   "			    AND so.Transition IN (".join(',',$transition_it->idsToArray()).") )";
-		 		}
-		 		else
-		 		{
-		 			return " AND 1 = 2 ";
-		 		}
- 		}
+        $transition_it = getFactory()->getObject('Transition')->getExact($ids);
+        if ( $transition_it->count() < 1 ) return " AND 1 = 2 ";
+
+        return " AND EXISTS (SELECT 1 FROM pm_StateObject so " .
+               "  			  WHERE so.pm_StateObjectId = t.StateObject ".
+               "			    AND so.Transition IN (".join(',',$transition_it->idsToArray()).") )";
  	}
 } 

@@ -78,6 +78,8 @@ class SystemSettingsPersister extends ObjectSQLPersister
         array_push( $columns, "'".(EnvironmentSettings::getAutoUpdate() ? 'Y' : 'N')."' AutoUpdate " );
 		array_push( $columns, "'".EnvironmentSettings::getUTCOffset()."' TimeZoneUTC " );
 		array_push( $columns, "'".EnvironmentSettings::getPasswordLength()."' PasswordLength " );
+        array_push( $columns, "'".EnvironmentSettings::getPlantUMLServer()."' PlantUMLServer " );
+        array_push( $columns, "'".EnvironmentSettings::getMathJaxServer()."' MathJaxServer " );
 
  		return $columns;
  	}

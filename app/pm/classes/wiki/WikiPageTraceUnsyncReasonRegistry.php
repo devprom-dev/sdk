@@ -2,7 +2,7 @@
 
 class WikiPageTraceUnsyncReasonRegistry extends ObjectRegistrySQL
 {
-	public function getAll()
+	public function Query($parms = array())
 	{
 		return $this->createIterator(
 				array (

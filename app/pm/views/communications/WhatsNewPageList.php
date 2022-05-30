@@ -9,11 +9,19 @@ class WhatsNewPageList extends PMPageList
         $this->getObject()->setAttributeCaption('Content', text(2460));
     }
 
+    protected function getPersisters( $object, $sorts ) {
+        return array();
+    }
+
     function getSorts()
     {
         $sorts = parent::getSorts();
 
         foreach( $sorts as $key => $sort ) {
+            if ( $key == '_group' ) {
+                $sorts[$key] = new SortChangeLogRecentProjectClause();
+                continue;
+            }
             $sorts[$key] = new SortChangeLogRecentClause();
         }
 
@@ -93,15 +101,15 @@ class WhatsNewPageList extends PMPageList
 
 	function getGroupFields() {
         if ( getSession()->getProjectIt()->get('LinkedProject') != '' ) {
-            return array('Project');
+            return array('Project', 'SystemUser');
         }
         else {
-            return array();
+            return array('SystemUser');
         }
     }
-	
-	function getColumnFields() {
-		return array('Content', 'RecordModified', 'Project');
+
+    function getColumnFields() {
+		return array('Content', 'RecordModified', 'Project', 'SystemUser');
 	}
 
 	function getItemActions($column_name, $object_it)
@@ -139,4 +147,8 @@ class WhatsNewPageList extends PMPageList
 
 		return $actions;
 	}
+
+    function getCollapseAttributes() {
+        return array('Content');
+    }
 }

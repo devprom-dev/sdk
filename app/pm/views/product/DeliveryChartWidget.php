@@ -36,7 +36,7 @@ class DeliveryChartWidget extends FlotChartWidget
 			var options = {
 				 start: '<?=$start?>',
 				 end: '<?=$finish?>',
-				 editable: false,
+                 editable: false,
 				 groupOrder: 'content',
 				 locales: {
 					    // create a new locale (text strings should be replaced with localized strings)
@@ -55,7 +55,8 @@ class DeliveryChartWidget extends FlotChartWidget
 					    return template(item);                  
 				 }
 			};
-			
+
+            $(container).html('');
 			var timeline = new vis.Timeline( container, dataSet,
 				new vis.DataSet(<?=JsonWrapper::encode($this->getGroups())?>),
 				options
@@ -66,6 +67,11 @@ class DeliveryChartWidget extends FlotChartWidget
 					window.location.replace(item.url);
 				}
 			});
+            timeline.on('select', function (data) {
+                if ( data.items.length < 1 ) return;
+                var item = dataSet.get(data.items[0]);
+                $(document).trigger("trackerItemSelected", [item.objectid, false, item.objectclass]);
+            });
 	   	</script>
 	   	<?php
     }
@@ -99,7 +105,7 @@ class DeliveryChartWidget extends FlotChartWidget
     {
     	$priority_it = getFactory()->getObject('Priority')->getRegistry()->Query();
     	$importance_it = getFactory()->getObject('Importance')->getRegistry()->Query();
-    	
+
         $project_ids = $this->iterator->fieldToArray('Project');
     	if ( count($project_ids) > 0 ) {
 	    	$project_it = getFactory()->getObject('Project')->getRegistry()->Query(
@@ -146,6 +152,7 @@ class DeliveryChartWidget extends FlotChartWidget
                 'template' => 'base-template',
                 'project' => $groups[$this->iterator->get('Project')]
     		);
+    		if ( $item['end'] == $item['start'] ) unset($item['end']);
 
 			switch( $this->iterator->get('ObjectClass') ) 
 			{
@@ -164,9 +171,7 @@ class DeliveryChartWidget extends FlotChartWidget
 			    			)
 			    	);
 			    	$item['letter'] = 'F';
-                    $item['end'] = $this->iterator->getDateFormatUser('DeliveryDate', '%Y-%m-%d');
 			    	$item['template'] = 'uid-template';
-			    	unset($item['end']);
 
 					$feature_it->moveToId($this->iterator->getId());
 					$method = new ObjectModifyWebMethod($feature_it);
@@ -207,9 +212,7 @@ class DeliveryChartWidget extends FlotChartWidget
 			    			)
 			    	);
 			    	$item['letter'] = 'I';
-                    $item['end'] = $this->iterator->getDateFormatUser('DeliveryDate', '%Y-%m-%d');
 			    	$item['template'] = 'uid-template';
-			    	unset($item['end']);
 
 					$request_it->moveToId($this->iterator->getId());
 					$method = new ObjectModifyWebMethod($request_it);
@@ -231,6 +234,6 @@ class DeliveryChartWidget extends FlotChartWidget
 	 	$metastate = getFactory()->getObject('StateMeta');
 		$metastate->setAggregatedStateObject(getFactory()->getObject('IssueState'));
  		$metastate->setStatesDelimiter("-");
-		return preg_split('/[,-]/',array_pop($metastate->getRegistry()->getAll()->fieldToArray('ReferenceName')));
+		return preg_split('/[,-]/',array_pop($metastate->getRegistry()->Query(array())->fieldToArray('ReferenceName')));
     }
 }

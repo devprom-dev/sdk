@@ -5,7 +5,6 @@ include_once SERVER_ROOT_PATH."pm/views/tasks/TaskForm.php";
 
 class WorkItemList extends PMPageList
 {
-	private $priority_method = null;
     private $task = null;
     private $request = null;
     private $issue = null;
@@ -15,24 +14,18 @@ class WorkItemList extends PMPageList
 	function buildRelatedDataCache()
 	{
         $this->task = getFactory()->getObject('Task');
-        $this->task->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
         $this->task->addAttribute('Description', 'WYSIWYG', translate('Описание'), true, false, '', 15);
 		$this->task->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
         $this->task_form = new TaskForm($this->task);
 
         $this->request = getFactory()->getObject('Request');
-        $this->request->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
 		$this->request->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
         $this->request_form = new RequestForm($this->request);
 
         if ( class_exists('Issue') ) {
             $this->issue = getFactory()->getObject('Issue');
-            $this->issue->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
             $this->issue->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
         }
-
-        $this->getTable()->buildRelatedDataCache();
-		$this->getTable()->cacheTraces('IssueTraces');
 	}
 
     function getItemClass($it) {
@@ -51,7 +44,14 @@ class WorkItemList extends PMPageList
                     $data[$this->issue->getIdAttribute()] = $object_it->getId();
                     return $this->issue->createCachedIterator(array($data));
                 }
+            case 'Task':
+                return $this->task->createCachedIterator(array($data));
             default:
+                if ( class_exists($object_it->get('ObjectClass')) ) {
+                    $object = getFactory()->getObject($object_it->get('ObjectClass'));
+                    $data[$object->getIdAttribute()] = $object_it->getId();
+                    return $object->createCachedIterator(array($data));
+                }
                 return $this->task->createCachedIterator(array($data));
         }
     }
@@ -65,7 +65,7 @@ class WorkItemList extends PMPageList
             return $this->task_form;
         }
         else {
-            return parent::getForm($object_it);
+            return new PMPageForm($object_it->object);
         }
     }
 
@@ -82,11 +82,6 @@ class WorkItemList extends PMPageList
 		return false;
 	}
 	
-	function IsNeedToSelectRow( $object_it )
-	{
-		return true;
-	}
-
 	function drawRefCell( $entity_it, $object_it, $attr )
 	{
         $it = $this->getIt($object_it);
@@ -185,6 +180,10 @@ class WorkItemList extends PMPageList
 		return parent::getColumnWidth( $attr );
 	}
 
+    function getBulkAttributes() {
+        return array();
+
+    }
 	function getRenderParms()
 	{
 		$this->buildRelatedDataCache();

@@ -57,7 +57,7 @@ import ru.devprom.pages.project.testscenarios.TestSpecificationsPage;
  */
 public class RequestsKanbanScreenCast extends ProjectTestBase{
     Project kanbanProject;
-    int timeOut = 1800;
+    int timeOut = 5000;
     int bigTimeOut = 3000;
     KanbanTask wish1;
     KanbanTask wish2;
@@ -165,7 +165,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
         requirement1.setTemplateName("OpenUP");
         requirement1.setParentPage(parentRequirement);
         requirement1.setTemplateName("OpenUP");
-        requirementNewPage.createFromBoard(requirement1, new File(Configuration.getPathToRequestKanbanImage()));
+        requirementNewPage.createFromBoard(requirement1, new File(Configuration.getPathToRequestKanbanImage()), false);
         FILELOG.debug("Created new requirement " + requirement1.getName());
     }
 
@@ -279,8 +279,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
     private void editRequirementsStage(KanbanTaskViewPage viewTaskPage, KanbanPageBase kanbanPage) throws InterruptedException {
         	kanbanPage.moveToAnotherRelease(wish2.getNumericId(), 1, "Анализ (");
         	Thread.sleep(timeOut);
-            RequirementsPage requirementPage = kanbanPage.goRequirementReestr();
-            requirement1.setId(requirementPage.getIdByName(requirement1.getName()));
+            RequirementsPage requirementPage = kanbanPage.gotoRequirementsMatrix();
             RequirementViewPage requirementViewPage = requirementPage.clickToRequirement(requirement1.getId());
             Thread.sleep(timeOut);
             requirementViewPage.addContent(requirement1.getClearId(), "\nПоявился новый шаг основного сценария");
@@ -299,7 +298,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
             kanbanPage.moveToAnotherRelease(wish2.getNumericId(), 1, "Разработка (");
             Thread.sleep(1000);
             kanbanPage.openTask(wish2.getId());
-	            viewTaskPage.openRequirement(requirement1.getName());
+            viewTaskPage.openRequirement(requirement1.getName());
             requirementViewPage.seeChanges(requirement1.getId());
             viewTaskPage.gotoKanbanBoard();
             kanbanPage.moveToAnotherRelease(wish2.getNumericId(), 1, "Разработка: готово");

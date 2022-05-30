@@ -3,7 +3,6 @@
 include_once SERVER_ROOT_PATH."tests/php/DevpromTestCase.php";
 include_once SERVER_ROOT_PATH."core/classes/versioning/Snapshot.php";
 include_once SERVER_ROOT_PATH."core/classes/user/User.php";
-include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidator.php";
 
 class ModelValidatorTest extends DevpromTestCase
 {

@@ -25,6 +25,7 @@ class IntegrationPage extends PMPage
         $object = $this->getObject();
         $form = new IntegrationForm($object);
         if ( $this->needDisplayForm() ) {
+            $this->setInfoSections(array());
             $this->addInfoSection(new PageSectionAttributes($object, 'mapping', translate('integration6')));
             $this->addInfoSection(new PageSectionAttributes($object, 'additional', translate('Лог')));
         }

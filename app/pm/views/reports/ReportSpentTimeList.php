@@ -30,16 +30,24 @@ class ReportSpentTimeList extends PMStaticPageList
             $plugin->interceptMethodListGetPredicates( $this, $predicates, $filterValues);
         }
 
-        foreach ( array_merge($predicates, $this->getTable()->getFilterPredicates($filterValues)) as $predicate ) {
-            $object->addFilter( $predicate );
-        }
-
-        $this->group = $this->getGroup();
+       $this->group = $this->getGroup();
         if ( !in_array($this->group, array('', 'none')) ) {
             $object->setGroup($this->group);
         }
 
         $rows_object = $this->getTable()->getRowsObject();
+        $rows_object->addFilter(
+            new FilterSearchAttributesPredicate(
+                $filterValues['search'], $rows_object->getSearchableAttributes()
+            )
+        );
+
+        if ( $_REQUEST['ids'] != '' ) {
+            $ids = $this->getIds($filterValues);
+            if ( count($ids) < 1 ) $ids[] = '0';
+            $rows_object->addFilter(new FilterInPredicate($ids));
+        }
+
         $object->setRowsObject($rows_object);
         $attribute = $this->getGroup();
 
@@ -52,7 +60,15 @@ class ReportSpentTimeList extends PMStaticPageList
             );
         }
 
-        $this->it = $object->getAll();
+        $this->it = $object->getRegistry()->Query(
+            array_merge(
+                $predicates,
+                $this->getTable()->getFilterPredicates($filterValues),
+                array(
+                    new FilterVpdPredicate()
+                )
+            )
+        );
         $this->days_map = $this->it->getDaysMap();
 
         foreach( $this->days_map as $dayId => $dayName ) {
@@ -61,9 +77,11 @@ class ReportSpentTimeList extends PMStaticPageList
 
         $object->setAttributeCaption('Caption', $this->getTable()->getRowsObject()->getDisplayName());
         $object->addAttribute('Total', 'FLOAT', translate('Итого'), true);
+        $object->addAttribute('TotalPlanned', 'FLOAT', translate('Трудоемкость'), true);
 
-        if ( $rows_object instanceof Task ) {
-            $object->addAttribute('Planned', 'INTEGER', $rows_object->getAttributeUserName('Planned'), true);
+        foreach( array('Total','TotalPlanned') as $attribute ) {
+            $object->addAttributeGroup($attribute, 'workload');
+            $object->addAttributeGroup($attribute, 'hours');
         }
 
         parent::extendModel();
@@ -96,7 +114,8 @@ class ReportSpentTimeList extends PMStaticPageList
         {
             case 'Caption':
             case 'Total':
-            case 'Planned':
+            case 'TotalCosts':
+            case 'TotalPlanned':
                 return true;
             default:
                 return strpos($attr, 'Day') !== false;
@@ -163,7 +182,7 @@ class ReportSpentTimeList extends PMStaticPageList
 		{
 			return '';
 		}
-		elseif( $attr == 'Total' || $attr == 'Planned' )
+		elseif( $attr == 'Total' || $attr == 'TotalPlanned' )
 		{
 			return 40;
 		}
@@ -183,10 +202,12 @@ class ReportSpentTimeList extends PMStaticPageList
 	{
         if ( $object_it->get('Group') == '' ) return;
 
-        echo '<td style="background-color:white;"></td>';
+        if ( $this->IsNeedToDisplayNumber() ) {
+            echo '<td style="background-color:white;"></td>';
+        }
 		foreach( $this->getObject()->getAttributes() as $attribute => $data )
 		{
-			if ( !in_array($attribute, array('Caption','Total')) && strpos($attribute, 'Day') === false ) continue;
+			if ( !in_array($attribute, array('Caption','Total','TotalPlanned','TotalCosts')) && strpos($attribute, 'Day') === false ) continue;
 			echo '<td id="'.strtolower($attribute).'" style="background-color:white;font-weight:bold;">';
 			if ( $attribute == 'Caption' ) {
                 echo '<div class="plus-minus-toggle" data-toggle="collapse" href="#gor' . $guid . '"></div>';
@@ -199,86 +220,84 @@ class ReportSpentTimeList extends PMStaticPageList
 	
 	function drawCell( $object_it, $attr ) 
 	{
-		if( $attr == 'Caption' )
-		{
-			if ( $object_it->get('Group') != '' ) {
-					$this->report_group_it->moveToId($object_it->get('ItemId'));
+	    switch( $attr ) {
+            case 'Caption':
+                if ( $object_it->get('Group') != '' ) {
+                    $this->report_group_it->moveToId($object_it->get('ItemId'));
+                    $uid = new ObjectUID;
+                    $uid->drawUidInCaption($this->report_group_it);
 
+                    if ( $this->userReportUrl != '' && $this->report_group_it->object instanceof User ) {
+                        echo ' &nbsp; <a target="_blank" href="'.str_replace('%1', $this->report_group_it->getId(), $this->userReportUrl).'" style="font-weight:normal;">';
+                        echo text(2274);
+                        echo '</a>';
+                    }
+                }
+                else {
+                    $this->row_it->moveToId( $object_it->get('ItemId') );
+                    if ( $this->row_it->getId() != '' )
+                    {
                         $uid = new ObjectUID;
-                        $uid->drawUidInCaption($this->report_group_it);
+                        echo '<div class="hover-holder" style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">';
+                        $uid->drawUidInCaption($this->row_it);
 
-                        if ( $this->userReportUrl != '' && $this->report_group_it->object instanceof User ) {
-                            echo ' &nbsp; <a target="_blank" href="'.str_replace('%1', $this->report_group_it->getId(), $this->userReportUrl).'" style="font-weight:normal;">';
-                                echo text(2274);
+                        if ( $this->userReportUrl != '' && $this->row_it->object instanceof User ) {
+                            echo ' &nbsp; <a class="dashed dashed-hidden" target="_blank" href="'.str_replace('%1', $this->row_it->getId(), $this->userReportUrl).'">';
+                            echo text(2274);
                             echo '</a>';
                         }
-			}
-			else {
-					$this->row_it->moveToId( $object_it->get('ItemId') );
-					if ( $this->row_it->getId() != '' )
-					{
-    					$uid = new ObjectUID;
-    					echo '<div class="hover-holder" style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">';
-    						$uid->drawUidInCaption($this->row_it);
-
-                            if ( $this->userReportUrl != '' && $this->row_it->object instanceof User ) {
-                                echo ' &nbsp; <a class="dashed dashed-hidden" target="_blank" href="'.str_replace('%1', $this->row_it->getId(), $this->userReportUrl).'">';
-                                    echo text(2274);
-                                echo '</a>';
+                        echo '</div>';
+                    }
+                }
+                break;
+            case 'Total':
+            case 'TotalCosts':
+            case 'TotalPlanned':
+                if ( $object_it->get($attr) > 0 ) {
+                    parent::drawCell($object_it, $attr);
+                }
+                else {
+                    echo '<span style="color:silver;">0</span>';
+                }
+                break;
+            default:
+                $hours = round($object_it->get($attr), \EnvironmentSettings::getFloatPrecision());
+                if ( $hours > 0 ) {
+                    $comment_attr = preg_replace('/Day(\d+)/', 'Comment\\1', $attr);
+                    $actions = array();
+                    if ( is_array($object_it->get($comment_attr)) ) {
+                        foreach ($object_it->get($comment_attr) as $task) {
+                            if ($task['Text'] == '') continue;
+                            if ( $task['Task'] > 0 ) {
+                                $actions[$task['Task']] = array(
+                                    'url' => $this->getUidService()->getObjectUrl('T-' . $task['Task']),
+                                    'name' => 'T-' . $task['Task'] . ' ' . substr($task['Text'], 0, 120)
+                                );
                             }
-    					echo '</div>';
-					}
-			}
-		}
-		elseif ( $attr == 'Total' )	{
-			if ( $object_it->get('Total') > 0 ) {
-			    parent::drawCell($object_it, $attr);
-			}
-			else {
-				echo '<span style="color:silver;">0</span>';
-			}
-		}
-        elseif ( $attr == 'Planned' )	{
-            echo round($this->row_it->get('Planned'), 0);
+                            else {
+                                $actions[$task['Issue']] = array(
+                                    'url' => $this->getUidService()->getObjectUrl('I-' . $task['Issue']),
+                                    'name' => 'I-' . $task['Issue'] . ' ' . substr($task['Text'], 0, 120)
+                                );
+                            }
+                        }
+                    }
+                    if ( count($actions) > 0 ) {
+                        echo $this->getRenderView()->render('core/SpentTimeMenu.php', array (
+                            'title' => $hours,
+                            'items' => $actions,
+                            'id' => $object_it->getId().$attr
+                        ));
+                    }
+                    else {
+                        echo $hours;
+                    }
+                }
+                else {
+                    echo '<span style="color:#dfdfdf;">0</span>';
+                }
+                echo '&nbsp;';
         }
-		else {
-			$hours = round($object_it->get($attr), 1);
-			if ( $hours > 0 ) {
-				$comment_attr = preg_replace('/Day(\d+)/', 'Comment\\1', $attr);
-				$actions = array();
-				if ( is_array($object_it->get($comment_attr)) ) {
-					foreach ($object_it->get($comment_attr) as $task) {
-						if ($task['Text'] == '') continue;
-						if ( $task['Task'] > 0 ) {
-                            $actions[$task['Task']] = array(
-                                'url' => $this->getUidService()->getObjectUrl('T-' . $task['Task']),
-                                'name' => 'T-' . $task['Task'] . ' ' . substr($task['Text'], 0, 120)
-                            );
-                        }
-                        else {
-                            $actions[$task['Issue']] = array(
-                                'url' => $this->getUidService()->getObjectUrl('I-' . $task['Issue']),
-                                'name' => 'I-' . $task['Issue'] . ' ' . substr($task['Text'], 0, 120)
-                            );
-                        }
-					}
-				}
-				if ( count($actions) > 0 ) {
-					echo $this->getRenderView()->render('core/SpentTimeMenu.php', array (
-						'title' => $hours,
-						'items' => $actions,
-						'id' => $object_it->getId().$attr
-					));
-				}
-				else {
-					echo $hours;
-				}
-			}
-			else {
-				echo '<span style="color:#dfdfdf;">0</span>';
-			}
-			echo '&nbsp;';
-		}
 	}
 
 	function getColumnAlignment ( $attr ) {
@@ -313,5 +332,19 @@ class ReportSpentTimeList extends PMStaticPageList
         }
 
         return $this->getObject()->createCachedIterator(array($values));
+    }
+
+    function getSettingsViewParms()
+    {
+        return array_filter(
+            parent::getSettingsViewParms(),
+            function($key) {
+                return $key == 'group';
+            },
+            ARRAY_FILTER_USE_KEY);
+    }
+
+    function IsNeedToSelect() {
+        return false;
     }
 }

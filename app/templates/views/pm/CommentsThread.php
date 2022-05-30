@@ -58,11 +58,11 @@
                                         <div class="comments-reply" object-id="<?=$comment['id']?>" id="commentsreply<?=$comment['uid']?>">
                                             <div class="comment">
                                                 <?php if ( !$readonly ) { ?>
-                                                    <a class="btn btn-sm btn-link" onclick="showCommentForm('<?=$url?>',$('#commentsreply<?=$comment['uid']?>'), '', '<?=$comment['id']?>');" style="padding-left:0;">
+                                                    <a class="btn btn-sm btn-link" onclick="showCommentForm('<?=$url?>',$('#commentsreply<?=$comment['uid']?>'), '', '<?=$comment['id']?>', '<?=$control_uid?>');" style="padding-left:0;">
                                                         <?=translate('Ответить')?>
                                                     </a>
                                                     <? if ( $private_comment ) { ?>
-                                                        &nbsp; <a class="btn btn-sm btn-link btn-link-hidden" onclick="showCommentForm('<?=$url.'&IsPrivate=Y'?>',$('#commentsreply<?=$comment['uid']?>'), '', '<?=$comment['id']?>');" style="padding-left:0;">
+                                                        &nbsp; <a class="btn btn-sm btn-link btn-link-hidden" onclick="showCommentForm('<?=$url.'&IsPrivate=Y'?>',$('#commentsreply<?=$comment['uid']?>'), '', '<?=$comment['id']?>', '<?=$control_uid?>');" style="padding-left:0;">
                                                             <?=text(2804)?>
                                                         </a>
                                                     <? } ?>

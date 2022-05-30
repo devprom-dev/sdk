@@ -38,13 +38,13 @@ class IssueService {
         $this->mailer = $mailer;
     }
 
-    public function saveIssue(Issue $issue,  User $author) {
+    public function saveIssue(Issue $issue, User $author, array $post) {
         $issue->setCaption(TextUtil::escapeHtml(addslashes($issue->getCaption())));
         $issue->setDescription(TextUtil::escapeHtml(addslashes($issue->getDescription())));
         if ($issue->getId()) {
-            $this->updateIssue($issue, $author);
+            $this->updateIssue($issue, $author, $post);
         } else {
-            $this->createIssue($issue, $author);
+            $this->createIssue($issue, $author, $post);
         }
     }
 
@@ -55,8 +55,8 @@ class IssueService {
         return $this->em->getRepository('DevpromServiceDeskBundle:Issue')->find($id);
     }
 
-    public function getIssuesByAuthor($authorEmail, $sortColumn, $sortDirection, $state) {
-        /** @var IssueRepository $issueRepository */
+    public function getIssuesByAuthor($authorEmail, $sortColumn, $sortDirection, $state, $page)
+    {
         $issueRepository = $this->em->getRepository('DevpromServiceDeskBundle:Issue');
         return $issueRepository->findByAuthor(
             $authorEmail,
@@ -66,13 +66,14 @@ class IssueService {
                 'state.orderNum' => 'asc',
                 'state.name' => 'asc',
                 $sortColumn => $sortDirection
-        	),
-            $state
+            ),
+            $state,
+            $page
         );
     }
     
-    public function getIssuesByCompany($authorEmail, $sortColumn, $sortDirection, $state) {
-        /** @var IssueRepository $issueRepository */
+    public function getIssuesByCompany($authorEmail, $sortColumn, $sortDirection, $state, $page)
+    {
         $issueRepository = $this->em->getRepository('DevpromServiceDeskBundle:Issue');
         return $issueRepository->findByCompany(
             $authorEmail,
@@ -83,7 +84,8 @@ class IssueService {
                 'state.name' => 'asc',
                 $sortColumn => $sortDirection
         	),
-            $state
+            $state,
+            $page
         );
     }
 
@@ -136,12 +138,11 @@ class IssueService {
         $this->em->flush();
     }
 
-    protected function createIssue(Issue $issue, User $author)
+    protected function createIssue(Issue $issue, User $author, array $post)
     {
         // persist issue
         $product = $issue->getProduct();
         if ( is_object($product) ) {
-            $vpd = $product->getVpd();
             $project = array_shift(
                 $this->em->getRepository('DevpromServiceDeskBundle:Project')->findBy(
                     array(
@@ -150,14 +151,12 @@ class IssueService {
                 )
             );
             $issue->setProject($project);
-            $projectId = $project->getId();
         }
         else {
-            $projectId = $issue->getProject()->getId();
-            $vpd = $this->getProjectVPD($projectId);
+            $project = $issue->getProject();
         }
-	    $issue->setVpd($vpd);
-        $issue->setState($this->getFirstIssueStateForProject($issue, $projectId));
+	    $issue->setVpd($project->getVpd());
+        $issue->setState($this->getFirstIssueStateForProject($issue, $project));
         $severity = $issue->getSeverity();
         if ( is_object($severity) ) {
             try {
@@ -181,15 +180,18 @@ class IssueService {
 
         $this->em->persist($issue);
         $this->em->flush();
+
+        $this->updateCustomAttributes($issue, $author, $post);
         $this->objectChangeLogger->logIssueCreated($issue,$author);
     }
 
-    protected function updateIssue(Issue $issue, User $author)
+    public function updateIssue(Issue $issue, User $author, array $post)
     {
         $severity = $issue->getSeverity();
         if ( is_object($severity) ) {
             try {
-                $priority = $this->em->getRepository('Devprom\ServiceDeskBundle\Entity\Priority')->find($severity->getId());
+                $priority = $this->em->getRepository(
+                    'Devprom\ServiceDeskBundle\Entity\Priority')->find($severity->getId());
                 $issue->setPriority($priority);
             }
             catch( \Exception $e) {}
@@ -198,15 +200,25 @@ class IssueService {
         list($changed, $stateIt) = $this->objectChangeLogger->logIssueModified($issue, $author);
         $this->em->persist($issue);
         $this->em->flush();
+
+        $this->updateCustomAttributes($issue, $author, $post);
         $this->objectChangeLogger->notifyIssueModified($issue, $author, $stateIt, $changed);
     }
 
-    /**
-     * @return string
-     */
-    protected function getProjectVPD($projectId)
+    public function updateCustomAttributes( Issue $issue, User $author, array $post )
     {
-        return \ModelProjectOriginationService::getOrigin($projectId);
+        $this->buildProjectSession($issue, $author);
+
+        $request = getFactory()->getObject('Request');
+        $attributes = $request->getAttributesByOrigin(ORIGIN_CUSTOM) ;
+
+        $post = array_filter($post, function($value, $key) use($attributes) {
+                        return in_array($key, $attributes);
+                    }, ARRAY_FILTER_USE_BOTH);
+        if ( count($post) < 1 ) return;
+
+        getFactory()->resetCachedIterator($request);
+        getFactory()->modifyEntity($request->getExact($issue->getId()), $post);
     }
 
     /**
@@ -244,15 +256,14 @@ class IssueService {
     /**
      * @return IssueState
      */
-    protected function getFirstIssueStateForProject($issue, $projectId)
+    protected function getFirstIssueStateForProject($issue, $project)
     {
-        $projectVpd = $this->getProjectVPD($projectId);
         $methodology = $this->em->getRepository("DevpromServiceDeskBundle:Methodology")
             ->findBy(array(
-                    "project" => $projectId
+                    "project" => $project->getId()
                 ), array(), 1);
         $firstState = $this->em->getRepository("DevpromServiceDeskBundle:IssueState")->findBy(array(
-            "vpd" => $projectVpd,
+            "vpd" => $project->getVpd(),
             "objectClass" => $methodology[0]->getRequirements() == 'Y' && $issue->getIssueType() == '' ? 'issue' : 'request',
         ), array('orderNum' => 'ASC'), 1);
         return $firstState[0];
@@ -273,5 +284,24 @@ class IssueService {
 
         $this->em->persist($watcher);
         $this->em->flush();
+    }
+
+    protected function buildProjectSession(Issue $issue, User $user)
+    {
+        global $session;
+        $session = new \PMSession(
+            getFactory()->getObject('Project')->getExact($issue->getProject()->getId()),
+            new \AuthenticationFactory(
+                getFactory()->getObject('User')->createCachedIterator(
+                    array (
+                        array (
+                            'Caption' => $user->getUsername(),
+                            'Email' => $user->getEmail()
+                        )
+                    )
+                )
+            )
+        );
+        getFactory()->setAccessPolicy(new \AccessPolicy(getFactory()->getCacheService()));
     }
 }

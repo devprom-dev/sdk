@@ -2,54 +2,60 @@
 
 class WikiPageComparableSnapshotRegistry extends ObjectRegistrySQL
 {
-	public function getAll()
+	public function Query($parms = array())
 	{
 		$uid = new ObjectUID;
 		$projectId = getSession()->getProjectIt()->getId();
-
 		$document_it = $this->getObject()->getDocumentIt();
-		$snapshot_registry = getFactory()->getObject('Snapshot')->getRegistry();
-
-		$documentUID = $document_it->get('UID');
-		if ( $documentUID == '' ) {
-            $documentUID = $uid->getObjectUid($document_it);
-        }
-
-        $registry = new ObjectRegistrySQL($document_it->object);
-		$documentIds = $registry->Query(
-                array(
-                    new FilterTextExactPredicate('UID', $documentUID)
-                )
-            )->idsToArray();
 
         $data = array();
-
-        $branch_it = $snapshot_registry->Query(
-            array (
-                new FilterAttributePredicate('ObjectClass', get_class($document_it->object)),
-                new FilterAttributePredicate('ObjectId', $documentIds),
-                new FilterAttributePredicate('Type', 'branch'),
-                new SortRecentClause()
-            )
+        $queryParms = array (
+            new FilterAttributePredicate('ObjectClass', get_class($document_it->object)),
+            new FilterVpdPredicate(),
+            new SortRecentClause()
         );
-        $data = $this->buildBranch($data, $branch_it, $projectId);
 
+        if ( $document_it->count() > 0 ) {
+            $documentUID = $document_it->get('UID');
+            if ( $documentUID == '' ) {
+                $documentUID = $uid->getObjectUid($document_it);
+            }
+            $registry = new ObjectRegistrySQL($document_it->object);
+            $documentIds = $registry->QueryKeys(
+                    array(
+                        new FilterTextExactPredicate('UID', $documentUID)
+                    )
+                )->idsToArray();
+            $queryParms[] = new FilterAttributePredicate('ObjectId', $documentIds);
+        }
+
+        $snapshot_registry = getFactory()->getObject('Snapshot')->getRegistry();
+        $branch_it = $snapshot_registry->Query(
+            array_merge(
+                $queryParms,
+                array(
+                    new FilterAttributePredicate('Type', 'branch')
+                )
+            ));
+
+        $data = $this->buildBranch($data, $branch_it, $projectId);
+        $documentIds = $branch_it->fieldToArray('ObjectId');
+
+        $registry = new ObjectRegistrySQL($document_it->object);
 		foreach( $documentIds as $document_id ) {
 			$id = 'document:'.$document_id;
 			if ( is_array($data[$id]) ) continue;
-
-            $registry = new ObjectRegistrySQL($document_it->object);
 			$data = $this->buildBaseline($data, $document_id, $uid, $registry);
 		}
 
 		$snapshot_it = $snapshot_registry->Query(
-			array (
-				new FilterAttributePredicate('ObjectClass', get_class($document_it->object)),
-				new FilterAttributePredicate('ObjectId', $documentIds),
-				new FilterAttributePredicate('Type', 'none'),
-                new SortRecentClause()
-			)
-		);
+            array_merge(
+                $queryParms,
+                array(
+                    new FilterAttributePredicate('Type', 'none'),
+                    new FilterAttributePredicate('ObjectId', $documentIds)
+                )
+            ));
 		foreach( $snapshot_it->getRowset() as $row ) {
 			$row['Caption'] = $projectId != $row['Project'] ? '{'.$row['ProjectCodeName'].'} '.$row['Caption'] : $row['Caption'];
 			$data[$row['cms_SnapshotId']] = $row;
@@ -58,7 +64,6 @@ class WikiPageComparableSnapshotRegistry extends ObjectRegistrySQL
 		usort($data, function($left, $right) {
 		    return $left['Caption'] > $right['Caption'];
         });
-
 		return $this->createIterator(array_values($data));
 	}
 

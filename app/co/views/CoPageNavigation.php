@@ -91,14 +91,25 @@ class CoPageNavigation extends PageNavigation
         $pages = array();
         if ( getSession()->getUserIt()->getId() < 1 ) return $pages;
 
+        $portfolio = defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED ? 'my' : 'all';
+
         $pages['main'] = array(
             'uid' => 'main',
             'items' => array(
                 array( 'url' => '/profile', 'name' => translate('Профиль'), 'uid' => 'profile' ),
                 array( 'url' => '/notifications', 'name' => text(1912), 'uid' => 'notifications' ),
-                array( 'url' => '/keys', 'name' => text(2913), 'uid' => 'keys' )
+                array( 'url' => '/keys', 'name' => text(2913), 'uid' => 'keys' ),
+                array( 'url' => "/pm/{$portfolio}/mytasks", 'name' => text(3141), 'uid' => 'mytasks' )
             )
         );
+
+        $plugins = getFactory()->getPluginsManager();
+        $tabs = is_object($plugins) ? $plugins->getHeaderTabs(getSession()->getSite()) : array();
+        foreach( $tabs as $tab ) {
+            if ( $tab['uid'] == 'main' ) {
+                $pages['main']['items'] = array_merge($pages['main']['items'], $tab['items']);
+            }
+        }
 
         return $pages;
     }

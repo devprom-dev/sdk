@@ -28,7 +28,7 @@ class PortfolioIterator extends ProjectIterator
             'IsPlanningUsed' => 'N',
         	'IsSupportUsed' => 'N',
         	'IsKnowledgeUsed' => 'Y',
-            'IsRequirements' => 'I'
+            'IsRequirements' => 'Y'
         )));
         
         $attributes = $methodology->getAttributes();

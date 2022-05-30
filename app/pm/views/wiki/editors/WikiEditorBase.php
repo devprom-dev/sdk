@@ -5,7 +5,7 @@ define('WIKI_MODE_MINIMAL', 4);
 define('WIKI_MODE_INLINE', 8);
 define('WIKI_MODE_INPLACE_INPUT', 16);
  
-abstract class WikiEditorBase
+class WikiEditorBase
 {
  	var $object, $object_it;
  	var $field = 'Content';
@@ -283,6 +283,9 @@ abstract class WikiEditorBase
  	{
  	}
  	
- 	abstract function draw( $content, $b_editable = false );
+ 	function draw( $content, $b_editable = false )
+    {
+
+    }
 }
  

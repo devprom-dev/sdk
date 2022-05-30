@@ -1,5 +1,4 @@
 <?php
-
 include ('JobForm.php');
 include ('JobTable.php');
 include ('JobRunTable.php');
@@ -9,22 +8,16 @@ class JobPage extends AdminPage
 {
 	var $project_it, $job_it;
 
-	function JobPage()
+	function __construct()
 	{
-		global $_REQUEST, $model_factory;
-			
-		if ( $_REQUEST['job'] != '' )
-		{
-			$job = $model_factory->getObject('co_ScheduledJob');
+		if ( $_REQUEST['job'] != '' ) {
+			$job = getFactory()->getObject('co_ScheduledJob');
 			$this->job_it = $job->getExact($_REQUEST['job']);
 		}
 
-		parent::Page();
+		parent::__construct();
 
-		$object_it = $this->getObjectIt();
-
-		if ( $this->needDisplayForm() )
-		{
+		if ( $this->needDisplayForm() ) {
 			$this->addInfoSection( new JobDescriptionSection() );
 		}
 	}

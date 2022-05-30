@@ -70,7 +70,12 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
  	                }
  	                $linked_it->moveNext();
  	            }
- 	            return count($vpds) > 0 ? $vpds : array('-');
+
+                $vpds = array_unique($vpds);
+                $restricted = $this->getRestrictedVpds($object);
+                if ( is_array($restricted) ) $vpds = array_diff($vpds, $restricted);
+
+                return count($vpds) > 0 ? $vpds : array('-');
  	    }		
 	}		
 }

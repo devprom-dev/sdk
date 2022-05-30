@@ -12,7 +12,7 @@ class ProjectUserRegistry extends ObjectRegistrySQL
             $filters,
             array (
                 count($exactFilters) > 0 || getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Participant'))
-                    ? new UserWorkerPredicate()
+                    ? new ProjectUserPredicate()
                     : new FilterInPredicate(getSession()->getUserIt()->getId())
             )
 		);

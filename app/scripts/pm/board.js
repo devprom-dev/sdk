@@ -7,9 +7,8 @@ var draggableOptions = {
 		revertDuration: 100,
 		helper: "clone",
 		cursor: "move",
-		redrawBoardItemCustom: function ( item, result )
+		redrawBoardItemCustom: function ( item, jResult, putOnTop )
 		{
-			var jResult = $(result);
             item.each(function() {
             	var self = $(this);
 				var objectid = self.attr('object');
@@ -23,8 +22,12 @@ var draggableOptions = {
 				var jNewColumnGroup = $('.list_cell[more="'+new_more+'"][group="'+new_group+'"]');
 
 				if( jNewColumnGroup.length < 1 ) {
-					setTimeout(function() { window.location.reload(); }, 200);
-					return;
+					if ( $('.list_cell[group="-3"]').length > 0 ) {
+						jNewColumnGroup = $('.list_cell[more="'+new_more+'"][group="-3"]');
+ 					} else {
+						setTimeout(function() { window.location.reload(); }, 200);
+						return;
+					}
 				}
 
 				var itemFound = false;
@@ -50,18 +53,28 @@ var draggableOptions = {
 						}
 						else {
 							oldCard.remove();
-							newCard.prependTo(jNewColumnGroup);
+							if ( putOnTop ) {
+								newCard.prependTo(jNewColumnGroup);
+							}
+							else {
+								newCard.appendTo(jNewColumnGroup);
+							}
 						}
 					}
 				}
 			});
 		},
 		initializeBoardItemCustom: function ( item, options ) {},
-		droppableAcceptFunction: function ( draggable ) {},
+		droppableAcceptFunction: function ( draggable ) {
+			if ( !draggable.is(draggableOptions.itemCSSPath) ) return false;
+			return true;
+		},
 		getMethodAttributes: function ( item, cell ) 
 		{
-			var controllerUrl = item.attr("project") != '' ? '/pm/'+item.attr("project")+'/' : '';
-			var methods = [];
+			var controllerUrl = cell.is('[project]')
+				? '/pm/'+cell.attr("project")+'/' : '/pm/'+item.attr("project")+'/';
+
+			var url = '';
 			var dataObject = {
 				'object': item.attr("object"),
 				'class': this.className
@@ -79,7 +92,7 @@ var draggableOptions = {
 			}
 
 
-			if( jQuery.trim(item.attr("group")) != jQuery.trim(cell.attr("group")) )
+			if( cell.is('.list_cell') && jQuery.trim(item.attr("group")) != jQuery.trim(cell.attr("group")) )
 			{
                 if ( this.groupAttribute == "State" ) {
                     dataObject.attribute = this.boardAttribute;
@@ -98,7 +111,7 @@ var draggableOptions = {
                 }
 			}
 
-			if( jQuery.trim(item.attr("more")) != jQuery.trim(cell.attr("more")) )
+			if( cell.is('.list_cell') && jQuery.trim(item.attr("more")) != jQuery.trim(cell.attr("more")) )
 			{
 				if ( this.boardAttribute == "State" ) {
 					dataObject.source = jQuery.trim(item.attr("more"));
@@ -119,19 +132,14 @@ var draggableOptions = {
 				}
 			}
 
-            var url = '';
-            controllerUrl = cell.is('[project]') ? '/pm/'+cell.attr('project')+'/' : controllerUrl;
 			if ( dataObject.source ) {
                 url = controllerUrl+'methods.php?method=modifystatewebmethod';
 			}
 			else if ( dataObject.attribute ) {
                 url = controllerUrl+'methods.php?method=modifyattributewebmethod';
 			}
-            if ( url != '' ) {
-				methods.push({url: url, data: dataObject});
-			}
 
-			return methods;
+			return {url: url, data: dataObject};
 		},
 		afterItemModified: function( item, options )
 		{
@@ -204,7 +212,8 @@ var draggableOptions = {
 			$('.list_cell.board-size-mic '+this.itemCSSPath).css('width', '20px');
 			$('.board-size-mic .list_cell '+this.itemCSSPath).css('width', '20px');
 		},
-		sliderTitle: ''
+		sliderTitle: '',
+		methods: []
 	};
 
 function board( options ) 
@@ -287,6 +296,15 @@ function board( options )
         redrawBoardChanges(options);
 	});
     $('.table-master').attachDragger();
+
+    $('.cell-hidden-ids').on('click', function() {
+    	var item = $(this);
+    	$('<div class="document-loader"></div>').prependTo(item.parent());
+		redrawBoardItem(item.attr('ids').split(','), options, function() {
+			$('.document-loader').detach();
+			item.detach();
+		});
+	});
 }
 
 function boardMake( options )
@@ -297,13 +315,16 @@ function boardMake( options )
 	$(options.cellCSSPath).not('.board-item-actions-armed').droppable({
 		hoverClass: options.hoverClass,
 		accept: options.droppableAcceptFunction,
-		drop: function( event, ui ) 
-		{
+		methods: [],
+		drop: function( event, ui ) {
 			var item = ui.draggable;
             ui.helper.hide();
 
-			var cell = $(this).is('.board-column') ? $(this).children('.list_cell') : $(this);
-			var methods = options.getMethodAttributes( item, cell );
+			var cell = $(event.target).is('.board-column')
+				? $(event.target).children('.list_cell') : $(event.target);
+
+			var method = options.getMethodAttributes( item, cell );
+			if ( method.url == '' ) return;
 			
 			if ( $(event.target).is('.board_item') && !$(event.target).is($(item)) ) {
 				$(item).insertBefore($(event.target)).fadeTo('fast', 0.9);
@@ -311,7 +332,14 @@ function boardMake( options )
 			else {
 				$(item).prependTo($(event.target)).fadeTo('fast', 0.9);
 			}
-			processBoardActions(methods,item,options);
+
+			if ( options.methods.length < 1 ) {
+				setTimeout(function() {
+					processBoardActions(options.methods,item,options);
+					options.methods = [];
+				}, 300);
+			}
+			options.methods.push(method);
 		}
 	});
 	$(".board_item").not('.board-item-actions-armed').droppable( "option", "tolerance", "touch" );
@@ -326,21 +354,20 @@ function boardMake( options )
 				if ( $(event.target).closest('.dropdown-toggle').length > 0 ) return;
 				if(event.ctrlKey || event.metaKey) {
 					$(this).find('input[type=checkbox]').each(function() {
-						$(this).is(':checked') ? $(this).removeAttr('checked') : $(this).attr('checked', 'checked');
+						$(this).is(':checked')
+							? $(this).removeAttr('checked').prop('checked', false)
+							: $(this).prop('checked', true);
 					});
 				}
 				else {
-					$('.board_item_body input[type=checkbox]').removeAttr('checked');
-					$(this).find('input[type=checkbox]').each(function() {
-						$(this).attr('checked', 'checked');
-					});
+					$('.board_item_body input[type=checkbox]').removeAttr('checked').prop('checked', false);
+					$(this).find('input[type=checkbox]').prop('checked', true);
 				}
+				toggleBulkActions(event);
                 var id = $(this).attr('object');
                 if ( id != '' ) {
                     $(document).trigger("trackerItemSelected", [id, event.ctrlKey || event.metaKey]);
                 }
-
-                toggleBulkActions(event);
 			});
 			$(this).addClass("board-item-actions-armed");
 	});
@@ -364,15 +391,16 @@ function processBoardActions( methods, item, options )
 			method.url,
 			method.data,
 			function ( result ) {
-				processActionResult(result, item, options);
-				processBoardActions(methods, item, options);
+				if ( processActionResult(method, result, item, options) ) {
+					processBoardActions(methods, item, options);
+				}
 			},
 			'',
 			true
 	);
 }
 
-function processActionResult( result, item, options ) 
+function processActionResult( method, result, item, options )
 {
 	var resultObject = {};
 	try {
@@ -392,21 +420,63 @@ function processActionResult( result, item, options )
 			break;
 
 		case 'ok':
-			if ( typeof resultObject.object != 'undefined' )
-			{
+			if ( typeof resultObject.object != 'undefined' ) {
 				item.attr('object', resultObject.object);
 				item.attr('lifecycle', 'created');
 			}
-
-			if ( typeof resultObject.object != 'undefined' )
-			{
+			if ( typeof resultObject.object != 'undefined' ) {
 				item.attr('object', "");
 			}
-			
 			break;
 			
 		case 'denied':
 			redrawBoardItem( item, options );
+			return false;
+
+		case 'alert':
+			workflowCloseDialog();
+			$('body').append( '<div id="modal-form" style="display:none;">'+resultObject.description+'</div>' );
+			$('#modal-form').dialog({
+				width: Math.max($(window).width() * 0.28, 300),
+				modal: true,
+				resizable: false,
+				closeText: "",
+				open: function() {
+					workflowMakeupDialog();
+				},
+				create: function() {
+					workflowBuildDialog($(this),{form_title: options.transitionTitle});
+				},
+				buttons: [{
+					tabindex: 1,
+					text: text('form-continue'),
+					id: options.entityRefName+'SubmitBtn',
+					click: function() {
+						method.data = $.extend({
+							'suppress-alert': 'true'
+						}, method.data);
+						workflowCloseDialog();
+						runMethod(
+							method.url,
+							method.data,
+							function ( result ) {
+								processActionResult(method, result, item, options);
+							},
+							'',
+							false
+						);
+					}
+				},{
+					tabindex: 2,
+					text: text('form-close'),
+					id: options.entityRefName+'CancelBtn',
+					click: function() {
+						workflowCloseDialog();
+						redrawBoardItem( item, options );
+						return false;
+					}
+				}]
+			});
 			break;
 
 		case 'redirect':
@@ -511,6 +581,8 @@ function processActionResult( result, item, options )
 					}
 			});
 	}
+
+	return true;
 }
 
 function initializeBoardItem( items, options )
@@ -535,7 +607,7 @@ function modifyBoardItem( item, options, callback )
 	}, "donothing");
 }
 
-function redrawBoardItem( item, options )
+function redrawBoardItem( item, options, callback )
 {
 	var url = filterLocation.locationTableOnly();
 	
@@ -569,24 +641,23 @@ function redrawBoardItem( item, options )
 		async: true,
 		cache: false,
 		success: 
-			function(result) 
-			{
-				updateBoardHeaders($(result),options);
+			function(result) {
+				var jqe = $(result);
+				updateBoardHeaders(jqe, options);
 
 				var items = [];
-				
-				$.each(itemSelectors, function(key, value) 
-				{
-					foundItem = $(result).find(value);
+				$.each(itemSelectors, function (key, value) {
+					foundItem = jqe.find(value);
 					foundItem.length > 0 ? items.push(foundItem) : $(value).remove();
 				});
 
-				if ( typeof options.redrawBoardItemCustom != 'undefined' ) 
-				{
-					options.redrawBoardItemCustom( $(items), result );
+				if (typeof options.redrawBoardItemCustom != 'undefined') {
+					options.redrawBoardItemCustom($(items), jqe, items.length < 2);
 				}
 
-				options.initializeBoardItem( $(itemSelectors.join(',')), options );
+				options.initializeBoardItem($(itemSelectors.join(',')), options);
+
+				if (callback) callback();
 			}
 	});
 }
@@ -621,16 +692,13 @@ function redrawBoardChanges( options )
 				var items = [];
 				var itemSelectors = [];
 
-                jResult.find(options.itemCSSPath).each( function(index, value)
-				{
+                jResult.find(options.itemCSSPath+'[modified]').each( function(index, value) {
 					itemSelector = options.itemCSSPath+'[object="'+$(this).attr('object')+'"]';
 					var item = $(itemSelector);
 					if ( item.length < 1 ) return true;
-					if ( item.is("[modified]") ) {
-						if ( $(this).attr('modified') <= item.attr('modified') ) return true;
-						itemSelectors.push(itemSelector);
-						items.push($(this));
-					}
+					if ( $(this).attr('modified') <= item.attr('modified') ) return true;
+					itemSelectors.push(itemSelector);
+					items.push($(this));
 				});
 
                 jResult.find(".object-changed[object-id]").each( function(index, value) {
@@ -648,7 +716,7 @@ function redrawBoardChanges( options )
 				});
 
 				if ( typeof options.redrawBoardItemCustom != 'undefined' ) {
-					options.redrawBoardItemCustom( $(items), result );
+					options.redrawBoardItemCustom( $(items), jResult, items.length < 2 );
 				}
 
 				options.initializeBoardItem( $(itemSelectors.join(',')), options );
@@ -676,7 +744,9 @@ function updateBoardHeaders( result, options )
 {
     if ( $('.dropdown-fixed.open').length > 0 ) return;
 	result.find('.board-table th .brd-head-menu').each( function(index, value) {
-		$('.board-table th .brd-head-menu:eq('+index+')').html($(this).html());
+		var header = $('.board-table th .brd-head-menu:eq('+index+')');
+		if ( header.find('.more-actions.open').length > 0 ) return true;
+		header.html($(this).html());
 	});
     result.find('.board-table th .brd-head-details').each( function(index, value) {
         $('.board-table th .brd-head-details:eq('+index+')').html($(this).html());

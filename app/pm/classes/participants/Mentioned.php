@@ -4,6 +4,8 @@ include "MentionedRegistry.php";
 
 class Mentioned extends Metaobject
 {
+    private $attributesObject = null;
+
  	function __construct() {
  		parent::Metaobject('entity', new MentionedRegistry($this));
  	}
@@ -14,5 +16,13 @@ class Mentioned extends Metaobject
 
     function getVpds() {
         return getFactory()->getObject('ProjectRole')->getVpds();
+    }
+
+    function setAttributesObject( $object ) {
+         $this->attributesObject = $object;
+    }
+
+    function getAttributesObject() {
+         return $this->attributesObject;
     }
 }

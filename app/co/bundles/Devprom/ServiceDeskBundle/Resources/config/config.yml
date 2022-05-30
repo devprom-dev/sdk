@@ -20,7 +20,8 @@ framework:
     default_locale: "%systemLanguage%"
     trusted_proxies: ~
     session:
-        cookie_lifetime: 604800
+        name: sdsessid
+        cookie_lifetime: 0
         gc_maxlifetime: 604800
         save_path: ~
 

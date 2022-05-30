@@ -25,4 +25,8 @@ class DocumentVersionPersister extends ObjectSQLPersister
 
         return $columns;
     }
+
+    function IsPersisterImportant() {
+        return true;
+    }
 }

@@ -76,7 +76,7 @@
         }
     ?>
         <li id="minimize" class="setup">
-            <a onclick="switchMenuState('minimized');" title="<?= text(2193) ?>">
+            <a onclick="switchMenuState();" title="<?= text(2193) ?>">
                 <span style="display:table-cell;"><i class="icon-arrow-left icon-white"></i></span>
             </a>
         </li>

@@ -7,6 +7,8 @@ var uiOptions = {
 
 function makeUpApp()
 {
+    buildNavigationTree();
+
     if ( !devpromOpts.uiExtensionsEnabled ) return;
 
     var jqe = $(document);
@@ -75,35 +77,6 @@ function makeUpApp()
             return false;
         });
 
-    jqe.find('.project-search input')
-        .on('click', function(e) {
-            e.stopImmediatePropagation();
-            return false;
-        })
-        .on('keyup', function(e) {
-            var items = $(this).parents('table').find('tr:eq(1) .p-link');
-            items.removeClass('p-found').hide();
-            if ( $(this).val() == "" ) {
-                var visibleItems = $(this).parents('table').find('.p-left-recent .p-link, .p-node');
-            }
-            else {
-                var text = $(this).val();
-                var visibleItems = items.filter(function(i, el) {
-                    return $(el).text().match(new RegExp(text, "ig")) && !$(el).hasClass('p-recent');
-                });
-                visibleItems.addClass('p-found');
-            }
-            visibleItems.show();
-            $('#project-list-all').show();
-        })
-        .trigger('keyup');
-
-    jqe.find('#project-list-all').click(function(){
-        $('tr:eq(1) .p-link').show();
-        $(this).hide();
-        $('.project-search input').val('');
-    });
-
     jqe.find('#rightTab a:first').tab('show');
     jqe.find('#rightTab a').click(function (e) {
         e.preventDefault();
@@ -165,7 +138,7 @@ function makeUpApp()
         placement: 'bottom',
         container: 'body',
         html: true,
-        trigger: 'focus'
+        trigger: 'click'
     });
     $('.vertical-menu-short a').tooltip({
         placement: 'right',
@@ -186,8 +159,6 @@ function makeUpApp()
         data = $.extend(data, {value: $(this).val()});
         runMethod( $(this).attr('data-href'), data, 'donothing', '' );
     });
-
-    highlightComment();
 
     $("body").on("contextmenu", "#tablePlaceholder .table-inner tr[object-id]", function(e)
     {
@@ -221,35 +192,38 @@ function makeUpApp()
             return false;
         }
     })
-        .on("keydown", function(e) {
-            if ( e.which == 39 || e.which == 37 ) {
-                $('.table-master:visible, .wysiwyg:not([contenteditable])').animate({
-                    scrollLeft: e.which == 39 ? '+=50' : '-=50'
-                }, 0, 'swing');
+    .on("keydown", function(e) {
+        if ( e.which == 39 || e.which == 37 ) {
+            $('.table-master:visible, .wysiwyg:not([contenteditable])').animate({
+                scrollLeft: e.which == 39 ? '+=50' : '-=50'
+            }, 0, 'swing');
+        }
+    });
+
+    $('td#search-area input')
+        .on('keypress', function(e) {
+            filterLocation.hidePopover();
+            if(e.which == 13) {
+                filterLocation.setup('search='+$(this).val());
             }
         });
-
-    var keywords_stored = $('td#search-area input').val();
-    window.setInterval(function() {
-        if ( $('td#search-area input').val() != keywords_stored ) {
-            keywords_stored = $('td#search-area input').val();
-            $('td#search-area input').trigger('onchange');
-        }
-    }, 500);
 
     if ( $('.page-details .details-body').length > 0 ) {
         const detailsPerfect = new PerfectScrollbar('.page-details .details-body', {
             suppressScrollX: true
         });
+        $('.page-details .details-body').on('keydown', function(e) {
+            e.stopImmediatePropagation();
+        })
     }
     if ( $('#tablePlaceholder.placeholder-fixed .table-master').length > 0 ) {
         const tableMasterPerfect = new PerfectScrollbar('#tablePlaceholder.placeholder-fixed .table-master');
     }
-    if ( $('.form-container').length > 0 ) {
-        const formContainerPerfect = new PerfectScrollbar('.form-container', {
-            suppressScrollX: true
+    $('.form-container').each(function() {
+        var scrollbar = new PerfectScrollbar($(this).get(0), {
+            suppressScrollX: $(this).find('#preview').length < 1 ? true : false
         });
-    }
+    });
     if ( $('.treeview-container').length > 0 ) {
         const treeContainerPerfect = new PerfectScrollbar('.treeview-container');
     }
@@ -279,8 +253,6 @@ function makeUpApp()
         .mouseup(function(e) {
             uiOptions.down = false;
         });
-
-    filterComments();
 }
 
 function completeChartsUI( jqe )
@@ -586,6 +558,26 @@ function completeUIForm(jqe)
             $(this).attr('project')
         );
     });
+
+    jqe.find('[alm-widget-url]').each(function() {
+        var self = $(this);
+        var width = self.parent().width();
+        $.get( self.attr('alm-widget-url') + '&' + $(this).attr('alm-widget-query'),
+            {
+                tableonly: true,
+                dashboard: true,
+                header: true,
+                height: self.parent('.cell').attr('data-height') - 50,
+                width: self.parent('.cell').attr('data-width') - 10
+            },
+            function(data) {
+                self.html($(data).find('.table-master'));
+                self.find('.table-master').removeClass('table-master');
+                if ( width > 0 ) self.width(width);
+            }
+        )
+
+    });
 }
 
 function completeUIExt( jqe )
@@ -595,4 +587,116 @@ function completeUIExt( jqe )
     completeUIForm(jqe);
     completeUIControls(jqe);
     makeupAnnotations(jqe, false);
+    highlightComment();
+
+    var storedCommentsSettings = localStorage.getItem('comments-filter-settings');
+    if ( storedCommentsSettings == null ) {
+        filterComments();
+    }
+    else {
+        setupFilterComments(JSON.parse(storedCommentsSettings));
+    }
+}
+
+function buildNavigationTree()
+{
+    var el = $("#projects-tree");
+    el.fancytree({
+        extensions: ["persist","filter"],
+        checkbox: false,
+        icon: false,
+        debugLevel: 0,
+        source: {
+            url: "/projects/tree",
+            cache: false
+        },
+        filter: {
+            highlight: false
+        },
+        persist: {
+            expandLazy: false,
+            store: "local",
+            types: "active expanded focus selected"
+        },
+        strings: {
+            loadError: text('project-tree-error'),
+            noData: text('project-tree-nodata')
+        },
+    });
+    el.on("click", "", function(e){
+        var node = $.ui.fancytree.getNode(e);
+        if ( node && node.data.code ) {
+            //window.location = '/pm/' + node.data.code;
+        }
+    });
+
+    $('.project-search input')
+        .on('keyup', function(e) {
+            $.ui.fancytree.getTree("#projects-tree").filterNodes($(this).val(), {
+                autoExpand: true,
+                mode: 'hide'
+            });
+        });
+}
+
+function storeFormCheckboxes( form )
+{
+    var options = {};
+    form.find('input:checkbox').each(function() {
+        var item = $(this);
+        options[item.attr('id')] = item.prop('checked');
+    });
+    localStorage.setItem(form.attr('module'), JSON.stringify(options));
+}
+
+function restoreFormCheckboxes( form )
+{
+    var formOptions = localStorage.getItem(form.attr('module'));
+    if ( !formOptions ) return;
+    try {
+        formOptions = JSON.parse(formOptions);
+        form.find('input:checkbox').each(function() {
+            var item = $(this);
+            if ( formOptions.hasOwnProperty(item.attr('id')) ) {
+                item.prop('checked', formOptions[item.attr('id')]);
+            }
+        });
+    }
+    catch(e) {}
+}
+
+function setFormCheckboxes( form, selectElement )
+{
+    try {
+        var select = $(selectElement);
+        var options = JSON.parse(select.attr('default'));
+        if ( !options.hasOwnProperty(select.val()) ) return;
+
+        var selectedOptions = options[select.val()];
+        form.find('input:checkbox').each(function() {
+            var item = $(this);
+            item.prop('checked', false);
+            $.each(selectedOptions, function(key,option) {
+                if ( item.attr('id').toLowerCase().includes(option) ) {
+                    item.prop('checked', true);
+                }
+            })
+        });
+    }
+    catch(e) {}
+}
+
+function updateStateAttributeData(frm, el, readonlyItems)
+{
+    var readonly = $.inArray(el.val(), readonlyItems) != -1;
+    frm.find('[name*="IsRequired"]').prop('disabled', readonly);
+    frm.find('[name*="IsReadonly"]').prop('disabled', readonly);
+    frm.find('[name*="IsVisibleOnEdit"]').prop('disabled', readonly);
+    frm.find('[name*="IsAskForValue"]').prop('disabled', readonly);
+    if ( readonly ) {
+        frm.find('[name*="IsReadonly"]').prop('checked', 'checked');
+        frm.find('[name*="IsRequired"]').prop('checked', '');
+        frm.find('[name*="IsVisibleOnEdit"]').prop('checked', '');
+        frm.find('[name*="IsAskForValue"]').prop('checked', '');
+    }
 }

@@ -12,10 +12,10 @@ class FilterAttributeLesserPredicate extends FilterPredicate
 
  	function _predicate( $filter ) {
         if ( in_array($this->getObject()->getAttributeType($this->attribute), array('integer','float')) ) {
-            return " AND t.".$this->attribute . " < " . $filter;
+            return " AND IFNULL(t.".$this->attribute . ",0) < " . $filter;
         }
         else {
-            return " AND t.".$this->attribute . " < '" . DAL::Instance()->Escape($filter) . "'";
+            return " AND IFNULL(t.".$this->attribute . ",'') < '" . DAL::Instance()->Escape($filter) . "'";
         }
  	}
 }

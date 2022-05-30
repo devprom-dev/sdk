@@ -10,7 +10,8 @@
                                 <div style="display: table-cell;vertical-align: top;">
                                     <select class="filter input-block-level" name="<?=$parmKey?>" <?=$parameter['attribute']?> >
                                         <?php foreach( $parameter['options'] as $optKey => $optValue ) { ?>
-                                            <option title="<?=htmlentities($titles[$optKey])?>" value="<?=$optKey?>" <?=(in_array(trim($optKey),\TextUtils::parseFilterItems($parameter['value'])) ? 'selected' : '')?> ><?=\TextUtils::getWords($optValue,3)?></option>
+                                            <option title="<?=htmlentities(join(' - ', array_filter(array($optValue, $parameter['titles'][$optKey]), 'strlen')))?>" value="<?=$optKey?>"
+                                                <?=(in_array(trim($optKey),\TextUtils::parseFilterItems($parameter['value'])) ? 'selected' : '')?> ><?=\TextUtils::getWords($optValue,3)?></option>
                                         <?php } ?>
                                     </select>
                                 </div>

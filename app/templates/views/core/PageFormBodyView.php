@@ -3,8 +3,8 @@
 $last_key = key( array_slice( $attributes, -1, 1, TRUE ) );
 
 $colspan_attributes = array();
-if ( $attributes['Caption']['visible'] ) {
-	$colspan_attributes[] = $attributes['Caption']['id'];
+if ( $attributes[$form->getTitleField()]['visible'] ) {
+	$colspan_attributes[] = $attributes[$form->getTitleField()]['id'];
 }
 if ( $attributes['UID']['visible'] ) {
 	$colspan_attributes[] = $attributes['UID']['id'];
@@ -22,10 +22,10 @@ $shortVisible = array();
 foreach( $attributes as $key => $attribute ) {
 	if ( !in_array($key, $shortAttributes) ) continue;
 	if ( !$attribute['visible'] ) continue;
-	$group = array_shift(
-		array_intersect($form->getObject()->getAttributeGroups($key),array_keys($form_groups))
-	);
+
+    $group = array_shift(array_intersect($attributes[$key]['groups'],array_keys($form_groups)));
 	if ( $group != '' ) continue;
+
 	$shortVisible[$key] = $attribute;
 	unset($attributes[$key]);
 }
@@ -41,15 +41,13 @@ $visible = array_filter( $attributes, function(&$value) use($colspan_attributes)
 
 $top = array();
 foreach( $attributes as $key => $attribute ) {
-	if ( in_array($key, array('Caption','UID')) && in_array($attribute['id'], $colspan_attributes) ) {
+	if ( in_array($key, array($form->getTitleField(),'UID')) && in_array($attribute['id'], $colspan_attributes) ) {
 		$top[$key] = $attribute;
 	}
 }
 
 foreach( $visible as $key => $attribute ) {
-	$group = array_shift(
-		array_intersect($form->getObject()->getAttributeGroups($key),array_keys($form_groups))
-	);
+	$group = array_shift(array_intersect($attributes[$key]['groups'],array_keys($form_groups)));
 	$chunked_attributes[$group][$key] = $attribute;
 }
 
@@ -83,13 +81,13 @@ foreach( $groupKeys as $key => $title ) {
 <? if ( !$form->getEditMode() ) { ?>
 <h4 class="bs page-form-view">
     <?
-    if ( $top['Caption']['field'] instanceof FieldEditable ) {
-        $top['Caption']['field']->draw();
+    if ( $top[$form->getTitleField()]['field'] instanceof FieldEditable ) {
+        $top[$form->getTitleField()]['field']->draw();
     }
     else {
-        echo $top['Caption']['text'];
+        echo $top[$form->getTitleField()]['text'];
     }
-    unset($top['Caption']);
+    unset($top[$form->getTitleField()]);
     ?>
 </h4>
 <? } ?>
@@ -102,14 +100,16 @@ foreach( $groupKeys as $key => $title ) {
     {
         if ( !$attribute['visible'] ) continue;
         if ( $attribute['type'] != 'wysiwyg' ) continue;
+        $stateKey = 'devprom_page_form_section#collapse' . $key;
+        $openState = array_key_exists($stateKey, $_COOKIE) ? $_COOKIE[$stateKey] > 0 : true;
         ?>
         <div class="accordion-heading">
-            <a class="to-drop-btn" data-toggle="collapse" tabindex="-1">
+            <a class="to-drop-btn <?=($openState ? "" : "collapsed")?>" data-toggle="collapse" tabindex="-1" <?=($attribute['editable'] ? "" : 'href="#collapse'.$key.'"')?> >
                 <span class="caret"></span>
                 <?=$attribute['name']?>
             </a>
         </div>
-        <div class="accordion-body in collapse" style="overflow: hidden;">
+        <div class="accordion-body <?=($openState ? "in" : "collapse")?>" style="overflow: hidden;" id="collapse<?=$key?>">
             <?
             if ( is_a($attribute['field'], 'Field') ) {
                 if ( !$wasToolbar && $attribute['field']->contentEditable() && $attribute['editable'] ) { $wasToolbar = true; ?>
@@ -135,8 +135,9 @@ $top = array_filter($top, function($attribute) {
    return $attribute['visible'] && $attribute['type'] != 'wysiwyg';
 });
 
-$colspan_visible = array_filter($colspan_visible, function($attribute,$key) {
-   return !in_array($key,array('Caption','UID'));
+$exceptFields = array($form->getTitleField(),'UID');
+$colspan_visible = array_filter($colspan_visible, function($attribute,$key) use ($exceptFields) {
+   return !in_array($key,$exceptFields);
 }, ARRAY_FILTER_USE_BOTH);
 
 $propertiesSection = count($form_groups) > 0  && (count($top) > 0 || count($colspan_visible) > 0 || count($shortVisible) > 0);

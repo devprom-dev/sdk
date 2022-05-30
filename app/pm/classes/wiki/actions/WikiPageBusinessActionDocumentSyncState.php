@@ -20,20 +20,22 @@ class WikiPageBusinessActionDocumentSyncState extends BusinessActionWorkflow
         $stateAttribute = 'State';
 
         $parentObject = getFactory()->getObject(get_class($object_it->object));
-
-		$page_it = $object_it->getParentsIt($parentObject);
-		$states = array_unique(
-		    array_merge(
-		        $page_it->fieldToArray($stateAttribute),
-                array(
-                    $object_it->get($stateAttribute)
-                )
-            )
-        );
-		if ( count($states) == 1 ) return true;
-
+		$childRegistry = new ObjectRegistrySQL($parentObject);
         $service = new WorkflowService($parentObject);
-		while( !$page_it->end() ) {
+
+        $page_it = $object_it->getParentsIt($parentObject);
+        while( !$page_it->end() ) {
+            $otherStatesCount = $childRegistry->Count(
+                array (
+                    new ParentTransitiveFilter($page_it->getId()),
+                    new FilterNotInPredicate($page_it->getId()),
+                    new FilterHasNoAttributePredicate($stateAttribute, $object_it->get($stateAttribute))
+                )
+            );
+            if ( $otherStatesCount > 0 ) {
+                $page_it->moveNext();
+                continue;
+            }
             try {
                 $service->moveToState(
                     $page_it, $object_it->get('State'), '', array(), true

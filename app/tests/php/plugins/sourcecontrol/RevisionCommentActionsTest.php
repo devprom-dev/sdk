@@ -3,6 +3,7 @@
 include_once SERVER_ROOT_PATH."tests/php/pm/DevpromDummyTestCase.php";
 include_once SERVER_ROOT_PATH."plugins/sourcecontrol/classes/notificators/RevisionCommentActionsTrigger.php";
 include_once SERVER_ROOT_PATH."plugins/sourcecontrol/classes/Commit.php";
+include_once SERVER_ROOT_PATH."plugins/sourcecontrol/classes/CommitMetadataBuilder.php";
 
 class RevisionCommentActionsTest extends DevpromDummyTestCase
 {
@@ -33,21 +34,18 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
                  array('submitted','open','closed')
         ));
 
-        $user = new \User();
-
-        $userRegistry = $this->getMockBuilder(ObjectRegistrySQL::class)
-            ->setConstructorArgs(array($user))
-            ->setMethods(['QueryById'])
+        $user = $this->getMockBuilder(\User::class)
+            ->setConstructorArgs(array())
+            ->setMethods(['getExact'])
             ->getMock();
-        $userRegistry->expects($this->any())->method('QueryById')->will(
-            $this->returnValue($user->createCachedIterator(array(
+        $user->expects($this->any())->method('getExact')->will( $this->returnValue(
+            $user->createCachedIterator(array(
                 array(
                     'cms_UserId' => 1,
                     'Caption' => 'test'
                 )
-            )))
-        );
-        $user->setRegistry($userRegistry);
+            ))
+        ));
 
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
@@ -55,6 +53,13 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
                         array ( 'Task', null, $task ),
                         array ( 'User', null, $user )
                 ) 
+        ));
+    }
+
+    function getMetadataBuilders()
+    {
+        return array_merge( parent::getMetadataBuilders(), array(
+            new CommitMetadataBuilder()
         ));
     }
 
@@ -229,7 +234,8 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
                     'pm_SubversionRevisionId' => 1,
                     'Description' =>
                         '[T-687] #comment asdasd #time 2h'.PHP_EOL.
-                        '[T-688] #time 2h #comment asdasd'
+                        '[T-688] #time 2h #comment asdasd',
+                    'SystemUser' => 1
                 )
             )
         ), TRIGGER_ACTION_ADD);
@@ -264,8 +270,43 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
             array (
                 array (
                     'pm_SubversionRevisionId' => 1,
-                    'Description' =>
-                        '[T-687] #comment asdasd'
+                    'Description' => '[T-687] #comment asdasd',
+                    'SystemUser' => 1
+                )
+            )
+        ), TRIGGER_ACTION_ADD);
+    }
+
+    function testCommentWhenStateChanged()
+    {
+        $commit_it = (new Commit)->createCachedIterator(
+            array (
+                array (
+                    'pm_SubversionRevisionId' => 1,
+                    'Description' => 'T-123 #submitted',
+                    'SystemUser' => 1
+                )
+            )
+        );
+
+        $this->handler->expects($this->atLeastOnce())->method('bindObjects')->will(
+            $this->returnValue(array($commit_it))
+        );
+
+        $this->handler->expects($this->atLeastOnce())->method('moveObjects')->with(
+            $this->anything(),
+            $this->callback(function($o) {
+                return $o == 'asd ads';
+            }),
+            $this->stringContains('resolve')
+        );
+
+        $this->handler->process((new Commit)->createCachedIterator(
+            array (
+                array (
+                    'pm_SubversionRevisionId' => 1,
+                    'Description' => '[T-687] #resolve asd ads',
+                    'SystemUser' => 1
                 )
             )
         ), TRIGGER_ACTION_ADD);

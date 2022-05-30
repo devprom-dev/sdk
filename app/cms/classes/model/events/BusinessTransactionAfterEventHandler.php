@@ -4,18 +4,15 @@ abstract class BusinessTransactionAfterEventHandler
 {
 	abstract protected function handle( $object_it );
 	
-	public function setObjectIt( $object_it )
-	{
+	public function setObjectIt( $object_it ) {
 		$this->object_it = $object_it;
 	}
 	
-	public function getObjectIt()
-	{
+	public function getObjectIt() {
 		return $this->object_it;
 	}
 
-	public function readyToHandle()
-	{
+	public function readyToHandle()	{
 		return true;
 	}
 	
@@ -36,8 +33,9 @@ abstract class BusinessTransactionAfterEventHandler
 	
 	public function __destruct()
 	{
-	    $lock = new LockFileSystem( get_class($this->object_it->object) );
-	    $lock->Release();
+        if ( !is_object($this->object_it) ) return;
+        $lock = new LockFileSystem( get_class($this->object_it->object) );
+        $lock->Release();
 	}
 	
 	private $object_it;

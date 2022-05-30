@@ -305,7 +305,6 @@ public class TaskTest extends ProjectTestBase {
 	    Assert.assertTrue(tvp.readTestDoc().get(0).contains(testScenario.getName()));
 	    Assert.assertTrue(tvp.readTestResults().get(0).contains(testResults));
 	    Assert.assertTrue(tvp.readDocs().get(0).contains("TestDoc"));
-	    Assert.assertTrue(tvp.readRequest().contains("I"));
 	    Assert.assertTrue(tvp.readWatchers().get(0).contains(user));
 	}
 	

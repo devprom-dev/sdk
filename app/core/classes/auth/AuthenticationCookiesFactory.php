@@ -47,8 +47,6 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  	
  	function logoff()
  	{
- 		global $_SERVER, $_COOKIE;
- 		
 		$tokens = array( $this->getToken() );
 
 		if ( is_array($_COOKIE['devprom']) ) {

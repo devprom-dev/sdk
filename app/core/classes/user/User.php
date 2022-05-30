@@ -8,6 +8,7 @@ include "predicates/UserAccessPredicate.php";
 include "persisters/UserDetailsPersister.php";
 include "persisters/UserReadonlyPersister.php";
 include "sorts/UserTitleSortClause.php";
+include "mappers/UserLDAPMapping.php";
 
 class User extends Metaobject
 {
@@ -21,6 +22,15 @@ class User extends Metaobject
 	{
 		return new UserIterator( $this );
 	}
+
+	function getSuperUserIt() {
+ 	    return $this->createCachedIterator( array (
+ 	        array (
+                'Caption' => text(3113),
+                'IsReadonly' => 'N'
+            )
+        ));
+    }
 
 	function getPage()
 	{
@@ -39,20 +49,13 @@ class User extends Metaobject
                 return 'direct';
             case 'SendDeadlinesReport':
                 return 'Y';
+            case 'IsReadonly':
+                return 'Y';
 			default:
 				return parent::getDefaultAttributeValue( $name );
 		}
 	}
 
-	function getActiveUsers()
-	{
-		return $this->getRegistry()->Count(
-			array (
-				new UserStatePredicate('active')
-			)
-		);
-	}
-	
  	function add_parms( $parms )
  	{
 		$_REQUEST['PasswordOriginal'] = $parms['Password'];
@@ -96,8 +99,6 @@ class User extends Metaobject
 		// store old email
 		$user_it = $this->getExact($object_id);
 		
-		$old_email = $user_it->get('Email');
-
 		if ( $parms['LDAPUID'] != '' ) $parms['Password'] = '';
 		
  		if ( array_key_exists('Password', $parms) )
@@ -140,4 +141,13 @@ class User extends Metaobject
  	    if ( $object->getEntityRefName() == 'co_UserGroupLink' ) return true;
 		return false;
 	}
+
+	function getMappers()
+    {
+        return array_merge( parent::getMappers(),
+            array(
+                new UserLDAPMapping()
+            )
+        );
+    }
 }

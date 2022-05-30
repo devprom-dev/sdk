@@ -30,7 +30,7 @@ class TaskForm extends PMPageForm
     {
         $object = $this->getObject();
 
-    	$object->setAttributeVisible('Fact', is_object($this->getObjectIt()));
+        $object->setAttributeEditable('Fact', true);
 		$object->addPersister( new WatchersPersister() );
 
         if ( $this->getEditMode() ) {
@@ -43,10 +43,7 @@ class TaskForm extends PMPageForm
 
 		if ( $object->getAttributeType('ChangeRequest') != '' && is_object($this->getObjectIt()) && $this->getObjectIt()->get('ChangeRequest') != '' )
 		{
-			$object->setAttributeVisible('IssueAttachment', true);
-
 			if ( $this->getObjectIt()->get('IssueDescription') != '' ) {
-				$object->setAttributeVisible('IssueDescription', true);
 				if ( getSession()->IsRDD() && $this->getObjectIt()->get('IssueType') != '' ) {
                     $object->setAttributeCaption('IssueDescription', text(2949));
                 }
@@ -54,21 +51,13 @@ class TaskForm extends PMPageForm
 			if ( $this->getObjectIt()->get('IssueTraces') != '' ) {
 				$object->setAttributeVisible('IssueTraces', true);
 			}
-            if ( $this->getObjectIt()->get('IssueVersion') != '' ) {
-                $object->setAttributeVisible('IssueVersion', true);
-            }
 		}
 		else if ( $_REQUEST['ChangeRequest'] != '' ) {
             $object->setAttributeVisible('ChangeRequest', false);
         }
         $object->setAttributeVisible('ProjectPage', true);
 
-        if ( !is_object($this->getObjectIt()) ) {
-            $object->setAttributeType('Release', 'REF_IterationActualId');
-        }
-        else {
-            $object->setAttributeType('Release', 'REF_IterationRecentId');
-        }
+        $object->setAttributeType('Release', 'REF_IterationRecentId');
         $object->setAttributeType('Assignee', 'REF_ProjectUserId');
 
 		parent::extendModel();
@@ -87,10 +76,12 @@ class TaskForm extends PMPageForm
         }
     }
 
-    function process()
+    function getValidators()
     {
         unset($_REQUEST['Fact']); // filled by embedded form instead of attribute
-        return parent::process();
+        $this->getObject()->setAttributeEditable('Fact', false);
+
+        return parent::getValidators();
     }
 
     public function buildMethods()
@@ -158,7 +149,6 @@ class TaskForm extends PMPageForm
 		switch ( $attr_name )
 		{
 			case 'IssueDescription':
-            case 'IssueVersion':
 				return false;
 			default:
 				return parent::IsAttributeEditable( $attr_name );
@@ -221,10 +211,6 @@ class TaskForm extends PMPageForm
 			    if ( $this->getAction() == 'view' ) return parent::createFieldObject($name);
 				return new FieldParticipantDictionary($this->getFieldValue('Release'));
 
-            case 'Planned':
-                if ( $this->getAction() == 'view' ) return new FieldEstimation($this->object_it, $name);
-                return parent::createFieldObject($name);
-
 			case 'Attachment':
 				return new FieldAttachments( is_object($this->object_it) ? $this->object_it : $this->object );
 
@@ -247,10 +233,17 @@ class TaskForm extends PMPageForm
                 return new FieldTaskTagTrace( is_object($this->object_it) ? $this->object_it : null );
 
             case 'Release':
-                if ( $this->getAction() != 'view' ) {
+                if ($this->getAction() == 'view') {
+                    return new FieldReferenceAttribute(
+                        $this->getObjectIt(),
+                        $name,
+                        $this->getObject()->getAttributeObject($name),
+                        array(),
+                        'btn-xs'
+                    );
+                } else {
                     return new FieldAutoCompleteObject($this->getObject()->getAttributeObject($name));
                 }
-                return parent::createFieldObject( $name );
 
 			default:
 				return parent::createFieldObject( $name );
@@ -280,15 +273,6 @@ class TaskForm extends PMPageForm
 		}
 		return $field;
 	}
-
-	function getFieldName( $attr )
-    {
-        switch($attr) {
-            case 'ChangeRequest':
-                return text(2698);
-        }
-        return parent::getFieldName( $attr );
-    }
 
 	function getFieldValue( $attr )
 	{
@@ -439,11 +423,6 @@ class TaskForm extends PMPageForm
 		);
 	}
 
-	function getDiscriminatorField()
- 	{
- 		return 'TaskType';
- 	}
-
     protected function getSourceParms($attributes)
     {
         $visibleAttributes = array_filter($attributes, function($item) {
@@ -502,5 +481,9 @@ class TaskForm extends PMPageForm
 
     protected function getNeighbourAttributes() {
         return array('Assignee', 'Release', 'Priority', 'ChangeRequest');
+    }
+
+    function getTemplateObject() {
+        return getFactory()->getObject('TaskTemplate');
     }
 }

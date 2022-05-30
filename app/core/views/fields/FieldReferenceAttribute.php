@@ -40,11 +40,14 @@ class FieldReferenceAttribute extends Field
 
     protected function getLovIterator()
     {
-        return $this->lovObject->getVpdValue() == ''
+        return count($this->lovObject->getVpds()) < 2 || !$this->lovObject->IsDictionary()
             ? $this->lovObject->getAll()
             : $this->lovObject->getRegistry()->Query(
-                array(
-                    new FilterVpdPredicate($this->object_it->get('VPD'))
+                array_merge(
+                    $this->lovObject->getSortDefault(),
+                    array(
+                        new FilterVpdPredicate($this->object_it->get('VPD'))
+                    )
                 )
             );
     }
@@ -88,6 +91,7 @@ class FieldReferenceAttribute extends Field
         }
         else {
             if ( count($this->moreActions) > 0 ) {
+                unset($this->moreActions['modify']);
                 $actions = array_merge($actions, array(array()), $this->moreActions);
             }
 

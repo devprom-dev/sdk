@@ -1,5 +1,4 @@
 <?php
-
 include_once "TaskProgressFrame.php";
 include_once "TaskBalanceFrame.php";
 include_once SERVER_ROOT_PATH.'core/views/c_issue_type_view.php';
@@ -13,17 +12,10 @@ class TaskBoardList extends PMPageBoard
  	private $priority_actions = array();
  	private $terminal_states = array();
  	private $method_spend_time = null;
-    private $estimation_strategy = null;
 	private $uidVisible = true;
 	private $planned_actions = array();
 	private $planned_title = '';
  	
- 	function __construct( $object ) 
-	{
-        $this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getIterationEstimationStrategy();
-		parent::__construct( $object );
-	}
-
 	function buildRelatedDataCache()
 	{
 		$object_it = $this->getObject()->getEmptyIterator();
@@ -44,22 +36,6 @@ class TaskBoardList extends PMPageBoard
 			$this->priorities_array[] = $priority_it->copy();
 			$priority_it->moveNext();
 		}
-
-        // cache assignees
-        $user_it = getFactory()->getObject('ProjectUser')->getAll();
-        while( !$user_it->end() )
-        {
-            $method = new ModifyAttributeWebMethod($object_it, 'Assignee', $user_it->getId());
-            if ( $method->hasAccess() )
-            {
-                $method->setCallback( "donothing" );
-                $this->owner_actions[$user_it->getId()] = array(
-                    'name' => $user_it->getDisplayName(),
-                    'method' => $method
-                );
-            }
-            $user_it->moveNext();
-        }
 
         $method = new CommentWebMethod($object_it);
  		if ( $method->hasAccess() ) {
@@ -86,8 +62,6 @@ class TaskBoardList extends PMPageBoard
 			}
 			$this->planned_title = $this->getObject()->getAttributeUserName('Planned');
 		}
-
-		$this->getTable()->buildRelatedDataCache();
 
         $info = $this->getTable()->getPage()->getPageWidgetNearestUrl();
         if ( is_object($info['widget']) ) {
@@ -175,7 +149,7 @@ class TaskBoardList extends PMPageBoard
 
 	function getGroupFilterValue()
 	{
-		$values = array_filter($this->getFilterValues(), function($value) {
+		$values = array_filter($this->getTable()->getPredicateFilterValues(), function($value) {
 			return !in_array($value, PageTable::FILTER_OPTIONS);
 		});
 
@@ -202,6 +176,8 @@ class TaskBoardList extends PMPageBoard
 		$groupFilter = $this->getGroupFilterValue();
         $values = $this->getFilterValues();
 
+        if ( $groupFilter == 'any' ) return parent::buildGroupIt();
+
         foreach( $this->getTable()->getFilterPredicates($values) as $filter ) {
             if ( $filter instanceof ProjectVpdPredicate && $filter->defined($filter->getValue()) ) {
                 $vpd_filter = $filter;
@@ -214,10 +190,10 @@ class TaskBoardList extends PMPageBoard
 			case 'pm_Version':
 				$object = getFactory()->getObject('Release');
 				$ids = array_merge(
-					$object->getRegistry()->Query(
+					$object->getRegistry()->QueryKeys(
 						array (
 							$vpd_filter,
-							!in_array($groupFilter, array('','any'))
+							!in_array($groupFilter, array(''))
 								? new FilterInPredicate(preg_split('/,/', $groupFilter))
                                 : new ReleaseTimelinePredicate('not-passed')
 						)
@@ -235,10 +211,10 @@ class TaskBoardList extends PMPageBoard
 			case 'pm_Release':
 				$object = getFactory()->getObject('Iteration');
 				$ids = array_merge(
-						$object->getRegistry()->Query(
+						$object->getRegistry()->QueryKeys(
 								array (
 									$vpd_filter,
-                                    !in_array($groupFilter, array('','any'))
+                                    !in_array($groupFilter, array(''))
 										? new FilterInPredicate(preg_split('/,/', $groupFilter))
                                         : new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED)
 								)
@@ -258,14 +234,14 @@ class TaskBoardList extends PMPageBoard
 				return $registry->Query(
 						array (
                             new UserTitleSortClause(),
-                            !in_array($groupFilter, array('','any'))
+                            !in_array($groupFilter, array(''))
                                     ? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 						)
 					);
 			case 'Priority':
 				return getFactory()->getObject('Priority')->getRegistry()->Query(
 						array (
-                            !in_array($groupFilter, array('','any'))
+                            !in_array($groupFilter, array(''))
 								? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 						)
 				    );
@@ -480,7 +456,7 @@ class TaskBoardList extends PMPageBoard
 		}
 	}
 
-	function getActions( $object_it ) 
+	function getActions( $object_it )
 	{
 		$actions = parent::getActions( $object_it );
 
@@ -522,31 +498,6 @@ class TaskBoardList extends PMPageBoard
 					'items' => $priority_actions
 			);
 		}
-
-        $owner_actions = $this->owner_actions;
-        foreach( $owner_actions as $key => $action ) {
-            if ( $object_it->get('Assignee') == $key ) {
-                unset($owner_actions[$key]);
-                continue;
-            }
-            $method = $owner_actions[$key]['method'];
-            $method->setObjectIt($object_it);
-            $owner_actions[$key]['url'] = $method->getJSCall(array());
-        }
-        if ( count($owner_actions) > 1 ) {
-            $pos = array_search(array('uid'=>'middle'), $actions);
-            $actions = array_merge(
-                array_slice($actions, 0, $pos),
-                array(
-                    array(),
-                    array(
-                        'name' => $object_it->object->getAttributeUserName('Assignee'),
-                        'items' => $owner_actions
-                    )
-                ),
-                array_slice($actions, $pos)
-            );
-        }
 
 		return $actions;
 	}

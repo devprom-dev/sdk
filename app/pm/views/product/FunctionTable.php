@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH.'pm/methods/FunctionFilterStateWebMethod.php';
+include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
 include "FunctionList.php";
 include "FunctionChart.php";
 include "FunctionTreeGrid.php";
@@ -53,7 +54,30 @@ class FunctionTable extends PMPageTable
 		
 		return $actions;  
 	}
-	
+
+    function getExportActions()
+    {
+        $actions = parent::getExportActions();
+
+        $method = new WikiExportBaseWebMethod();
+        $methodPageIt = $this->getObject()->createCachedIterator(
+            array (
+                array ('pm_FunctionId' => '%ids%')
+            )
+        );
+        $converter = new WikiConverter( $this->getObject() );
+        $converter_it = $converter->getAll();
+        while( !$converter_it->end() ) {
+            $actions[] = array(
+                'name' => $converter_it->get('Caption'),
+                'url' => $method->url($methodPageIt, $converter_it->get('EngineClassName'))
+            );
+            $converter_it->moveNext();
+        }
+
+        return $actions;
+    }
+
 	function getFilters()
 	{
 		$filters = array(
@@ -85,10 +109,8 @@ class FunctionTable extends PMPageTable
 		$predicates = array(
 			new FeatureStateFilter( $values['state'] ),
 			new CustomTagFilter( $this->getObject(), $values['tag'] ),
-			new FilterAttributePredicate( 'Importance', $values['importance'] ),
-			new FilterAttributePredicate( 'Type', $values['type'] ),
             $_REQUEST['roots'] == '0'
-                ? new FeatureRootFilter()
+                ? new ObjectRootFilter()
                 : new FilterAttributePredicate('ParentFeature', $_REQUEST['roots']),
             new ParentTransitiveFilter($values['parent']),
             new FeatureStageFilter($values['stage'])

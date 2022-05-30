@@ -11,7 +11,7 @@ $filterChunks = array_chunk(
     );
 
 ?>
-<div class="row-fluid" style="padding:6px 10px 0 0;width:99%;opacity:0;">
+<div class="row-fluid filter-body" style="padding:6px 10px 0 0;width:99%;opacity:0;">
     <?php foreach( $filterChunks as $chunkKey => $filters ) { ?>
         <div class="fltr-clm">
             <table class="table table-bordered table-striped">
@@ -34,19 +34,26 @@ $filterChunks = array_chunk(
                                                 $checked = in_array(trim($optKey),$filterValue) || trim($optKey) == trim($filter['value']);
                                             ?>
                                             <option class="<?=(in_array($optKey,array('any','none')) ? "special" : "")?>" value="<?=$optKey?>" <?=($checked ? 'selected' : '')?> >
-                                                <?=\TextUtils::stripAnyTags(html_entity_decode($optValue))?>
+                                                <?=\TextUtils::stripAnyTags($optValue)?>
                                             </option>
                                         <?php } ?>
                                     <?php } ?>
-
                                 </select>
+                            </td>
+                        </tr>
+                    <?php } elseif (is_a($filter['class'], 'FilterDateIntervalWebMethod', true) ) { ?>
+                        <tr>
+                            <td width="160"><?=$filter['caption']?></td>
+                            <td class="filter-pair">
+                                <input type="text" class="input-block-level datepicker-filter" value="<?=$filter['value']?>" name="<?=$filter['name']?>" autocomplete="off">
+                                <input type="text" class="input-block-level datepicker-filter" value="<?=$filter['valueRight']?>" name="<?=$filter['nameRight']?>" autocomplete="off">
                             </td>
                         </tr>
                     <?php } elseif (is_subclass_of($filter['class'], 'SelectDateRefreshWebMethod')) { ?>
                         <tr>
                             <td width="160"><?=$filter['caption']?></td>
                             <td>
-                                <input type="text" class="input-block-level datepicker-filter" value="<?=$filter['value']?>" name="<?=$filter['name']?>">
+                                <input type="text" class="input-block-level datepicker-filter" value="<?=$filter['value']?>" name="<?=$filter['name']?>" autocomplete="off">
                             </td>
                         </tr>
                     <?php } ?>

@@ -17,7 +17,7 @@ class Iteration extends Metaobject
 		$this->setSortDefault( array( 
 		        new SortReleaseIterationClause(),
 				new SortAttributeClause('StartDate'),
-		        new SortAttributeClause('ReleaseNumber')
+		        new SortAttributeClause('Caption')
 		));
 	}
 
@@ -56,48 +56,10 @@ class Iteration extends Metaobject
 
 	function getDefaultAttributeValue( $name )
 	{
-		global $_REQUEST, $model_factory;
-		
-		if ( $name == 'ReleaseNumber' ) 
-		{
-			$iteration = $model_factory->getObject('Iteration');
-			$iteration->addSort( new SortRecentNumberClause() );
-			
-			if ( $_REQUEST['Version'] > 0 )
-			{
-    			$iteration->addFilter( new IterationReleasePredicate($_REQUEST['Version']) );
-			}
-			
-			return max(intval($iteration->getFirst()->get('ReleaseNumber')), 0) + 1;
-		}
-		elseif ($name == 'Project') 
-		{
-			return getSession()->getProjectIt()->getId();
-		}
-		elseif ($name == 'InitialVelocity' && $_REQUEST['Version'] > 0 ) 
-		{
-			$release = $model_factory->getObject('Release');
-			$iteration = $model_factory->getObject('Iteration');
-			
-			$release_it = $release->getExact($_REQUEST['Version']);
-			if ( $release_it->count() > 0 )
-			{
-				$iterations = $iteration->getByRefArrayCount(
-					array( 'Version' => $release_it->getId() ) );
-					
-				if ( $iterations < 1 )
-				{
-					return $release_it->get('InitialVelocity');
-				}
-				else
-				{
-					return $release_it->getVelocity();
-				}
-			}
-
-			return getSession()->getProjectIt()->getTeamVelocity();
-		}
-		
+		switch( $name ) {
+            case 'Project':
+                return getSession()->getProjectIt()->getId();
+        }
 		return parent::getDefaultAttributeValue($name);
 	}
 
@@ -137,10 +99,6 @@ class Iteration extends Metaobject
 				   );
 		}
 
-		if ( $parms['Caption'] != '' && $parms['ReleaseNumber'] == ''  ) {
-            $parms['ReleaseNumber'] = $parms['Caption'];
-        }
-
 		$result = parent::add_parms( $parms );
 		
 		if ( $result < 1 ) return $result;
@@ -153,32 +111,38 @@ class Iteration extends Metaobject
 	function modify_parms( $object_id, $parms ) 
 	{
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
+        $object_it = $this->getExact( $object_id );
+
+        if ( $methodology_it->HasFixedRelease() ) {
+            // automatically calculate finish date
+            $weeks = $methodology_it->get('ReleaseDuration');
+            if ( $weeks < 1 ) $weeks = 4;
+
+            $parms['FinishDate'] = date( 'Y-m-j',
+                strtotime('-1 day',
+                    strtotime($weeks.' week', strtotime( $object_it->get_native('StartDate') ) ) )
+            );
+        }
+        else {
+            if ( $parms['StartDate'] != '' && $parms['FinishDate'] == '' && $object_it->get('FinishDate') != '' ) {
+                $nowStart = new DateTime($parms['StartDate']);
+                $wasStart = new DateTime($object_it->get('StartDate'));
+                $interval = $wasStart->diff($nowStart);
+                $parms['FinishDate'] = date('Y-m-d',
+                                            strtotime($interval->format('%R%a days'),
+                                                strtotime($object_it->get('FinishDate')))
+                                        );
+            }
+        }
+
 		$result = parent::modify_parms( $object_id, $parms );
-		
 		if ( $result < 1 ) return $result;
-		
-		$object_it = $this->getExact( $object_id );
-		
-		// automatically calculate finish date
-		if ( $methodology_it->HasFixedRelease() )
-		{
-			$weeks = $methodology_it->get('ReleaseDuration');
-			if ( $weeks < 1 ) $weeks = 4;
 
-			$parms['FinishDate'] = date( 'Y-m-j', 
-				   		strtotime('-1 day',
-				   			strtotime($weeks.' week', strtotime( $object_it->get_native('StartDate') ) ) ) 
-				   );
-
-			$result = parent::modify_parms ( $object_id, array('FinishDate' => $parms['FinishDate']) );
-			if ( $result < 1 ) return $result;
-		}
+        $object_it = $this->getExact( $object_id );
 
 		if ( $parms['StartDate'] != '' ) {
 			$object_it->resetBurndown();
 		}
-		
 		$object_it->storeMetrics();
 		
 		return $result;

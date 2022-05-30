@@ -9,11 +9,6 @@ class KnowledgeBaseForm extends PMWikiForm
 		return translate('Статья');
 	}
 
- 	function getTraceActions( $page_it )
-	{
-		return array();
-	}
-	
 	function IsAttributeVisible( $attr )
 	{
 	    $object_it = $this->getObjectIt();

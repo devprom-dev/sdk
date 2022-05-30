@@ -12,6 +12,7 @@ include_once 'SetupPhpIni.php';
 include_once 'UpgradeCustomerUIDLocation.php';
 include_once 'UpgradeMySQL.php';
 include_once 'UpgradeUserPictures.php';
+include_once 'UpgradeModel.php';
 include_once 'SetupPhpOpCache.php';
 include_once 'SetupUserGroups.php';
 include_once 'SDKSetup.php';
@@ -64,10 +65,11 @@ class InstallationFactory
         	new SetupUserGroups(),
         	new SDKSetup(),
         	new AttachCustomersToCompanies(),
+            new UpgradeModel(),
 			new CacheParameters(),
 	        new ClearCache(),
 			new DownloadProductChangesInfo()
-	    );
+        );
     }
     
     public function getInstallables()

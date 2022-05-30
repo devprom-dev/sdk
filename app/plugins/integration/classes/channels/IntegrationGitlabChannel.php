@@ -47,7 +47,7 @@ class IntegrationGitlabChannel extends IntegrationRestAPIChannel
 
             $page = 1;
             do {
-                $items = $this->jsonGet(self::apiPath.'projects/'.$this->projectId.'/issues?per_page=1000&page='.($page++), array() );
+                $items = $this->jsonGet(self::apiPath.'projects/'.$this->projectId.'/issues?per_page=30&page='.($page++), array() );
                 foreach( $items as $key => $item ) {
                     $first['Request' . $item['iid']] = array(
                         'class' => 'Request',
@@ -70,7 +70,7 @@ class IntegrationGitlabChannel extends IntegrationRestAPIChannel
 
             $page = 1;
             do {
-                $items = $this->jsonGet(self::apiPath.'projects/'.$this->projectId.'/merge_requests?per_page=1000&page='.($page++), array() );
+                $items = $this->jsonGet(self::apiPath.'projects/'.$this->projectId.'/merge_requests?per_page=30&page='.($page++), array() );
                 foreach( $items as $key => $item ) {
                     if ( $item['created_at'] <= $timestamp ) continue;
                     $latest['ReviewRequest' . $item['id']] = array(
@@ -118,7 +118,7 @@ class IntegrationGitlabChannel extends IntegrationRestAPIChannel
 
         $page = 1;
         do {
-            $items = $this->jsonGet(self::apiPath.'projects/'.$this->projectId.'/releases?per_page=1000&page='.($page++), array() );
+            $items = $this->jsonGet(self::apiPath.'projects/'.$this->projectId.'/releases?per_page=30&page='.($page++), array() );
             foreach( $items as $key => $item ) {
                 if ( $item['created_at'] <= $timestamp ) continue;
                 $latest['Build' . $item['id']] = array(
@@ -166,6 +166,11 @@ class IntegrationGitlabChannel extends IntegrationRestAPIChannel
             $data['State'] = array_shift($states);
         }
 
+        $priorities = array_intersect($source['labels'], $this->internalPriorities);
+        if ( count($priorities) > 0 ) {
+            $data['Priority']['Caption'] = array_shift($priorities);
+        }
+
         foreach( $data as $attribute => $value ) {
             if ( $attribute == 'Estimation' ) {
                 $data[$attribute] = $value / (60 * 60);
@@ -194,8 +199,18 @@ class IntegrationGitlabChannel extends IntegrationRestAPIChannel
                         $put['state_event'] = 'reopen';
                         break;
                     default:
-                        $put['labels'] = array (
-                            $source['State']
+                        if ( !is_array($put['labels']) ) $put['labels'] = array();
+                        $put['labels'] = array_merge(
+                            array_diff($put['labels'], $this->internalIssueStates),
+                            array(
+                                $source['State']
+                            )
+                        );
+                        $put['labels'] = array_merge(
+                            array_diff($put['labels'], $this->internalPriorities),
+                            array(
+                                $source['Priority']['Caption']
+                            )
                         );
                 }
 
@@ -244,6 +259,7 @@ class IntegrationGitlabChannel extends IntegrationRestAPIChannel
         $this->projectId = $this->getObjectIt()->get('ProjectKey');
         $this->instanceName = getFactory()->getObject('cms_SystemSettings')->getAll()->getDisplayName();
         $this->internalIssueStates = \WorkflowScheme::Instance()->getStates(getFactory()->getObject('Request'));
+        $this->internalPriorities = getFactory()->getObject('Priority')->getAll()->fieldToArray('Caption');
     }
 
     protected function buildUsersMap()
@@ -276,4 +292,5 @@ class IntegrationGitlabChannel extends IntegrationRestAPIChannel
     private $projectId = '';
     private $instanceName = '';
     private $internalIssueStates = array();
+    private $internalPriorities = array();
 }

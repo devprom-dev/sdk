@@ -33,7 +33,7 @@
     <script type="text/javascript">
         $(document).ready( function() {
             setupEditorGlobal();
-            setupWysiwygEditor('issue_form_description', 450);
+            setupWysiwygEditor('issue_form_description', 200, '{{ 'field.required.alert'|trans({}, "validators") }}');
         });
     </script>
 {% endblock %}

@@ -36,18 +36,31 @@ class ProjectLogTable extends PMPageTable
 		 
 	    $classes = preg_split('/,/', $values['entities']);
 		if ( count($classes) != 1 ) return $this->getObject()->getEmptyIterator();
-		
+
 		$class_name = getFactory()->getClass($classes[0]);
 		if ( !class_exists($class_name) ) return $this->getObject()->getEmptyIterator();
 		
 		$object = getFactory()->getObject($class_name);
         $object_id = $_REQUEST[strtolower(get_class($object))];
-        
+
     	if ( $object_id < 1 ) {
 			return $this->getObject()->getEmptyIterator();
-    	} 
-    		
-        return $object->getExact($object_id);
+    	}
+
+        $object_it = $object->getExact($object_id);
+
+        if ( $object_it->object instanceof WikiPage ) {
+            $object_it = getFactory()->getObject(get_class($object_it->object))
+                ->getRegistry()->Query(
+                    array (
+                        new ParentTransitiveFilter($object_it->getId()),
+                        new FilterAttributePredicate('DocumentId', $object_it->get('DocumentId')),
+                        new SortDocumentClause()
+                    )
+                );
+        }
+
+        return $object_it;
 	}
 	
 	function getObjectIt()

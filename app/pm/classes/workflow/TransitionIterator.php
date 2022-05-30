@@ -80,4 +80,33 @@ class TransitionIterator extends OrderedIterator
  	{
 		return true;				
  	}
+
+    function getUserAlerts()
+    {
+        $alerts = array();
+
+        $action_it = getFactory()->getObject('TransitionAction')->getRegistry()->Query(
+            array (
+                new FilterAttributePredicate('Transition', $this->getId()),
+                new FilterAttributePredicate('IsNotifyUser', 'Y')
+            )
+        );
+        while( !$action_it->end() ) {
+            $alerts[] = $action_it->getActionOnlyName();
+            $action_it->moveNext();
+        }
+
+        $action_it = getFactory()->getObject('StateAction')->getRegistry()->Query(
+            array (
+                new FilterAttributePredicate('State', $this->get('TargetState')),
+                new FilterAttributePredicate('IsNotifyUser', 'Y')
+            )
+        );
+        while( !$action_it->end() ) {
+            $alerts[] = $action_it->getActionOnlyName();
+            $action_it->moveNext();
+        }
+
+        return array_unique($alerts);
+    }
 }

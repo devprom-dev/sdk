@@ -79,7 +79,32 @@ class SystemDateTime
 			}
 		}
 	}
-	
+
+    static public function convertToUTC0( $date, $format = 'Y-m-d H:i:s', $tz = null )
+    {
+        if ( $date == '' ) return $date;
+        if ( !$tz ) $tz = EnvironmentSettings::getClientTimeZone();
+
+        try {
+            // convert from client's time to UTC+0
+            $time = new DateTime($date, $tz);
+
+            $time->setTimezone(new DateTimeZone("UTC"));
+
+            return $time->format($format);
+        }
+        catch( Exception $e ) {
+            try {
+                $time = new DateTime($date, new DateTimeZone("UTC"));
+                return $time->format($format);
+            }
+            catch( Exception $e )
+            {
+                return "";
+            }
+        }
+    }
+
 	static private function serverDate( $format = 'Y-m-d H:i:s' )
 	{
 		$time = new DateTime(EnvironmentSettings::getUTCOffset()." hours", new DateTimeZone("UTC")); 
@@ -87,10 +112,22 @@ class SystemDateTime
 		return $time->format($format);
 	}
 
-	static public function getTimeParseRegex()
-	{
+	static public function getTimeParseRegex() {
 		return text(2115);
 	}
+
+    static public function parseHours( $value )
+    {
+        $match = array();
+        if ( preg_match(self::getTimeParseRegex(), $value, $match) and count($match) > 1 ) {
+            $value = 0;
+            $value += $match[2] * 8 * 60;
+            $value += $match[4] * 60;
+            $value += $match[6];
+            return round($value / 60, 4);
+        }
+        return $value;
+    }
 
 	static public function parseRelativeDateTime( $value, $language )
     {
@@ -121,6 +158,11 @@ class SystemDateTime
         );
         $value = preg_replace(
             '/now\(\)/',
+            $language->getPhpDate( strtotime(date('Y-m-j')) ),
+            $value
+        );
+        $value = preg_replace(
+            '/today/',
             $language->getPhpDate( strtotime(date('Y-m-j')) ),
             $value
         );

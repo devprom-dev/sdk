@@ -10,7 +10,7 @@ class TransitionMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( !$metadata->getObject() instanceof Transition ) return;
 
 		$metadata->addAttribute('Attributes', 
-			'REF_TransitionAttributeId', text(1800), true);
+			'REF_StateAttributeId', text(1800), true);
 
 		$metadata->addAttribute('ProjectRoles', 
 			'REF_TransitionRoleId', translate('Проектные роли'), false);

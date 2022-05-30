@@ -49,6 +49,8 @@ class ReleaseTable extends PMPageTable
             'iterationplanningboard',
             'releaseplanningboard',
             'assignedtasks',
+            'assignedissues',
+            'tasksbyassignee',
             'projects',
             'process/metrics'
         );
@@ -61,7 +63,7 @@ class ReleaseTable extends PMPageTable
             'projectburnup',
             'iterationburndown',
             'scrum/velocitychart',
-            'workitemchart'
+            'resman/resourceload'
         );
     }
 }

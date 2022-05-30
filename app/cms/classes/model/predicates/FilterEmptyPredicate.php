@@ -7,6 +7,6 @@ class FilterEmptyPredicate extends FilterPredicate
     }
 
     function _predicate( $filter ) {
- 	    return "";
+ 	    return " AND 1 = 2 ";
  	}
 }

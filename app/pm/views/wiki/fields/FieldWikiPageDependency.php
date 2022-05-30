@@ -1,6 +1,6 @@
 <?php
 
-class FieldWikiPageDependency extends Field
+class FieldWikiPageDependency extends FieldForm
 {
 	function render( $view )
 	{
@@ -17,8 +17,6 @@ class FieldWikiPageDependency extends Field
 		}
 		ksort($uids);
 
-		echo '<div class="input-block-level well well-text">';
-			echo join('<br/>', $uids);
-		echo '</div>';
+		echo join('<br/>', $uids);
 	}
 }

@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelService;
 
 define('REGEX_IMAGE_NUMBERING', '/<figcaption[^>]*>(.*)<\/figcaption>/i');
 define('REGEX_TABLE_NUMBERING', '/<table([^>]*)>\s*<caption([^>]*)>(.+)<\/caption>/i');
@@ -23,6 +24,7 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
             REGEX_INCLUDE_REVISION => array($this, 'parseIncludeRevisionCallback'),
             REGEX_INCLUDE_PAGE => array($this, 'parseIncludePageCallback'),
             REGEX_MATH_TEX => array($this, 'parseMathTex'),
+            REGEX_FIELD_SUBSTITUTION => array($this, 'parseFieldSubstitution'),
             REGEX_IMAGE_NUMBERING => array($this, 'imageNumbering'),
             REGEX_TABLE_NUMBERING => array($this, 'tableNumbering'),
             IMAGE_RESTORE => array($this, 'imageRestore'),
@@ -64,39 +66,72 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
         }
 
         $revisions = preg_split('/-/', $match[2]);
-        $changeIt = getFactory()->getObject('WikiPageChange')->getExact($revisions[0]);
 
-        if ( $changeIt->getId() != '' ) {
-            if ( count($revisions) > 1 ) {
-                if ( $revisions[1] > 0 ) {
-                    $freshContent = $changeIt->object->getExact($revisions[1])->getHtmlDecoded('Content');
-                }
-                else {
-                    $freshContent = $object_it->getHtmlDecoded('Content');
-                }
-                $parser = new WrtfCKEditorComparerParser($this->getObjectIt());
-                $wasContent = $parser->parse($changeIt->getHtmlDecoded('Content'));
-                $freshContent = $parser->parse($freshContent);
+        $pageIt = (new WikiPageRegistryContent($object_it->object))->Query(
+            array(
+                new ParentTransitiveFilter($object_it->getId()),
+                new FilterAttributePredicate('DocumentId', $object_it->get('DocumentId')),
+                new SortDocumentClause()
+            )
+        );
+        $removeSectionNumberHead = $pageIt->get('SectionNumber');
+        if ( $removeSectionNumberHead != '' ) $removeSectionNumberHead .= '.';
 
-                $content .= '<div class="reset wysiwyg">';
-                $diffBuilder = new WikiHtmlDiff($wasContent, $freshContent);
-                $diffContent = $diffBuilder->build();
-                if ( $diffContent == '' ) $diffContent = $freshContent;
-                $content .= $diffContent . '</div>';
-            }
-            else {
-                $content = $changeIt->getHtmlDecoded('Content');
-            }
-        }
-        else {
-            $content = $object_it->getHtmlDecoded('Content');
+        $freshContent = '';
+        while ( !$pageIt->end() ) {
+            $freshContent .= $this->buildDocumentStructure($removeSectionNumberHead,
+                $pageIt, 'Content');
+            $pageIt->moveNext();
         }
 
-        $content = '<div class="wiki-page-help">'.sprintf(text(2332), '<a target="_blank" href="'.$info['url'].'">'.$info['uid'].'</a>').'</div>' . $content;
+        $pageChangedIt = (new WikiPageRegistryContent($object_it->object))->Query(
+            array(
+                new ParentTransitiveFilter($object_it->getId()),
+                new WikiPageAfterRevisionPersister($revisions[0]),
+                new FilterAttributePredicate('DocumentId', $object_it->get('DocumentId')),
+                new SortDocumentClause()
+            )
+        );
+        $wasContent = '';
+        while ( !$pageChangedIt->end() ) {
+            $wasContent .= $this->buildDocumentStructure($removeSectionNumberHead,
+                $pageChangedIt, 'Content');
+            $pageChangedIt->moveNext();
+        }
+
+        $parser = new WrtfCKEditorComparerParser($this->getObjectIt());
+        $wasContent = $parser->parse($wasContent);
+        $freshContent = $parser->parse($freshContent);
+
+        $content .= '<div class="reset wysiwyg">';
+        $diffBuilder = new WikiHtmlDiff($wasContent, $freshContent);
+        $diffContent = $diffBuilder->build();
+        if ( $diffContent == '' ) $diffContent = $freshContent;
+        $content .= $diffContent . '</div>';
+
+        $content = '<div class="wiki-page-help">'.
+            sprintf(text(2332), '<a target="_blank" href="'.$info['url'].'">'.$info['uid'].'</a>').'</div>' . $content;
         return '<div class="inline-page">' . $content . '</div>';
     }
 
     function parseUMLImage( $match ) {
         return $match[0];
+    }
+
+    function parseFieldSubstitution( $match )
+    {
+        $result = ModelService::computeFormula(
+            $this->getObjectIt(),
+            '{' . $match[1] . '}'
+        );
+        $lines = array();
+        foreach ($result as $computedItem) {
+            if (!is_object($computedItem)) {
+                $lines[] = TextUtils::stripAnyTags($computedItem);
+            } else {
+                $lines[] = $computedItem->getDisplayName();
+            }
+        }
+        return join(', ', $lines);
     }
 }

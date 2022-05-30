@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelService;
 
 class IntegrationTfsChannel extends IntegrationRestAPIChannel
 {
@@ -31,9 +32,10 @@ class IntegrationTfsChannel extends IntegrationRestAPIChannel
                 'timePrecision' => 'true'
             )
         );
+
         $ids = array_map(function($item) {
-            return $item['id'];
-        }, array_slice($result['workItems'], 0, 30));
+                    return $item['id'];
+                }, $result['workItems']);
 
         $internalTimeStamp = '';
         if ( $timestamp != '' ) {
@@ -46,9 +48,9 @@ class IntegrationTfsChannel extends IntegrationRestAPIChannel
         $latest = array();
         $nextTimestamp = '';
 
-        if ( count($ids) > 0 ) {
+        foreach( array_chunk($ids, 30) as $idsChunk ) {
             $result = $this->jsonGet($this->apiPath . '/wit/workitems', array(
-                            'ids' => join(',', $ids)
+                            'ids' => join(',', $idsChunk)
                         ), false);
             foreach( $result['value'] as $issue )
             {
@@ -78,6 +80,7 @@ class IntegrationTfsChannel extends IntegrationRestAPIChannel
         $result = $this->jsonGet($this->apiPath . '/wit/recyclebin', array(), false);
         foreach( $result['value'] as $issue )
         {
+            /* needs to get it incrementally last since sync date/time
             $latest[] = array (
                 'class' => 'Task',
                 'id' => $issue[$this->getKeyField()],
@@ -88,6 +91,7 @@ class IntegrationTfsChannel extends IntegrationRestAPIChannel
                 'id' => $issue[$this->getKeyField()],
                 'action' => 'delete'
             );
+            */
         }
 
         // aggregate items using dependency based order
@@ -103,8 +107,8 @@ class IntegrationTfsChannel extends IntegrationRestAPIChannel
         return 'uniqueName';
     }
 
-    function getHtmlAllowed() {
-        return true;
+    function getWysiwygMode() {
+        return ModelService::OUTPUT_HTML;
     }
 
     protected function buildUsersMap()
@@ -173,6 +177,7 @@ class IntegrationTfsChannel extends IntegrationRestAPIChannel
         if ( is_array($jsonData['relations']) ) {
             // expand each relation into it's REST representation
             foreach( $jsonData['relations'] as $relKey => $relData ) {
+                if ( $relData['rel'] == 'AttachedFile' ) continue;
                 $relData['url'] = str_replace($this->getObjectIt()->get('URL'), '', $relData['url']);
                 $relDetails = parent::jsonGet( $relData['url'],
                     array_merge($data, array('api-version' => $this->apiVersion, '$expand' => 'All')),

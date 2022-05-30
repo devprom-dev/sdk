@@ -10,7 +10,7 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Release' ) return;
 
-        foreach ( array('ReleaseNumber','Version') as $attribute ) {
+        foreach ( array('Caption','Version') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'alternative-key');
         }
     	$metadata->addPersister( new CapacityPersister() );
@@ -20,8 +20,6 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
     	$metadata->addAttribute('EstimatedStartDate', 'DATE', translate('Оценка начала'), false, false);
 		$metadata->addAttribute('EstimatedFinishDate', 'DATE', translate('Оценка окончания'), false, false);
 		$metadata->addPersister( new IterationMetricsPersister() );
- 		
-    	$metadata->addAttribute( 'Caption', 'TEXT', translate('Итерация'), false, false, '', 1);
     	$metadata->addPersister( new IterationTitlePersister() );
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();

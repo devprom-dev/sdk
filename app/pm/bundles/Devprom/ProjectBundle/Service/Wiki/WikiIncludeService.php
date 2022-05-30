@@ -46,7 +46,6 @@ class WikiIncludeService
                     'Content' => "{{".$uid->getObjectUID($include_it)."}}",
                     'Includes' => $include_it->getId(),
                     'PageType' => $include_it->get('PageType'),
-                    'IsTemplate' => 0,
                     'ParentPage' => $maps[$include_it->get('ParentPage')] != ''
                         ? $maps[$include_it->get('ParentPage')]
                         : $parentPage,

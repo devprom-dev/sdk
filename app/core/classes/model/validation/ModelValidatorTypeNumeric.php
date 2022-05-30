@@ -1,15 +1,13 @@
 <?php
-
 include_once "ModelValidatorType.php";
 
 class ModelValidatorTypeNumeric extends ModelValidatorType
 {
-	public function applicable( $type_name )
-	{
+	public function applicable( $type_name ) {
 		return in_array($type_name, array('integer', 'price'));
 	}
 	
-	public function validate( & $value )
+	public function validate( & $value, array $groups = array() )
 	{
 		if ( in_array($value, array('','NULL')) ) return true;
 		

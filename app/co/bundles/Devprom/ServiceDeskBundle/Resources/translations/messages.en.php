@@ -37,6 +37,8 @@ return array(
     'issue_state_all' => 'All',
     'issue_state_open' => 'Open',
     'issue_state_closed' => 'Closed',
+    'issue_feedback' => 'Issue completion feedback',
+    'issue_feedback_text' => 'Issue completion feedback comments',
 
     'issue.edit' => 'Edit request',
     'issue.add' => 'Add new request',

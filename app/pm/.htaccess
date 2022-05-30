@@ -5,7 +5,7 @@ RewriteBase /pm
 
 RewriteRule ^([^/]+)/menu/?(rest/)?(.*)$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/comments/([^/]+)/([^/]+)$ comments.php?project=$1&class=$2&object=$3&formonly=true [L,QSA]
-RewriteRule ^([^/]+)/(roadmap|form|dashboard|iterations|releases|comment|upload|projects|whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treegrid|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
+RewriteRule ^([^/]+)/(roadmap|form|components|dashboard|iterations|releases|comment|upload|projects|whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treegrid|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)$ page.php?namespace=$2&module=$3&project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)/(.+)$ page.php?namespace=$2&module=$3&project=$1&report=$4 [L,QSA]
 RewriteRule ^_images/([^/]+)$ /images/$1 [L]

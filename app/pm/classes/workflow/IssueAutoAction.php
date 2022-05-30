@@ -24,7 +24,8 @@ class IssueAutoAction extends AutoAction
  	{
  		return array_merge(
  		    array (
-                'State'
+                'State',
+                'StateDuration'
             ),
             parent::getActionAttributes(),
             array(
@@ -37,7 +38,9 @@ class IssueAutoAction extends AutoAction
                 'Severity',
                 'Project',
                 'Iteration',
-                'PlannedRelease'
+                'PlannedRelease',
+                'Fact',
+                'FactToday'
             ),
             $this->getAttributesByGroup('task')
  		);
@@ -55,7 +58,9 @@ class IssueAutoAction extends AutoAction
 					'SupportChannelEmail',
 					'SupportChannelName',
                     'SubmittedVersion',
-                    'ClosedInVersion'
+                    'ClosedInVersion',
+                    'ResponseSLA',
+                    'LeadTimeSLA'
  				)
  		);
  	}

@@ -12,11 +12,11 @@ include ('UserFormAsyncParticipance.php');
 
 class UserPage extends AdminPage
 {
-	var $project_it;
+    private $object = null;
 
 	function __construct()
 	{
-		parent::Page();
+		parent::__construct();
 
 		$object_it = $this->getObjectIt();
 
@@ -29,17 +29,23 @@ class UserPage extends AdminPage
                     $this->getFormRef()->getObject(), 'notifications-tab', text(1912))
             );
 			if ( is_object($object_it) && $object_it->getId() > 0 ) {
-				$this->addInfoSection(new LastChangesSection($object_it));
+				$this->addInfoSection(new PageSectionLastChanges($object_it));
 			}
 		}
 	}
 	
 	function getObject()
 	{
-		getSession()->addBuilder( new UserModelExtendedBuilder() );
-		
-	    return getFactory()->getObject('User');
+	    if ( !is_object($this->object) ) {
+            $this->object = $this->buildObject();
+        }
+	    return $this->object;
 	}
+
+	function buildObject() {
+        getSession()->addBuilder( new UserModelExtendedBuilder() );
+        return getFactory()->getObject('User');
+    }
 
 	function getTable()
 	{

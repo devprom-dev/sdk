@@ -3,10 +3,15 @@
     <div class="context-middle">
         <?php
         $id = md5(uniqid(time().$title,true));
+        if ( $titleUrl != '' ) {
+            echo '<a class="btn btn-link" href="'.$titleUrl.'">'.$title.'</a>';
+        }
+        else {
+            echo $title;
+        }
         ?>
         <div class="btn-group row-group-btn more-actions">
             <div class="btn dropdown-toggle" data-toggle="dropdown" href="" data-target="#textmenu<?=$id?>" title="<?=text(2634)?>">
-                &nbsp; &nbsp;&nbsp; <?=$title?> &nbsp;
                 <span class="label">...</span>
             </div>
         </div>

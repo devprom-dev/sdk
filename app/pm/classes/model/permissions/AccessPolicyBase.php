@@ -113,6 +113,9 @@ abstract class AccessPolicyBase extends COAccessPolicy
      		    break;
      		    
 		    case 'cms_Report':
+                if ( $object_it->get('IsActive') == 'N' ) {
+                    return false;
+                }
 		    	if ( $object_it->get('Module') != '' ) {
          			$module_it = getFactory()->getObject('Module')->getExact($object_it->get('Module'));
          			return $this->getObjectAccess(ACCESS_READ, $module_it);

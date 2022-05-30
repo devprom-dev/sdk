@@ -290,6 +290,10 @@
     background-position: -188px 0;
     opacity: 1;
 }
+#main-sidebar [area] .icon-portfolio {
+    background-position: -216px 0;
+    opacity: 1;
+}
 .icon-reqs {
     background-position: -162px 0;
 }

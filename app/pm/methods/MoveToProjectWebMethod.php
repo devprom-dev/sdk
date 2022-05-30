@@ -42,11 +42,4 @@ class MoveToProjectWebMethod extends WebMethod
 		return getFactory()->getAccessPolicy()->can_modify($this->request_it->object)
             && getFactory()->getAccessPolicy()->can_modify_attribute($this->request_it->object, 'Project');
 	}
-
-     function execute_request()
-     {
-         if($_REQUEST['ChangeRequest'] != '') {
-             $this->execute($_REQUEST['ChangeRequest']);
-         }
-     }
 }

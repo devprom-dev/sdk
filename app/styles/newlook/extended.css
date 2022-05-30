@@ -589,7 +589,7 @@ div.embeddedRowTitle .transparent-btn
         width: 50%;
     }
     .properties-column-32 {
-        width: auto;
+        width: 95%;
         padding-left: 8px;
     }
     .hidden-tv {
@@ -1287,6 +1287,9 @@ section[module*=workflow] .hint-holder .alert {
 }
 .hint-holder .alert.alert-hint {
     margin-top: 18px;
+    background-color: transparent;
+    border: none;
+    padding-left: 0;
 }
 .hint-holder .workflow-image-holder {
     text-align: center;
@@ -1572,6 +1575,7 @@ tbody.collapse.in tr {
 
 td.row-clmn {
     padding-left: 2px;
+    white-space: nowrap;
 }
 
 tbody.collapse {
@@ -1656,4 +1660,94 @@ tbody.collapse {
 .fltr-clm .multiselect-selected-text ~ .caret {
     margin-left: 5px;
     float: right;
+}
+
+.vis-labelset .vis-label .vis-inner {
+    max-width: 175px;
+}
+section[report='projectplan'] #tablePlaceholder .table-details.wide.visible {
+    width: 45%;
+}
+section[module='resman/resourceload'] #tablePlaceholder .table-details.wide.visible {
+    width: 45%;
+}
+
+.popover-required.bottom {
+    background-color: rgba(255, 99, 71, 1);
+    border: none;
+    color: white;
+}
+.popover-required.bottom .arrow:after {
+    border-bottom-color: rgba(255, 99, 71, 1);
+}
+
+
+.vis-item.workload-usage .vis-item-content {
+    padding: 0;
+    top: 25px;
+}
+.vis-item.workload-usage .vis-item-content .histogram .bar {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+.vis-item.workload-usage .vis-item-overflow {
+    z-index: 99;
+}
+.vis-item.vis-range.allocation .vis-item-content {
+    position: absolute;
+    bottom: 0;
+    background-color: plum;
+}
+.vis-item.allocation .vis-item-overflow {
+    z-index: 999;
+}
+
+.vis-item.vis-selected {
+    border-color:#ffc200 !important;
+    background-color:#fff785 !important;
+    z-index:2
+}
+
+.actions .btn-warning {
+    max-width: 140px;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-light {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+table.printable th,
+table.printable td {
+    padding:2px 4px !important
+}
+
+table.printable-pdf th,
+table.printable-pdf td {
+    padding:0 4px !important;
+    line-height: 16px;
+}
+
+#projects-tree ul.fancytree-container li {
+    margin-bottom: 2px;
+}
+#projects-tree i {
+    opacity: 0.6;
+    margin-right: 3px;
+    margin-top: 0;
+}
+#projects-tree .project .fancytree-title {
+    margin-left: 22px;
+}
+.navbar-company table.table {
+    margin-bottom: 0;
+}
+.navbar-company .navbar-menu {
+    min-width: 230px;
 }

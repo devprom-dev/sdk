@@ -15,7 +15,8 @@ class IssueAuthorRegistryUsersBuilder extends IssueAuthorRegistryBuilder
                        t.cms_UserId CustomerId, 
                        'User' CustomerClass,
                        t.IsReadonly,
-                       t.OrderNum
+                       t.OrderNum,
+                       0
                   FROM cms_User t
                  WHERE t.cms_UserId = ".getSession()->getUserIt()->getId()."
             ");
@@ -31,7 +32,8 @@ class IssueAuthorRegistryUsersBuilder extends IssueAuthorRegistryBuilder
                        t.cms_UserId CustomerId, 
                        'User' CustomerClass,
                        t.IsReadonly,
-                       t.OrderNum
+                       t.OrderNum,
+                       (SELECT COUNT(1) FROM cms_BlackList i WHERE i.SystemUser = t.cms_UserId ) Blocks 
                   FROM cms_User t
                  WHERE 1 = 1
             ");

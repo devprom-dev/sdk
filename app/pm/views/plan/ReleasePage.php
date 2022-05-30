@@ -26,13 +26,13 @@ class ReleasePage extends PMPage
 
                 $object = $this->getFormRef()->getObject();
                 $stage = $this->getObject();
-				$this->addInfoSection( new PageSectionAttributes($object, 'tab-issues',
+				$this->addInfoSection( new PageSectionAttributes($object, 'tabissues',
                     $stage->getAttributeType('Issues') != '' ? $stage->getAttributeUserName('Issues') : $stage->getAttributeUserName('Increments')
                 ));
 
-				$this->addInfoSection( new PageSectionAttributes($object,'tab-tasks',translate('Задачи')) );
+				$this->addInfoSection( new PageSectionAttributes($object,'tabtasks',translate('Задачи')) );
                 $this->addInfoSection( new PageSectionAttributes($object,'artefacts',translate('Документация')) );
-                $this->addInfoSection( new PageSectionComments($object_it) );
+                $this->addInfoSection( new PageSectionComments($object_it, $this->getCommentObject()) );
                 $this->addInfoSection( new PMLastChangesSection($object_it) );
 			}
 		}
@@ -47,6 +47,6 @@ class ReleasePage extends PMPage
  	}
  	
  	function getEntityForm() {
-        return new ReleaseForm();
+        return new ReleaseForm($this->getObject());
  	}
 }

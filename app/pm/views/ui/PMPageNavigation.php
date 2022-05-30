@@ -41,7 +41,7 @@ class PMPageNavigation extends PageNavigation
     function getAreas()
     {
         $service = new WorkspaceService();
-        $areas = $service->getFunctionalAreas();
+        $areas = $service->getFunctionalAreas(getSession()->getProjectIt());
         foreach( $areas['favs']['menus'] as $menu => $value ) {
             foreach( $areas['favs']['menus'][$menu]['items'] as $key => $value ) {
                 $areas['favs']['menus'][$menu]['items'][$key]['entry-point'] = true;
@@ -49,6 +49,38 @@ class PMPageNavigation extends PageNavigation
             }
             break;
         }
+
+        if ( !getSession()->getProjectIt()->IsPortfolio() ) {
+            if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED ) {
+                $portfolioIt = getFactory()->getObject('Portfolio')
+                    ->getByRef( 'CodeName', 'my');
+            }
+            else {
+                $portfolioIt = getFactory()->getObject('Portfolio')
+                    ->getByRef( 'CodeName', 'all');
+            }
+            if ( $portfolioIt->getId() != '' ) {
+                $portfolioAreas = $service->getFunctionalAreas($portfolioIt);
+                $portfolioFavs = $portfolioAreas['favs'];
+                $portfolioFavs['name'] = $portfolioIt->getDisplayName();
+                $portfolioFavs['uid'] = 'portfolio';
+                $portfolioFavs['icon'] = 'icon-portfolio';
+                foreach ( $portfolioFavs['menus'] as $tab_key => $tab ) {
+                    foreach( $tab['items'] as $item_key => $item ) {
+                        $portfolioFavs['menus'][$tab_key]['items'][$item_key]['url'] =
+                            preg_replace('/\/pm\/[^\/]+\//i', '/pm/'.$portfolioIt->get('CodeName').'/',
+                                $portfolioFavs['menus'][$tab_key]['items'][$item_key]['url']);
+                    }
+                }
+                $areas = array_merge(
+                    array(
+                        'portfolio' => $portfolioFavs
+                    ),
+                    $areas
+                );
+            }
+        }
+
         foreach( $areas as $key => $area ) {
             foreach ( $area['menus'] as $tab_key => $tab ) {
                 foreach( $tab['items'] as $item_key => $item ) {
@@ -73,6 +105,8 @@ class PMPageNavigation extends PageNavigation
         $menus = array();
 
         $module = getFactory()->getObject('Module');
+        $report = getFactory()->getObject('PMReport');
+
         $plugin_menus = getFactory()->getPluginsManager()->getHeaderMenus( 'pm' );
         foreach ( $plugin_menus as $menu )
         {
@@ -100,7 +134,12 @@ class PMPageNavigation extends PageNavigation
             'url' => getSession()->getApplicationUrl().'profile'
         );
 
-        if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
+        $actions['profile-my-tasks'] = array (
+            'name' => text(3141),
+            'url' => $report->getExact('mytasks')->get('Url'),
+            'uid' => 'profile-my-tasks'
+        );
+
         $actions['profile-my-reports'] = array (
             'name' => text(1811),
             'url' => $module->getExact('project-reports')->get('Url'),
@@ -213,17 +252,19 @@ class PMPageNavigation extends PageNavigation
         $actions = array();
         $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
-        $className = getFactory()->getClass('Issue');
-        if (getSession()->IsRDD()) {
-            $method = new ObjectCreateNewWebMethod(getFactory()->getObject($className));
+        if (getSession()->IsRDD() || getSession()->getProjectIt()->IsPortfolio() ) {
+            $method = new ObjectCreateNewWebMethod(
+                getSession()->getProjectIt()->IsPortfolio()
+                        ? getFactory()->getObject('Request')
+                        : getFactory()->getObject(getFactory()->getClass('Issue'))
+                    );
             if ($method->hasAccess()) {
                 $actions[] = array(
                     'name' => $method->getCaption(),
                     'url' => $method->getJSCall(
                         array(
                             'area' => $this->getPage()->getArea()
-                        ),
-                        $method->getCaption()
+                        )
                     ),
                     'uid' => 'request'
                 );
@@ -244,8 +285,7 @@ class PMPageNavigation extends PageNavigation
                         array (
                             'Type' => $type_it->getId(),
                             'area' => $this->getPage()->getArea()
-                        ),
-                        translate($type_it->getDisplayName())
+                        )
                     ),
                     'uid' => $type_it->get('ReferenceName') == '' ? 'issue' : $type_it->get('ReferenceName')
 

@@ -37,10 +37,13 @@ class WikiRemoveStyleWebMethod extends WebMethod
         );
  		
  		while( !$object_it->end() ) {
- 			$object_it->object->getRegistry()->Store( $object_it, array (
- 					'Content' => \TextUtils::getUnstyledHtml($object_it->getHtmlDecoded('Content')),
- 					'UserField3' => null 
- 			));
+            $unstyled = \TextUtils::getUnstyledHtml($object_it->getHtmlDecoded('Content'));
+            if ( $unstyled != '' ) {
+                 $object_it->object->modify_parms( $object_it->getId(), array (
+                        'Content' => $unstyled,
+ 					    'UserField3' => null
+ 			        ));
+            }
  			$object_it->moveNext();
  		}
  	}

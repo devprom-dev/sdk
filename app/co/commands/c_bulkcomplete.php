@@ -23,30 +23,19 @@ class BulkComplete extends CommandForm
 		$this->checkRequired( array('ids', 'object', 'operation') );
 		
 		$object_it = $this->getObjectIt();
-
 		$data = $this->getOperationData( $object_it );
 		
 		if ( $data['operation'] == '' ) throw new Exception('Unknown operation type on bulk update'); 
-		
-		if ( $data['operation'] == 'Transition' )
-		{
-			foreach( $data['attributes'] as $attribute => $value )
-			{
-			    if ( $value == '' ) $this->replyError(text(2).': '.$object_it->object->getAttributeUserName($attribute));
-			}
-		}
-		
+
 		return true;
  	}
  	
  	function getOperationData( $object_it )
  	{
  	    $data = array();
- 	    
  	    $attributes = array();
  	    
-		if ( preg_match('/^Attribute(.+)$/mi', $_REQUEST['operation'], $attributes) )
-		{
+		if ( preg_match('/^Attribute(.+)$/mi', $_REQUEST['operation'], $attributes) ) {
 		    $data['operation'] = 'Attribute';
 			$attributes = preg_split('/:/', $attributes[1]);
 			$attribute = array_shift($attributes);
@@ -84,10 +73,8 @@ class BulkComplete extends CommandForm
    			}
 		}
 		
-		if ( preg_match('/^Method:(.+)$/mi', $_REQUEST['operation'], $attributes) )
-		{ 
+		if ( preg_match('/^Method:(.+)$/mi', $_REQUEST['operation'], $attributes) ) {
 		    $data['operation'] = 'Method';
-		    
 		    $data['parameter'] = $attributes[1];
 		}		
 		
@@ -99,6 +86,7 @@ class BulkComplete extends CommandForm
 		global $_REQUEST, $_SERVER;
 		
 		$except_items = array();
+        DAL::Instance()->Query("SET autocommit=0");
 
 		$object_it = $this->getObjectIt();
 		$object_it->object->removeNotificator( 'EmailNotificator' );
@@ -111,6 +99,8 @@ class BulkComplete extends CommandForm
                 if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) $this->replyError( text(1062) );
 
 				$attribute = array_pop(array_keys($data['attributes']));
+                $processedIds = array();
+
 				if ( $attribute == 'Project' && $object_it->object instanceof WikiPage ) {
 					$object_it = $object_it->object->getRegistry()->useImportantPersistersOnly()->Query(
 						array (
@@ -121,44 +111,51 @@ class BulkComplete extends CommandForm
                             new SortDocumentClause()
                         )
 					);
-				}
 
-				$processedIds = array();
-				while ( !$object_it->end() )
-    			{
-    				try {
-                        if ( $object_it->object instanceof MetaobjectStatable ) {
-                            if ( $object_it->getStateIt()->getId() != '' ) {
-                                $model_builder = new WorkflowStateAttributesModelBuilder(
-                                    $object_it->getStateIt(), array_keys($data['attributes'])
-                                );
-                                $tempObject = getFactory()->getObject(get_class($object_it->object));
-                                $model_builder->build($tempObject);
-                                foreach( $data['attributes'] as $key => $value ) {
-                                    if ( !$tempObject->getAttributeEditable($key) ) {
-                                        throw new Exception(sprintf(text(3016), $tempObject->getAttributeUserName($key)));
-                                    }
-                                }
-                            }
+                    try {
+                        getFactory()->getEventsManager()->delayNotifications();
+
+                        while ( !$object_it->end() ) {
+                            $storedIt = $this->processItemAttributes($object_it, $data);
+                            getFactory()->getEventsManager()->notify_object_add($storedIt, $data);
+                            $processedIds[] = $storedIt->getId();
+                            $object_it->moveNext();
                         }
 
-                        $key = array();
-	    		        $this->processEmbeddedForms( $object_it, $key );
-	    		        getFactory()->modifyEntity($object_it, $data['attributes']);
-						$processedIds[] = $object_it->getId();
-    				}
-    				catch( Exception $e ) {
-	   					$except_items[] = array (
+                        getFactory()->getEventsManager()->releaseNotifications();
+                        DAL::Instance()->Query("COMMIT");
+                    }
+                    catch( \Exception $e ) {
+                        DAL::Instance()->Query("ROLLBACK");
+                        $except_items[] = array (
                             'it' => $object_it->copy(),
                             'ex' => $e
-	   					);
-    				}
+                        );
+                        \Logger::getLogger('System')->error($e->getMessage());
+                        \Logger::getLogger('System')->error($e->getTraceAsString());
+                    }
+				}
+				else {
+                    while ( !$object_it->end() ) {
+                        try {
+                            $this->processItemAttributes($object_it, $data);
+                            $processedIds[] = $object_it->getId();
+                            DAL::Instance()->Query("COMMIT");
+                       }
+                        catch( \Exception $e ) {
+                            DAL::Instance()->Query("ROLLBACK");
+                            $except_items[] = array (
+                                'it' => $object_it->copy(),
+                                'ex' => $e
+                            );
+                            \Logger::getLogger('System')->error($e->getMessage());
+                            \Logger::getLogger('System')->error($e->getTraceAsString());
+                        }
+                        $object_it->moveNext();
+                    }
+                }
 
-    				\ZipSystem::sendResponse();
-    				$object_it->moveNext();
-    			}
-
-				if ( count($processedIds) > 0 ) {
+                if ( count($processedIds) > 0 ) {
 					$processedIt = $object_it->object->getExact($processedIds);
 					if ( $_REQUEST['OpenList'] != '' && $processedIt->count() > 0 ) {
 						if ( $processedIt->count() == 1 || ($attribute == 'Project' && $object_it->object instanceof WikiPage) ) {
@@ -172,12 +169,13 @@ class BulkComplete extends CommandForm
 						}
 					}
 				}
-
 		        break;
 		        
 		    case 'Transition':
 		    	$transition_it = getFactory()->getObject('Transition')->getExact($data['parameter']);
-                $data['attributes']['IsPrivate'] = $_REQUEST['IsPrivate'];
+		    	foreach( array('IsPrivate', 'TransitionNotification', 'TransitionNotificationOnForm') as $attribute ) {
+                    $data['attributes'][$attribute] = $_REQUEST[$attribute];
+                }
 
                 $emptyOnlyAttributes = array();
                 foreach( $data['attributes'] as $attribute => $value ) {
@@ -205,13 +203,13 @@ class BulkComplete extends CommandForm
 
                         $key = array();
     					$this->processEmbeddedForms( $object_it, $key );
-    					
+
 	    				ob_start();
 	    				$method = new TransitionStateMethod($transition_it, $object_it);
                         if ( !$method->hasAccess() ) {
                             throw new \Exception($method->getReasonHasNoAccess());
                         }
-	    				$method->execute( 
+	    				$method->execute(
                             $transition_it->getId(),
                             $object_it->getId(),
                             get_class($object_it->object),
@@ -219,69 +217,68 @@ class BulkComplete extends CommandForm
                             false
 						);
 	    				ob_end_clean();
-    				}
+                        DAL::Instance()->Query("COMMIT");
+                    }
     				catch( Exception $e ) {
+                        DAL::Instance()->Query("ROLLBACK");
     					$except_items[] = array (
     							'it' => $object_it->copy(),
     							'ex' => $e
-    					); 
+    					);
+                        \Logger::getLogger('System')->error($e->getMessage());
+                        \Logger::getLogger('System')->error($e->getTraceAsString());
     				}
                     \ZipSystem::sendResponse();
     				$object_it->moveNext();
     			}
-
-                getFactory()->getEventsManager()->
-                    executeEventsAfterBusinessTransaction(
-                        $object_it->object->getRegistry()->Query(
-                            array (
-                                new FilterInPredicate($object_it->idsToArray())
-                            )
-                        ), 'WorklfowMovementEventHandler', $data['attributes']
-                    );
                 break;
 			    
 		    case 'Method':
-
 				$parms = preg_split('/:/', $data['parameter']);
 			
     			$class_name = $parms[0];
-    			 
     			array_shift($parms);
     			
     			$attrs = array();
-    			
-    			if ( count($parms) > 0 )
-    			{
-    				foreach( $parms as $parm )
-    				{
+    			if ( count($parms) > 0 ) {
+    				foreach( $parms as $parm ) {
     					$pair = preg_split('/=/', $parm);
-    					
     					$attrs[$pair[0]] = $pair[1] != '' ? $pair[1] : $_REQUEST[$pair[0]];
     				}
     			}
     			
     			$_REQUEST = array_merge( $_REQUEST, $attrs );
-
     			try {
 	    			$method = new $class_name( $object_it );
                     if ( !$method->hasAccess() ) throw new Exception(text(1062));
                     \FeatureTouch::Instance()->touch(strtolower(get_class($method)));
 
 					if ( $method instanceof BulkDeleteWebMethod ) {
+                        ob_start();
 						$method->execute_request();
+                        $methodResponse = ob_get_contents();
+                        ob_end_clean();
 					}
 					else {
 						// as standalone the method may to echo some text
 						ob_start();
-
 						$method->execute_request();
+                        DAL::Instance()->Query("COMMIT");
+						$methodResponse = ob_get_contents();
+                        ob_end_clean();
+
 						if ( strpos($method->getRedirectUrl(), '/') !== false ) {
 							$_REQUEST['redirect'] = $method->getRedirectUrl();
 						}
-						ob_end_clean();
 					}
-    			}
+
+                    if ( count(JsonWrapper::decode($methodResponse)) > 0 ) {
+                        echo $methodResponse;
+                        exit();
+                    }
+                }
 				catch( Exception $e ) {
+                    DAL::Instance()->Query("ROLLBACK");
     			    while( !$object_it->end() ) {
                         $except_items[] = array(
                             'it' => $object_it->copy(),
@@ -289,6 +286,8 @@ class BulkComplete extends CommandForm
                         );
                         $object_it->moveNext();
                     }
+                    \Logger::getLogger('System')->error($e->getMessage());
+                    \Logger::getLogger('System')->error($e->getTraceAsString());
     			}
     			break;
 		}
@@ -309,7 +308,10 @@ class BulkComplete extends CommandForm
 						) 
 			);
 		}
-		
+
+        DAL::Instance()->Query("COMMIT");
+        DAL::Instance()->Query("SET autocommit=1");
+
         $lock = new LockFileSystem(get_class($object_it->object));
         $lock->Release();
 		
@@ -354,4 +356,30 @@ class BulkComplete extends CommandForm
             }
         });
 	}
+
+	function processItemAttributes( $object_it, $data )
+    {
+        if ( $object_it->object instanceof MetaobjectStatable ) {
+            $stateIt = $object_it->getStateIt();
+            if ( $stateIt->getId() != '' ) {
+                $model_builder = new WorkflowStateAttributesModelBuilder(
+                    $stateIt, array_keys($data['attributes'])
+                );
+                $tempObject = getFactory()->getObject(get_class($object_it->object));
+                $model_builder->build($tempObject);
+                foreach( $data['attributes'] as $key => $value ) {
+                    if ( !$tempObject->getAttributeEditable($key) ) {
+                        throw new Exception(sprintf(text(3016), $tempObject->getAttributeUserName($key)));
+                    }
+                }
+            }
+        }
+
+        $key = array();
+        $this->processEmbeddedForms( $object_it, $key );
+        $objectIt = getFactory()->modifyEntity($object_it, $data['attributes']);
+
+        \ZipSystem::sendResponse();
+        return $objectIt;
+    }
 }

@@ -81,7 +81,7 @@ class Field
         $text = preg_replace_callback('/\[url=([^\]]+)\s+text=([^\]]+)]/im', array(self::class, iterator_url_callback), $text);
         $text = preg_replace_callback('/\[url=([^\]]+)]/im', array(self::class, iterator_url_callback), $text);
 
-        $url = '~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
+        $url = '~(?:(https?)://([^<^\s]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
         $text = preg_replace($url, '<a href="$0" target="_blank">$0</a>', $text);
 
         $text = preg_replace_callback('/(^|[^\w\.\,\:\;\/\#">]+)(\[?[A-Z]{1}-[0-9]+\]?)([\s]*|$)/mi', array(self::class,iterator_uid_callback), $text);

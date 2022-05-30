@@ -39,7 +39,7 @@ class FilterObjectMethod extends FilterWebMethod
  		$this->has_all = $has_all;
  		$this->has_none = true;
  		$this->parmvalue = $parmvalue;
- 		$this->use_uid = false;
+ 		$this->use_uid = true;
  		
  		if ( is_object($this->object) )
 	 		$this->idfieldname = $this->object->getClassName().'Id'; 
@@ -122,26 +122,20 @@ class FilterObjectMethod extends FilterWebMethod
 		
 		if ( !is_object($this->it) )
 		{
-			$registry = $this->object->getRegistryDefault();
+			$registry = $this->object->getRegistry();
+			$parms = array();
             if ( $this->getLazyLoad() ) {
                 $registry->setLimit(30);
             }
 			if ( $this->object->getVpdValue() != '' ) {
-                $registry->setPersisters(
-                    array_merge(
-                        $registry->getPersisters(),
-                        array(
-                            new EntityProjectPersister()
-                        )
-                    )
-                );
+                $parms[] = new EntityProjectPersister();
+                $parms[] = new FilterVpdPredicate();
             }
-            $registry->setSorts(array());
-	 		$this->it = $registry->getAll();
+	 		$this->it = $registry->Query($parms);
 		}
 
 		$selected_values = \TextUtils::parseItems(
-            $this->parseFilterValue($this->getValue())
+            $this->parseFilterValue($this->getValue(), $this->object)
         );
 
 		while ( !$this->it->end() )
@@ -189,7 +183,13 @@ class FilterObjectMethod extends FilterWebMethod
 		});
 
 		if ( $this->object->getEntityRefName() == 'cms_User' ) {
-            $values = array_merge( array ( 'user-id' => text(2480) ), $values );
+            $values = array_merge(
+                array (
+                    'user-id' => text(2480),
+                    'user-tasks' => text(3205)
+                ),
+                $values
+            );
         }
 		if ( $this->has_none ) {
 			$values = array_merge( array ( 'none' => $this->none_title ), $values );
@@ -251,8 +251,35 @@ class FilterObjectMethod extends FilterWebMethod
 		return $this->parmvalue;
 	}
 
-    function parseFilterValue($value) {
-        return preg_replace('/user-id/i', getSession()->getUserIt()->getId(), $value);
+    function parseFilterValue($value, $context)
+    {
+        $value = preg_replace('/user-id/i', getSession()->getUserIt()->getId(), $value);
+
+        $value = preg_replace_callback('/(user\-tasks)/i', function($match) use($context) {
+            if ( $context->getEntityRefName() == 'pm_Task' ) {
+                $attribute = 'Assignee';
+            }
+            else if ( $context->getEntityRefName() == 'pm_ChangeRequest' ) {
+                $attribute = 'Owner';
+            }
+            else {
+                return '';
+            }
+            $aggregate = new AggregateBase( $attribute, '1', 'COUNT' );
+            $context->addAggregate($aggregate);
+            $it = $context->getAggregated();
+
+            $users = array();
+            while( !$it->end() ) {
+                if ( $it->get($aggregate->getAggregateAlias()) > 0 ) {
+                    $users[] = $it->get($attribute);
+                }
+                $it->moveNext();
+            }
+            return join(',', $users);
+        }, $value);
+
+        return $value;
     }
 
 	function execute_request()

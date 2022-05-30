@@ -4,10 +4,10 @@
  {
  	var $object_it;
  	
- 	function StatableLifecycleSection( $object_it )
+ 	function __construct( $object_it )
  	{
  		$this->object_it = $object_it;
- 		parent::InfoSection();
+ 		parent::__construct();
  	}
  	
  	function getCaption()
@@ -26,7 +26,7 @@
 				array(
 					new FilterAttributePredicate('ObjectId', $this->object_it->getId()),
 					new FilterAttributePredicate('ObjectClass', $this->object_it->object->getStatableClassName()),
-					new SortReverseKeyClause()
+					new SortKeyClause('DESC')
 				)
 		);
  	}
@@ -51,18 +51,22 @@
  	function getRenderParms()
 	{
 		$rows = array();
-        $lastDuration = $duration = round($this->getObjectIt()->get('StateDurationRecent'), 1);
         $lastComment = '';
+        $lastDuration = round($this->getObjectIt()->get('StateDuration'), 1);
         $timeCreated = strtotime($this->getObjectIt()->get('RecordCreated'));
 
  		$state_it = $this->getIterator();
  		while ( !$state_it->end() )
  		{
-			$duration = $state_it->get('Duration') != ''
-					? round($state_it->get('Duration'), 1)
-					: $duration;
-
 			list( $state, $transition, $comment, $stateRef, $sourceStateIt ) = $this->getState( $state_it );
+			if ( $stateRef == '' ) {
+			    $state_it->moveNext();
+			    continue;
+            }
+
+            $duration = $state_it->getPos() == 0
+                ? $lastDuration
+                : round($state_it->get('Duration'), 1);
 
 			$rows[] = array(
 				'author' => $state_it->getRef('Author')->getDisplayName(),
@@ -71,13 +75,13 @@
 				'duration' => getSession()->getLanguage()->getDurationWording($duration),
                 'duration-value' => $duration,
 				'state' => $state,
-                'state-ref' => $stateRef,
+                'state-ref' => preg_replace('/\s+/', '', $stateRef),
 				'transition' => $transition,
 				'comment' => IteratorBase::getWordsOnlyValue($comment, 35),
 				'icon' => 'icon-pencil'
 			);
 
-			$lastDuration = (strtotime($state_it->get('RecordCreated')) - $timeCreated) / (60 * 60);
+			$lastDuration = round((strtotime($state_it->get('RecordCreated')) - $timeCreated) / (60 * 60), 1);
 			$lastState = $sourceStateIt->get('ReferenceName');
             if ( $lastComment == '' ) {
                 $lastComment = $comment . ' ';
@@ -112,16 +116,18 @@
                 else {
                     $objectStateIt->moveTo('ReferenceName', $lastState);
                 }
-                $rows[] = array(
-                    'state' => $objectStateIt->getDisplayName(),
-                    'state-ref' => $objectStateIt->get('ReferenceName'),
-                    'author' => $change_it->get('AuthorName'),
-                    'datetime' => $change_it->getDateTimeFormat('RecordModified'),
-                    'date' => $change_it->getDateFormattedShort('RecordModified'),
-                    'duration' => getSession()->getLanguage()->getDurationWording($lastDuration),
-                    'duration-value' => $lastDuration,
-                    'icon' => 'icon-plus-sign'
-                );
+                if ( $objectStateIt->get('ReferenceName') != '' ) {
+                    $rows[] = array(
+                        'state' => $objectStateIt->getDisplayName(),
+                        'state-ref' => $objectStateIt->get('ReferenceName'),
+                        'author' => $change_it->get('AuthorName'),
+                        'datetime' => $change_it->getDateTimeFormat('RecordModified'),
+                        'date' => $change_it->getDateFormattedShort('RecordModified'),
+                        'duration' => getSession()->getLanguage()->getDurationWording($lastDuration),
+                        'duration-value' => $lastDuration,
+                        'icon' => 'icon-plus-sign'
+                    );
+                }
             }
             $objectStateIt->moveFirst();
 		}

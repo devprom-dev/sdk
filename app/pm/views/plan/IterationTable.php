@@ -55,7 +55,7 @@ class IterationTable extends PMPageTable
             'tasksplanningboard',
             'iterationplanningboard',
             'releaseplanningboard',
-            'assignedtasks',
+            'tasks-list',
             'projects',
             'process/metrics'
         );
@@ -68,7 +68,7 @@ class IterationTable extends PMPageTable
             'projectburnup',
             'iterationburndown',
             'scrum/velocitychart',
-            'workitemchart'
+            'resman/resourceload'
         );
     }
 }

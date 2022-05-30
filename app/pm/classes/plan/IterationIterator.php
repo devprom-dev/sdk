@@ -4,9 +4,9 @@ include_once "IterationDatesIterator.php";
 
 class IterationIterator extends IterationDatesIterator
 {
-	function IsFinished() 
+    function IsFinished()
 	{
-		$sql = " SELECT TO_DAYS(NOW()) - TO_DAYS('".$this->get('EstimatedFinishDate')."') Offset ";
+		$sql = " SELECT TO_DAYS(NOW()) - TO_DAYS('".$this->get('EstimatedFinishDate')."') `Offset` FROM dual ";
 		$it = $this->object->createSQLIterator( $sql );
 		
 		return $it->get('Offset') > 0;
@@ -30,25 +30,25 @@ class IterationIterator extends IterationDatesIterator
 		return $it->get('diff') < 0;
 	}
 	
-	function getDuration()
-	{
+	function getDuration() {
 	    return $this->get('Capacity');
 	}
 
-	function getSpentDuration()
-	{
+	function getSpentDuration()	{
 	    return $this->get('ActualDurationInWorkingDays');
 	}
 
-	function getPlannedCapacity() 
-	{
-	    return $this->get('PlannedCapacity');
+	function getPlannedDurationInWorkingDays() {
+	    return $this->get('PlannedDurationInWorkingDays');
 	}
 	
-	function getLeftDuration()
-	{
-	    return $this->get('LeftCapacityInWorkingDays');
+	function getLeftDuration() {
+	    return $this->get('LeftDurationInWorkingDays');
 	}
+
+    function getParticipantsCapacity() {
+        return $this->get('ParticipantsCapacity');
+    }
 
 	function getTotalWorkload( $predicates = array() ) 
 	{
@@ -76,38 +76,7 @@ class IterationIterator extends IterationDatesIterator
 		return $task_it->get( $sum_aggregate->getAggregateAlias() );
 	}
 
-	function getTotalHours() 
-	{
-		$sql = 'SELECT IFNULL(SUM(IFNULL(Fact + LeftWork, Planned)), 0) Workload FROM pm_Task t '.
-			   ' WHERE t.Release = '.$this->getId();
-		
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->get('Workload');
-	}
-
-	function getSpentHours() 
-	{
-		$sql = 'SELECT IFNULL(SUM(t.Planned - t.LeftWork), 0) Workload FROM pm_Task t '.
-			   ' WHERE t.Release = '.$this->getId().' AND t.Assignee IS NOT NULL ';
-		
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->get('Workload');
-	}
-
-	function getSpentHoursByParticipant( $user_id ) 
-	{
-		$sql = 'SELECT IFNULL(SUM(Planned - LeftWork), 0) Workload FROM pm_Task t '.
-			   ' WHERE t.Release = '.$this->getId().
-			   '   AND t.Assignee = '.$user_id;
-		
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->get('Workload');
-	}
-
-	function getPlannedTotalWorkload( $predicates = array() ) 
+	function getPlannedTotalWorkload( $predicates = array() )
 	{
 		global $model_factory;
 
@@ -187,7 +156,7 @@ class IterationIterator extends IterationDatesIterator
 	{
 		$request = getFactory()->getObject('pm_ChangeRequest');
 		$request->addFilter( new RequestIterationFilter($this->getId()) );
-		$request->addFilter( new StatePredicate('notresolved') );
+		$request->addFilter( new RequestTaskStatePredicate('notresolved') );
 
 		return array_shift(
 			$this->getRef('Project')->getMethodologyIt()->getIterationEstimationStrategy()->getEstimation( $request )
@@ -198,7 +167,7 @@ class IterationIterator extends IterationDatesIterator
 	{
 		$methodology_it = $this->getRef('Project')->getMethodologyIt();
 
-		$duration = $this->getPlannedCapacity();
+		$duration = $this->getPlannedDurationInWorkingDays();
 		$capacity = $this->get('PlannedWorkload') > 0 ? $this->get('PlannedWorkload') : $this->getPlannedTotalWorkload();
         $velocity = $this->get('InitialVelocity');
 
@@ -213,7 +182,7 @@ class IterationIterator extends IterationDatesIterator
 	{
 		$methodology_it = $this->getRef('Project')->getMethodologyIt();
 
-		$duration = $this->get('PlannedCapacity') > 0 ? round($this->get('PlannedCapacity'), 0) : $this->getDuration();
+		$duration = $this->get('PlannedDurationInWorkingDays') > 0 ? round($this->get('PlannedDurationInWorkingDays'), 0) : $this->getDuration();
 		$capacity = $this->get('PlannedEstimation') > 0 ? $this->get('PlannedEstimation') : $this->getEstimation();
         $velocity = $this->get('InitialVelocity');
 
@@ -421,31 +390,11 @@ class IterationIterator extends IterationDatesIterator
         }
 	}
 	
-	function getSeparateTaskIt()
-	{
-		$sql = 'SELECT * FROM pm_Task t ' .
-			   ' WHERE t.Release = ' .$this->getId().
-			   '   AND t.ChangeRequest IS NULL '.
-			   ' ORDER BY t.Priority, t.OrderNum, t.State, t.TaskType, t.RecordCreated ASC';
-
-		return getFactory()->getObject('pm_Task')->createSQLIterator($sql);
-	}
- 
-	function getStartDate()
-	{
-		return $this->getDateFormatted('StartDate');
-	}
-	
-	function getFinishDate()
-	{
-		return $this->getDateFormatted('FinishDate');
-	}
-
 	function getWorkItemsMaxDateQuery() {
         return " GREATEST(
-                    (SELECT IFNULL(MAX(r.FinishDate), '".$this->get_native('FinishDate')."') 
+                    (SELECT IFNULL(MAX(r.EstimatedFinishDate), '".$this->get_native('FinishDate')."') 
                         FROM pm_ChangeRequest r WHERE r.Iteration = ".$this->getId()."),
-                    (SELECT IFNULL(MAX(r.FinishDate), '".$this->get_native('FinishDate')."') 
+                    (SELECT IFNULL(MAX(r.EstimatedFinishDate), '".$this->get_native('FinishDate')."') 
                         FROM pm_Task r WHERE r.Release = ".$this->getId().")
                   ) ";
     }
@@ -454,38 +403,21 @@ class IterationIterator extends IterationDatesIterator
 	{
 		if ( $format == '' ) $format = getSession()->getLanguage()->getDateFormat();
 
-		$prev_it = $this->getPrevSiblingRelease();
+		$it = $this->object->createSQLIterator("
+		    SELECT GREATEST(t.StartDate, 
+		                IFNULL((SELECT MIN(s.EstimatedStartDate) FROM pm_Task s WHERE s.Release = t.pm_ReleaseId), t.StartDate),
+		                IFNULL((SELECT MIN(s.EstimatedStartDate) FROM pm_ChangeRequest s WHERE s.Iteration = t.pm_ReleaseId), t.StartDate)
+		            ) dt
+		      FROM pm_Release t 
+             WHERE t.pm_ReleaseId = {$this->getId()}
+    		");
 
-		if ( $prev_it->count() > 0 )
-		{
-			$prev_start = EstimationProxy::getEstimatedFinish($this, false);
-			
-			$sql = " SELECT GREATEST(TO_DAYS('".$prev_start."') - TO_DAYS('".
-						$this->get_native('StartDate')."'), 0) days, '".$prev_start."' prevStart ";
-			
-			$it = $this->object->createSQLIterator($sql);
-			
-			if ( $it->get('days') > 0 )
-			{
-				if ( $formatted )
-				{
-					return $it->getDateFormatUser( 'prevStart', $format);
-				}
-				else
-				{
-					return $it->get_native('prevStart');
-				}
-			}
-		}
-
-		if ( $formatted )
-		{
-			return $this->getDateFormatUser( 'StartDate', $format);
-		}
-		else
-		{
-			return $this->get_native('StartDate');
-		}
+        if ( $formatted ) {
+            return getSession()->getLanguage()->getDateUserFormatted($it->get('dt'), $format);
+        }
+        else {
+            return $it->get('dt');
+        }
 	}
 
 	function getFinishOffsetDays()
@@ -497,6 +429,14 @@ class IterationIterator extends IterationDatesIterator
         );
         return $it->get('diff');
 	}
+
+    function getStartOffsetDays()
+    {
+        return $this->object->createSQLIterator(
+                    " SELECT TO_DAYS('{$this->get('EstimatedStartDate')}') 
+                          - TO_DAYS('{$this->get_native('StartDate')}') diff "
+            )->get('diff');
+    }
 
     function getCommentsUrl() {
         return '';

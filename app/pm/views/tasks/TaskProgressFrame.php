@@ -11,7 +11,7 @@ class TaskProgressFrame
  	
  	function draw()
  	{
-		$this->drawLine( translate('Осталось, ч.'), $this->progress[0],
+		$this->drawLine( translate('Осталось'), $this->progress[0],
 			$this->progress[1], '#E6B51E', '#F8EABE' );
  	}
  	

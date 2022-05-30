@@ -50,14 +50,14 @@ class OpenBrokenTraceWebMethod extends WebMethod
             if ( $trace_it->get('UnsyncReasonType') == 'text-changed' ) {
                 $attributes = array_diff(
                     $broken->getAttributesByGroup('trace-branches'),
-                    $broken->getAttributesByGroup('source-attribute'),
                     array (
                         'FeatureRequirements'
                     )
                 );
                 foreach( $attributes as $attribute ) {
                     if ( $broken->getAttributeClass($attribute) != get_class($broken) ) continue;
-                    if ( !in_array($trace_it->get('SourcePage'), \TextUtils::parseIds($broken_it->get($attribute))) ) continue;
+                    if ( !in_array($trace_it->get('SourcePage'), \TextUtils::parseIds($broken_it->get($attribute)))
+                            && !in_array($trace_it->get('TargetPage'), \TextUtils::parseIds($broken_it->get($attribute))) ) continue;
                     $url .= '&hide=all&show=Content-'.$attribute;
                     break;
                 }

@@ -67,14 +67,15 @@ abstract class WikiImporterEngine
             $selfLevel = $matches[1];
 
             list($title, $content) = preg_split('/<\/h[1-6]>/i', $section);
-
             $title = trim(\TextUtils::stripAnyTags(preg_replace('/[\r\n]+/i', ' ', $title)));
 
-            if ( preg_match('/^(([\d]+\.)+)/i', $title, $matches) ) {
+            $sectionNumber = '';
+            if ( preg_match('/^(([\d]+\.?)+)/i', $title, $matches) ) {
                 $sectionNumber = trim($matches[1], ' .');
             }
-            $title = trim(preg_replace('/^(([\d]+\.)+)/i', '', $title));
+            $title = trim(preg_replace('/^(([\d]+\.?)+)/i', '', $title));
 
+            $uid = '';
             if ( preg_match('/^\[([^\]]+)\]/i', $title, $matches) ) {
                 $uid = trim($matches[1]);
             }
@@ -216,6 +217,10 @@ abstract class WikiImporterEngine
 
     function getDocumentIt() {
         return $this->document_it;
+    }
+
+    function getOptions() {
+        return $this->options;
     }
 
     private $document_it = null;

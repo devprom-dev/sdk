@@ -91,27 +91,12 @@ class WorkflowService
     {
         if ( $object_it->getId() == '' ) throw new \Exception('Nothing to move');
 
-        $result = $object_it->object->modify_parms($object_it->getId(),
-            array_merge( $parms,
+        getFactory()->modifyEntity($object_it, array_merge( $parms,
                 array(
                     'Transition' => $transition_it->getId(),
                     'TransitionComment' => $comment
                 )
-            )
-        );
-
-        if ( $result < 1 ) {
-            $this->logger->error('Unable move object using "'.$transition_it->getDisplayName().'"');
-        }
-        else {
-            $object_it = $object_it->object->getExact($object_it->getId());
-            if ( $fire_event ) {
-                getFactory()->getEventsManager()
-                    ->executeEventsAfterBusinessTransaction(
-                        $object_it, 'WorklfowMovementEventHandler', $parms
-                    );
-            }
-        }
+            ));
 
         return true;
     }
@@ -119,31 +104,45 @@ class WorkflowService
 	static function getImage( $stateObject )
     {
         $uml = "";
+
+        $stateObject->setAttributeType('IsTerminal', 'char');
         $state_it = $stateObject->getRegistry()->Query(
             array(
-                new \FilterBaseVpdPredicate()
+                new \FilterBaseVpdPredicate(),
+                new \StateOrderedSortClause()
             )
         );
+
         if ( $state_it->count() < 1 ) return '';
 
         while( !$state_it->end() ) {
-            $uml .= "state " . '"' . $state_it->getDisplayName() . '" as ' . $state_it->get('ReferenceName') . PHP_EOL;
+            $stateRefName = preg_replace('/\s+/', '', $state_it->get('ReferenceName'));
+            $uml .= "state \"{$state_it->getDisplayName()}\" as {$stateRefName}" . PHP_EOL;
             $state_it->moveNext();
         }
 
         $state_it->moveFirst();
-        $uml .= "[*] -down-> " . $state_it->get('ReferenceName') . PHP_EOL;
+        $stateRefName = preg_replace('/\s+/', '', $state_it->get('ReferenceName'));
+
+        $uml .= "[*] -down-> {$stateRefName}" . PHP_EOL;
 
         while( !$state_it->end() ) {
             $sourceStateIt = $state_it;
             $transitionIt = $state_it->getTransitionIt();
             while( !$transitionIt->end() ) {
                 $targetIt = $transitionIt->getRef('TargetState');
-                $uml .= $sourceStateIt->get('ReferenceName') . " -down-> " . $targetIt->get('ReferenceName') . " : " . $transitionIt->getDisplayName() . PHP_EOL;
+                $targetRefName = preg_replace('/\s+/', '', $targetIt->get('ReferenceName'));
+                $stateRefName = preg_replace('/\s+/', '', $sourceStateIt->get('ReferenceName'));
+                if ( $targetRefName == '' || $stateRefName == '' ) {
+                    $transitionIt->moveNext();
+                    continue;
+                }
+                $uml .= "{$stateRefName} -down-> {$targetRefName} : \"{$transitionIt->getDisplayName()}\"" . PHP_EOL;
                 $transitionIt->moveNext();
             }
             if ( $state_it->get('IsTerminal') == 'Y' ) {
-                $uml .= $state_it->get('ReferenceName') . " -down-> [*]" . PHP_EOL;
+                $stateRefName = preg_replace('/\s+/', '', $state_it->get('ReferenceName'));
+                $uml .= "{$stateRefName} -down-> [*]" . PHP_EOL;
             }
             $state_it->moveNext();
         }

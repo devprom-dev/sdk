@@ -1,5 +1,4 @@
 <?php
-include "classes/widgets/FunctionalAreaMenuScrumBuilder.php";
 include "views/EstimationStrategyScrumBuilder.php";
 include "classes/VelocityReportsBuilder.php";
 include "classes/events/ScrumReportedEvent.php";
@@ -50,7 +49,6 @@ class ScrumPMPlugin extends PluginPMBase
     function getBuilders()
     {
         return array (
-            new FunctionalAreaMenuScrumBuilder(),
             new VelocityReportsBuilder(),
             new EstimationStrategyScrumBuilder(),
             new ScrumReportedEvent(),

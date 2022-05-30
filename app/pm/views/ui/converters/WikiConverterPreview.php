@@ -83,27 +83,31 @@ class WikiConverterPreview
                 $this->parser = $editor->getHtmlParser();
             }
         }
-
-		$this->parser->setRequiredExternalAccess();
- 		$this->parser->setInlineSectionNumbering(in_array('numbering', $this->options));
-
- 		$this->parser->setHrefResolver(function($wiki_it) {
- 			return '#'.$wiki_it->getId();
- 		});
- 		$this->parser->setReferenceTitleResolver(
- 		        in_array('uid', $this->options)
-                    ? function($info) {
-                            $result = $info['caption'];
-                            if ( $info['uid'] != '' ) {
-                                $result = "[" . $info['uid'] . "] " . $result;
-                            }
-                            return $result;
-                      }
-                    : function($info) {
-                        return $info['caption'];
-                      }
-        );
+        $this->configureParser($this->parser);
  	}
+
+ 	function configureParser( $parser )
+    {
+        $parser->setRequiredExternalAccess();
+        $parser->setInlineSectionNumbering(in_array('numbering', $this->options));
+
+        $parser->setHrefResolver(function($wiki_it) {
+            return '#'.$wiki_it->getId();
+        });
+        $parser->setReferenceTitleResolver(
+            in_array('uid', $this->options)
+                ? function($info) {
+                    $result = $info['caption'];
+                    if ( $info['uid'] != '' ) {
+                        $result = "[" . $info['uid'] . "] " . $result;
+                    }
+                    return $result;
+                }
+                : function($info) {
+                    return $info['caption'];
+                }
+        );
+    }
 
  	function buildCompareTo( $value, $wiki_it )
 	{
@@ -136,7 +140,6 @@ class WikiConverterPreview
  	
  	function parse()
  	{
- 		header('Content-Type: text/html; charset='.APP_ENCODING);
  		$this->drawBegin();
 		$this->drawBody();
  		$this->drawEnd();
@@ -288,7 +291,7 @@ class WikiConverterPreview
 		if( $this->b_draw_section_num && $wiki_it->get('SectionNumber') != '' ) {
 			$title .= $wiki_it->get('SectionNumber').'.&nbsp; ';
 		}
-		if ( in_array('uid', $this->options) && ($wiki_it->get('ParentPage') != '' || $wiki_it->get('DocumentId') == '') ) {
+		if ( in_array('uid', $this->options) && $wiki_it->get('IsNoIdentity') == 'N' && ($wiki_it->get('ParentPage') != '' || $wiki_it->get('DocumentId') == '') ) {
 			$title .= '['.$wiki_it->get('UID') . ']&nbsp; ';
 		}
 		$title .= $wiki_it->get('Caption');

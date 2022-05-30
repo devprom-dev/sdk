@@ -219,7 +219,7 @@
 		switch($result)
 		{
 			case 1:
-				return text(615);
+				return text(2);
 
 			case 2:
 				if ( is_object($this->error_object) )
@@ -280,34 +280,41 @@
 		set_error_handler("CommandFormErrorHandler");
 		$this->logStart();
 
-		switch( $this->getAction() )
-		{
-			case CO_ACTION_CREATE:
-				if ( $this->validate() )
-				{
-					$this->create();
-				}
-				break;
+        try {
+            switch( $this->getAction() )
+            {
+                case CO_ACTION_CREATE:
+                    if ( $this->validate() )
+                    {
+                        $this->create();
+                    }
+                    break;
 
-			case CO_ACTION_PREVIEW:
-				if ( $this->validate() )
-				{
-					$this->preview();
-				}
-				break;
+                case CO_ACTION_PREVIEW:
+                    if ( $this->validate() )
+                    {
+                        $this->preview();
+                    }
+                    break;
 
-			case CO_ACTION_MODIFY:
-				if ( $this->validate() )
-				{
-					$this->modify( $_REQUEST['object_id'] );
-				}
-				break;
+                case CO_ACTION_MODIFY:
+                    if ( $this->validate() )
+                    {
+                        $this->modify( $_REQUEST['object_id'] );
+                    }
+                    break;
 
-			case CO_ACTION_DELETE:
-				$this->delete( $_REQUEST['object_id'] );
-				break;
-		}
-		
+                case CO_ACTION_DELETE:
+                    $this->delete( $_REQUEST['object_id'] );
+                    break;
+            }
+        }
+        catch( \Exception $e ) {
+            $log = $this->getLogger();
+            if ( is_object($log) ) $log->error( $e->getTraceAsString() );
+            $this->replyError($e->getMessage());
+        }
+
 		$this->logFinish();
 	}
 

@@ -60,35 +60,44 @@ class ActuateWikiLinkWebMethod extends WebMethod
 	
 	function execute_request()
  	{
- 		global $model_factory;
- 		
- 		$class = $model_factory->getClass($_REQUEST['LinkClass']);
+ 		$class = getFactory()->getClass($_REQUEST['LinkClass']);
  		
  		if ( !class_exists($class) ) throw new Exception('Unknown class name: '.$_REQUEST['LinkClass']);
- 		
  		if ( $_REQUEST['LinkId'] < 1 ) throw new Exception('Trace identifier is missed');
  		
- 		$link_it = $model_factory->getObject($class)->getExact($_REQUEST['LinkId']);
- 		
+ 		$link_it = getFactory()->getObject($class)->getExact($_REQUEST['LinkId']);
+        if ( $link_it->getId() < 1 ) throw new Exception('Wrong trace identifier is given: '.$_REQUEST['LinkId']);
+
  		$this->setObjectIt( $link_it );
- 			
- 		if ( $link_it->getId() < 1 ) throw new Exception('Wrong trace identifier is given: '.$_REQUEST['LinkId']);
- 		
+
  		if ( $_REQUEST['Baseline'] > 0 )
  		{
-	 		$baseline_it = $model_factory->getObject('Snapshot')->getExact($_REQUEST['Baseline']);
-	 		
+	 		$baseline_it = getFactory()->getObject('Snapshot')->getExact($_REQUEST['Baseline']);
 	 		if ( $baseline_it->getId() < 1 ) throw new Exception('Wrong baseline identifier is given: '.$_REQUEST['Baseline']);
 	 		
 	 		$this->setBaselineIt( $baseline_it );
  		}
 
  		$parms = array (
- 				'IsActual' => 'Y'
+            'IsActual' => 'Y'
  		);
-
- 		if ( is_object($baseline_it) ) $parms['Baseline'] = $baseline_it->getId();
+ 		if ( is_object($baseline_it) ) {
+ 		    $parms['Baseline'] = $baseline_it->getId();
+        }
  		
  		$link_it->object->modify_parms($link_it->getId(), $parms);
+
+ 		// check if there are more non-actual pages in the document
+        $nonActualCount = getFactory()->getObject('WikiPage')->getRegistryBase()->Count(
+            array(
+                new PMWikiLinkedStateFilter('nonactual'),
+                new FilterAttributePredicate('DocumentId', $link_it->get('TargetDocumentId'))
+            )
+        );
+        if ( $nonActualCount < 1 ) {
+            $this->redirect(
+                $link_it->getRef('TargetPage')->getUIDUrl()
+            );
+        }
  	}
 }

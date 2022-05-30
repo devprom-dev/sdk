@@ -1,22 +1,18 @@
 <?php
-
 include "ReportTable.php";
 include "PMCustomReportForm.php";
 
 class ReportPage extends PMPage
 {
-	function getObject()
-	{
+	function getObject() {
 		return getFactory()->getObject('PMReport');
 	}
 	
-	function getTable() 
- 	{
+	function getTable() {
  		return new ReportTable( $this->getObject() );
  	}
 
- 	function getEntityForm()
- 	{
+ 	function getEntityForm() {
  		return new PMCustomReportForm();
  	}
 }

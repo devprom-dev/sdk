@@ -22,7 +22,7 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
     		$object->addAttributeGroup($attribute, 'dates');
     	}
 
-		if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED ) {
+		if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED ) {
 			$object->addAttribute('UserGroup', 'REF_UserGroupId', text('user.group.name'), false);
 		}
 

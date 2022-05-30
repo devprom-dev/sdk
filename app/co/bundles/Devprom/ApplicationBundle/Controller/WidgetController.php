@@ -4,6 +4,7 @@ namespace Devprom\ApplicationBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Devprom\ApplicationBundle\Service\QRCodeService;
 
 class WidgetController extends Controller
 {
@@ -45,6 +46,17 @@ class WidgetController extends Controller
                 'metrics_text' => $metrics_text,
                 'server_url' => \EnvironmentSettings::getServerUrl(),
                 'title' => text('guide.support')
+            )
+        );
+    }
+
+    public function mobileAction(Request $request)
+    {
+        return $this->render( 'ApplicationBundle:UI:mobile.html.twig',
+            array(
+                'welcome_text' => text('guide.mobile.welcome'),
+                'image' => (new QRCodeService())->getMobileAuthQRCode(),
+                'title' => text('guide.mobile.app')
             )
         );
     }

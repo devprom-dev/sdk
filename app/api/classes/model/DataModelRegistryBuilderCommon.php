@@ -9,9 +9,6 @@ class DataModelRegistryBuilderCommon implements IDataModelRegistryBuilder
 		$registry->addClass( array (
             'Activity',
             'Attachment',
-            'Blog',
-            'BlogPost',
-            'BlogPostFile',
             'ChangeLog',
             'Comment',
             'Environment',

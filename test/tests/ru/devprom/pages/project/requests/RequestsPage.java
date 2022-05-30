@@ -309,7 +309,7 @@ public class RequestsPage extends SDLCPojectPageBase {
 		WebElement changeTypeBtn = driver.findElement(By.xpath("//div[@id='bulk-modify-actions']//a[text()='Тип']"));
 		clickOnInvisibleElement(changeTypeBtn);
 		waitForDialog();
-		(new Select(driver.findElement(By.id("Type")))).selectByVisibleText(type);
+		(new Select(driver.findElement(By.xpath("//form//select[@name='Type']")))).selectByVisibleText(type);
 		submitDialog(driver.findElement(By.id("SubmitBtn")));
 		driver.navigate().refresh();
 		return new RequestsPage(driver);

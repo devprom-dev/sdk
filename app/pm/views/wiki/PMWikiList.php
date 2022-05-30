@@ -1,27 +1,58 @@
 <?php
 use Devprom\ProjectBundle\Service\Widget\WidgetService;
+use Devprom\ProjectBundle\Service\Wiki\WikiBaselineService;
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/persisters/WikiPageDocumentGroupPersister.php";
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/persisters/WikiPageUsedByPersister.php";
 include_once SERVER_ROOT_PATH . "pm/views/ui/WorkflowProgressFrame.php";
-include "fields/FieldWikiEstimation.php";
 
 class PMWikiList extends PMPageList
 {
 	private $displayContent = false;
-	private $inlineSectionNumber = false;
 	private $searchText = '';
     private $workflowFrame = null;
     private $typeField = null;
     private $baselineIt = null;
+    private $baselineService = null;
+    private $versionedAttributes = array();
 
     function extendModel()
     {
+        $versioned = new VersionedObject();
+        $this->versionedAttributes = $versioned->getExact(get_class($this->getObject()))->get('Attributes');
+
         if ( $this->getObject()->getStateClassName() != '' ) {
             $this->getObject()->addAttribute('Readiness', '', translate('Готовность'), false, false, '',
                 $this->getObject()->getAttributeOrderNum('State') + 1);
         }
 
         parent::extendModel();
+    }
+
+    function getVersionedAttributes() {
+        return $this->versionedAttributes;
+    }
+
+    function getBaselineService() {
+        if ( is_object($this->baselineService) ) return $this->baselineService;
+        return $this->baselineService = new WikiBaselineService(getFactory(), getSession());
+    }
+
+    function buildIterator()
+    {
+        $values = $this->getFilterValues();
+        if ( in_array($values['search'], array('','all','none')) ) {
+            $values['search'] = '';
+        }
+
+        $this->searchText = $values['search'];
+        $this->displayContent = count(\TextUtils::parseFilterItems($this->searchText)) > 0
+            || parent::getColumnVisibility('Content') || count(\TextUtils::parseFilterItems($values['compareto'])) > 0;
+
+        if (!$this->displayContent) {
+            $this->getObject()->setRegistry(new WikiPageRegistry());
+        }
+
+        return parent::buildIterator();
     }
 
     function retrieve()
@@ -68,7 +99,7 @@ class PMWikiList extends PMPageList
         );
     }
 
-	function & getStateObject()
+	function getStateObject()
 	{
 	    return $this->getTable()->getStateObject();
 	}
@@ -79,17 +110,16 @@ class PMWikiList extends PMPageList
 		return false;
 	}
 
-  	function IsNeedToSelect()
-	{
-		return true;
-	}
-
 	function getTitle( $object_it ) {
 	    return $object_it->getDisplayName();
     }
 
 	function drawCell( $object_it, $attr ) 
 	{
+        if ( $object_it->get('Includes') > 0 ) {
+            return $this->drawCell( $object_it->object->getExact($object_it->get('Includes')), $attr );
+        }
+
 		switch ( $attr )
 		{
 			case 'Caption':
@@ -102,10 +132,6 @@ class PMWikiList extends PMPageList
 				if ( $object_it->get('Suspected') > 0 ) {
                     $title = WidgetService::getHtmlBrokenIcon($object_it->getId(), getSession()->getApplicationUrl($object_it)) . $title;
 				}
-
-				if ( $this->inlineSectionNumber ) {
-                    $title = $object_it->get('SectionNumber') . ' &nbsp; ' . $title;
-                }
 
 				if ( strpos($title, $object_it->getHtmlDecoded('DocumentVersion')) === false && $object_it->get('ParentPage') == '' && $object_it->get('DocumentVersion') != '' ) {
 				    echo '[' . $object_it->get('DocumentVersion') . '] ';
@@ -121,41 +147,18 @@ class PMWikiList extends PMPageList
                     $filterValues = $this->getFilterValues();
 
                     $content = $object_it->get('Content');
-                    if ( $filterValues['branch'] != '' ) {
-                        $snapshot = new WikiPageComparableSnapshot(
-                            $object_it->get('DocumentId') == '' ? $object_it : $object_it->getRef('DocumentId')
-                        );
-                        $snapshotIt = $snapshot->getAll();
-                        $snapshotIt->moveToId($filterValues['branch']);
-                        if ( $snapshotIt->getId() != '' ) {
-                            $registry = new WikiPageRegistryComparison($this->getObject());
-                            $registry->setPageIt($object_it);
-                            $registry->setBaselineIt($snapshotIt);
-                            $content = $registry->Query()->get('Content');
-                        }
+
+                    $compareToIt = $this->getTable()->getCompareToSnapshot($filterValues);
+                    if ( $compareToIt->getId() != '' ) {
+                        $comparePageIt = $this->getBaselineService()->getComparedPageIt($object_it, $compareToIt);
+                        echo '<div class="reset wysiwyg">';
+                            $field = new FieldCompareToContent($object_it,
+                                html_entity_decode($content), $comparePageIt->getHtmlDecoded('Content'));
+                            $field->draw();
+                        echo '</div>';
+                        break;
                     }
 
-                    if ( $filterValues['compareto'] != '' ) {
-                        $snapshot = new WikiPageComparableSnapshot(
-                            $object_it->get('DocumentId') == '' ? $object_it : $object_it->getRef('DocumentId')
-                        );
-                        $snapshotIt = $snapshot->getAll();
-                        $snapshotIt->moveTo('Caption', $filterValues['compareto']);
-                        if ( $snapshotIt->getId() != '' ) {
-                            $registry = new WikiPageRegistryComparison($this->getObject());
-                            $registry->setPageIt($object_it);
-                            $registry->setBaselineIt($snapshotIt);
-                            $compareToPageIt = $registry->Query();
-                            if ( $compareToPageIt->getId() != '' ) {
-                                echo '<div class="reset wysiwyg">';
-                                    $field = new FieldCompareToContent($object_it,
-                                        html_entity_decode($content), $compareToPageIt->getHtmlDecoded('Content'));
-                                    $field->draw();
-                                echo '</div>';
-                                break;
-                            }
-                        }
-                    }
                     if ( trim($object_it->get('Content')," \r\n") != '' ) {
                         $field = new FieldWYSIWYG($object_it->get('ContentEditor'));
                         $field->setValue($content);
@@ -166,16 +169,6 @@ class PMWikiList extends PMPageList
 				}
 				break;
 
-            case 'Estimation':
-                if ( is_object($this->estimation_field) && $object_it->get('TotalCount') < 1 && $object_it->getId() != '' ) {
-                    $this->estimation_field->setObjectIt($object_it);
-                    $this->estimation_field->draw($this->getRenderView());
-                }
-                else {
-                    parent::drawCell($object_it, $attr);
-                }
-                break;
-				
 			case 'Workflow':
                 if ( $object_it->get($attr) != '' ) {
                     $lines = array();
@@ -223,12 +216,45 @@ class PMWikiList extends PMPageList
 				break;
 
 			default:
-				parent::drawCell( $object_it, $attr );
+			    if ( in_array($attr, $this->versionedAttributes) ) {
+                    $compareToIt = $this->getTable()->getCompareToSnapshot($this->getFilterValues());
+
+                    if ( $compareToIt->getId() != '' ) {
+                        $comparePageIt = $this->getBaselineService()->getComparedPageIt($object_it, $compareToIt);
+
+                        parent::drawCell( $object_it, $attr );
+
+                        if ( in_array($this->getObject()->getAttributeType($attr), array('integer','float')) ) {
+                            $diff = $object_it->get($attr) - $comparePageIt->get($attr);
+                            if ( $diff != 0 ) {
+                                $data = $comparePageIt->getData();
+                                $data[$attr] = $diff;
+                                echo ' (';
+                                if ( $diff > 0 ) echo '+';
+                                parent::drawCell( $object_it->object->createCachedIterator(array($data)), $attr );
+                                echo ')';
+                            }
+                        }
+                        else {
+                            echo '<del>';
+                            parent::drawCell( $comparePageIt, $attr );
+                            echo '</del>';
+                        }
+                        return;
+                    }
+                }
+
+                parent::drawCell( $object_it, $attr );
 		}
 	}
 
 	function drawRefCell( $entity_it, $object_it, $attr ) 
 	{
+        if ( $object_it->get('Includes') > 0 ) {
+            $object_it = $object_it->object->getExact($object_it->get('Includes'));
+            return $this->drawRefCell( $object_it->getRef($attr), $object_it, $attr );
+        }
+
 		switch ( $entity_it->object->getClassName() )
 		{
 		    case 'WikiPageFile':
@@ -252,20 +278,7 @@ class PMWikiList extends PMPageList
 		        break;
 
 			default:
-			    switch ( $attr ) {
-                    case 'PageType':
-                        if ( is_object($this->typeField) ) {
-                            $this->typeField->setObjectIt($object_it);
-                            $this->typeField->draw($this->getRenderView());
-                        }
-                        else {
-                            parent::drawRefCell( $entity_it, $object_it, $attr );
-                        }
-                        break;
-
-                    default:
-                        parent::drawRefCell( $entity_it, $object_it, $attr );
-                }
+                parent::drawRefCell( $entity_it, $object_it, $attr );
 		}
 	}
 	
@@ -278,8 +291,13 @@ class PMWikiList extends PMPageList
 	
 	function getGroupFields()
 	{
+        $fields = parent::getGroupFields();
+        if ( in_array('Feature', $fields) ) {
+            unset($fields['Feature']);
+            array_unshift($fields, 'Feature');
+        }
 		$fields = array_diff(
-			parent::getGroupFields(),
+            $fields,
 		    array (
 				'Watchers', 'Attachments'
 			)
@@ -291,10 +309,6 @@ class PMWikiList extends PMPageList
                 'DocumentVersion'
             )
         );
-	}
-
-    function IsNeedToSelectRow( $object_it ) {
-        return true;
 	}
 
 	function getColumnVisibility($attr) {
@@ -339,21 +353,6 @@ class PMWikiList extends PMPageList
 	function getRenderParms()
 	{
         $parms = parent::getRenderParms();
-
-		$values = $this->getFilterValues();
-
-		if ( in_array($values['search'], array('','all','none')) ) {
-			$values['search'] = '';
-		}
-
-		$this->searchText = $values['search'];
-		$this->displayContent = count(\TextUtils::parseFilterItems($this->searchText)) > 0
-            || parent::getColumnVisibility('Content') || count(\TextUtils::parseFilterItems($values['compareto'])) > 0;
-
-        if ( parent::getColumnVisibility('Estimation') ) {
-            $this->estimation_field = new FieldWikiEstimation($this->getObject());
-        }
-
 		return array_merge( $parms,
 			array (
 				'table_class_name' => $this->displayContent ? 'table wishes-table' : $parms['table_class_name']

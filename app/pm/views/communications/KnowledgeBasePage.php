@@ -1,8 +1,7 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/views/wiki/PMWikiUserPage.php';
 include_once SERVER_ROOT_PATH.'pm/views/wiki/WikiBulkForm.php';
- 
+
 include "KnowledgeBaseForm.php";
 include "KnowledgeBaseTable.php";
 include "KnowledgeBaseDocument.php";
@@ -21,7 +20,7 @@ class KnowledgeBasePage extends PMWikiUserPage
  	}
  	
  	function getObject() {
-		return getFactory()->getObject('ProjectPage');
+		return new ProjectPage();
 	}
 	
 	function getBulkForm() {
@@ -32,7 +31,7 @@ class KnowledgeBasePage extends PMWikiUserPage
        	return new KnowledgeBaseForm($this->getObject());
  	}
  	
- 	function getDocumentTableBase( & $object ) {
+ 	function getDocumentTableBase( $object ) {
  		return new KnowledgeBaseDocument($object, $this->getStateObject(), $this->getForm());
  	}
  	

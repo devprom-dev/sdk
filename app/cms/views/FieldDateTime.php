@@ -15,7 +15,7 @@ class FieldDateTime extends Field
 		}
 		else
 		{
-			echo '<input class="datepicker input-medium" type="text" tabindex="'.$this->getTabIndex().'" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'" '.($this->getRequired() ? 'required' : '').' >';
+			echo '<input class="datepicker input-medium" type="text" autocomplete="off" tabindex="'.$this->getTabIndex().'" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'" '.($this->getRequired() ? 'required' : '').' >';
 		}
 	}
 }

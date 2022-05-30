@@ -27,13 +27,10 @@ class ProjectTemplate extends Metaobject
 
 	function getObjects( $section_name )
 	{
-		global $model_factory;
-
-		$sectionSet = $model_factory->getObject('ProjectTemplateSections');
+		$sectionSet = getFactory()->getObject('ProjectTemplateSections');
 		$section_it = $sectionSet->getAll();
 		
 		$section_it->moveTo( 'ReferenceName', $section_name );
-		
 		return $section_it->get('items');
 	}
 	
@@ -61,9 +58,13 @@ class ProjectTemplate extends Metaobject
 	
 			foreach( $objects as $object )
 			{
+                if ( $object instanceof WikiPage ) {
+                    $object->setRegistry(new \WikiPageRegistryContent());
+                }
+
 			    // export records related to the hosted project only
 			    $object->addFilter( new FilterBaseVpdPredicate() );
-			    
+
 			    // get all records and serialize it into xml subtree
 		 		fwrite( $file, $object->serialize2Xml() );
 			}

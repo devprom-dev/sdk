@@ -120,28 +120,31 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
     @FindBy(xpath = "//ul[@id='menu_qa']//*[@uid='testingdocinprogress']")
     protected WebElement testScenariosItem;
         
-        //боковая панель документы требований
-        @FindBy(xpath = "//li/a[@uid='requirements-docs']")
+    //боковая панель документы требований
+    @FindBy(xpath = "//li/a[@uid='requirements-docs']")
 	protected WebElement requirementsDoksItem;
         
-        //боковая панель Реестр требований
-        @FindBy(xpath = "//li/a[@uid='requirementsnotimpl']")
+    //боковая панель Реестр требований
+    @FindBy(xpath = "//li/a[@uid='requirementsnotimpl']")
 	protected WebElement requirementReestr;
-        
-        //боковая панель Сборки
-         @FindBy(xpath = "//ul[@id='menu_qa']//li/a[@uid='operations-builds']")
+
+    @FindBy(xpath = "//li/a[@uid='requirementsmatrix']")
+    protected WebElement traceMatrixItem;
+
+    //боковая панель Сборки
+     @FindBy(xpath = "//ul[@id='menu_qa']//li/a[@uid='operations-builds']")
 	protected WebElement builds;
         
-         //боковая панель Окружение
-         @FindBy(xpath = "//ul[@id='menu_qa']//li/a[@uid='dicts-environment']")
+     //боковая панель Окружение
+     @FindBy(xpath = "//ul[@id='menu_qa']//li/a[@uid='dicts-environment']")
 	protected WebElement envirenmentsItem;
          
-        //боковая панель "Задачи"
-        @FindBy(xpath = "(//a[@id='menu-group-tasks'])[2]")
+    //боковая панель "Задачи"
+    @FindBy(xpath = "(//a[@id='menu-group-tasks'])[2]")
 	protected WebElement tasksItem;
         
-        //подраздел "Доска задач анализа" отдела Разработка на боковой панели
-         @FindBy(xpath = "//*[@id='tasksboardfordesign']")
+    //подраздел "Доска задач анализа" отдела Разработка на боковой панели
+     @FindBy(xpath = "//*[@id='tasksboardfordesign']")
 	protected WebElement tasksBoardForDesignItem;
         
 	// --ИЗБРАННОЕ--
@@ -340,22 +343,20 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
     }
 
     public RequirementsPage goRequirementReestr() {
-        try
-        {
-            Thread.sleep(3000);
-            AnalyseLink.click();
-            (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(requirementReestr));
-            requirementReestr.click();
-            showAll();
-            FILELOG.debug("Requirement Reeste Item clicked");
-            return new RequirementsPage(driver);
-        }
-        catch(InterruptedException e)
-        {
-            FILELOG.debug("Requirement Reeste Item didn't click");
-            return null;
-        }
-        
+        AnalyseLink.click();
+        (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(requirementReestr));
+        requirementReestr.click();
+        showAll();
+        FILELOG.debug("Requirement Reeste Item clicked");
+        return new RequirementsPage(driver);
+    }
+
+    public RequirementsPage gotoRequirementsMatrix() {
+        AnalyseLink.click();
+        (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(traceMatrixItem));
+        traceMatrixItem.click();
+        showAll();
+        return new RequirementsPage(driver);
     }
 
     public void gotoCommits() {

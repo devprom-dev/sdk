@@ -2,7 +2,7 @@
 
 class IntegrationJiraChannel extends IntegrationRestAPIChannel
 {
-    const apiPath = "/rest/api/latest";
+    const apiPath = "/rest/api/2";
 
     public function getKeyField() {
         return 'id';
@@ -13,61 +13,69 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         // build search query
         $jql = array();
         if ( $timestamp != '' ) {
-            $jql[] = 'updatedDate > "-'. round((strtotime($this->getTimestamp()) - strtotime($timestamp)) / 60, 0) .'m"';
+            $jql[] = 'updated > "-'. abs(round((strtotime($this->getTimestamp()) - strtotime($timestamp)) / 60, 0)) .'m"';
         }
         else {
-            $jql[] = 'updatedDate >= "-60d"';
+            $jql[] = 'updated >= "-6000d"';
         }
         if ( $this->getObjectIt()->get('ProjectKey') != '' ) {
             $jql[] = 'project = '.$this->getObjectIt()->get('ProjectKey');
         }
 
-        $result = $this->jsonGet('/rest/api/latest/search', array (
-            'jql' => join(' AND ', $jql),
-            'maxResults' => $limit,
-            'fields' => '*all'
-        ));
-
         $mapping = $this->getMapping();
         if ( $timestamp != '' ) {
             $internalTimeStamp = $timestamp;
         }
-
-        // extract items ids
-        $first = array();
-        $second = array();
-        $latest = array();
-        $nextTimestamp = '';
-
         $taskTypeMapping = array_map(
             function($mapRule) {
                 return array_pop(array_values($mapRule));
             }, $mapping['Task']['TaskType']['mapping']
         );
 
-        foreach( $result['issues'] as $issue )
-        {
-            if ( $issue['fields']['issuetype']['subtask'] || in_array($issue['fields']['issuetype']['name'], $taskTypeMapping) ) {
-                $item = $second[$issue[$this->getKeyField()]] = array (
-                    'class' => 'Task',
-                    'id' => $issue[$this->getKeyField()]
+        // extract items ids
+        $first = array();
+        $second = array();
+        $latest = array();
+        $nextTimestamp = '';
+        $startAt = 0;
+
+        do {
+            $result = $this->jsonGet(self::apiPath . '/search', array(
+                'jql' => join(' AND ', $jql) . " ORDER BY updated ASC",
+                'maxResults' => $limit,
+                'startAt' => $startAt,
+                'fields' => 'updated,created,issuetype,comment,worklog,attachment,issuelinks'
+            ));
+
+            foreach ($result['issues'] as $issue) {
+                if ($issue['fields']['issuetype']['subtask'] || in_array($issue['fields']['issuetype']['name'], $taskTypeMapping)) {
+                    $item = $second[$issue[$this->getKeyField()]] = array(
+                        'class' => 'Task',
+                        'id' => $issue[$this->getKeyField()]
+                    );
+                } else {
+                    $item = $first[$issue[$this->getKeyField()]] = array(
+                        'class' => 'Request',
+                        'id' => $issue[$this->getKeyField()]
+                    );
+                }
+                $latest = array_merge($latest,
+                    $this->getReferenceItems($issue, $item, $internalTimeStamp)
                 );
+                if ($issue['fields']['updated'] > $nextTimestamp) $nextTimestamp = $issue['fields']['updated'];
             }
-            else {
-                $item = $first[$issue[$this->getKeyField()]] = array (
-                    'class' => 'Request',
-                    'id' => $issue[$this->getKeyField()]
-                );
-            }
-            $latest = array_merge( $latest,
-                $this->getReferenceItems($issue, $item, $internalTimeStamp)
-            );
-            if ( $issue['fields']['updated'] > $nextTimestamp ) $nextTimestamp = $issue['fields']['updated'];
-        }
+
+            if ( count($result['issues']) < 1 ) break;
+            $startAt += $result['maxResults'];
+
+        } while(true);
 
         $releases = array();
+        $users = array();
+
         if ( $this->getObjectIt()->get('ProjectKey') != '' ) {
-            $result = $this->jsonGet('/rest/api/latest/project/'.$this->getObjectIt()->get('ProjectKey').'/versions', array(), false);
+            $result = $this->jsonGet(self::apiPath."/project/{$this->getObjectIt()->get('ProjectKey')}/versions",
+                            array(), false);
             foreach( $result as $version ) {
                 if ( $timestamp != '' ) {
                     // skip past releases
@@ -78,12 +86,21 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
                     'id' => $version[$this->getKeyField()]
                 );
             }
+
+            $result = $this->jsonGet(self::apiPath."/user/assignable/search?project={$this->getObjectIt()->get('ProjectKey')}",
+                            array(), false);
+            foreach( $result as $user ) {
+                $users[] = array (
+                    'class' => 'User',
+                    'id' => $user['key'] != '' ? $user['key'] : $user['accountId']
+                );
+            }
         }
 
         // aggregate items using dependency based order
         return array(
             array_merge(
-                $releases, $first, $second, $latest
+                $users, $releases, $first, $second, $latest
             ),
             $nextTimestamp != '' ? new \DateTime($nextTimestamp, new DateTimeZone("UTC")) : ''
         );
@@ -119,16 +136,64 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         $data = parent::mapToInternal($class, $id, $source, $mapping, $getter);
 
         foreach( $data as $attribute => $value ) {
-            if ( $attribute == 'File' ) {
+            if ( in_array($attribute, array('File', 'Photo')) ) {
                 $data[$attribute] = $this->convertToFileAttribute($this->binaryGet($value));
             }
             if ( $attribute == 'Capacity' ) {
                 $data[$attribute] = $data[$attribute] / (60 * 60);
             }
+            if ( $attribute == 'State' ) {
+                $this->persistState($class, $value);
+            }
+        }
+
+        if ( in_array($class, array('Issue','Request','Task')) ) {
+            $customAttribute = getFactory()->getObject('pm_CustomAttribute');
+            foreach( $this->fields as $fieldKey => $fieldName ) {
+                if ( is_array($source['fields'][$fieldKey]) && count($source['fields'][$fieldKey]) < 1 ) continue;
+                if ( $source['fields'][$fieldKey] == '' ) continue;
+                $customAttributeIt = $customAttribute->getByRef('ReferenceName', $fieldKey);
+                if ( $customAttributeIt->getId() == '' ) {
+                    $customAttribute->getRegistry()->Create(
+                        array(
+                            'ReferenceName' => $fieldKey,
+                            'Caption' => $fieldName,
+                            'AttributeType' => 4,
+                            'EntityReferenceName' => strtolower($class),
+                            'OrderNum' => 200
+                        )
+                    );
+                }
+                $data[$fieldKey] = is_array($source['fields'][$fieldKey])
+                    ? join(',', $source['fields'][$fieldKey])
+                    : $source['fields'][$fieldKey];
+            }
         }
 
         $data['key'] = $source['key'];
         return $data;
+    }
+
+    protected function persistState( $class, $stateValue )
+    {
+        $object = getFactory()->getObject($class);
+        if ( !$object instanceof \MetaobjectStatable ) return;
+
+        $stateObject = getFactory()->getObject($object->getStateClassName());
+        $stateIt = $stateObject->getByRef('ReferenceName', $stateValue);
+        if ( $stateIt->getId() != '' ) return;
+
+        $data = $this->jsonGet(self::apiPath.'/status/'.$stateValue, array(), false);
+        $stateObject->getRegistry()->Create(
+            array(
+                'Caption' => $data['name'],
+                'ReferenceName' => $data['id'],
+                'IsTerminal' => $data['statusCategory']['key'] == 'new'
+                                    ? 'N'
+                                    : ($data['statusCategory']['key'] == 'done' ? 'Y' : 'I'),
+                'OrderNum' => $data['id']
+            )
+        );
     }
 
     public function mapFromInternal($class, $id, $source, $mapping, $setter)
@@ -180,15 +245,30 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
 
     function buildDictionaries()
     {
-        foreach( $this->jsonGet(self::apiPath.'/issuetype', array(), false) as $issueType ) {
+        $projectData = $this->jsonGet(
+            self::apiPath."/project/{$this->getObjectIt()->get('ProjectKey')}", array(), false);
+
+        $typeObject = getFactory()->getObject('RequestType');
+        foreach( $this->jsonGet(self::apiPath."/issuetype/project?projectId={$projectData['id']}", array(), false) as $issueType ) {
             $this->issueTypeMap[$issueType['id']] = $issueType['name'];
             if ( $issueType['subtask'] ) {
                 $this->taskIssueTypeId = $issueType['id'];
             }
+            $typeIt = $typeObject->getByRef('ReferenceName', $issueType['id']);
+            if ( $typeIt->getId() == '' ) {
+                $typeObject->getRegistry()->Create(
+                    array(
+                        'ReferenceName' => $issueType['id'],
+                        'Caption' => $issueType['name']
+                    )
+                );
+            }
         }
 
-        foreach( $this->jsonGet(self::apiPath.'/status', array(), false) as $issueState ) {
-            $this->issueStates[$issueState['id']] = $issueState['name'];
+        foreach( $this->jsonGet(self::apiPath."/field", array(), false) as $fieldData ) {
+            if ( !$fieldData['custom'] ) continue;
+            if ( strpos($fieldData['schema']['custom'], 'customfieldtypes') === false ) continue;
+            $this->fields[$fieldData['key']] = $fieldData['name'];
         }
     }
 
@@ -212,8 +292,6 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         switch( $fieldName ) {
             case 'fields.issuetype.name':
                 return in_array($value, $this->issueTypeMap);
-            case 'fields.status.name':
-                return in_array($value, $this->issueStates);
             default:
                 return true;
         }
@@ -232,6 +310,6 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
     }
 
     private $issueTypeMap = array();
-    private $issueStates = array();
     private $taskIssueTypeId = 0;
+    private $fields = array();
 }

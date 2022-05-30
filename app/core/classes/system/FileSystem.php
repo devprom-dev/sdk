@@ -12,7 +12,7 @@ class FileSystem
 	}
 
 	static protected function _rmdir($dir) {
-        foreach(glob($dir . '/*') as $file) {
+        foreach(glob($dir . '/{,.}*[!.]*', GLOB_BRACE) as $file) {
             if(is_dir($file))
                 self::_rmdir($file);
             else

@@ -67,13 +67,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  	
  	function getFormula( $row, $columnIndex, $cellName )
  	{
- 		$fields = $this->getFields();
- 	
- 		if ( $columnIndex == count($fields) - 1 )
- 		{
- 			return "=SUM(B".$row.":".PHPExcel_Cell::stringFromColumnIndex($columnIndex-1).$row.")";
- 		}
- 		else if ( $columnIndex > 0 )
+ 		if ( $columnIndex > 0 )
  		{
  			$iterator = $this->getIterator();
  			if ( $iterator->get('Group') > 0 )
@@ -93,7 +87,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  	function getFields()
  	{
  		$iterator = $this->getIterator();
- 		
+
         $fields = array ( 'ItemId' => $iterator->object->getAttributeUserName('Caption') );
 
         foreach( $iterator->getDaysMap() as $dayId => $dayName ) {
@@ -101,6 +95,10 @@ class ActivitiesExcelIterator extends IteratorExportExcel
         }
 
 		$fields = array_merge($fields, array( 'Total' => translate('Итого')) );
+        $fields = array_merge($fields, array( 'TotalPlanned' => translate('Трудоемкость')) );
+        if ( $iterator->object->hasAttribute('CostFact') ) {
+            $fields = array_merge($fields, array( 'TotalCosts' => translate('Расходы')) );
+        }
 
  		return $fields;
  	}
@@ -113,6 +111,8 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  				return $this->getIterator()->get('Group') < 1 ? 60 : 30;
 
  			case 'Total':
+            case 'TotalPlanned':
+            case 'TotalCosts':
  				return 15;
 
  			default:

@@ -12,10 +12,6 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  	    return $this->anchor_it;
     }
 
-    function getAnchorField() {
-        return 'Task';
-    }
-
     function getLeftWorkAttribute() {
 	    return 'LeftWork';
 	}
@@ -26,14 +22,30 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  		{
  			case 'LeftWork':
  			    return getSession()->getProjectIt()->getMethodologyIt()->IsLeftWorkVisible();
-            case 'Participant':
-                return getFactory()->getAccessPolicy()->can_modify_attribute(new Activity(), 'Participant');
  			default:
  				return parent::IsAttributeVisible( $attribute );
  		}
  	}
- 	
-	function getAttributeType( $attr )
+
+    function getAttributes()
+    {
+        $visible = array();
+        $activity = new Activity();
+
+        if ( getFactory()->getAccessPolicy()->can_modify_attribute($activity, 'Participant') ) {
+            $this->getObject()->setAttributeVisible('Participant', true);
+        }
+
+        foreach( array_keys($this->getObject()->getAttributes()) as $attribute ) {
+            if ( !$this->getObject()->IsAttributeVisible($attribute) && !$this->getObject()->IsAttributeStored($attribute) ) continue;
+            if ( !getFactory()->getAccessPolicy()->can_modify_attribute($activity, $attribute) ) continue;
+            $visible[] = $attribute;
+        }
+
+        return $visible;
+    }
+
+    function getAttributeType( $attr )
 	{
  		switch ( $attr )
  		{
@@ -77,6 +89,8 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
         switch( $attr ) {
             case 'Participant':
                 return new FieldParticipantDictionary();
+            case 'LeftWork':
+                return new FieldHours();
             default:
                 return parent::createField( $attr );
         }
@@ -88,12 +102,12 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  		
  		switch ( $attr )
  		{
- 		    case 'LeftWork':
+ 		    case 'LeftWork2':
 				echo '<div class="line">';
 					echo '<div class="line">';
 						echo translate($this->object->getAttributeUserName('LeftWork'));
 					echo '</div>';
-					echo '<input type="text" class="spent-time input-block-level" id="'.$this->getFieldName('LeftWork').'" name="'.$this->getFieldName('LeftWork').'" default="'.$this->getFieldValue('LeftWork').'" tabindex="'.($tabindex+1).'">';
+					echo '<input type="text" class="spent-time input-block-level" id="'.$this->getFieldName('LeftWork').'" name="'.$this->getFieldName('LeftWork').'" autocomplete="off" default="'.$this->getFieldValue('LeftWork').'" tabindex="'.($tabindex+1).'">';
 				echo '</div>';
 		        break;
  		        

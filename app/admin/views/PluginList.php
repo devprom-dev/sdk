@@ -20,6 +20,9 @@ class PluginList extends StaticPageList
 			if ( in_array($data['Caption'], array('plugins.php','_factory.php','_methods.php')) ) {
 				unset($rowset[$row]);
 			}
+            if ( pathinfo($data['Caption'], PATHINFO_EXTENSION) != 'php' ) {
+                unset($rowset[$row]);
+            }
 		}
 		
 		return $this->getObject()->createCachedIterator(array_values($rowset));

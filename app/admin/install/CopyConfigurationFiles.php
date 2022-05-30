@@ -108,25 +108,8 @@ class CopyConfigurationFiles extends Installable
 	function setupLinuxLoggers()
 	{
 		$default_path = '/var/log/devprom';
-		
-		mkdir($default_path, 0755, true);
-		
-		if ( is_dir($default_path) ) return;
-
-		$local_dir = SERVER_ROOT.'/logs';
-
-		mkdir($local_dir, 0755, true);
-
-		if ( !is_dir($local_dir) )
-		{
-			// shared hosting
-			$local_dir = DOCUMENT_ROOT.'logs';
-
-			mkdir($local_dir, 0755, true);
-		}
-		
 		$settings_file = DOCUMENT_ROOT.'conf/logger.xml';
-		
-		file_put_contents($settings_file, str_replace($default_path, $local_dir, file_get_contents($settings_file))); 
+		file_put_contents($settings_file,
+            str_replace($default_path, SERVER_LOGS_PATH, file_get_contents($settings_file)));
 	}
 }

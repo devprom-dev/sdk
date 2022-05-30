@@ -32,6 +32,9 @@ class ProfileNotificationsForm extends AjaxForm
                 return text(2469);
             case 'NotificationTrackingType':
                 return text(2468);
+            case 'SendDeadlinesReport':
+                return sprintf(text(3309),
+                    defined('DEADLINE_REPORT_DUE_DAYS') ? DEADLINE_REPORT_DUE_DAYS : 4);
  		}
  	}
 }

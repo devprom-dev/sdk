@@ -1,13 +1,10 @@
 <?php
 include "FeatureIterator.php";
 include "predicates/FeatureStateFilter.php";
-include "predicates/FeatureRootFilter.php";
 include "predicates/FeatureIssuesAllowedFilter.php";
 include "predicates/FeatureStageFilter.php";
 include "sorts/SortFeatureStartClause.php";
-include "sorts/SortFeatureHierarchyClause.php";
 include "validation/ModelValidatorChildrenLevels.php";
-include "validation/ModelValidatorAvoidInfiniteLoop.php";
 
 class Feature extends Metaobject
 {
@@ -15,7 +12,7 @@ class Feature extends Metaobject
  	{
  		parent::__construct('pm_Function', $registry, getSession()->getCacheKey());
  		$this->setSortDefault( array(
- 		    new SortFeatureHierarchyClause(),
+ 		    new SortObjectHierarchyClause(),
             new SortAttributeClause('Caption')
         ));
  	}

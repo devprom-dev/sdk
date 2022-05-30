@@ -135,6 +135,10 @@
  	{
  		return 'attribute';
  	}
+
+    function getAttributes() {
+         return $this->attributes;
+    }
  }
 
  class AttributeRegistry extends ObjectRegistrySQL

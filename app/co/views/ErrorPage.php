@@ -8,12 +8,7 @@ class ErrorPage extends CoPage
 {
  	var $project_it;
  	
- 	function ErrorPage()
- 	{
- 		parent::Page();
- 	}
- 	
- 	function needDisplayForm() 
+ 	function needDisplayForm()
  	{
  		return false;
  	}

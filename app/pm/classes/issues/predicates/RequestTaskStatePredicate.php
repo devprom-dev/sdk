@@ -9,9 +9,15 @@ class RequestTaskStatePredicate extends FilterPredicate
  		switch ( $filter )
  		{
  			case 'notresolved':
-		 		return " AND EXISTS (SELECT 1 FROM pm_Task e " .
-		 			   "			  WHERE e.ChangeRequest = t.pm_ChangeRequestId " .
-		 			   "				AND e.FinishDate IS NULL ) ";
+		 		return " AND (
+		 		            EXISTS (
+		 		                SELECT 1 FROM pm_Task e 
+		 			   		     WHERE e.ChangeRequest = t.pm_ChangeRequestId 
+		 			   		       AND e.FinishDate IS NULL )
+		 			   		OR NOT EXISTS (
+		 			   		    SELECT 1 FROM pm_Task e
+		 			   		      WHERE e.ChangeRequest = t.pm_ChangeRequestId )
+		 			    ) ";
  				
  			default:
                 $states = array_intersect(

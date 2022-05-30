@@ -11,6 +11,7 @@ class PlanChartData extends Metaobject
         $this->addAttribute('FinishDate', 'VARCHAR', '', false);
         $this->addAttribute('Project', 'VARCHAR', '', false);
         $this->addAttribute('SortIndex', 'VARCHAR', '', false);
+        $this->addAttribute('ObjectClass', 'VARCHAR', '', false);
         foreach( array('StartDate','FinishDate','Project','SortIndex') as $attribute ) {
             $this->setAttributeGroups($attribute, array('system'));
         }
@@ -20,4 +21,8 @@ class PlanChartData extends Metaobject
  	    		)
  	    	);
  	}
+
+    function getVpdValue() {
+        return '';
+    }
 }

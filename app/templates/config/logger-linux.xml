@@ -32,7 +32,7 @@
     </appender>
     <appender name="SCMFileAppender" class="LoggerAppenderRollingFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/var/log/devprom/scm.log" />
+        <param name="file" value="/var/log/devprom/task-processrevisionlog.log" />
         <param name="maxFileSize" value="1M"></param>
         <param name="maxBackupIndex" value="5"></param>
     </appender>

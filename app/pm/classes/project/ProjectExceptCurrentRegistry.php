@@ -12,7 +12,7 @@ class ProjectExceptCurrentRegistry extends ObjectRegistrySQL
         });
 		return array_merge( $filters,
             array (
-                new FilterVpdPredicate($vpds),
+                new ProjectVpdPredicate($vpds),
                 new ProjectStatePredicate('active'),
                 new FilterNotInPredicate(getSession()->getProjectIt()->getId())
             )

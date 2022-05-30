@@ -13,6 +13,7 @@ class ProjectRole extends Metaobject
  		$this->setAttributeVisible('ProjectRoleBase', true);
  		$this->setAttributeVisible('ReferenceName', false);
  		$this->addAttributeGroup('ReferenceName', 'system');
+        $this->addAttributeGroup('Caption', 'alternative-key');
  	}
 
  	function createIterator() {

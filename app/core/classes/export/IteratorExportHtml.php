@@ -14,7 +14,7 @@ class IteratorExportHtml extends IteratorExport
         return parent::get( $fieldName );
     }
 
-    function buildHtml()
+    function buildHtml( $tableClass = 'printable' )
     {
         $uid = new ObjectUID;
 
@@ -23,7 +23,7 @@ class IteratorExportHtml extends IteratorExport
         $keys = array_keys($fields);
 
         $result = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>';
-        $result .= '<body style="background:white;"><table class="table table-bordered"><tr>';
+        $result .= '<body style="background:white;"><table class="table table-bordered '.$tableClass.'"><tr>';
 
         foreach ( $fields as $key => $field )
         {
@@ -93,6 +93,12 @@ class IteratorExportHtml extends IteratorExport
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-control: no-store");
 		header('Content-Type: text/html; charset='.APP_ENCODING);
+
+        if ( defined('UI_EXTENSION') && !UI_EXTENSION ) {
+        }
+        else {
+            header(EnvironmentSettings::getDownloadHeader($this->getName().'.html'));
+        }
 
  		echo $this->buildHtml();
  	}

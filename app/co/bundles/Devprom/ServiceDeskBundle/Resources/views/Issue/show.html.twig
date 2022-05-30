@@ -78,7 +78,23 @@
 
                         <h4>{{ 'issue_state'|trans }}</h4>
                         <p>
-                            {{ issue.state.name|trans }}
+                            {{ issue.state.name }}
+
+                            {% if issue.state.terminal == 'Y' %}
+                                {% set starVar = '&starf;' %}
+                                <br/>
+                                <span title="{{ 'issue_feedback'|trans }}">
+                                    {% for e in 1..5 %}
+                                        {% if issue.feedback < e %}
+                                            {% set starVar = '&star;' %}
+                                        {% endif %}
+                                        <a class="issue-fb" href="{{ issue.id }}/feedback/{{ e }}">
+                                            {{ starVar|unescapeHtml|raw }}
+                                        </a>
+                                    {% endfor %}
+                                </span>
+                            {% endif %}
+
                             {% if issue.state.description != "" %}
                                 <br/>({{ issue.state.description|unescapeHtml }})
                             {% endif %}

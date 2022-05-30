@@ -2,12 +2,13 @@
 
 class SpentTimeRegistry extends ObjectRegistrySQL
 {
- 	function createSQLIterator( $sql ) 
+ 	function Query( $parms = array() )
  	{
         $startDate = $finishDate = "CURDATE()";
         $mapping = new ModelDataTypeMappingDate();
 
-        foreach( $this->getFilters() as $filter ) {
+        $filters = $this->extractPredicates($parms);
+        foreach( $filters as $filter ) {
             if ( $filter instanceof FilterSubmittedAfterPredicate ) {
                 $value = $mapping->map($filter->getValue());
                 if ( $value != '' ) $startDate = "DATE('".$value."')";
@@ -55,33 +56,51 @@ class SpentTimeRegistry extends ObjectRegistrySQL
             $row_field = 'Project';
             $row_object = getFactory()->getObject('Project');
         }
+
 		$registry = $row_object->getRegistry();
 
-		$sql = " SELECT ".$registry->getSelectClause('t').",".
-			   "        ".$group." Day, ".
-		       "		t2.* " .
-			   "   FROM (SELECT t.ChangeRequest, (SELECT r.Caption FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) RequestCaption, ".
-               "                t.Caption TaskCaption, a.Task, a.Capacity, a.ReportDate, a.Description, a.Issue, " .
-			   "				a.VPD, a.Participant ".$userField.", ".($userField != 'SystemUser' ? "a.Participant SystemUser," : "").
-			   " 				(SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project, t.State" .
-			   "		   FROM pm_Activity a, pm_Task t ".
-			   "  	      WHERE a.Task = t.pm_TaskId AND DATE(a.ReportDate) BETWEEN ".$startDate." AND ".$finishDate." ".
-               $this->getObject()->getVpdPredicate('t').
-			   "        ) t2, ".
-			   "		(SELECT t.* FROM ".$registry->getQueryClause()." t WHERE 1 = 1 ".$row_object->getFilterPredicate('t').") t " .
-			   "  WHERE 1 = 1 ".$this->getFilterPredicate('t2').
-			   "	AND t2.".$row_field." = t.".$row_object->getIdAttribute();
+		$participantField = $userField != 'SystemUser' ? "a.Participant SystemUser," : "";
+
+		$sql = " SELECT {$registry->getSelectClause(array(), 't')},
+			            {$group} Day,
+		       		    t2.*
+			       FROM (SELECT t.ChangeRequest,
+                                IFNULL(r.Caption, (SELECT rc.Caption FROM pm_ChangeRequest rc WHERE rc.pm_ChangeRequestId = t.ChangeRequest)) RequestCaption,
+                                t.Caption TaskCaption,
+			                    t.Planned TaskPlanned,
+                                a.Task,
+                                a.Capacity,
+                                a.ReportDate,
+                                a.Description,
+                                a.Issue,
+			   				    IFNULL(r.VPD, t.VPD) VPD, a.Participant cms_UserId, a.Participant {$userField}, {$participantField}
+			    				(SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = IFNULL(r.VPD, t.VPD)) Project, t.State, u.Rate
+			   		               FROM pm_Activity a LEFT OUTER JOIN pm_ChangeRequest r ON a.Issue = r.pm_ChangeRequestId,
+                                        pm_Task t,
+                                        cms_User u
+			     	              WHERE a.Task = t.pm_TaskId AND a.Participant = u.cms_UserId
+                                    AND DATE(a.ReportDate) BETWEEN {$startDate} AND {$finishDate} ) t2,
+                        (SELECT t.* FROM {$registry->getQueryClause($parms)} t WHERE 1 = 1 {$registry->getFilterPredicate(array(),'t')} ) t
+			      WHERE 1 = 1 {$this->getFilterPredicate($filters,'t2')} AND t2.{$row_field} = t.{$row_object->getIdAttribute()} ";
 
         $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
 		$activity_it = parent::createSQLIterator($sql);
 
 		$rows = array();
+		$planned = array();
+		$costs = array();
 		$groups = array();
+		$groupPlanned = array();
+        $groupCosts = array();
 
 		while( !$activity_it->end() )
 		{
-			$rows[$activity_it->get($group_field)][$activity_it->get($row_field)]['Day'.$activity_it->get('Day')] 
-					+= $activity_it->get('Capacity');
+			$rows[$activity_it->get($group_field)][$activity_it->get($row_field)]['Day'.$activity_it->get('Day')]
+                += $activity_it->get('Capacity');
+
+            $costs[$activity_it->get($group_field)][$activity_it->get($row_field)]['Day'.$activity_it->get('Day')]
+                += $activity_it->get('Capacity') * $activity_it->get('Rate');
+
             $rows[$activity_it->get($group_field)][$activity_it->get($row_field)]['Comment'.$activity_it->get('Day')][] =
                 array (
                     'Task' => $methodologyIt->HasTasks() ? $activity_it->get('Task') : '',
@@ -92,7 +111,13 @@ class SpentTimeRegistry extends ObjectRegistrySQL
                                         ? $activity_it->get('TaskCaption')
                                         : $activity_it->get('RequestCaption'))
                 );
-			$groups[$activity_it->get($group_field)]['Day'.$activity_it->get('Day')] += $activity_it->get('Capacity');
+
+			$groups[$activity_it->get($group_field)]['Day'.$activity_it->get('Day')]
+                += $activity_it->get('Capacity');
+
+            $planned[$activity_it->get($group_field)][$activity_it->get($row_field)]['Task'.$activity_it->get('Task')]
+                = $activity_it->get('TaskPlanned');
+
 			$activity_it->moveNext();
 		}
 
@@ -100,18 +125,30 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		foreach( $groups as $group_id => $values )
 		{
 			if ( $group_id != '' ) {
-				$data[] = array_merge(
+                $plannedGroup = 0;
+                foreach( $planned[$group_id] as $row ) {
+                    $plannedGroup += array_sum($row);
+                }
+
+                $costGroup = 0;
+                foreach( $costs[$group_id] as $row ) {
+                    $costGroup += array_sum($row);
+                }
+
+    			$data[] = array_merge(
 						array (
 							'Item' => $group_field,
 							'ItemId' => $group_id,
 							$group_field => $group_id,
 							'Total' => array_sum($values),
+                            'TotalPlanned' => $plannedGroup,
+                            'TotalCosts' => $costGroup,
 							'Group' => 1
 						),
 						$values
 					);
 			}
-			
+
 			foreach( $rows[$group_id] as $row_id => $values  )
 			{
 				$data[] = array_merge(
@@ -120,6 +157,8 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 							'ItemId' => $row_id,
 							$group_field => $group_id,
 							'Total' => array_sum($values),
+                            'TotalPlanned' => array_sum($planned[$group_id][$row_id]),
+                            'TotalCosts' => array_sum($costs[$group_id][$row_id]),
 							'Group' => 0
 						),
 						$values

@@ -2,55 +2,12 @@
 
 class WikiPageIterator extends StatableIterator
 {
-	private $content_storage;
-	private $style_storage;
-
-   	function get_native( $attr )
- 	{
- 		switch ( $attr )
- 		{
- 			case 'Content':
-				$native = parent::get_native( $attr );
- 				if ( $native != '' || array_key_exists('Content', $this->getData()) ) return $native;
-
- 				if ( !isset($this->content_storage[$this->getId()]) ) $this->cacheContentAndStyle();
-		        return $this->content_storage[$this->getId()];
-
- 			case 'UserField3':
-				if ( parent::get_native('ContentPresents') != 'Y' ) return parent::get_native( $attr );
-
- 				if ( !isset($this->style_storage[$this->getId()]) ) $this->cacheContentAndStyle();
-		        return $this->style_storage[$this->getId()];
-
-		    default:
- 				return parent::get_native( $attr );
- 		}
- 	}
-
-    function get( $attr )
- 	{
- 		switch ( $attr )
- 		{
- 			case 'Content':
- 			case 'UserField3':
- 				return $this->get_native($attr);
-
- 			default:
- 				return parent::get( $attr );
- 		}
- 	}
-
  	function getDisplayNameExt( $prefix = '', $baselineId = 0 )
     {
         if ( $baselineId > 0 ) {
             $baselineIt = getFactory()->getObject('cms_Snapshot')->getExact($baselineId);
             if ( $baselineIt->getId() != '' ) {
                 $prefix .= '['.$baselineIt->getDisplayName().'] ';
-            }
-        }
-        else {
-            if ( $this->get('DocumentVersion') != '' ) {
-                $prefix .= '['.$this->get('DocumentVersion').'] ';
             }
         }
         if ( $this->get('DocumentName') != '' && $this->get('ParentPage') != '' ) {
@@ -73,7 +30,7 @@ class WikiPageIterator extends StatableIterator
     {
         $value = $this->getDisplayName();
 
-        if ( in_array('uid', $options) ) {
+        if ( in_array('uid', $options) && $this->get('IsNoIdentity') == 'N' ) {
             $uid = $this->get('IncludesUID') != '' ? $this->get('IncludesUID') : $this->get('UID');
             $value = $uid.'&nbsp; '.$value;
         }
@@ -94,28 +51,17 @@ class WikiPageIterator extends StatableIterator
         }
 
         if ( in_array('comments', $options) ) {
-            if ( $this->get('NewComments') > 0 ) {
-                $value = '<i class="icon-comment icon-white"></i> ' . $value;
-            } elseif ( $this->get('CommentsCount') > 0 ) {
-                $value = '<i class="icon-comment"></i> ' . $value;
+            if ( $this->get('CommentsCount') > 0 ) {
+                if ( $this->get('NewComments') > 0 ) {
+                    $value = '<i class="icon-comment icon-white"></i> ' . $value;
+                }
+                else {
+                    $value = '<i class="icon-comment"></i> ' . $value;
+                }
             }
         }
 
         return $value;
-    }
-
-    private function cacheContentAndStyle()
- 	{
- 		if ( $this->getId() < 1 ) return;
-
- 		$registry = new WikiPageRegistryContent($this->object);
-
- 		$it = $registry->Query(array(
- 				new FilterInPredicate($this->getId())
- 			));
-
- 		$this->content_storage[$this->getId()] = $it->get_native('Content');
- 		$this->style_storage[$this->getId()] = $it->get_native('UserField3');
     }
 
 	function getChildrenIt()
@@ -140,7 +86,7 @@ class WikiPageIterator extends StatableIterator
 	 */
 	function getAllChildrenIds()
 	{
-		return $this->object->getRegistry()->Query(
+		return $this->object->getRegistry()->QueryKeys(
 				array (
 						new ParentTransitiveFilter($this->getId())
 				)
@@ -248,40 +194,6 @@ class WikiPageIterator extends StatableIterator
 	{
 	}
 
-	function Version( $was_content )
-	{
-		$change = getFactory()->getObject('WikiPageChange');
-		$change->setAttributeType('WikiPage', 'REF_'.get_class($this->object).'Id');
-
-		$change->add_parms( array(
-		    'WikiPage' => $this->getId(),
-		    'Content' => $was_content,
-		    'Author' => getSession()->getUserIt()->getId()
-		));
-	}
-	
-	function Revert($revertIt)
-	{
-        $this->object->setNotificationEnabled(false);
-        $this->object->modify_parms($this->getId(), array(
-            'Content' => $revertIt->getHtmlDecoded('Content'),
-            'Revert' => 'true'
-        ));
-
-        $change = getFactory()->getObject('WikiPageChange');
-        $changeIt = $change->getRegistry()->Query(
-            array(
-                new FilterAttributePredicate('WikiPage', $this->getId()),
-                new FilterNextKeyPredicate($revertIt)
-            )
-        );
-        while( !$changeIt->end() ) {
-            $change->delete($changeIt->getId());
-            $changeIt->moveNext();
-		}
-        $change->delete($revertIt->getId());
-	}
-	
 	function getValues()
 	{
 		return $this->object->getValues( $this );
@@ -330,5 +242,25 @@ class WikiPageIterator extends StatableIterator
             $commentIt->moveNext();
         }
         return \JsonWrapper::encode($data);
+    }
+
+    function buildDataHash()
+    {
+        $attributes =
+            array_diff(
+                (new \VersionedObject())->getExact(get_class($this->object))->get('Attributes'),
+                $this->object->getAttributesByGroup('system'),
+                array(
+                    'SortIndex', 'ParentPage', 'SectionNumber'
+                )
+            );
+
+        $data = array();
+        foreach( $attributes as $attribute ) {
+            if ( in_array($this->get($attribute), array('','0','NULL')) ) continue;
+            $data[] = md5(\TextUtils::getNormalizedString($this->getHtmlDecoded($attribute)));
+        }
+
+        return md5(join(',', $data));
     }
 }

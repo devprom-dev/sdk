@@ -2,7 +2,7 @@
 
 class WebMethod
 {
- 	var $frames, $title, $module;
+ 	var $title, $module;
  	
  	private $redirect_url = '';
  	private $freeze_method = null;
@@ -92,22 +92,6 @@ class WebMethod
 	    $this->redirect_url = $url;
 	}
  	
-	function addFrame( $frame )
-	{
-		if ( !is_array($this->frames) )
-		{
-			$this->frames = array();
-		}
-		
-		array_push($this->frames, $frame);
-	}
-	
-	function getFrames()
-	{
-		// returns array of frames names and urls to update their content
-		return $this->frames;
-	}
-	
 	function setFilter( $filter )
 	{
 		$this->filter_name = $filter;
@@ -195,59 +179,6 @@ class WebMethod
 			"', {".join(',', $data)."}, ".$redirect.", '".$this->getWarning()."', ".($this->async?'true':'false').", ".$this->beforeCallback.");";
 	}
  	
- 	function getLink( $parms_array ) 
- 	{
- 		global $script_number;
- 		$url = $this->getUrl( $parms_array );
- 		
- 		$script_number += 1;
- 		
- 		return $this->getPreCaption().
-			'<a class="'.$this->getLinkStyle().'" id="'.$this->getLinkId().'" href="javascript: '.$this->getMethodCall().'" title="'.$this->getDescription().'" rel="'.$url.'">'.
-				$this->getCaption().
-			'</a>';
- 	}
- 	
- 	function getLinkId()
- 	{
- 		global $script_number;
- 		return 'link_'.get_class($this).$script_number;
- 	}
- 	
- 	function getFramesArgument()
- 	{
-        $frames_array = $this->getFrames();
-
-        if ( count($frames_array) > 0 )
-        {
-        	$parms = array();
-        	for ( $i = 0; $i < count($frames_array); $i++ )
-        	{
-        		array_push($parms, $frames_array[$i]->getUid());
-        	}
-        	
-        	return "new Array('".join("' , '", $parms)."')";
-        }
-        else
-        {
-        	return 'new Array()';
-        }
- 	}
- 	
- 	function getMethodCall()
- 	{
- 		return "webmethod('".$this->getLinkId()."', ".$this->getFramesArgument().", '".
- 			$this->getRedirectUrl()."', '".$this->getWarning()."' );";
- 	}
- 	
- 	function drawLink( $parms_array ) {
- 		echo $this->getLink( $parms_array );
- 	}
- 	
- 	function getLinkStyle() {
- 		return '';
- 	}
- 	
  	function getParametersUrl( $parms_array ) {
  		return '';
  	}
@@ -257,31 +188,22 @@ class WebMethod
  		return 'method_'.get_class($this);
  	}
 
- 	function getMethodExecutionString()
- 	{
- 		global $script_number;
- 		
- 		return 'method_'.get_class($this).'('.$script_number.')';
- 	}
-
-	function wintoutf8($s) 
+	function wintoutf8($s)
  	{
  		return IteratorBase::wintoutf8($s);
  	}
 
  	function getObjectIt()
  	{
- 	 	global $model_factory;
- 		
  		if ( $_REQUEST['class'] == '' ) throw new Exception('Class name is required');
  		
  		if ( $_REQUEST['object'] == '' ) throw new Exception('Object is required');
  		
- 		$class_name = $model_factory->getClass($_REQUEST['class']);
+ 		$class_name = getFactory()->getClass($_REQUEST['class']);
  		
  		if ( !class_exists($class_name) ) throw new Exception('Unknown class name: '.$class_name);
  		
- 		$object_it = $model_factory->getObject($class_name)->getExact($_REQUEST['object']);
+ 		$object_it = getFactory()->getObject($class_name)->getExact($_REQUEST['object']);
  		
  		if ( $object_it->getId() < 1 ) throw new Exception('Unknown object identifier: '.$_REQUEST['object']);
 
@@ -290,7 +212,17 @@ class WebMethod
  		return $object_it;
  	}
 
- 	function parseFilterValue( $value ) {
+ 	function parseFilterValue($value, $context) {
  	    return $value;
+    }
+
+    function redirect( $url ) {
+        echo JsonWrapper::encode(
+            array (
+                'message' => 'location',
+                'state' => 'redirect',
+                'object' => $url,
+            )
+        );
     }
 }

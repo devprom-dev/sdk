@@ -35,7 +35,7 @@ class UserParticipatesModelBuilder extends ObjectModelBuilder
             $object->addAttribute('ProjectRole', 'REF_ProjectRoleId', translate('Роль'), false, false, '', 101);
         }
 
-		$object->addAttribute('Capacity', 'FLOAT', translate('Ежедневная загрузка, ч.'), true, false, '', 102);
+		$object->addAttribute('Capacity', 'FLOAT', translate('Ежедневная доступность, ч.'), true, false, '', 102);
 		$object->addAttribute('Project', 'REF_ProjectActiveId', translate('Проект'), false, false, '', 103);
 		$object->addAttribute('Participant', 'REF_ParticipantId', translate('Участник'), false, false, '', 104);
 		$object->addAttributeGroup('Participant', 'system');

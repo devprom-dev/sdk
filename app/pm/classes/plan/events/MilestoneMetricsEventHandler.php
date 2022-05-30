@@ -18,11 +18,10 @@ class MilestoneMetricsEventHandler extends SystemTriggersBase
 	    if ( count($ids) < 1 ) return;
 
 	    $service = new StoreMetricsService();
-    	$service->storeIssueMetrics(
-			getFactory()->getObject('Request')->getRegistry(),
+    	$service->forceIssueMetrics(
 			array (
 				new FilterInPredicate($ids),
-				new RequestMetricsPersister()
+                new \StatePredicate('notresolved')
 			)
 		);
 	}

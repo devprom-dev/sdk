@@ -56,10 +56,27 @@ class MailboxScannerTest extends DevpromTestCase {
 
         $this->requestMock = $this->getMockBuilder(\Request::class)
             ->setConstructorArgs(array())
-            ->setMethods(["add_parms", "getExact", "getByRefArray", "createSQLIterator", "getTerminalStates"])
+            ->setMethods(["add_parms", "getRegistry", "getExact", "getByRefArray", "createSQLIterator", "getTerminalStates"])
             ->getMock();
 
+        $this->requestRegistryMock = $this->getMockBuilder(\ObjectRegistrySQL::class)
+            ->setConstructorArgs(array($this->requestMock))
+            ->setMethods(["Create"])
+            ->getMock();
+        $this->requestRegistryMock->expects($this->any())->method('Create')->will(
+            $this->returnValue(
+                $this->requestMock->createCachedIterator(array(
+                    array(
+                        'Caption' => "Existing request",
+                        'pm_ChangeRequestId' => '1'
+                    )))
+            )
+        );
+        $this->requestMock->expects($this->any())->method('getRegistry')->will(
+            $this->returnValue($this->requestRegistryMock)
+        );
         $this->requestMock->expects($this->any())->method('add_parms')->will($this->returnValue(1));
+
         $this->requestMock->expects($this->any())->method('getExact')->will(
         		$this->returnValue(
                     $this->requestMock->createCachedIterator(array(
@@ -96,7 +113,8 @@ class MailboxScannerTest extends DevpromTestCase {
                 array ( 'cms_User', null, $this->user ),
                 array ( 'User', null, $this->user ),
                 array ( 'Severity', null, $this->user ),
-                array ( 'Priority', null, $this->user )
+                array ( 'Priority', null, $this->user),
+                array ( 'PMCustomAttribute', null, new \PMCustomAttribute())
             )
         ));
                 

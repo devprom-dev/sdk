@@ -19,6 +19,7 @@ include "predicates/RequestFinishAfterPredicate.php";
 include "predicates/RequestOwnerIsNotTasksAssigneeFilter.php";
 include "predicates/RequestDependsFilter.php";
 include "predicates/RequestSelectivePredicate.php";
+include "predicates/RequestHasTasksPredicate.php";
 include "sorts/IssueOwnerSortClause.php";
 include "sorts/IssueFunctionSortClause.php";
 include "validators/ModelValidatorIssueFeatureLevel.php";
@@ -33,7 +34,11 @@ class Request extends MetaobjectStatable
             new SortOrderedClause()
         ));
  	}
- 	
+
+    function getDisplayName() {
+        return getSession()->IsRDD() ? translate('Доработка') : parent::getDisplayName();
+    }
+
 	function createIterator() {
 		return new RequestIterator( $this );
 	}
@@ -66,11 +71,16 @@ class Request extends MetaobjectStatable
 	
 	function add_parms( $parms )
 	{
-		if ( $parms['EstimationLeft'] == '' ) $parms['EstimationLeft'] = $parms['Estimation'];
-		if ( $parms['EmailMessageId'] == '' ) {
+        if ( $parms['EstimationLeft'] == '' ) {
+		    $parms['EstimationLeft'] = $parms['Estimation'];
+        }
+		if ( !\TextUtils::isValueDefined($parms['EmailMessageId']) ) {
             $parms['EmailMessageId'] = '<'.uniqid(strtolower(get_class($this))) . '@alm>';
         }
-		
+		if ( !\TextUtils::isValueDefined($parms['Author']) ) {
+            $parms['Author'] = getSession()->getUserIt()->getId();
+        }
+
 		$request_id = parent::add_parms( $parms );
 		
 		if ( $parms['Question'] > 0 )

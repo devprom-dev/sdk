@@ -18,11 +18,6 @@ class IssueOrderNumTrigger extends SystemTriggersBase
 		
 		$sql = "UPDATE pm_ChangeRequest t SET t.OrderNum = @r:= (@r+1) WHERE t.FinishDate IS NULL AND t.OrderNum >= ".$minimalIndex." ORDER BY t.OrderNum ASC";
 		DAL::Instance()->Query( $sql );
-
-		$sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass) ".
-		       " SELECT NOW(), NOW(), t.VPD, t.pm_ChangeRequestId, 'Request' ".
-		       "     FROM pm_ChangeRequest t WHERE t.FinishDate IS NULL AND t.OrderNum >= ".$minimalIndex;
-		DAL::Instance()->Query( $sql );
 	}
 }
  

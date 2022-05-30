@@ -43,7 +43,6 @@ class RequestBulkForm extends BulkForm
  		{
  			case 'Tag':
             case 'Watchers':
- 			case 'Project':
  			case 'Iteration':
  			case 'LinkType':
             case 'CreateLinked':
@@ -85,7 +84,6 @@ class RequestBulkForm extends BulkForm
 	{
 		switch( $attribute )
 		{
-		    case 'RemoveTag':
             case 'RemoveWatchers':
 			case 'Tasks':
 		    	return false;
@@ -123,16 +121,6 @@ class RequestBulkForm extends BulkForm
  	{
  		switch ( $attribute )
  		{
- 			case 'Project':
- 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessibleActive'));
-				$field->SetId($attribute);
-				$field->SetName($attribute);
-				$field->SetValue($value);
-				$field->SetTabIndex($tab_index);
-				$field->SetRequired(true);
-				$field->draw();
-				break;
-
  			case 'Iteration':
  			    $iteration = getFactory()->getObject('IterationRecent');
  			    $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );

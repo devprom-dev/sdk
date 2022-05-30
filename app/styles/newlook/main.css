@@ -53,10 +53,12 @@ section.login label {
 section.login .enter {
 	margin-top: 40px;
 }
-section.login .enter button {
-	padding-left: 80px;
-	padding-right: 80px;
-	font-size: 20px;
+section.login .enter button,
+section.login .enter a.btn
+{
+	padding-left: 30px;
+	padding-right: 30px;
+	font-size: 18px;
 }
 .login-img {
 	object-fit: contain;
@@ -944,7 +946,7 @@ input.spent-time
 	padding-left: 8px;
 }
 .title-cell a.btn {
-	max-width: calc(100vw/8ptt);
+	max-width: calc(100vw/8);
 	overflow-x: hidden;
 	text-overflow: ellipsis;
 }
@@ -984,7 +986,6 @@ input.spent-time
 table.table-document
 {
     max-width: 100%;
-	min-height: 300px;
     background-color: transparent;
     border-collapse: collapse;
     border-spacing: 0;
@@ -1882,11 +1883,6 @@ span.project-search input {
 .p-link.p-sub {
 	margin-left: 41px;
 }
-.p-link.p-node i {
-	opacity: 0.6;
-	margin-right: 3px;
-	margin-top: 0;
-}
 .p-left-recent {
 	display: table-cell;
 	min-width: 270px;
@@ -2053,10 +2049,6 @@ a.text-link {
 }
 .source-text .source-text-data {
 	overflow-y: auto;
-}
-
-#fieldRowStartDate {
-	max-width: 280px;
 }
 
 .tab-pane.statablelifecyclesection {
@@ -2321,24 +2313,21 @@ div.frm-bdy {
 }
 div.frm-sct {
 	float: left;
+	visibility: visible;
+}
+div.frm-sct-bottom {
+	visibility: hidden;
 }
 
-@media screen and (min-device-width: 1024px) {
+@media screen and (max-width: 1359px) {
+	div.frm-sct-bottom {
+		visibility: visible;
+	}
 	div.frm-sct {
-		width: 100%;
+		visibility: hidden;
 	}
 }
-@media screen and (min-device-width: 1279px) {
-	div.frm-sct {
-		width: 100%;
-	}
-}
-@media screen and (min-width: 1359px) {
-	div.frm-sct {
-		width: 100%;
-	}
-}
-@media screen and (min-width: 1440px) {
+@media screen and (min-width: 1360px) {
 	div.frm-bdy {
 		width: 60%;
 	}
@@ -2438,8 +2427,10 @@ span[name=pm_TestCases] .hint-container {
 .action-buttons {
 	overflow: hidden;
 	height: 31px;
-	margin-left: 8px;
 	margin-top: -1px;
+}
+.wiki-page-document .action-buttons {
+	overflow: inherit;
 }
 .filter-actions .btn-group {
 	margin: 2px 0 3px 2px;
@@ -2522,6 +2513,11 @@ tr:first-child th #filter-settings {
 	margin: 0;
 }
 
+.fltr-clm:last-child ul.dropdown-menu {
+	right: 0;
+	left: auto;
+}
+
 .free-wall .cell {
 	overflow: hidden;
 	border: 1px solid #efefef;
@@ -2596,7 +2592,7 @@ tr:first-child th #filter-settings {
 	position: relative;
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: 0px 10px;
+	padding: 0px 13px 0 0;
 }
 .treeview-container {
 	position: relative;
@@ -2657,6 +2653,7 @@ div.wysiwyg *:nth-child(n+3).wysiwyg-body {
 
 button.multiselect {
 	min-width: 120px;
+	max-width: inherit;
 }
 button.multiselect .multiselect-selected-text {
 	float: left;
@@ -2746,7 +2743,7 @@ button.multiselect .caret {
 }
 
 .comment-well {
-	border: 1px solid #efebeb;
+	border: 2px solid #efebeb;
 	border-radius: 6px;
 	background-color: white;
 }
@@ -2758,6 +2755,12 @@ td .comment-well:nth-child(n+2) {
 	padding: 2px 8px;
 	background-color: #f0f3f8;
 }
+#commentslist1 tr.active[object-id] td {
+	background-color: #c5cbd6;
+}
+#commentslist1 tr.active[object-id] .comment-well {
+	border-color: #e9b46b;
+}
 .comment-well .wysiwyg {
 	padding: 0;
 	margin: 0 8px 0 12px;
@@ -2768,6 +2771,10 @@ td .comment-well:nth-child(n+2) {
 }
 .comment-well .dates {
 	margin: 8px 12px;
+	white-space: nowrap;
+	overflow-x: hidden;
+	text-overflow: ellipsis;
+	max-width: 320px;
 }
 .comment-well .dates .user-mini {
 	margin-bottom: -5px;
@@ -2803,4 +2810,51 @@ mark.selected {
 
 .FieldTestCaseExecution .table-inner-div {
 	padding: 0;
+}
+
+.filter-pair input:first-child {
+	width: 47%;
+	float: left;
+}
+.filter-pair input:last-child {
+	width: 47%;
+	float: right;
+}
+
+code.source {
+	height: calc(100vh - 126px);
+}
+
+div[alm-widget-module] {
+	overflow-x: auto;
+	-ms-overflow-style: auto;
+}
+div[alm-widget-module] table.wishes-table>thead th {
+	white-space: nowrap;
+}
+
+.filter-body {
+	padding:6px 10px 0 0;
+	width:99%;
+	opacity:0;
+	max-height: calc(100vh - 200px);
+}
+
+table.reviewers tbody tr td {
+	vertical-align: top;
+	max-width: 1%;
+}
+table.reviewers td:last-child {
+	white-space: nowrap;
+}
+table.reviewers td.rev-progress {
+	min-width: 120px;
+}
+
+.well hr {
+	margin: 5px 0;
+}
+
+[contenteditable=true] span.diagrams img {
+	cursor: pointer !important;
 }

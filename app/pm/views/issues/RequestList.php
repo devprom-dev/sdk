@@ -6,34 +6,22 @@ include "RequestReleaseBurndownChart.php";
 
 class RequestList extends PMPageList
 {
-	private $estimation_field = null;
 	private $visible_columns = array();
     private $strategy = null;
     private $velocity = 0;
-    private $assigneeField = null;
     private $typeField = null;
 
 	function RequestList( $object ) 
 	{
 		$object->setAttributeOrderNum('OrderNum', 35);
-		
-		parent::PMPageList($object);
+		parent::__construct($object);
 	}
 	
 	function buildRelatedDataCache()
 	{
         $this->non_terminal_states = $this->getObject()->getNonTerminalStates();
-		$this->estimation_field = new FieldIssueEstimation($this->getObject()->getEmptyIterator());
         $this->strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
         $this->velocity = getSession()->getProjectIt()->getVelocityDevider();
-
-        if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Owner') ) {
-            $this->assigneeField = new FieldReferenceAttribute(
-                $this->getObject()->getEmptyIterator(),
-                'Owner',
-                getFactory()->getObject('ProjectUser')
-            );
-        }
 
         if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Type') ) {
             $this->typeField = new FieldReferenceAttribute(
@@ -42,16 +30,9 @@ class RequestList extends PMPageList
                 getFactory()->getObject('RequestType')
             );
         }
+	}
 
-        $this->getTable()->buildRelatedDataCache();
-	}
-	
- 	function IsNeedToSelectRow( $object_it )
-	{
-		return true;
-	}
-	
-	function IsNeedToDisplayLinks( ) 
+	function IsNeedToDisplayLinks( )
 	{ 
 	    return false; 
 	}
@@ -139,16 +120,6 @@ class RequestList extends PMPageList
                 }
                 break;
 
-            case 'Owner':
-                if ( is_object($this->assigneeField) ) {
-                    $this->assigneeField->setObjectIt($object_it);
-                    $this->assigneeField->draw($this->getRenderView());
-                }
-                else {
-                    parent::drawRefCell( $entity_it, $object_it, $attr );
-                }
-                break;
-
             case 'Type':
                 if ( is_object($this->typeField) ) {
                     $this->typeField->setObjectIt($object_it);
@@ -191,18 +162,15 @@ class RequestList extends PMPageList
                     parent::drawCell($object_it, $attr);
                 }
 			break;
-			
-			case 'Estimation':
-                if ( in_array('astronomic-time', $this->getObject()->getAttributeGroups($attr)) ) {
+
+            case 'Estimation':
+                if ( $this->strategy instanceof \EstimationHoursStrategy || $object_it->get($attr) == '' ) {
                     parent::drawCell($object_it, $attr);
                 }
                 else {
-                    echo '<div style="margin-left:22px;">';
-                    $this->estimation_field->setObjectIt($object_it);
-                    $this->estimation_field->draw($this->getRenderView());
-                    echo '</div>';
+                    echo $this->strategy->getDimensionText($object_it->get($attr));
                 }
-    			break;
+                break;
 
             case 'DeliveryDate':
                 $deadline_alert =
@@ -297,5 +265,14 @@ class RequestList extends PMPageList
         }
 
         parent::render($view, $parms);
+    }
+
+    function getBulkAttributes() {
+        return array_diff(
+            parent::getBulkAttributes(),
+            array(
+                'Type'
+            )
+        );
     }
 }

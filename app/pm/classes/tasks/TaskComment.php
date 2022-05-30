@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/comments/Comment.php";
 include "TaskCommentRegistry.php";
 
 class TaskComment extends Comment

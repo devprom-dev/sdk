@@ -9,7 +9,7 @@ class ModelDataTypeMappingFile extends ModelDataTypeMapping
 		return in_array($type_name, array('file','image'));
 	}
 	
-	public function mapInstance( $attribute, $values )
+	public function mapInstance( $attribute, $values, array $groups )
 	{
 		if ( in_array($values[$attribute], array('','file')) ) return $values[$attribute];
 		
@@ -23,5 +23,5 @@ class ModelDataTypeMappingFile extends ModelDataTypeMapping
 		return "";
 	}
 	
-	public function map( $value ) {}
+	public function map( $value, array $groups = array() ) {}
 }

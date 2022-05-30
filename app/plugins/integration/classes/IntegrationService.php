@@ -10,6 +10,7 @@ include "channels/IntegrationRedmineChannel.php";
 include "channels/IntegrationYouTrackChannel.php";
 include "channels/IntegrationGitlabChannel.php";
 include "channels/IntegrationTfsChannel.php";
+include "channels/IntegrationDevpromRESTChannel.php";
 
 class IntegrationService
 {
@@ -29,7 +30,7 @@ class IntegrationService
         $this->remote_channel->setMapping($this->mapping);
         $this->remote_channel->setCurlDelay($curlDelay);
 
-        $this->self_channel->setHtmlAllowed($this->remote_channel->getHtmlAllowed());
+        $this->self_channel->setWysiwygMode($this->remote_channel->getWysiwygMode());
     }
 
     public function setItemsToProcess( $items ) {
@@ -64,7 +65,7 @@ class IntegrationService
                 $this->getLogger()->error($status_text.PHP_EOL.$e->getTraceAsString());
             }
 
-            $queue = $this->getItemsQueue($this->itemsToProcess);
+            $queue = $this->getItemsQueue();
 
             if ( count($queue['items']) < 1 ) {
                 $this->getLogger()->info('Integration queue is empty for '.$this->object_it->getDisplayName());
@@ -222,7 +223,7 @@ class IntegrationService
                                     $externalId = $id;
                                 }
 
-                                if ( $internalId != '' && $externalId != '' ) {
+                                if ( $internalId != '' && $externalId != '' && in_array($this->object_it->get('Type'), array('write','readwrite')) ) {
                                     $uid = new ObjectUID();
                                     $info = $uid->getUIDInfo(getFactory()->getObject($item['class'])->getExact($internalId));
                                     try {
@@ -264,7 +265,7 @@ class IntegrationService
         $this->getLogger()->info('Integration process has been completed for '.$this->object_it->getDisplayName());
     }
 
-    protected function getItemsQueue( $limit = 256 )
+    protected function getItemsQueue( $limit = 300 )
     {
         $queue = json_decode($this->object_it->getHtmlDecoded('ItemsQueue'), true);
         if ( count($queue['items']) > 0 ) return $queue;
@@ -315,6 +316,8 @@ class IntegrationService
                 return new IntegrationGitlabChannel($this->object_it, $this->getLogger());
             case 'tfs':
                 return new IntegrationTfsChannel($this->object_it, $this->getLogger());
+            case 'alm':
+                return new IntegrationDevpromRESTChannel($this->object_it, $this->getLogger());
             default:
                 return new IntegrationDummyChannel($this->object_it);
         }
@@ -354,6 +357,14 @@ class IntegrationService
         return $this->logger;
     }
 
+    function setDoMigration( $value = true ) {
+        $this->doMigration = $value;
+    }
+
+    function getDoMigration() {
+        return $this->doMigration;
+    }
+
     private $object_it = null;
     private $remote_channel = null;
     private $self_channel = null;
@@ -362,4 +373,5 @@ class IntegrationService
     private $mapping = array();
     private $itemsToProcess = 60;
     private $logger = null;
+    private $doMigration = false;
 }

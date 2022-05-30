@@ -2,9 +2,11 @@
 
 namespace Devprom\ApplicationBundle\Controller;
 
+use Devprom\ApplicationBundle\Service\Project\ProjectNavigatorTreeService;
 use Devprom\CommonBundle\Controller\PageController;
 use Symfony\Component\HttpFoundation\Request;
 use Devprom\ApplicationBundle\Service\CreateProjectService;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 include_once SERVER_ROOT_PATH."co/views/Common.php";
 include SERVER_ROOT_PATH."co/views/ProjectCreatePage.php";
@@ -126,5 +128,13 @@ class ProjectController extends PageController
         if ( is_object($response = $this->checkUserAuthorized($request)) ) return $response;
 
     	return $this->responsePage( new \ProjectWelcomePage() );
+    }
+
+    public function navigationTreeAction(Request $request)
+    {
+        $service = new ProjectNavigatorTreeService();
+        return new JsonResponse(
+            $service->getTreeGridJsonView()
+        );
     }
 }

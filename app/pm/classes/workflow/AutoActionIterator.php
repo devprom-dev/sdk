@@ -46,11 +46,11 @@ class AutoActionIterator extends OrderedIterator
 			  		break;
 
 				case 'less':
-					$items[] = $attributeName.'<"'.$value.'"';
+					$items[] = is_numeric($value) ? "{$attributeName} < {$value}" : $attributeName.'<"'.$value.'"';
 					break;
 
 				case 'greater':
-					$items[] = $attributeName.'>"'.$value.'"';
+					$items[] = is_numeric($value) ? "{$attributeName} > {$value}" : $attributeName.'>"'.$value.'"';
 					break;
 			}
 		}
@@ -70,6 +70,55 @@ class AutoActionIterator extends OrderedIterator
         foreach( $conditions['items'] as $condition ) {
             $items[] = $condition['Condition'];
         }
+        return $items;
+    }
+
+    function getConditionQueryParms()
+    {
+        $conditions = JsonWrapper::decode($this->getHtmlDecoded('Conditions'));
+        if ( !is_array( $conditions['items']) ) {
+            return array( new FilterInPredicate('-123'));
+        }
+
+        $items = array();
+        $subject = getFactory()->getObject($this->object->getSubjectClassName());
+
+        foreach( $conditions['items'] as $condition )
+        {
+            $attribute = $condition['Condition'];
+            $value = $condition['Value'];
+
+            if ( $attribute == 'State' && $subject instanceof MetaobjectStatable ) {
+                $stateIt = \WorkflowScheme::Instance()->getStateIt($subject);
+                $stateIt->moveTo('Caption', $value);
+                $value = $stateIt->get('ReferenceName');
+            }
+
+            switch ( $condition['Operator'] )  {
+                case 'is':
+                    $items[] = new FilterAttributePredicate($attribute, $value);
+                    break;
+                case 'isnot':
+                    $items[] = new FilterHasNoAttributePredicate($attribute, $value);
+                    break;
+                case 'contains':
+                    $items[] = new FilterSearchAttributesPredicate($value, array($attribute));
+                    break;
+                case 'unknown':
+                    $items[] = new FilterAttributeNullPredicate($attribute);
+                    break;
+                case 'any':
+                    $items[] = new FilterAttributeNotNullPredicate($attribute);
+                    break;
+                case 'less':
+                    $items[] = new FilterAttributeLesserPredicate($attribute, $value);
+                    break;
+                case 'greater':
+                    $items[] = new FilterAttributeGreaterPredicate($attribute, $value);
+                    break;
+            }
+        }
+
         return $items;
     }
 }

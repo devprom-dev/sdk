@@ -55,9 +55,15 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
                 $action_it->moveNext();
                 continue;
             }
+
+            $notificator = new PMChangeLogNotificator();
+
             try {
                 Logger::getLogger('System')->info('Applying system action: '.$rule_it->getDisplayName());
-                $rule_it->apply( $object_it, $this->getData() );
+                $rule_it->apply( $object_it, $this->getData(), $action_it->getHtmlDecoded('Parameters') );
+                $notificator->setRecordData( array(
+                        'SystemActionUserName' => $rule_it->getDisplayName()
+                    ));
             }
             catch( Exception $e ) {
                 Logger::getLogger('System')->error(
@@ -65,7 +71,13 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
                     $e->getMessage().PHP_EOL.
                     $e->getTraceAsString()
                 );
+                $notificator->setRecordData( array(
+                    'SystemActionUserName' => $rule_it->getDisplayName(),
+                    'SystemActionErrors' => $e->getMessage()
+                ));
             }
+
+            $notificator->modify( $object_it, $object_it );
             $action_it->moveNext();
         }
     }

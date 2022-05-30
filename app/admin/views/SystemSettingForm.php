@@ -1,5 +1,4 @@
 <?php
-include SERVER_ROOT_PATH . "core/classes/system/validators/ModelValidatorSystemSettingsTimezone.php";
 include "ui/FieldRestCache.php";
 
 class SystemSettingsForm extends PageForm
@@ -121,6 +120,7 @@ class SystemSettingsForm extends PageForm
 			'SERVER_CORPDB_PATH',
 			'SERVER_CORPMYSQL_PATH',
 			'SERVER_ROOT_PATH',
+            'SERVER_LOGS_PATH',
 			'DOCUMENT_ROOT',
 			'CACHE_PATH'
 			);
@@ -135,15 +135,6 @@ class SystemSettingsForm extends PageForm
 			return join($lines, "\r\n");
 	}
 	
-    function getValidators() {
-        return array_merge(
-            parent::getValidators(),
-            array(
-                new ModelValidatorSystemSettingsTimezone()
-            )
-        );
-    }
-
     function getPageTitle()
     {
         return translate('Приложение');

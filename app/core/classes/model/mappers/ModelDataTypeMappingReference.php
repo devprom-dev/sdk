@@ -9,21 +9,24 @@ class ModelDataTypeMappingReference extends ModelDataTypeMapping
 	{
         if ( $type_name == 'reference' ) return true;
         $matches = array();
-	    if ( !preg_match('/([a-zA-Z_]+)Id/i', $type_name, $matches) ) return false;
+	    if ( !preg_match('/([a-zA-Z_]+)id/i', strtolower($type_name), $matches) ) return false;
         $matches[1] = str_replace('ref_', '', strtolower($matches[1]));
-        if ( !class_exists($matches[1]) ) return false;
-        $this->entityReferenceName = $matches[1];
+        $className = getFactory()->getClass($matches[1]);
+        if ( !class_exists($className) ) return false;
+        $this->entityReferenceName = $className;
         return true;
 	}
 	
-	public function map( $value )
+	public function map( $value, array $groups = array() )
 	{
-        if ( is_null($value) || $value == 'NULL' ) $value = '';
+        if ( \TextUtils::isNullValue($value) ) return '';
+
 	    if ( is_array($value) ) {
 	        $value = join(',', array_filter($value, function($item) {
-	            return $item != 'NULL' && strlen($item) > 0;
+	            return strtolower($item) != 'null' && strlen($item) > 0;
 	        }));
         }
+	    $uidService = new ObjectUID;
 
         if ( $this->entityReferenceName != '' && $value != '' )
         {
@@ -40,23 +43,32 @@ class ModelDataTypeMappingReference extends ModelDataTypeMapping
                     $resultValues = array();
                     $accessPolicy = getFactory()->getAccessPolicy();
 
-                    foreach( \TextUtils::parseItems($value) as $valueItem ) {
-                        if (is_numeric($valueItem)) {
+                    foreach( \TextUtils::parseItems($value) as $valueItem )
+                    {
+                        $matches = array();
+                        if ( preg_match('/\[([^\]]+)\]/i', $valueItem, $matches) ) {
+                            $uid = $matches[1];
+                            $objectIt = $uidService->getObjectIt($uid);
+                            if ( $objectIt->getId() != '' ) {
+                                $resultValues[] = $objectIt->getId();
+                                continue;
+                            }
+                        }
+
+                        if (ctype_digit($valueItem)) {
                             $objectIt = $reference->getExact($valueItem);
                             if ( $objectIt->getId() != '' ) {
                                 $resultValues[] = $objectIt->getId();
                             }
                         }
-                        else {
-                            if ( $accessPolicy->can_modify($reference) && $accessPolicy->can_create($reference) ) {
-                                $objectIt = $reference->getRegistry()->Merge(
-                                    array(
-                                        $alternativeKey => $valueItem
-                                    )
-                                );
-                                if (is_object($objectIt)) {
-                                    $resultValues[] = $objectIt->getId();
-                                }
+                        else if ( $accessPolicy->can_modify($reference) && $accessPolicy->can_create($reference) ) {
+                            $objectIt = $reference->getRegistry()->Merge(
+                                array(
+                                    $alternativeKey => $valueItem
+                                )
+                            );
+                            if (is_object($objectIt)) {
+                                $resultValues[] = $objectIt->getId();
                             }
                         }
                     }

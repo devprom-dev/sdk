@@ -7,7 +7,7 @@ class ProjectArtifactMetadataBuilder extends ObjectMetadataBuilder
         'pm_Workspace', 'pm_WorkspaceMenu', 'pm_WorkspaceMenuItem', 'pm_StateObject', 'pm_Watcher', 'cms_Resource',
         'pm_Methodology', 'pm_ProjectRole', 'pm_ParticipantRole', 'pm_AccessRight', 'co_AccessRight', 'pm_ObjectAccess',
         'pm_CustomAttribute', 'pm_IssueType', 'pm_TaskType', 'WikiPageType', 'pm_StateAttribute', 'pm_StateAction', 'pm_Transition',
-        'pm_TransitionAttribute', 'pm_TransitionAction', 'pm_TransitionPredicate', 'entity',
+        'pm_TransitionAction', 'pm_TransitionPredicate', 'entity', 'ObjectChangeLog',
         'pm_TransitionRole', 'pm_FeatureType', 'pm_UserSettings', 'pm_CustomReport', 'pm_ProjectLink'
     );
 

@@ -799,3 +799,18 @@ article.post th {
 textarea.search-field {
   width: 100%;
 }
+
+#issue_feedback_form_feedback {
+  color: gold;
+  font-size: x-large;
+  padding-top: 7px;
+}
+.issue-fb {
+  font-size: x-large;
+  color:gold;
+  text-decoration: none;
+}
+.issue-fb:hover {
+  text-decoration: none;
+  color:gold;
+}

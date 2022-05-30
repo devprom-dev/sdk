@@ -8,7 +8,7 @@ class AttachmentUnifiedRegistry extends ObjectRegistrySQL
         );
     }
 
- 	function getQueryClause()
+ 	function getQueryClause(array $parms)
  	{
 		$sql = "
 			SELECT t.pm_AttachmentId,

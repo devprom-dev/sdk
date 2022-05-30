@@ -10,7 +10,7 @@ class WikiPageUsedByPersister extends ObjectSQLPersister
  	{
  		return array(
 			" (SELECT GROUP_CONCAT(CAST(ub.WikiPageId AS CHAR)) 
-			     FROM WikiPage ub WHERE LOCATE(CONCAT('".get_class($this->getObject()).":',t.WikiPageId),ub.Dependency)) UsedBy "
+			     FROM WikiPage ub WHERE FIND_IN_SET(CONCAT('".get_class($this->getObject()).":',t.WikiPageId),ub.Dependency)) UsedBy "
 		);
  	}
 }

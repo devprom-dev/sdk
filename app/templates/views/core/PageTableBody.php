@@ -103,11 +103,21 @@ if ( is_array($filtersMenu) ) {
                         $maxButtons = defined('MAX_PLUS_ACTIONS') ? MAX_PLUS_ACTIONS : 7;
 
                         foreach( array_slice($buttons, 0, $maxButtons) as $key => $item ) { ?>
+                            <? if ( is_array($item['items']) ) { ?>
+                            <div class="btn-group pull-left plus-action">
+                                <a class="btn dropdown-toggle btn-sm <?=($item['class'] == '' ? 'btn-success' : $item['class'])?>" data-toggle="dropdown">
+                                    <i class="<?=($item['icon'] != '' ? $item['icon'] : 'icon-plus')?>"></i> <?=$item['name']?>
+                                    <span class="caret"></span>
+                                </a>
+                                <? echo $view->render('core/PopupMenu.php', array ('items' => $item['items'])); ?>
+                            </div>
+                            <? } else { ?>
                             <div class="btn-group pull-left plus-action">
                                 <a id="<?=($item['uid'] != '' ? $item['uid'] : $key)?>" class="btn plus-action append-btn btn-sm <?=($item['class'] == '' ? 'btn-success' : $item['class'])?>" href="<?=$item['url']?>">
                                     <i class="<?=($item['icon'] != '' ? $item['icon'] : 'icon-plus')?> icon-white"></i> <?=($buttonsNumber > 2 ? TextUtils::getWords($item['name']) : $item['name'])?>
                                 </a>
                             </div>
+                            <? } ?>
                         <?php }
                         $restActions = array_slice($buttons, $maxButtons);
                         ?>
@@ -161,16 +171,10 @@ if ( is_array($filtersMenu) ) {
     				)) 
     		: $table->draw( $view );
 
-		$is_need_navigator = $table->IsNeedNavigator() && is_object($list);
-
-		if ( is_object($list) && $is_need_navigator ) {
+		if ( is_object($list) && $list->IsNeedNavigator() ) {
 		    $list->drawNavigator($view, false, $table->getRowsOnPage());
         } else {
 		    $table->drawFooter();
-        }
-
-        if ( !$tableonly ) {
-            $table->drawScripts();
         }
 
         if ( $hint != '' ) {
@@ -180,7 +184,7 @@ if ( is_array($filtersMenu) ) {
         }
 	?>
 	</div>
-	<? if ( !is_a($list, 'PageChart') && !$tableonly && count($details) > 0 ) { ?>
+	<? if ( $list->getDetailsPaneVisible() && !$tableonly && count($details) > 0 ) { ?>
 		<div class="table-details invisible" style="height:100%;" onclick="if($(this).is('.invisible')){toggleMasterDetails(true);}">
 			<?php
 				$list->getIteratorRef()->moveFirst();
@@ -196,3 +200,8 @@ if ( is_array($filtersMenu) ) {
 		</div>
 	<? } ?>
 </div>
+
+<?php
+if ( !$tableonly ) {
+    $table->drawScripts();
+}

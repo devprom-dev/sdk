@@ -5,23 +5,22 @@
 include_once SERVER_ROOT_PATH.'core/c_session.php';
 include_once SERVER_ROOT_PATH."core/classes/project/PortfolioAllBuilder.php";
 include_once SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
-
+include_once SERVER_ROOT_PATH."core/classes/search/SearchableMetadataBuilder.php";
 include SERVER_ROOT_PATH.'pm/classes/model/ModelFactoryProject.php';
 include SERVER_ROOT_PATH.'pm/classes/model/permissions/AccessPolicyProject.php';
-
 include SERVER_ROOT_PATH.'pm/classes/widgets/ModuleCategoryBuilderCommon.php';
 include SERVER_ROOT_PATH.'pm/classes/product/widgets/ModuleBuilderProduct.php';
+include SERVER_ROOT_PATH.'pm/classes/design/widgets/ModuleBuilderComponent.php';
 include SERVER_ROOT_PATH.'pm/classes/widgets/ObjectsListWidgetBuilderCommon.php';
 include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceBuilder.php';
 include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceCustomReportsBuilder.php';
-
-include SERVER_ROOT_PATH.'pm/classes/common/PMUserSettings.php'; 
+include SERVER_ROOT_PATH.'pm/classes/common/PMUserSettings.php';
 include SERVER_ROOT_PATH."pm/classes/common/ModuleProjectsBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/SharedObjectsCommonBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/SharedObjectsTasksBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/SharedObjectsPlanBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/ObjectMetadataCustomAttributesBuilder.php";
-include SERVER_ROOT_PATH."pm/classes/common/ObjectModelCustomAttributesBuilder.php";
+include SERVER_ROOT_PATH . "pm/classes/common/CustomAttributesObjectReferencesModelBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/ObjectMetadataPermissionsBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/ProjectArtifactMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/search/SearchableObjectsCommonBuilder.php";
@@ -40,17 +39,13 @@ include SERVER_ROOT_PATH."pm/classes/workflow/WorkflowMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/events/ApplyBusinessActionsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/events/ResetFieldsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/events/AutoActionEventHandler.php";
-
 include SERVER_ROOT_PATH."pm/classes/resources/ResourceBuilderTerminology.php";
 include SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderWorkflow.php";
-
 include SERVER_ROOT_PATH."pm/classes/settings/DictionaryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/settings/WorkflowBuilderCommon.php";
-
 include SERVER_ROOT_PATH."pm/views/common/PageSettingSet.php";
 include SERVER_ROOT_PATH.'pm/views/common/PageSettingCommonBuilder.php';
 include SERVER_ROOT_PATH."pm/classes/settings/EstimationStrategyCommonBuilder.php";
-
 include SERVER_ROOT_PATH."pm/classes/report/ReportsCommonBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/report/events/CustomReportModelEventsHandler.php";
 include SERVER_ROOT_PATH."pm/classes/tags/TagMetadataBuilder.php";
@@ -60,24 +55,22 @@ include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueOrderNumTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueModifyProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/ResetTasksEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/RequestMetricsEventHandler.php";
+include SERVER_ROOT_PATH."pm/classes/issues/MetricIssueBuilderDeliveryDate.php";
+include SERVER_ROOT_PATH."pm/classes/issues/MetricIssueBuilderFact.php";
 include SERVER_ROOT_PATH."pm/classes/plan/events/MilestoneMetricsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/plan/events/PlanItemsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/time/events/TimeSpentEvent.php";
-
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/triggers/TaskOrderNumTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskTypeMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/events/TaskModifyProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/events/TaskMetricsEventHandler.php";
-
 include SERVER_ROOT_PATH."pm/classes/plan/IterationMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/ReleaseMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/MilestoneMetadataBuilder.php";
-
 include SERVER_ROOT_PATH."pm/classes/product/FeatureMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/product/ProjectTemplateArtefactsBuilderProduct.php";
 include SERVER_ROOT_PATH."pm/classes/product/events/FeatureUpdateMetricsEventHandler.php";
-
 include SERVER_ROOT_PATH."pm/classes/common/HistoricalObjectsRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/comments/CommentMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderCommon.php";
@@ -85,11 +78,9 @@ include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuil
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateArtefactsBuilderWorkItems.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectMetricsModelBuilderDates.php";
 include SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectLinkedSelfPredicate.php";
-
 include SERVER_ROOT_PATH."pm/classes/common/triggers/CacheSessionProjectTrigger.php";
-include SERVER_ROOT_PATH."pm/classes/communications/triggers/DeleteCommentsTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/communications/events/ProjectPageModifyProjectTrigger.php";
-
+include SERVER_ROOT_PATH."pm/classes/design/ComponentMetadataBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/notificators/EmailNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/notificators/PMChangeLogNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetWorkItemDatesTrigger.php";
@@ -97,15 +88,17 @@ include_once SERVER_ROOT_PATH."pm/classes/model/events/ClearCommentsEvent.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/ClearChangeNotificationsEvent.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/StoreTextChangesEvent.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/events/BusinessActionModifiedEvent.php";
-
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiBreakTraceTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageMetadataBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageBusinessActionBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/events/RemoveObsoleteAttachmentsEventHandler.php";
+include_once SERVER_ROOT_PATH."pm/classes/wiki/events/WikiPageDataHashEventHandler.php";
 include_once SERVER_ROOT_PATH."pm/classes/communications/ProjectPageMetadataBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/events/AttachmentEntityRemoveEvent.php";
+include_once SERVER_ROOT_PATH.'pm/classes/widgets/PageFormTabGroupBuilderCommon.php';
+include_once SERVER_ROOT_PATH."pm/classes/settings/ObjectMetadataStateAttributeBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/permissions/AttributePermissionEntityCommonBuilder.php";
 
-///////////////////////////////////////////////////////////////////////
 class PMSession extends SessionBase
 {
  	protected $part_it;
@@ -182,7 +175,6 @@ class PMSession extends SessionBase
  	            array (
                         new ProjectArtifactMetadataBuilder(),
  	            		new ResourceBuilderCoLanguageFile(),
-                        new PortfolioAllBuilder(),
                         new CacheResetTrigger(),
                         new WorkflowMetadataBuilder(),
  	            		new WikiPageMetadataBuilder(),
@@ -194,8 +186,10 @@ class PMSession extends SessionBase
  	                    new ReportsCommonBuilder(),
  	                    new SearchableObjectsCommonBuilder(),
  	                    new AccessRightEntitySetCommonBuilder(),
+                        new AttributePermissionEntityCommonBuilder(),
  	                    new TagMetadataBuilder(),
  	                    new RequestMetadataBuilder(),
+                        new ComponentMetadataBuilder(),
  	            		new TaskTypeMetadataBuilder(),
  	                    new TaskMetadataBuilder(),
  	                    new IterationMetadataBuilder(),
@@ -204,7 +198,6 @@ class PMSession extends SessionBase
  	                    new IssueOrderNumTrigger(),
  	                    new TaskOrderNumTrigger(),
  	                    new SetWorkItemDatesTrigger(),
- 	                    new DeleteCommentsTrigger(),
  	                    new IssueModifyProjectTrigger(),
  	            		new TaskModifyProjectTrigger(),
  	            		new FeatureMetadataBuilder(),
@@ -226,13 +219,17 @@ class PMSession extends SessionBase
  	            		new IssueAutoActionMetadataBuilder(),
  	            		new CommentMetadataBuilder(),
  	            		new ProjectPageMetadataBuilder(),
- 	            		
+ 	            		new MetricIssueBuilderDeliveryDate(),
+ 	            		new MetricIssueBuilderFact(),
+
  	            		// widgets
  	            		new ModuleCategoryBuilderCommon(),
  	            		new BulkActionBuilderWorkflow(),
  	            		new ObjectsListWidgetBuilderCommon(),
  	            		new ModuleBuilderProduct(),
- 	            		
+                        new ModuleBuilderComponent(),
+ 	            		new PageFormTabGroupBuilderCommon(),
+
  	            		// triggers
  	            		new WikiBreakTraceTrigger(),
  	            		new CustomReportModelEventsHandler(),
@@ -240,6 +237,7 @@ class PMSession extends SessionBase
  	            		new RequestMetricsEventHandler(),
                         new TaskMetricsEventHandler(),
 						new RemoveObsoleteAttachmentsEventHandler(),
+                        new WikiPageDataHashEventHandler(),
                         new MilestoneMetricsEventHandler(),
                         new ProjectPageModifyProjectTrigger(),
                         new AutoActionEventHandler(),
@@ -257,19 +255,20 @@ class PMSession extends SessionBase
                 ),
  	            parent::createBuilders(),
  	            array (
- 	                    new ObjectMetadataCustomAttributesBuilder(),
- 	            		new ObjectModelCustomAttributesBuilder(),
- 	                    new ChangeLogEntitiesProjectBuilder(),
- 	                    new EstimationStrategyCommonBuilder(),
- 	                    new CacheSessionProjectTrigger(),
- 	            		new CustomizableObjectBuilderCommon($this),
- 	            		new PMContextResourceBuilder(),
- 	            		new PMContextResourceCustomReportsBuilder(),
-                        new ResourceBuilderTerminology(),
+                    new PortfolioAllBuilder(),
+                    new ObjectMetadataCustomAttributesBuilder(),
+                    new CustomAttributesObjectReferencesModelBuilder(),
+                    new ChangeLogEntitiesProjectBuilder(),
+                    new EstimationStrategyCommonBuilder(),
+                    new CacheSessionProjectTrigger(),
+                    new CustomizableObjectBuilderCommon($this),
+                    new PMContextResourceBuilder(),
+                    new PMContextResourceCustomReportsBuilder(),
+                    new ResourceBuilderTerminology(),
 
- 	            		// model
-                        new PMChangeLogNotificator(),
-                        new EmailNotificator(),
+                    // model
+                    new PMChangeLogNotificator(),
+                    new EmailNotificator(),
 				)
  	    );
  	}
@@ -280,8 +279,10 @@ class PMSession extends SessionBase
             parent::createLatestBuilders(),
             array(
                 new ObjectMetadataPermissionsBuilder(),
+                new ObjectMetadataStateAttributeBuilder(),
                 new ApplyBusinessActionsEventHandler(),
-                new BusinessActionModifiedEvent()
+                new BusinessActionModifiedEvent(),
+                new SearchableMetadataBuilder()
             )
         );
     }

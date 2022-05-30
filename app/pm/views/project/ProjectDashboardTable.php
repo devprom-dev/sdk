@@ -64,4 +64,12 @@ class ProjectDashboardTable extends PMPageTable
     function getFilterIds() {
 	    return '';
     }
+
+    function getNewActions() {
+        return array();
+    }
+
+    function buildOpenInOtherMenu() {
+        return array();
+    }
 }

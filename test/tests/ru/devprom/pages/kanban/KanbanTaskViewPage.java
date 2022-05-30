@@ -211,7 +211,7 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 
 	public TasksPage openRelatedTasksList()
 	{
-		WebElement link = driver.findElement(By.xpath("//a[contains(@class,'embedded-add-button') and contains(@class,'items-list')]"));
+		WebElement link = driver.findElement(By.xpath("//div[@id='pm_ChangeRequestTasks']//a[contains(@class,'embedded-add-button') and contains(@class,'items-list')]"));
 		clickOnInvisibleElement(link);
 		return new TasksPage(driver);
 	}

@@ -1,7 +1,5 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Task\TaskDefaultsService;
-
 include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueTasks.php";
 include_once "FormTaskEmbedded.php";
 
@@ -43,7 +41,7 @@ class FieldTask extends Field
             'FormActive' => 'Y'
 		);
 		if ( $taskboxes < 1 ) {
-            $this->drawForm( $task, $taskboxes, '', $parms );
+            $this->drawForm( $task->getEmptyIterator(), $taskboxes, '', $parms );
         }
 
         $parms = array (
@@ -51,7 +49,7 @@ class FieldTask extends Field
             'FormActive' => 'N'
         );
 		for ( $i = $taskboxes; $i < 8; $i++ ) {
-			$this->drawForm( $task, $taskboxes, 'display:none;', $parms );
+			$this->drawForm( $task->getEmptyIterator(), $taskboxes, 'display:none;', $parms );
 			$taskboxes++;
 		}
 

@@ -11,6 +11,8 @@ class NetworkService
     private $modelBuilders = array();
     private $session = null;
     private $usedItems = 0;
+    private $visitedNodes = array();
+    private $visitedEdges = array();
 
     public function __construct( \SessionBase $session, $objectClass, $objectId )
     {
@@ -31,7 +33,7 @@ class NetworkService
         $this->allowedClasses = array (
             'Requirement', 'TestScenario', 'HelpPage', 'WikiPage',
             'Request', 'Task', 'TestExecution', 'Commit', 'Question', 'Feature',
-            'Issue', 'Increment'
+            'Issue', 'Increment', 'Component'
         );
     }
 
@@ -48,13 +50,12 @@ class NetworkService
 
     public function getVisData()
     {
-        $visited = array();
         $nodes = array();
         $edges = array();
         $this->usedItems = 0;
 
         $id = get_class($this->object_it->object).$this->object_it->getId();
-        $this->buildVisData($this->object_it, $id, 1, $nodes, $edges, $visited );
+        $this->buildVisData($this->object_it, $id, 1, $nodes, $edges );
 
         $nodes[0]['shape'] = 'dot';
 
@@ -64,10 +65,10 @@ class NetworkService
         );
     }
 
-    protected function buildVisData( $object_it, $sourceId, $level, & $nodes, & $edges, & $visited )
+    protected function buildVisData( $object_it, $sourceId, $level, & $nodes, & $edges )
     {
-        if ( in_array($sourceId, $visited) ) return false;
-        $visited[] = $sourceId;
+        if ( in_array($sourceId, $this->visitedNodes) ) return false;
+        $this->visitedNodes[] = $sourceId;
 
         $uidInfo = $this->uidService->getUidInfo($object_it);
         $label = $uidInfo['uid'].' '.$object_it->getHtmlDecoded('Caption');
@@ -92,30 +93,37 @@ class NetworkService
             $this->getDependencies($object_it)
         );
 
-        foreach( $references as $referenceName => $reference_it ) {
+        foreach( $references as $referenceName => $reference_it )
+        {
             while (!$reference_it->end()) {
                 $id = get_class($reference_it->object) . $reference_it->getId();
-                if (!in_array($id, $visited)) {
-                    $edges[] = array(
-                        'from' => $sourceId,
-                        'to' => $id,
-                        'label' => $referenceName,
-                        'length' => 400,
-                        'font' => array(
-                            'align' => 'middle'
-                        )
-                    );
-                    $this->usedItems++;
+                if ( in_array($sourceId . $id, $this->visitedEdges) ) {
+                    $reference_it->moveNext();
+                    continue;
                 }
+                $edges[] = array(
+                    'from' => $sourceId,
+                    'to' => $id,
+                    'label' => $referenceName,
+                    'length' => 400,
+                    'font' => array(
+                        'align' => 'middle'
+                    )
+                );
+                $this->visitedEdges[] = $sourceId . $id;
+                $this->visitedEdges[] = $id . $sourceId;
+                $this->usedItems++;
+
                 $reference_it->moveNext();
             }
             $reference_it->moveFirst();
         }
+
         foreach( $references as $referenceName => $reference_it ) {
             while( !$reference_it->end() )
             {
                 $id = get_class($reference_it->object).$reference_it->getId();
-                $this->buildVisData( $reference_it->copy(), $id, $level + 1, $nodes, $edges, $visited );
+                $this->buildVisData( $reference_it->copy(), $id, $level + 1, $nodes, $edges );
                 $reference_it->moveNext();
             }
         }
@@ -128,6 +136,7 @@ class NetworkService
         $referencesVisited = $this->referencesVisited;
         $skip = $object_it->object->getAttributesByGroup('skip-network');
 
+        $referencesFound = 0;
         foreach( $object_it->object->getAttributes() as $attribute => $info )
         {
             if ( in_array($attribute, $skip) ) continue;
@@ -147,17 +156,18 @@ class NetworkService
                 $objectClass = get_class($attributeObject);
                 $attributeId = $attributeObject->getIdAttribute();
 
-                $rowset = array_filter($rowset, function($row) use($referencesVisited, $attributeId, $objectClass) {
-                    return !in_array($objectClass.$row[$attributeId], $referencesVisited);
+                $rowset = array_filter($rowset, function($row) use($referencesVisited, $attributeId, $objectClass, $attribute) {
+                    return !in_array($objectClass.$attribute.$row[$attributeId], $referencesVisited);
                 });
                 if ( count($rowset) < 1 ) continue;
 
                 $rowset = array_splice($rowset, 0, self::MAX_ITEMS - $this->usedItems);
 
                 foreach( $rowset as $row ) {
-                    $referencesVisited[] = $objectClass.$row[$attributeId];
+                    $referencesVisited[] = $objectClass.$attribute.$row[$attributeId];
                 }
-                $result[$object_it->object->getAttributeUserName($attribute)] = $attributeObject->createCachedIterator(array_values($rowset));
+                $result[$object_it->object->getAttributeUserName($attribute)]
+                    = $attributeObject->createCachedIterator(array_values($rowset));
             }
         }
 
@@ -167,18 +177,22 @@ class NetworkService
 
     protected function getDependencies( $object_it )
     {
-        $result = array();
-
-        $title = $object_it->object->getAttributeUserName('Dependency');
-        $items = array_splice(preg_split('/,/', $object_it->get('Dependency')), 0, self::MAX_ITEMS - $this->usedItems);
-
-        foreach( $items as $object_info ) {
+        $rowset = array();
+        foreach( \TextUtils::parseItems($object_it->get('Dependency')) as $object_info ) {
             list($class, $id) = preg_split('/:/',$object_info);
-            if ( $class == '' ) continue;
-            if ( !in_array($class, $this->allowedClasses) ) continue;
-
+            $class = getFactory()->getClass($class);
+            if ( !class_exists($class) ) continue;
             $object = $this->extendModel(getFactory()->getObject($class));
-            $result[$title] = $object->getExact($id);
+            $rowset[get_class($object)][] = $object->getExact($id)->getData();
+        }
+
+        $result = array();
+        $title = $object_it->object->getAttributeUserName('Dependency');
+
+        foreach( $rowset as $className => $rowsetData ) {
+            $object = getFactory()->getObject($className);
+            $result[$title . " [{$object->getDisplayName()}/{$className}]"] =
+                $object->createCachedIterator(array_values($rowsetData));
         }
 
         return $result;

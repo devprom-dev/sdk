@@ -20,13 +20,12 @@ class TaskViewModelCommonBuilder extends TaskViewModelBuilder
                 }
             }
             $object->addAttribute('IssueAttachment', 'REF_pm_AttachmentId', text(2123), false, false, '', 41);
-            $object->addAttribute('IssueVersion', 'VARCHAR', text(1334), false, false, '', 43);
             $object->addPersister( new TaskIssueArtefactsPersister() );
 
             $object->addAttribute('Feature', 'REF_pm_FunctionId', translate('Функция'), false, false, '', 41);
             $object->addPersister( new TaskFeaturePersister() );
 
-            foreach ( array('IssueAttachment','IssueVersion') as $attribute ) {
+            foreach ( array('IssueAttachment') as $attribute ) {
                 $object->addAttributeGroup($attribute, 'source-issue');
             }
         }

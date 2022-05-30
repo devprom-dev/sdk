@@ -5,15 +5,12 @@ include_once "persisters/TaskTraceWikiPageDetailsPersister.php";
 
 class TaskTraceWikiPage extends TaskTraceBase
 {
-	function __construct()
-	{
+	function __construct() {
 		parent::__construct();
-		
 		$this->addPersister( new TaskTraceWikiPageDetailsPersister() );
 	}
 	
-	function createIterator()
-	{
+	function createIterator() {
 		return new TaskTraceWikiPageIterator($this);
 	}
 }

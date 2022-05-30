@@ -44,7 +44,6 @@ public class SCMTest extends ProjectTestBase {
  * @throws InterruptedException */
 	@Test
 	public void testRequestCompletedOnCommit() throws InterruptedException {
-		
 		// Configure SCM connection
 		String repositoryUrl = Configuration.getSVNUrl();
 		String repositoryPath = Configuration.getSVNPath();
@@ -141,7 +140,7 @@ public class SCMTest extends ProjectTestBase {
 			Assert.assertEquals(rvp.readComment(rvp.readFirstInPageCommentNumber()),textComment);
 			//Check Time estimates
             List<Spent> timeEstimates = rvp.readSpentRecords();
-            Assert.assertEquals(timeEstimates.size(), 2);
+            Assert.assertEquals(timeEstimates.size(), 1);
             Assert.assertEquals(timeEstimates.get(0).hours, Double.parseDouble(spentTime));
 		}
 	}

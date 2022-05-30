@@ -294,14 +294,9 @@ public class ProgramTest extends ProjectTestBase {
 		LoginPage lp = (new PageBase(driver)).logOut();
 		FavoritesPage fp = lp.loginAs(testUser.getUsername(), testUser.getPass());
 		SDLCPojectPageBase favspage =  (SDLCPojectPageBase) fp.gotoProject(sdlcProject);
-		
-		MenuCustomizationPage mcp = favspage.gotoMenuFavsCustomization();
-		mcp.searchMenuItem("Доска пожеланий");	
-		mcp.addFilteredMenuItem("Доска пожеланий");
-		mcp.saveChanges();
-		favspage =  mcp.close();
-		favspage.gotoCustomReport("favs", "", "Доска пожеланий");
-		CrossProjectsRequestsBoard cprb = new CrossProjectsRequestsBoard(driver);
+
+		favspage.gotoRequestsBoard();
+		CrossProjectsRequestsBoard cprb = favspage.gotoCommonRequestsBoard();
 		cprb.setFilter("priority", "all");
 		cprb = cprb.moveToAnotherProject(task.getNumericId(), scrumProject.getName(), 1);
 		Assert.assertTrue(cprb.isRequestInSection(task.getNumericId(), scrumProject.getName(), 1), "Пожелание не найдено в другом проекте после перемещения");

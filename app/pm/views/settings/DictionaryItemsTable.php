@@ -1,12 +1,17 @@
 <?php
-
 include "DictionaryItemsList.php";
+include "FormFieldList.php";
 
 class DictionaryItemsTable extends SettingsTableBase
 {
 	function getList()
 	{
-		return new DictionaryItemsList( $this->getObject() );
+        switch ( $this->getObject()->getEntityRefName() ) {
+            case 'pm_StateAttribute':
+                return new FormFieldList($this->getObject());
+            default:
+                return new DictionaryItemsList($this->getObject());
+        }
 	}
 
 	function getSortDefault( $sort_parm = 'sort' )
@@ -22,7 +27,9 @@ class DictionaryItemsTable extends SettingsTableBase
 		switch ( $this->getObject()->getClassName() )
 		{
 			case 'pm_CustomAttribute':
-			    $filter = new FilterObjectMethod(getFactory()->getObject('CustomizableObjectSet'), translate('Сущность'), 'customattributeentity');
+			    $filter = new FilterObjectMethod(
+			        getFactory()->getObject('CustomizableObjectSet'),
+                        translate('Сущность'), 'customattributeentity');
 			    $filter->setHasNone(false);
 			    $filter->setIdFieldName('ReferenceName');
 				return array ( $filter );

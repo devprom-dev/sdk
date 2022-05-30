@@ -6,7 +6,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Devprom\ProjectBundle\Service\TreeviewModel\FeatureService;
+use Devprom\ProjectBundle\Service\TreeviewModel\HierarchyService;
 use Devprom\ProjectBundle\Service\TreeviewModel\WikiService;
 use Devprom\ProjectBundle\Service\TreeGridViewModel\TreeGridService;
 
@@ -28,9 +28,13 @@ class ViewController extends PageController
             $objectIt = $objectIt->getObjectIt();
         }
 
+        if ( $objectIt->object->getEntityRefName() == 'pm_Project' ) {
+            return new Response();
+        }
         if ( $objectIt->getId() == '' ) {
             return new Response();
         }
+
     	return new RedirectResponse($objectIt->getViewUrl() . '&attributesonly=true');
     }
 }

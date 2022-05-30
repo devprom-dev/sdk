@@ -41,7 +41,7 @@ foreach( $actions as $key => $action ) {
     }
 
     foreach( $buttonsFlat as $button ) { ?>
-        <a id="<?=$button['uid']?>" class="btn <?=$buttonSizeClass?> <?=$button['button-class']?>" href="<?=$button['url']?>" onclick="<?=$button['click']?>" title="<?=$button['title']?>">
+        <a id="<?=$button['uid']?>" class="btn <?=$buttonSizeClass?> <?=$button['button-class']?>" href="<?=$button['url']?>" onclick="<?=$button['click']?>" title="<?=($button['title'] != '' ? $button['title'] : $button['name'])?>">
             <?php if ( $button['icon'] != '' ) { ?> <i class="icon-white <?=$button['icon']?>"></i><?php } ?>
             <?=$button['name']?>
         </a>

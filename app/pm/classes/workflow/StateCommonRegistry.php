@@ -6,7 +6,7 @@ class StateCommonRegistry extends ObjectRegistrySQL
 	const Progress = 'I';
 	const Submitted = 'N';
 
-	public function getAll()
+	public function Query($parms = array())
 	{
 		return $this->createIterator( array (
 				array ( 'entityId' => self::Submitted, 'Caption' => translate('Добавлено') ),

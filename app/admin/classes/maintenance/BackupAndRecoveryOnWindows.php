@@ -15,34 +15,22 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
  	function zip() 
  	{
 		$archiver_path = SERVER_ROOT.'/tools/7za.exe';
-		if ( file_exists($archiver_path) )
-		{
-			chdir(SERVER_BACKUP_PATH);
+        chdir(SERVER_BACKUP_PATH);
 
-			$command = $archiver_path.' a -r -tzip '.$this->getBackupFileName().' devprom/* htdocs/*';
-			$this->writeLog("Zip: ".$command);
+        $command = $archiver_path.' a -r -tzip '.$this->getBackupFileName().' devprom/* htdocs/*';
+        $this->writeLog("Zip: ".$command);
 
-            try {
-                $this->writeLog('Zip: ' . \FileSystem::execAndSendResponse($command));
-            }
-            catch( \Exception $e ) {
-                $this->errorLog("Zip: ".$e->getMessage());
-                throw $e;
-            }
-		}
-		else
-		{
-	 		$zip = new createFileZip( $this->getBackupFilePath() );
-			$this->full_zip( $zip, SERVER_BACKUP_PATH, 'devprom');
-			$this->full_zip( $zip, SERVER_BACKUP_PATH, 'htdocs');
-
-		 	// save zip
-		 	$zip->saveZippedfile();
- 		}
+        try {
+            $this->writeLog('Zip: ' . \FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog(IteratorBase::wintoutf8($e->getMessage()));
+            throw $e;
+        }
 
 		// remove source backup files
-		$this->full_delete( SERVER_BACKUP_PATH.'devprom/' );
-		$this->full_delete( SERVER_BACKUP_PATH.'htdocs/' );
+        \FileSystem::rmdirr( SERVER_BACKUP_PATH.'devprom/' );
+        \FileSystem::rmdirr( SERVER_BACKUP_PATH.'htdocs/' );
  	}
 
  	function unzip( $zip_file_directory, $zip_file_name ) 
@@ -153,7 +141,7 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
             $this->writeLog("Backup: ".\FileSystem::execAndSendResponse($command));
         }
         catch( \Exception $e ) {
-            $this->errorLog("Backup: ".$e->getMessage());
+            $this->errorLog(IteratorBase::wintoutf8($e->getMessage()));
             throw $e;
         }
 
@@ -176,7 +164,7 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
             $this->writeLog('Recovery: ' . \FileSystem::execAndSendResponse($command));
         }
         catch( \Exception $e ) {
-            $this->errorLog("Recovery: ".$e->getMessage());
+            $this->errorLog(IteratorBase::wintoutf8($e->getMessage()));
             throw $e;
         }
 	}
@@ -212,8 +200,33 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
             $this->writeLog('Update: ' . \FileSystem::execAndSendResponse($command));
         }
         catch( \Exception $e ) {
-            $this->errorLog("Update: ".$e->getMessage());
+            $this->errorLog(IteratorBase::wintoutf8($e->getMessage()));
             throw $e;
         }
 	}
+
+    function full_copy( $source_path, $destination_path, $async = false )
+    {
+        if ( substr($source_path, -1) == '.' ) {
+            $source_path = rtrim($source_path, '\\/.');
+        }
+        else {
+            $destination_path = rtrim($destination_path, '\\/') . '/' . basename($source_path);
+            mkdir($destination_path, 0777, true);
+        }
+
+        $source_path = realpath($source_path);
+        $destination_path = realpath($destination_path);
+
+        $command = "xcopy /s/e/h/y \"{$source_path}\" \"{$destination_path}\" ";
+
+        $this->writeLog($command."\n");
+        try {
+            $this->writeLog(\FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog(IteratorBase::wintoutf8($e->getMessage()));
+            throw $e;
+        }
+    }
 }

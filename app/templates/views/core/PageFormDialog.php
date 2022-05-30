@@ -39,10 +39,10 @@ foreach( $sections as $key => $section ) {
 		  </a>
 	  </li>
 	  <?php foreach ( $primary_sections as $key => $section ) { ?>
-		<li><a href="#tab-<?=$section->getId()?>"><?=$section->getCaption()?></a></li>
+		<li><a href="#tab-<?=array_shift(explode('-',$section->getId()))?>"><?=$section->getCaption()?></a></li>
 	  <?php } ?>
 	  <?php foreach ( $secondary_sections as $key => $section ) { ?>
-	  <li><a href="#tab-<?=$section->getId()?>"><?=$section->getCaption()?></a></li>
+	  <li><a href="#tab-<?=array_shift(explode('-',$section->getId()))?>"><?=$section->getCaption()?></a></li>
 	  <?php } ?>
       <li class="ui-tabs-close-button" style="float:right;"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></li>
     </ul>
@@ -87,7 +87,7 @@ foreach( $sections as $key => $section ) {
 				</div>
 				<?php
 				foreach( $secondary_attributes as $referenceName => $secondary ) {
-					echo '<div id="tab-'.$referenceName.'">';
+					echo '<div id="tab-'.array_shift(explode('-',$referenceName)).'">';
 					echo $view->render( $form_body_template, array(
 						'attributes' => array_intersect_key($attributes, array_flip($secondary)),
 						'formonly' => $formonly,
@@ -101,7 +101,7 @@ foreach( $sections as $key => $section ) {
 		</form>
 
 	<?php foreach ( $secondary_sections as $key => $section ) { ?>
-	<div id="tab-<?=$section->getId()?>">
+	<div id="tab-<?=array_shift(explode('-',$section->getId()))?>">
 		<?php $section->render( $this, array() ); ?>
 	</div>
 	<?php }	?>

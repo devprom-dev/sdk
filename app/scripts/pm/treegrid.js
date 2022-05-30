@@ -67,7 +67,11 @@ function refreshTreeGridItems()
                             	var node = tree.getNodeByKey(item.key);
                             	if ( node ) {
                             	    if ( node.data.modified != item.modified ) {
+                                        var expanded = node.expanded;
                                         node.fromDict(item);
+                                        if ( expanded ) {
+                                            node.setExpanded();
+                                        }
                                     }
 								}
 								else {
@@ -76,9 +80,14 @@ function refreshTreeGridItems()
                                         : tree.getRootNode();
 									if ( parent ) {
                                         parent.addChildren(item);
+                                        parent.setExpanded();
                                     }
 								}
                                 var updateIndex = $.inArray(item.key, updateKeys);
+                                if (updateIndex != -1) {
+                                    updateKeys.splice(updateIndex, 1);
+                                }
+                                var updateIndex = $.inArray(item.parentkey, updateKeys);
                                 if (updateIndex != -1) {
                                     updateKeys.splice(updateIndex, 1);
                                 }

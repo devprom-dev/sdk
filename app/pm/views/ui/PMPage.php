@@ -2,22 +2,12 @@
 use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 use Devprom\ProjectBundle\Service\Model\ModelService;
 use Devprom\ProjectBundle\Service\Tooltip\TooltipProjectService;
-
-include SERVER_ROOT_PATH . 'core/methods/ExcelExportWebMethod.php';
-include SERVER_ROOT_PATH . 'core/methods/BoardExportWebMethod.php';
-include SERVER_ROOT_PATH . 'core/methods/HtmlExportWebMethod.php';
-include SERVER_ROOT_PATH . 'core/methods/PrintPDFExportWebMethod.php';
-include SERVER_ROOT_PATH . 'core/methods/XmlExportWebMethod.php';
-include SERVER_ROOT_PATH . "pm/methods/WatchWebMethod.php";
-include SERVER_ROOT_PATH . 'pm/methods/ReportModifyWebMethod.php';
-include_once SERVER_ROOT_PATH."pm/methods/UndoWebMethod.php";
-include_once SERVER_ROOT_PATH.'pm/methods/WikiExportBaseWebMethod.php';
-include_once SERVER_ROOT_PATH."pm/methods/OpenWorkItemWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/views/import/ImportXmlForm.php";
 
 include 'PMFormEmbedded.php';
 include 'PMPageForm.php';
 include 'PMPageTable.php';
+include 'PMPageDetailsTable.php';
 include 'PageSectionLifecycle.php';
 include "FieldHierarchySelectorAppendable.php";
 include 'FieldCustomDictionary.php';
@@ -33,24 +23,34 @@ include 'converters/WikiIteratorExportHtml.php';
 include 'converters/WikiIteratorExportPdf.php';
 include_once "SettingsFormBase.php";
 include "SettingsTableBase.php";
-
-include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/comments/PageSectionComments.php';
 
 class PMPage extends Page
 {
     var $tabs, $areas;
-    
     protected $settings;
     protected $report_uid;
     protected $report_base;
     protected $report_chart = false;
     protected $nearestInfo = array();
     
-    function PMPage()
+    function __construct()
  	{
-	    getSession()->addBuilder( new WorkflowModelBuilder() );
  		parent::__construct();
+
+        if ( $this->needDisplayForm() && is_object($this->getFormRef()) ) {
+            $groupIt = (new PageFormTabGroup())->getAll();
+            while( !$groupIt->end() ) {
+                $this->addInfoSection(
+                    new PageSectionAttributes(
+                            $this->getFormRef()->getObject(),
+                            explode(',',$groupIt->get('ReferenceName')),
+                            $groupIt->get('Caption')
+                        )
+                    );
+                $groupIt->moveNext();
+            }
+        }
  	}
  	
  	function getSettingsBuilder()
@@ -210,43 +210,27 @@ class PMPage extends Page
                 'uid' => $this->getReportBase(),
 				'widget_id' => $this->getReport() != '' ? $this->getReport() : $this->getModule(),
 				'bodyExpanded' => $bodyExpanded,
-				'search_url' => getSession()->getApplicationUrl().'search.php'
+				'search_url' => '/pm/' . getSession()->getProjectIt()->get('CodeName') . '/search.php'
 			)
 		);
 	}
 
-	function render( $view = null )
-	{
-        if ( !$this->hasAccess() ) {
-            $info = $this->getPageWidgetNearestUrl();
-            if ( $info['url'] != '' ) {
-                exit(header('Location: '.$info['url']));
-            }
-
-            $widgetIt = getFactory()->getObject('ObjectsListWidget')
-                            ->getByRef('Caption', get_class($this->getObject()))->getWidgetIt();
-            if ( $widgetIt->getUrl() != '' ) {
-                exit(header('Location: '.$widgetIt->getUrl()));
-            }
+    function getDefaultRedirectUrl()
+    {
+        $info = $this->getPageWidgetNearestUrl();
+        if ( $info['url'] != '' ) {
+            return $info['url'];
         }
 
-		if ( $_REQUEST['attributeonly'] != '' )
-		{
-			$service = new ModelService(null, null, null);
+        $widgetIt = getFactory()->getObject('ObjectsListWidget')
+            ->getByRef('Caption', get_class($this->getObject()))->getWidgetIt();
+        if ( $widgetIt->getUrl() != '' ) {
+            return $widgetIt->getUrl();
+        }
 
-			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
-			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
-			header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
-			header("Pragma: no-cache"); // HTTP/1.0
-			header('Content-type: application/json; charset=utf-8');
-			
-			echo JsonWrapper::encode($service->get($_REQUEST['entity'], $_REQUEST['object'], 'html'));
-			die();
-		}
-		
-		parent::render( $view );
-	}
-	
+        return parent::getDefaultRedirectUrl();
+    }
+
 	function getRedirect( $renderParms )
 	{
         if ( !DeploymentState::Instance()->IsReadyToBeUsed() ) return '/install';
@@ -298,35 +282,14 @@ class PMPage extends Page
             }
 
             // if no tab is specified then use default entry
-	        foreach( $areas as $area )
- 		    {
- 		    	if ( !is_array($area['menus']) ) continue;
- 		    	
-	            foreach ( $area['menus'] as $menu )
-	            {
-                    foreach( $menu['items'] as $item )
-                    {
-                        if ( $item['entry-point'] && $item['url'] != '' && !in_array($item['uid'], array('navigation-settings')) )
-                        {
-							if ( $this->checkWidgetExists($item) ) return $item['url'];
-                        }
+            $favArea = $areas['favs'];
+            foreach ( $favArea['menus'] as $menu ) {
+                foreach( $menu['items'] as $item ) {
+                    if ( $item['entry-point'] && $item['url'] != '' && !in_array($item['uid'], array('navigation-settings')) ) {
+                        if ( $this->checkWidgetExists($item) ) return $item['url'];
                     }
-	            }
- 		    }
- 		    
- 			foreach( $areas as $area )
- 		    {
-	            foreach ( $area['menus'] as $menu )
-	            {
-                    foreach( $menu['items'] as $item )
-                    {
-                        if ( $item['url'] != '' && !in_array($item['uid'], array('navigation-settings')) )
-                        {
-							if ( $this->checkWidgetExists($item) ) return $item['url'];
-                        }
-                    }
-	            }
- 		    }
+                }
+            }
  		}
 
 		if ( array_key_exists('fitmenu', $_REQUEST) ) {
@@ -373,18 +336,30 @@ class PMPage extends Page
 				if ( $object_it->getId() == '' ) return;
 
 				$reference = $this->getObject()->getAttributeObject($_REQUEST['attribute']);
-				$referenceIds = $object_it->fieldToArray($_REQUEST['attribute']);
+				$referenceIds = array_filter(
+                        array_unique($object_it->fieldToArray($_REQUEST['attribute'])),
+                        function($item) {
+                            return $item > 0;
+                        }
+                    );
 
 				$it = getFactory()->getObject('ObjectsListWidget')->getAll();
 				while( !$it->end() )
 				{
 					if ( is_a($reference, $it->get('Caption')) ) {
 						$widget_it = $it->getWidgetIt();
-                        $referenceIt = $reference->getRegistryBase()->Query(
-                            array(
-                                new FilterInPredicate($referenceIds)
-                            )
-                        );
+                        if ( count($referenceIds) > 0 ) {
+                            $referenceIt = $reference->getRegistryBase()->Query(
+                                array(
+                                    $reference->hasAttribute('ParentPage')
+                                        ? new ParentTransitiveFilter($referenceIds)
+                                        : new FilterInPredicate($referenceIds)
+                                )
+                            );
+                        }
+                        else {
+                            $referenceIt = $reference->getEmptyIterator();
+                        }
 
                         $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIt($referenceIt, 'ids', $widget_it);
                         if ( $url != '' ) {
@@ -502,9 +477,10 @@ class PMPage extends Page
 		header('Content-type: text/html; charset='.APP_ENCODING);
 
         $comment_list = $this->buildCommentList($object_it);
+        $comment_list->setControlUID($_REQUEST['control-uid']);
 
 		if ( $_REQUEST['form'] != '' ) {
-			$comment = getFactory()->getObject('Comment');
+			$comment = $this->getCommentObject();
 			$comment->setVpdContext( $object_it );
 			
 		    $comment_it = $_REQUEST['comment'] > 0 
@@ -521,6 +497,10 @@ class PMPage extends Page
             $comment_list->render( $this->getRenderView(), array() );
 		}
  	}
+
+    function getCommentObject() {
+        return getFactory()->getObject('Comment');
+    }
 
  	function buildCommentForm( $comment_it, $control_uid )
     {
@@ -543,7 +523,7 @@ class PMPage extends Page
     }
 
     function buildCommentList( $object_it ) {
-        return new CommentsThread( $object_it );
+        return new CommentsThread( $object_it, $this->getCommentObject() );
     }
 
  	function getHint()
@@ -707,54 +687,10 @@ class PMPage extends Page
 
     protected function buildExportContent( $object_it, $skipTitle = false )
     {
-        $extended = true;
-        $service = new TooltipProjectService( get_class($object_it->object), $object_it->getId(), $extended );
-        $data = $service->getData();
+        $service = new TooltipProjectService( get_class($object_it->object), $object_it->getId(), true );
         $traceAttributes = $object_it->object->getAttributesByGroup('trace');
 
-        ob_start();
-        if ( $skipTitle ) {
-            echo $data['type']['uid'];
-            echo '<br/>';
-            echo '<br/>';
-        }
-
-        foreach($data as $key => $section ) {
-            switch( $key ) {
-                case 'attributes':
-                    foreach( $section as $attribute ) {
-                        if ( $skipTitle && $attribute['name'] == 'Caption' ) continue;
-                        if ( in_array($attribute['name'], $traceAttributes) ) continue;
-
-                        echo '<b>'.$attribute['title'].'</b>: ';
-                        switch( $attribute['type'] ) {
-                            case 'wysiwyg':
-                                echo $attribute['text'];
-                                echo '<br/><br/>';
-                                break;
-                            default:
-                                if ( $attribute['name'] == 'Caption' ) {
-                                    echo $data['type']['uid'].' ';
-                                }
-                                echo $attribute['text'];
-                                echo '<br/>';
-                        }
-                    }
-                    break;
-                case 'lifecycle':
-                    echo '<b>'.$section['name'].'</b>: ';
-                    echo $section['data']['state'];
-                    echo '<br/>';
-                    break;
-                case 'type':
-                    echo '<b>'.translate('Тип').'</b>: ';
-                    echo $section['name'];
-                    break;
-            }
-        }
-        $html = ob_get_contents();
-        ob_end_clean();
-
+        $html = $service->getHtmlRep($skipTitle, $traceAttributes);
         if ( !$skipTitle ) return $html;
 
         foreach( $traceAttributes as $attribute ) {
@@ -781,7 +717,6 @@ class PMPage extends Page
 
         $registry = getFactory()->getObject('WorkItem')->getRegistry();
         $registry->setDescriptionIncluded(false);
-        $registry->setTracesIncluded(false);
         $registry->getObject()->disableVpd();
 
         $registry->setLimit(1);
@@ -796,15 +731,11 @@ class PMPage extends Page
         if ( $openIt->getId() != '' && class_exists($openIt->get('ObjectClass')) ) {
             $info = $uid->getUIDInfo($openIt);
             $title = $info['uid'] . ' ' . $openIt->getDisplayNameExt();
-            $actions[] = array(
-                'name' => translate('Открыть'),
-                'url' => getFactory()->getObject($openIt->get('ObjectClass'))->getRegistryBase()->Query(
-                            array(
-                                new FilterInPredicate($openIt->getId())
-                            )
-                         )->getViewUrl()
-            );
-            $actions[] = array();
+            $titleUrl = getFactory()->getObject($openIt->get('ObjectClass'))->getRegistryBase()->Query(
+                                array(
+                                    new FilterInPredicate($openIt->getId())
+                                )
+                            )->getViewUrl();
         }
 
         $sortDueDate = new SortAttributeClause('DueDate');
@@ -838,7 +769,7 @@ class PMPage extends Page
 
         $actions[] = array();
         $actions[] = array(
-            'name' => text(2473),
+            'name' => text(3112),
             'url' =>
                 in_array('my', $portfolios)
                     ? '/pm/my/tasks/list/mytasks'
@@ -848,6 +779,7 @@ class PMPage extends Page
         );
         return array(
             'title' => $title,
+            'titleUrl' => $titleUrl,
             'actions' => $actions
         );
     }

@@ -64,6 +64,6 @@ class LogForm extends PageForm
         fclose($fp);
 
         return '<code class="accesslog hljs" style="color:inherit;background-color:inherit;white-space:pre-wrap;border:none;">'.
-            htmlentities($line) .'</code>';
+            $line .'</code>';
     }
 }

@@ -5,8 +5,6 @@ include "predicates/SpentTimeStatePredicate.php";
 
 class SpentTime extends Metaobject
 {
- 	private $report_year;
- 	private $report_month;
  	private $group;
  	private $participant_filter = array();
  	private $rowsObject = null;
@@ -19,18 +17,19 @@ class SpentTime extends Metaobject
 		$this->removeAttribute('Iteration');
  	}
  	
- 	function createIterator() 
- 	{
+ 	function createIterator() {
  		return new SpentTimeIterator( $this );
  	}
- 	
- 	function setGroup( $group )
- 	{
+
+ 	function getVpds() {
+        return (new Activity)->getVpds();
+    }
+
+    function setGroup( $group ) {
  	    $this->group = $group;
  	}
- 	
- 	function getGroup()
- 	{
+
+ 	function getGroup() {
  	    return $this->group;
  	}
 
@@ -42,28 +41,7 @@ class SpentTime extends Metaobject
  	    return $this->rowsObject;
     }
 
- 	function setReportYear( $year )
- 	{
- 		$this->report_year = is_numeric($year) ? $year : date('Y');
- 	}
- 	
- 	function getReportYear()
- 	{
- 	    return $this->report_year;
- 	}
-
-  	function setReportMonth( $month )
- 	{
- 		$this->report_month = is_numeric($month) ? $month : date('m');
- 	}
- 	
- 	function getReportMonth()
- 	{
- 	    return $this->report_month;
- 	}
- 	
-	function setParticipantFilter( array $filters )
-	{
+	function setParticipantFilter( array $filters ) {
 		$this->participant_filter = $filters;
 	}
  	
@@ -72,23 +50,19 @@ class SpentTime extends Metaobject
 		return $this->participant_filter;
 	}
 	
-	function getActivityObject()
-	{
-		return getFactory()->getObject('pm_Activity');
-	}
-
-	function DeletesCascade($object)
-	{
+	function DeletesCascade($object) {
 		return false;
 	}
 
-	function IsUpdatedCascade($object)
-	{
+	function IsUpdatedCascade($object) {
 		return false;
 	}
 
-	function IsDeletedCascade($object)
-	{
+	function IsDeletedCascade($object) {
 		return false;
 	}
+
+    function IsPersistable() {
+        return false;
+    }
 }

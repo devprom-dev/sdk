@@ -32,12 +32,13 @@ class TagBase extends Metaobject
         );
     }
 
-    function removeTags( $objectId )
+    function removeTags( $objectId, $tagIds = array() )
     {
         if ( $objectId < 1 ) return;
         $tagIt = $this->getRegistry()->Query(
             array(
-                new FilterAttributePredicate($this->getGroupKey(), $objectId)
+                new FilterAttributePredicate($this->getGroupKey(), $objectId),
+                new FilterAttributePredicate('Tag', $tagIds)
             )
         );
         while( !$tagIt->end() ) {

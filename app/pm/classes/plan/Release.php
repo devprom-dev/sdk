@@ -10,9 +10,13 @@ class Release extends Metaobject
 {
  	function __construct( $registry = null )
  	{
-		parent::__construct('pm_Version', is_object($registry) ? $registry : new ReleaseRegistry($this));
+		parent::__construct('pm_Version',
+            is_object($registry) ? $registry : new ReleaseRegistry($this));
 
-		$this->setSortDefault( array( new SortAttributeClause('StartDate'), new SortAttributeClause('Caption')) );
+		$this->setSortDefault( array(
+            new SortAttributeClause('StartDate'),
+            new SortAttributeClause('Caption'))
+        );
 	}
 
 	function createIterator() {
@@ -183,16 +187,29 @@ class Release extends Metaobject
 	
 	function modify_parms( $object_id, $parms )
 	{
+        $object_it = $this->getExact( $object_id );
+
 	    if ( array_key_exists('StartDate', $parms) && array_key_exists('FinishDate', $parms) ) {
             $parms['FinishDate'] = $this->getDefaultFinishDate($parms['StartDate'], $parms['FinishDate']);
+        }
+
+        if ( $parms['StartDate'] != '' && $parms['FinishDate'] == '' && $object_it->get('FinishDate') != '' ) {
+            $nowStart = new DateTime($parms['StartDate']);
+            $wasStart = new DateTime($object_it->get('StartDate'));
+            $interval = $wasStart->diff($nowStart);
+            $parms['FinishDate'] = date('Y-m-d',
+                strtotime($interval->format('%R%a days'),
+                    strtotime($object_it->get('FinishDate')))
+            );
         }
 
 		$result = parent::modify_parms( $object_id, $parms );
 		if ( $result < 1 ) return $result;
 		
 		$object_it = $this->getExact( $object_id );
-		
-		if ( $parms['StartDate'] != '' ) $object_it->resetBurndown();
+		if ( $parms['StartDate'] != '' ) {
+		    $object_it->resetBurndown();
+        }
 
 		$object_it->storeMetrics();
 		return $result;

@@ -1,10 +1,10 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
-include_once "persisters/WikiPageDependencyPersister.php";
-include_once "persisters/WikiPageDetailsPersister.php";
-include_once 'persisters/DocumentVersionPersister.php';
-include_once "persisters/WikiPageModifierPersister.php";
-include_once "persisters/WikiPageIsIncludedPersister.php";
+include "persisters/WikiPageDependencyPersister.php";
+include "persisters/WikiPageDetailsPersister.php";
+include 'persisters/DocumentVersionPersister.php';
+include "persisters/WikiPageModifierPersister.php";
+include "persisters/WikiPageIsIncludedPersister.php";
 include "persisters/WikiPageFeaturePersister.php";
 include "persisters/WikiPageFeatureTracesPersister.php";
 
@@ -16,7 +16,6 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
     	
     	$object = $metadata->getObject();
 
-		$metadata->setAttributeType('Content', 'WYSIWYG');
         $metadata->setAttributeCaption('Content', translate('Текст'));
         $metadata->setAttributeOrderNum('Content', 30);
 		$metadata->setAttributeType('ParentPage', 'REF_'.get_class($object).'Id');
@@ -25,6 +24,7 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeOrderNum('PageType', 12);
         $metadata->setAttributeVisible('PageType', true);
         $metadata->addAttributeGroup('PageType', 'type');
+        $metadata->addAttributeGroup('PageType', 'customattribute-descriptor');
 
 		$metadata->addAttribute('DocumentId', 'REF_'.get_class($object).'Id', $object->getDocumentName(), false);
         $metadata->setAttributeEditable('DocumentId', false);
@@ -56,6 +56,8 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addPersister( new WikiPageIsIncludedPersister() );
 
         $metadata->addAttribute('DocumentVersion', 'VARCHAR', translate('Бейзлайн'), true, true, '', 40);
+        $metadata->addAttributeGroup('DocumentVersion', 'display-name');
+        $metadata->addAttributeGroup('DocumentVersion', 'bulk');
         $metadata->addPersister( new DocumentVersionPersister() );
 
         if ( $object instanceof ProjectPage ) {
@@ -88,7 +90,9 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
             'ContentEditor',
             'Includes',
             'ParentPath',
-            'IsDocument'
+            'IsDocument',
+            'IDProject',
+            'DataHash'
         );
         foreach( $system_attributes as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'system');

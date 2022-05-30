@@ -30,8 +30,6 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $title;
             'state_name' => $state_name,
             'form' => $form,
             'listWidgetIt' => $listWidgetIt,
-            'nextUrl' => $nextUrl,
-            'nextTitle' => $nextTitle,
             'title' => $title
         ));
     ?>
@@ -61,6 +59,16 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $title;
                 ?>
            </fieldset>
         </form>
+        <div class="frm-sct-bottom">
+            <?php
+            echo $view->render('core/PageSections.php', array(
+                'sections' => $sections,
+                'object_class' => $object_class,
+                'object_id' => $object_id,
+                'tag' => 'btm'
+            ));
+            ?>
+        </div>
     </div>
 </div>
 
@@ -70,6 +78,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $title;
             'sections' => $sections,
             'object_class' => $object_class,
             'object_id' => $object_id,
+            'tag' => 'rt',
             'style_class' => 'right-side-tab'
         ));
     ?>
@@ -81,4 +90,5 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $title;
         makeForm('<?=$form_id?>','<?=$action?>');
     });
     devpromOpts.saveButtonName = '<?=$button_save_title?>';
+    devpromOpts.updateUI = function() { window.location.reload(); };
 </script>

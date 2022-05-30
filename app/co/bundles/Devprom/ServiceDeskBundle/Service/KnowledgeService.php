@@ -46,8 +46,6 @@ class KnowledgeService
 
     function getRoots( $vpds )
     {
-        $user = $this->tokenStorage->getToken()->getUser();
-
         $restricted = $this->restrictedArticles($vpds);
         $repository = $this->em->getRepository('DevpromServiceDeskBundle:KnowledgeBase');
 

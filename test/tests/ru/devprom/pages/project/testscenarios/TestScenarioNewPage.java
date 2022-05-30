@@ -128,7 +128,7 @@ public class TestScenarioNewPage extends SDLCPojectPageBase {
 	
 	public void clickTraceTab()
 	{
-		clickTab("trace-source-attribute");
+		clickTab("trace");
 	}
 
     public void createNewScenarioWithTestPlan(TestScenario testScenary) {

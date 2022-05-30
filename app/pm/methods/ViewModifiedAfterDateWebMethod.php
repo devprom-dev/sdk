@@ -1,20 +1,13 @@
 <?php
-include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
 
-class ViewModifiedAfterDateWebMethod extends FilterDateWebMethod
+class ViewModifiedAfterDateWebMethod extends FilterDateIntervalWebMethod
 {
     function __construct() {
         parent::__construct();
-        $this->setCaption(translate('Изменено после'));
+        $this->setCaption(translate('Изменено'));
     }
 
-    function getStyle()
-    {
-        return 'width:100px;';
-    }
-
-    function getValueParm()
-    {
+    function getValueParm() {
         return 'modifiedafter';
     }
 }

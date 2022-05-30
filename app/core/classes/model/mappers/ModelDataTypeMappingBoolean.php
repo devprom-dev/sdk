@@ -7,8 +7,7 @@ class ModelDataTypeMappingBoolean extends ModelDataTypeMapping
 		return in_array($type_name, array('char'));
 	}
 	
-	public function map( $value )
-	{
-		return (in_array($value, array('','on','Y')) ? 'Y' : 'N');
+	public function map( $value, array $groups = array() ) {
+		return (in_array($value, array('on','Y')) ? 'Y' : 'N');
 	}
 }

@@ -14,7 +14,7 @@ class AccessObjectRegistry extends ObjectRegistrySQL
 		return $this->object_it;
 	}
 	
-	function getAll()
+	function Query($parms = array())
 	{
 		if ( $this->object_it->getId() < 1 ) throw new Exception('Real object required, empty object is given');
 		

@@ -12,7 +12,8 @@ class LicenseEnterpriseIterator extends LicenseIterator
             }
             return $user->checkLicense($this) > 0;
 		} else {
-            return parent::valid();
+            if ( !parent::valid() ) return false;
+            return $this->getLeftDays() >= 0;
 		}
 	}
 	

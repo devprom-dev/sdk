@@ -7,20 +7,21 @@ class SearchableObjectsCommonBuilder extends SearchableObjectsBuilder
     {
  		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
- 		$set->add( 'Request', array('Caption', 'Description'), 'allissues' );
+ 		$set->add( 'Request', 'allissues' );
 
  		if ( $methodology_it->HasTasks() ) {
-     		$set->add( 'Task', array('Caption', 'Comments'), 'currenttasks' );
+     		$set->add( 'Task', 'currenttasks' );
  		}
  		if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' ) {
-     		$set->add( 'ProjectPage', array('Caption', 'Content') );
+     		$set->add( 'ProjectPage');
  		}
  		if ( $methodology_it->HasFeatures() ) {
-            $set->add( 'Feature', array('Caption', 'Description'), 'features-trace' );
+            $set->add( 'Feature', 'features-trace' );
         }
 
- 		$set->add( 'Question', array('Content'), 'discussions' );
- 		$set->add( 'Comment', array('Caption') );
-        $set->add( 'Widget', array('Caption','ReferenceName') );
+ 		$set->add( 'Question', 'discussions' );
+ 		$set->add( 'Comment');
+        $set->add( 'Component');
+        $set->add( 'Widget');
     }
 }

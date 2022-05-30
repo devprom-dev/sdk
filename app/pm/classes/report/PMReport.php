@@ -1,5 +1,4 @@
 <?php
-
 include_once "Report.php";
 include "PMReportRegistry.php";
 include "PMReportIterator.php";
@@ -9,8 +8,8 @@ class PMReport extends Report
  	function __construct()
  	{
  		parent::__construct( new PMReportRegistry($this) );
-		$this->addAttributeGroup('Category', 'system'); 		
- 	}
+		$this->addAttributeGroup('Category', 'system');
+    }
  	
  	function createIterator() {
  	    return new PMReportIterator( $this );

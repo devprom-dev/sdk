@@ -22,17 +22,6 @@ class ProjectPage extends PMWikiPage
 		return new ProjectPageIterator( $this );
 	}
 
-	function getRootIt()
-	{
-		return $this->getRegistry()->Query(
-		    array (
-				new WikiRootFilter(),
-				new FilterVpdPredicate(),
-				new NativeProjectSortClause($this->getVpdValue())
-		    )
-        );
-	}
-	
 	function getPage() {
 		return getSession()->getApplicationUrl($this).'knowledgebase/tree?';
 	}

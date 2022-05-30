@@ -89,4 +89,8 @@ class ReportTable extends PMPageTable
         $parms['filter_search']['script'] = "filterReports( $(this).val() )";
         return $parms;
     }
+
+    function getDetails() {
+        return array();
+    }
 } 

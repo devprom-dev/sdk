@@ -1,6 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."core/classes/user/validators/ModelValidatorPasswordLength.php";
-include_once SERVER_ROOT_PATH."core/classes/user/validators/ModelValidatorLDAPUser.php";
+include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
 include "ui/FieldUserLicensesAttribute.php";
 
 class UserForm extends AdminPageForm
@@ -43,8 +43,7 @@ class UserForm extends AdminPageForm
         return array_merge(
             parent::getValidators(),
             array(
-                new ModelValidatorPasswordLength(),
-                new ModelValidatorLDAPUser()
+                new ModelValidatorPasswordLength()
             )
         );
     }
@@ -63,7 +62,7 @@ class UserForm extends AdminPageForm
 		if ( !$this->checkUniqueExcept($id, 'Login') ) {
 			return text(214);
 		}
-		if ( !$this->checkUniqueExcept($id, 'Email') ) {
+		if ( $_REQUEST['Email'] != '' && !$this->checkUniqueExcept($id, 'Email') ) {
 			return text(213);
 		}
 		
@@ -102,6 +101,11 @@ class UserForm extends AdminPageForm
 			case 'RepeatPassword':
 				return new FieldPassword;
 
+            case 'NotificationEmailType':
+                $field = new FieldDictionary(getFactory()->getObject('Notification'));
+                $field->setNullTitle(text(2451));
+                return $field;
+
             case 'IsReadonly':
                 return new FieldUserLicensesAttribute($this->getObjectIt());
 
@@ -138,6 +142,8 @@ class UserForm extends AdminPageForm
 	{
 		switch ( $field )
 		{
+            case 'NotificationEmailType':
+                return '';
 			default:
 				return parent::getDefaultValue( $field );
 		}
@@ -172,4 +178,44 @@ class UserForm extends AdminPageForm
 
 		return $actions;
 	}
+
+	function persist()
+    {
+        $wasUsers = $this->getObject()->getRecordCount();
+        if ( parent::persist() ) {
+            if ( $wasUsers < 1 ) {
+                getSession()->setAuthenticationFactory(null);
+                getSession()->open( $this->getObjectIt() );
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function process()
+    {
+        $result = parent::process();
+
+        if ( $result && $this->getAction() == 'add' ) {
+            $generator = new UserPicSpritesGenerator();
+            $generator->storeSprites();
+            $this->invalidateCache(array('projects','apps','sessions'));
+            $this->executeCheckpoints();
+        }
+
+        return $result;
+    }
+
+    function executeCheckpoints()
+    {
+        $checkpoint_factory = getCheckpointFactory();
+        $checkpoint = $checkpoint_factory->getCheckpoint( 'CheckpointSystem' );
+        $checkpoint->checkOnly( array('CheckpointHasAdmininstrator') );
+    }
+
+    function invalidateCache( array $paths ) {
+        foreach( $paths as $path ) {
+            getFactory()->getCacheService()->invalidate($path);
+        }
+    }
 }

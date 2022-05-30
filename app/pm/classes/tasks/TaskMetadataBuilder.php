@@ -24,6 +24,10 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeOrderNum('LeftWork', 14);
 		$metadata->setAttributeVisible('LeftWork', false);
         $metadata->setAttributeRequired('OrderNum', true);
+        $metadata->setAttributeEditable('EstimatedStartDate', false);
+        $metadata->setAttributeEditable('EstimatedFinishDate', false);
+        $metadata->setAttributeEditable('StartDate', false);
+        $metadata->setAttributeEditable('FinishDate', false);
 
         $metadata->addAttribute( 'Tags', 'REF_TagId', translate('Тэги'), true, false, '', 280 );
         $metadata->addPersister( new TaskTagPersister() );
@@ -32,6 +36,7 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttribute('TaskTypeBase', 'REF_TaskTypeUnifiedId', translate('Тип'), false);
 		$metadata->addAttributeGroup('TaskTypeBase', 'system');
         $metadata->addAttributeGroup('TaskType', 'type');
+        $metadata->addAttributeGroup('TaskType', 'customattribute-descriptor');
 		$metadata->addPersister(new TaskTypePersister());
 
 		$metadata->addAttribute('TraceTask', 'REF_TaskId', text(874), true, false, '', 80);
@@ -52,6 +57,7 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addPersister( new TaskDatesPersister() );
 
         $metadata->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
+        $metadata->addAttributeGroup('RecentComment', 'non-form');
 
         $attributes = array(
             'Assignee',
@@ -61,6 +67,7 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
             'Priority',
             'Planned',
             'Fact',
+            'FactToday',
             'Tags',
             'OrderNum',
             'TraceTask',
@@ -79,21 +86,17 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
         foreach ( array('Result') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'system');
 		}
-		foreach ( array('Release','PlannedStartDate','PlannedFinishDate','StartDate','FinishDate') as $attribute ) {
+		foreach ( array('Release','PlannedStartDate','PlannedFinishDate','StartDate','FinishDate','EstimatedStartDate', 'EstimatedFinishDate') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'deadlines');
 		}
         foreach ( array('Watchers','TraceTask','TraceInversedTask','OrderNum','Tags','Author') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'additional');
         }
-		foreach ( array('Caption','Description','Planned','Fact','LeftWork','Attachment','ChangeRequest') as $attribute ) {
+		foreach ( array('Caption','Description','Fact','Attachment') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'nonbulk');
 		}
         foreach ( array('StartDate','FinishDate','DueWeeks','PlannedStartDate','PlannedFinishDate','RecordCreated','RecordModified') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'dates');
-        }
-        foreach ( array('Planned','LeftWork','Fact') as $attribute ) {
-            $metadata->addAttributeGroup($attribute, 'workload');
-            $metadata->addAttributeGroup($attribute, 'hours');
         }
 
         $metadata->addPersister( new TaskDetailsPersister() );
@@ -108,14 +111,20 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 
         $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
         if ( $methodologyIt->getId() != '' && getSession()->IsRDD() ) {
-            $metadata->setAttributeCaption('ChangeRequest', text(2824));
-        }
-        if ( $methodologyIt->IsTimeTracking() ) {
-            $metadata->addAttribute('Fact', 'FLOAT', translate('Затрачено'), true, true, '', 14 );
-            $metadata->addPersister( new TaskFactPersister(array('Fact')) );
+            $metadata->setAttributeCaption('ChangeRequest', text(2698));
         }
 
-        $metadata->addAttribute('IssueDescription', 'WYSIWYG', text(2083), false, false, '', 40);
+        $metadata->addAttribute('Fact', 'FLOAT', translate('Затрачено'), true, true, '', 14 );
+        $metadata->addPersister( new TaskFactPersister(array('Fact')) );
+
+        foreach( array('Fact','FactToday','LeftWork') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'skip-notification');
+            $metadata->addAttributeGroup($attribute, 'nonbulk');
+            $metadata->setAttributeEditable($attribute, false);
+        }
+
+        $metadata->addAttribute('IssueDescription', 'WYSIWYG', text(2083), true, false, '', 40);
+        $metadata->setAttributeEditable('IssueDescription', false);
         $metadata->addAttribute('IssueState', 'VARCHAR', text(2128), false, false, '', 43);
         $metadata->addAttributeGroup('IssueState', 'workflow');
 
@@ -132,16 +141,19 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
             $metadata->setAttributeRequired('Caption', true);
         }
 
+        foreach ( array('Planned','LeftWork','Fact','FactToday') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'workload');
+            $metadata->addAttributeGroup($attribute, 'hours');
+        }
+
         $this->removeAttributes($metadata, $methodologyIt);
     }
     
     private function removeAttributes( $metadata, $methodology_it )
     {
-	    $metadata->removeAttribute( 'Controller' );
-	    $metadata->removeAttribute( 'Comments' );
-
         if ( !$methodology_it->IsTimeTracking() ) {
             $metadata->addAttributeGroup('Fact', 'system');
+            $metadata->addAttributeGroup('FactToday', 'system');
         }
 
         if ( !$methodology_it->TaskEstimationUsed() ) {

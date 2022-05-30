@@ -113,6 +113,7 @@ switch ( $type )
             'fancytree/jquery.fancytree.ui-deps.js,' .
             'fancytree/jquery.fancytree.dnd5.js,' .
             'fancytree/jquery.fancytree.persist.js,' .
+            'fancytree/jquery.fancytree.filter.js,' .
             'fancytree/jquery.fancytree.table.js,' .
             'scrollbar/perfect-scrollbar.min.js,'.
             'jquery/jquery.peekabar.js,'.

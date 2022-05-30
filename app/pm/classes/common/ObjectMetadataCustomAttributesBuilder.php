@@ -1,5 +1,4 @@
 <?php
-
 define( 'ORIGIN_CUSTOM', 'custom' );
 include_once "persisters/CustomAttributesPersister.php";
 include_once "sorts/CustomAttributeSortClause.php";
@@ -17,7 +16,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
     public function build( ObjectMetadata $metadata )
     {
         $object = $metadata->getObject();
-        if ( in_array($object->getEntityRefName(), array('pm_Project','pm_CustomAttribute','pm_ProjectLink')) ) return;
+        if ( in_array($object->getEntityRefName(), array('pm_Project','pm_CustomAttribute','pm_ProjectLink','pm_StateAttribute')) ) return;
 
         $attr = getFactory()->getObject('pm_CustomAttribute');
         if ( count(array_intersect($attr->getEntityClasses($object), $this->classes)) < 1 ) return;
@@ -38,7 +37,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 				continue;
 			}
 
-            $db_type = $attr_it->getDBType();
+            $db_type = $attr_it->getDbType();
 
 			$attributes[$attr_it->get('ReferenceName')] = array(
 				'dbtype' => $db_type,
@@ -48,9 +47,10 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 				'type' => $db_type,
 				'description' => $attr_it->get('Description'),
 				'ordernum' => $attr_it->get('OrderNum'),
+				'editable' => $attr_it->get('IsReadonly') != '' ? $attr_it->get('IsReadonly') == 'N' : true,
 				'origin' => ORIGIN_CUSTOM,
 				'default' => $attr_it->get('ObjectKind') == '' ? $attr_it->getHtmlDecoded('DefaultValue') : '',
-				'required' => $attr_it->get('ObjectKind') == '' ? $attr_it->get('IsRequired') == 'Y' : false,
+				'required' => $attr_it->get('ObjectKind') == '' && $attr_it->get('IsRequired') == 'Y',
 				'groups' => $attr_it->getGroups()
 			);
 			if ( $attr_it->get('ShowMainTab') == 'Y' ) {
@@ -68,9 +68,15 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 		foreach( $attributes as $key => $attribute )
 		{
 			$metadata->setAttribute( $key, $attribute );
-			if ( !in_array($key, $firstTabAttributes) && !in_array('trace', $attribute['groups']) ) {
+			if ( in_array($key, $firstTabAttributes) ) {
+                $metadata->addAttributeGroup($key, 'tab-main');
+            }
+            else {
 				$metadata->addAttributeGroup($key, 'additional');
 			}
+            if ( in_array('computed', $attribute['groups']) ) {
+                $metadata->setAttributeEditable($key, false);
+            }
 			$metadata->addAttributeGroup($key, 'bulk');
 		}
 		

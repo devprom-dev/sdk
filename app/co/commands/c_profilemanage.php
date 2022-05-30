@@ -1,7 +1,8 @@
 <?php
+include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
 
- class ProfileManage extends CommandForm
- {
+class ProfileManage extends CommandForm
+{
  	function validate()
  	{
 		// check authorization was successfull
@@ -9,27 +10,25 @@
 			return false;
 		}
 
-		$this->user = getFactory()->getObject('cms_User');
-
 		// proceeds with validation
-		$this->checkRequired( array('Caption', 'Email', 'Login') );
+		$this->checkRequired( array('Caption', 'Login') );
 		
 		return true;
  	}
  	
 	function modify( $user_id )
 	{
-		$this->user_it = $this->user->getExact($user_id);
-		
-		$this->checkUniqueExcept( $this->user_it, 
-			$this->Utf8ToWin('Email') );
-			
-		$this->checkUniqueExcept( $this->user_it, 
-			$this->Utf8ToWin('Login') );
+        getFactory()->getEventsManager()->delayNotifications();
+		$userIt = getFactory()->getObject('cms_User')->getExact($user_id);
 
-		$_REQUEST['Caption'] = $this->user_it->utf8towin($_REQUEST['Caption']);
-		
-		$this->user->modify_parms($this->user_it->getId(),
+		if ( $_REQUEST['Email'] != '' ) {
+            $this->checkUniqueExcept( $userIt, $this->Utf8ToWin('Email') );
+        }
+		$this->checkUniqueExcept( $userIt, $this->Utf8ToWin('Login') );
+
+		$_REQUEST['Caption'] = $userIt->utf8towin($_REQUEST['Caption']);
+
+        $userIt->object->modify_parms($userIt->getId(),
              array( 'Caption' => $_REQUEST['Caption'],
 				    'Email' => $_REQUEST['Email'],
 				    'Login' => $_REQUEST['Login'],
@@ -46,21 +45,27 @@
 			);
 
 		$participantParms = array();
-		if ( $this->user_it->get('NotificationTrackingType') != $_REQUEST['NotificationTrackingType'] ) {
+		if ( $userIt->get('NotificationTrackingType') != $_REQUEST['NotificationTrackingType'] ) {
             $participantParms['NotificationTrackingType'] = $_REQUEST['NotificationTrackingType'];
         }
-        if ( $this->user_it->get('NotificationEmailType') != $_REQUEST['NotificationEmailType'] ) {
+        if ( $userIt->get('NotificationEmailType') != $_REQUEST['NotificationEmailType'] ) {
             $participantParms['NotificationEmailType'] = $_REQUEST['NotificationEmailType'];
         }
 
         if ( count($participantParms) > 0 ) {
             $participant = getFactory()->getObject('pm_Participant');
-            $participantIt = $participant->getByRef('SystemUser', $this->user_it->getId());
+            $participantIt = $participant->getByRef('SystemUser', $userIt->getId());
             while( !$participantIt->end() ) {
                 $participant->getRegistry()->Store($participantIt, $participantParms);
                 $participantIt->moveNext();
             }
         }
+
+        getFactory()->getEventsManager()->releaseNotifications();
+
+        $generator = new UserPicSpritesGenerator();
+        $generator->storeSprites();
+        getFactory()->getCacheService()->invalidate();
 
 		$this->replySuccess( 
 			$this->getResultDescription( 1001 ) );
@@ -77,5 +82,5 @@
 				return parent::getResultDescription( $result );
 		}
 	}
- }
+}
  

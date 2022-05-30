@@ -31,6 +31,9 @@ class ChangeLogWhatsNewPersister extends ObjectSQLPersister
         array_push( $columns,
  			" MAX(t.ObjectChangeLogId) ObjectChangeLogId " );
 
+        array_push( $columns,
+            "(SELECT MAX(r.pm_ProjectId) FROM pm_Project r WHERE r.VPD = t.VPD) Project " );
+
 		return $columns;
  	}
 }

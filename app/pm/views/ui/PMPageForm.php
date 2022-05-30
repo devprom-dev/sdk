@@ -1,17 +1,16 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelService;
 use Devprom\ProjectBundle\Service\Email\CommentNotificationService;
 use Devprom\ProjectBundle\Service\Files\UploadFileService;
 use Devprom\ProjectBundle\Service\Model\ModelChangeNotification;
+
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/model/validators/ModelProjectValidator.php";
 include_once SERVER_ROOT_PATH."pm/views/comments/FieldCheckNotifications.php";
-include_once SERVER_ROOT_PATH."pm/classes/common/CustomAttributesModelBuilder.php";
 include "FieldWidgetUrl.php";
 include "FieldState.php";
 include "FieldComputed.php";
 include "FieldUID.php";
-include "JSONViewerField.php";
 
 class PMPageForm extends PageForm
 {
@@ -19,7 +18,7 @@ class PMPageForm extends PageForm
     private $customkinds = array();
     private $customdefault = array();
     private $templateFields = array();
-    private $allowChooseProject = false;
+    private $template_it;
 
     function getId()
     {
@@ -32,52 +31,36 @@ class PMPageForm extends PageForm
         parent::setObjectIt($object_it);
     }
 
-    function getIterator( $objectId )
-    {
-        if ( is_numeric($objectId) && $objectId > 0 ) {
-            $objectIt = $this->getObject()->createCachedIterator(
-                array(
-                    array(
-                        $this->getObject()->getIdAttribute() => $objectId
-                    )
-                )
-            );
-            $builder = new CustomAttributesModelBuilder($objectIt);
-            $builder->build($this->getObject());
-        }
-        return parent::getIterator($objectId);
-    }
-
     protected function extendModel()
     {
+        parent::extendModel();
+
+        if ( $_REQUEST['template'] > 0 ) {
+            $this->setTemplate($_REQUEST['template']);
+        }
+
         $entities = TextTemplateEntityRegistry::getEntities();
         $this->templateFields = preg_split('/,/',$entities[get_class($this->getObject())]);
 
-        $shareable = in_array(
-            strtolower(get_class($this->getObject())),
-            getFactory()->getObject('SharedObjectSet')->getAll()->fieldToArray('ClassName')
-        );
-
-        $this->allowChooseProject = $shareable && (
-                getSession()->getProjectIt()->IsPortfolio()
-                || getSession()->getProjectIt()->IsProgram()
-            );
-
-        if ( in_array($this->getMode(), array('new','add')) && $this->allowChooseProject ) {
-            if ( $this->getObject()->getAttributeEditable('Project') ) {
-                $this->getObject()->setAttributeVisible('Project', true);
+        if ( $this->getObject() instanceof MetaobjectStatable ) {
+            if( !is_object($this->getObjectIt()) ) {
+                $this->getObject()->setAttributeVisible('State', true);
             }
             else {
-                $this->getObject()->addAttribute('Project', 'REF_ProjectActiveId', translate('Проект'), true, false);
+                if ( !in_array($this->getObjectIt()->get('State'), $this->getObjectIt()->getStateIt()->fieldToArray('ReferenceName')) ) {
+                    $this->getObject()->setAttributeVisible('State', true);
+                }
             }
-            $this->getObject()->setAttributeRequired('Project', true);
-        }
-
-        if ( !is_object($this->getObjectIt()) && $this->getObject() instanceof MetaobjectStatable && !$this->allowChooseProject ) {
-            $this->getObject()->setAttributeVisible('State', true);
         }
 
         $this->buildCustomAttributes();
+
+        foreach( $this->customtypes as $attribute => $type ) {
+            if ( $this->customkinds[$attribute] != '' ) {
+                $visible = $this->customkinds[$attribute] == $this->getDiscriminator();
+                $this->getObject()->setAttributeVisible($attribute, $visible);
+            }
+        }
 
         if ( is_object($this->getObjectIt()) ) {
             $uid = new ObjectUID();
@@ -126,15 +109,6 @@ class PMPageForm extends PageForm
             else {
                 $this->getObject()->setAttributeVisible('IntegrationLink', $this->getObjectIt()->get('IntegrationLink') != '');
 
-                if ( !$this->getEditMode() ) {
-                    foreach( $this->customtypes as $attribute => $type ) {
-                        if ( $this->customkinds[$attribute] != '' ) {
-                            $visible = $this->customkinds[$attribute] == $this->getDiscriminator();
-                            $this->getObject()->setAttributeVisible($attribute, $visible);
-                        }
-                    }
-                }
-
                 $model_builder = new WorkflowStateAttributesModelBuilder(
                     $this->getStateIt(), array()
                 );
@@ -146,8 +120,6 @@ class PMPageForm extends PageForm
     
 	protected function buildCustomAttributes()
 	{
-		if ( !getFactory()->getObject('CustomizableObjectSet')->checkObject($this->getObject()) ) return;
-
         $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
         while (!$it->end())
         {
@@ -161,15 +133,6 @@ class PMPageForm extends PageForm
             $it->moveNext();
         }
 	}
-
-    function getValidators() {
-        return array_merge(
-            parent::getValidators(),
-            array(
-                new ModelProjectValidator()
-            )
-        );
-    }
 
     function persist()
     {
@@ -188,25 +151,6 @@ class PMPageForm extends PageForm
         $service->deleteFiles();
         $this->persistTemporaryAttachments($service, $object_it);
 
-    	$invoke_workflow = is_object($object_it) 
-    		&& ($this->getAction() == 'add' || $this->getAction() == 'modify' && $this->getTransitionIt()->getId() > 0);
-    	
-	    if ( $invoke_workflow )
-	    {
-            $it = $object_it->object->getExact($object_it->getId());
-	        $data = array();
-
-	        foreach( $it->getData() as $key => $value ) {
-	            if ( $this->getObject()->IsAttributeVisible($key) ) {
-                    $data[$key] = $value;
-                }
-            }
-	    	getFactory()->getEventsManager()
-                ->executeEventsAfterBusinessTransaction(
-                    $it, 'WorklfowMovementEventHandler', $data
-                );
-	    }
-	    
 	    return true;
     }
 
@@ -227,9 +171,9 @@ class PMPageForm extends PageForm
         }
     }
     
- 	function getDiscriminatorField()
- 	{
- 		return '';
+ 	function getDiscriminatorField() {
+        $attributes = $this->getObject()->getAttributesByGroup('customattribute-descriptor');
+ 		return $attributes[0];
  	}
 
     function getSite()
@@ -285,25 +229,33 @@ class PMPageForm extends PageForm
     {
         $value = parent::getDefaultValue( $field );
 
-        switch( $field ) {
-            case 'Project':
-                if ( $value == '' ) return getSession()->getProjectIt()->getId();
-                break;
-            default:
-                if ( array_key_exists( $field, $this->customdefault ) && $this->getEditMode() ) {
-                    if ( $this->getDiscriminator() == $this->customkinds[$field] ) {
-                        $value = $this->customdefault[$field];
-                    }
-                }
-                if ( $value == '' && in_array($field, $this->templateFields) && $this->getObject()->IsAttributeVisible($field) ) {
-                    $template_it = $this->getTextTemplateIt();
-                    if ( $template_it->getId() != '' ) {
-                        return $template_it->getHtmlDecoded('Content');
-                    }
-                }
+        if ( array_key_exists( $field, $this->customdefault ) && $this->getEditMode() ) {
+            if ( $this->getDiscriminator() == $this->customkinds[$field] ) {
+                $value = $this->customdefault[$field];
+            }
+        }
+        if ( $value == '' && in_array($field, $this->templateFields) && $this->getObject()->IsAttributeVisible($field) ) {
+            $template_it = $this->getTextTemplateIt();
+            if ( $template_it->getId() != '' ) {
+                return $template_it->getHtmlDecoded('Content');
+            }
         }
 
-        return $value;
+        $objectIt = $this->getObjectIt();
+        if ( !is_object($objectIt) ) {
+            $objectIt = $this->getObject()->createCachedIterator(array($_REQUEST));
+        }
+        $items = array();
+        foreach( ModelService::computeFormula($objectIt, $value, false) as $computedItem ) {
+            if ( !is_object($computedItem) ) {
+                $items[] = $computedItem;
+            }
+            else {
+                $items[] = $computedItem->getId();
+            }
+        }
+
+        return join(',',$items);
     }
 
     function getTextTemplateIt() {
@@ -328,12 +280,6 @@ class PMPageForm extends PageForm
                     return parent::createFieldObject($attr);
                 }
 
-            case 'Project':
-                if ( $this->allowChooseProject ) {
-                    return new FieldAutoCompleteObject(getFactory()->getObject('ProjectLinkedActive'));
-                }
-                return parent::createFieldObject($attr);
-
             case 'State':
                 if ( $this->getObject() instanceof MetaobjectStatable ) {
                     $field = new FieldState(getFactory()->getObject($this->getObject()->getStateClassName()));
@@ -353,17 +299,18 @@ class PMPageForm extends PageForm
                 }
                 return $field;
 
-            case 'Caption':
-                if ( !$this->getEditMode() ) {
-                    $field = new FieldTextEditable();
-                    $field->setObjectIt( $this->getObjectIt() );
-                }
-                else {
-                    $field = parent::createFieldObject($attr);
-                }
-                return $field;
-
             default:
+                if ( $attr == $this->getTitleField() ) {
+                    if ( !$this->getEditMode() ) {
+                        $field = new FieldTextEditable();
+                        $field->setObjectIt( $this->getObjectIt() );
+                    }
+                    else {
+                        $field = parent::createFieldObject($attr);
+                    }
+                    return $field;
+                }
+
                 $attributeGroups = $this->getObject()->getAttributeGroups($attr);
                 if ( in_array('dictionary', $attributeGroups) ) {
                     if ( $this->getAction() == 'view' && !in_array('multiselect', $attributeGroups) ) {
@@ -422,18 +369,39 @@ class PMPageForm extends PageForm
         if ( !is_object($field) ) return $field;
 
         switch( $name ) {
-            case 'IntegrationLink':
-                $field->setReadOnly(true);
-                break;
             case 'TransitionComment':
                 $field->setObjectIt(getFactory()->getObject('Comment')->getEmptyIterator());
                 break;
         }
 
-        if ( $this->customtypes[$name] == 'computed' ) {
-            $field->setReadOnly(true);
-        }
         return $field;
+    }
+
+    function IsAttributeEditable($attr_name)
+    {
+        switch( $attr_name ) {
+            case 'IntegrationLink':
+                return false;
+            default:
+                return parent::IsAttributeEditable($attr_name);
+        }
+    }
+
+    function getFieldValue( $attr )
+    {
+        if (is_object($this->template_it) && $this->template_it->get($attr) != '') {
+            return $this->template_it->get($attr);
+        }
+
+        $objectIt = $this->getObjectIt();
+        if ( $this->getTransitionIt()->getId() != '' && is_object($objectIt) ) {
+            if ( $objectIt->get($attr) == '' ) {
+                $default = $this->getDefaultValue($attr);
+                if ( $default != '' ) return $default;
+            }
+        }
+
+        return parent::getFieldValue( $attr );
     }
 
     function getFieldDescription($field_name)
@@ -473,24 +441,7 @@ class PMPageForm extends PageForm
 
     function getRenderParms()
     {
-        $uid = new ObjectUID;
-
  		$object_it = $this->getObjectIt();
-        $nextIt = $this->getNextObjectIt();
-        if ( $nextIt->getId() != '' ) {
-            $nextInfo = $uid->getUIDInfo($nextIt);
-            $nextUrl = $nextInfo['url'];
-            $nextTitle = $nextInfo['uid'] . ' ';
-
-            $caption = $nextIt->getDisplayName();
-            $items = explode(' ', $caption);
-            if ( count($items) > 7 ) {
-                $nextTitle .= join(' ', array_slice($items, 0, 7)) . '...';
-            }
-            else {
-                $nextTitle .= $caption;
-            }
-        }
 
         return array_merge(parent::getRenderParms(), array(
             'state_name' => is_object($object_it) && is_a($object_it, 'StatableIterator') && $object_it->IsTransitable()
@@ -499,8 +450,6 @@ class PMPageForm extends PageForm
             'form_class' => '',
             'showtabs' => $this->getTransitionIt()->getId() == '',
             'shortAttributes' => $this->getShortAttributes(),
-            'nextUrl' => $nextUrl,
-            'nextTitle' => $nextTitle,
             'listWidgetIt' => getFactory()->getObject('ObjectsListWidget')
                                 ->getByRef('Caption', get_class($this->getObject()))->getWidgetIt()
         ));
@@ -545,6 +494,22 @@ class PMPageForm extends PageForm
             );
             $hint = str_replace('%1', $method->getJsCall(), str_replace('%2', $method_state->getJsCall(), text(2020)));
 		}
+
+        $objects = new ConfigurableObject();
+        $objectIt = $objects->getAll();
+        $objectIt->moveToId(strtolower(get_class($this->getObject())));
+        if ( $objectIt->getId() != '' ) {
+            if ( $hint != '' ) $hint .= '<br/>';
+            $hint .= sprintf(text(3202),
+                getFactory()->getObject('Module')
+                    ->getExact('dicts-stateattribute')
+                        ->getUrl('fieldentity='.strtolower(get_class($this->getObject()))),
+                getFactory()->getObject('Module')
+                    ->getExact('dicts-pmcustomattribute')
+                        ->getUrl('customattributeentity='.strtolower(get_class($this->getObject())))
+            );
+        }
+
 		return $this->parseHint($hint);
 	}
 
@@ -568,13 +533,6 @@ class PMPageForm extends PageForm
         return $text;
     }
 
-    protected function getComputedFields()
-    {
-        return array_keys(array_filter($this->customtypes, function($value) {
-            return $value == 'computed';
-        }));
-    }
-
     function redirectOnDelete($object_it, $redirect_url = '')
     {
         $method = new UndoWebMethod(ChangeLog::getTransaction());
@@ -588,75 +546,36 @@ class PMPageForm extends PageForm
         return array();
     }
 
-    protected function getNeighbourIt( $objectIt )
-    {
-        $attributes = $this->getNeighbourAttributes();
-        if ( count($attributes) < 1 ) return $this->getObject()->getEmptyIterator();
-
-        $filters = array(
-            new FilterVpdPredicate()
-        );
-        $sorts = array();
-        foreach( $attributes as $attribute ) {
-            if ( !$this->getObject()->hasAttribute($attribute) ) continue;
-            $clause = new SortAttributeClause($attribute);
-            $clause->setNullOnTop(false);
-            $sorts[] = $clause;
-            $filters[] = new FilterAttributePredicate($attribute, $objectIt->get($attribute));
-        }
-        $sorts[] = new SortOrderedClause();
-        $sorts[] = new SortKeyClause();
-
-        $registry = $this->getObject()->getRegistry();
-        $registry->setLimit(1);
-        $registry->setPersisters(array(
-            new EntityProjectPersister()
-        ));
-
-        $resultIt = $registry->Query(
-            array_merge($filters, $sorts, array(
-                new FilterNextSiblingsPredicate($objectIt),
-                new FilterNextKeyPredicate($objectIt)
-            ))
-        );
-        if ( $resultIt->getId() != '' ) return $resultIt;
-
-        $resultIt = $registry->Query(
-            array_merge($filters, $sorts, array(
-                new FilterNotInPredicate($objectIt->getId())
-            ))
-        );
-        if ( $resultIt->getId() != '' ) return $resultIt;
-
-        $resultIt = $registry->Query(
-            array_merge($sorts, array(
-                new FilterVpdPredicate(),
-                new FilterNextSiblingsPredicate($objectIt),
-                new FilterNextKeyPredicate($objectIt)
-            ))
-        );
-        if ( $resultIt->getId() != '' ) return $resultIt;
-
-        return $registry->Query(
-            array_merge($sorts, array(
-                new FilterVpdPredicate(),
-                new FilterNotInPredicate($objectIt->getId())
-            ))
-        );
-    }
-
-    protected function getNextObjectIt()
-    {
-        $objectIt = $this->getObjectIt();
-        if ( !is_object($objectIt) ) return $this->getObject()->getEmptyIterator();
-        return $this->getNeighbourIt($objectIt);
-    }
-
     function render( $view, $parms )
     {
+        if ( $this->getTransitionIt()->getId() != '' ) {
+            $alerts = $this->getTransitionIt()->getUserAlerts();
+            if ( count($alerts) > 0 ) {
+                $this->setWarningMessage(
+                    sprintf(text(3312), ' - '.join(';<br/> - ', $alerts))
+                );
+            }
+        }
+
         $service = new ModelChangeNotification();
         $service->clearUser($this->getObjectIt(), getSession()->getUserIt(), array('commented'));
+
         parent::render( $view, $parms );
+    }
+
+    function getTemplateObject() {
+    }
+
+    public function setTemplate( $templateId )
+    {
+        $template_it = $this->getTemplateObject()->getRegistry()->Query(
+            array(
+                new FilterInPredicate($templateId),
+                new ObjectTemplatePersister()
+            )
+        );
+        if ( $template_it->getId() < 1 ) return;
+        $this->template_it = $template_it;
     }
 
     private $state_it = null;

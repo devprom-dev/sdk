@@ -11,14 +11,20 @@ abstract class SystemTriggersBase extends ObjectFactoryNotificator
 	
  	function add( $object_it ) 
 	{
-		if ( $object_it->getId() < 1 ) throw new Exception('Unable execute trigger on empty object');
+		if ( $object_it->getId() < 1 ) {
+            throw new Exception(
+                get_class($this).': unable execute trigger on empty object');
+        }
 		
         $this->process( $object_it->copy(), TRIGGER_ACTION_ADD, $object_it->getData() );
 	}
 
  	function modify( $prev_object_it, $object_it ) 
 	{
-		if ( $object_it->getId() < 1 ) throw new Exception('Unable execute trigger on empty object');
+		if ( $object_it->getId() < 1 ) {
+            throw new Exception(
+                get_class($this). ': unable execute trigger on empty object');
+        }
 		
 		$this->was_data = $prev_object_it->getData();
 		

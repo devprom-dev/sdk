@@ -42,11 +42,13 @@ class WikiBulkForm extends BulkForm
             case 'Feature':
             case 'Branch':
             case 'CopyAttributes':
+            case 'ExportTemplate':
  		    	return 'custom';
  			case 'CopyOption':
             case 'UseNumbering':
             case 'UsePaging':
             case 'ExportChildren':
+            case 'ExportParents':
             case 'UseSyntax':
             case 'UseUID':
  				return 'char';
@@ -54,8 +56,6 @@ class WikiBulkForm extends BulkForm
  				return 'largetext';
             case 'File':
                 return 'file';
-            case 'ExportTemplate':
-                return 'object';
             default:
  				return parent::getAttributeType( $attr );
  		}
@@ -81,6 +81,8 @@ class WikiBulkForm extends BulkForm
                 return text(2525);
             case 'ExportChildren':
                 return text(2526);
+            case 'ExportParents':
+                return text(3142);
             case 'UseUID':
                 return text(3011);
             case 'UseSyntax':
@@ -133,6 +135,14 @@ class WikiBulkForm extends BulkForm
                 }
                 return 'Y';
 
+            case 'ExportParents':
+                $pageIt = $this->getIt();
+                while( !$pageIt->end() ) {
+                    if ( $pageIt->get('ParentPage') != '' ) return 'Y';
+                    $pageIt->moveNext();
+                }
+                return 'N';
+
             case 'Project':
                 return getSession()->getProjectIt()->getId();
 
@@ -182,7 +192,29 @@ class WikiBulkForm extends BulkForm
 				$field->setDefault($this->getAttributeValue($attribute));
 				$field->draw();
 				break;
-				
+
+            case 'ExportTemplate':
+                $template = $this->getAttributeClass($attribute);
+                $field = new FieldDictionary($template);
+                $field->SetId($attribute);
+                $field->SetName($attribute);
+                $field->SetValue($value);
+                $field->SetTabIndex($tab_index);
+
+                $options = array();
+                $templateIt = $template->getAll();
+                while( !$templateIt->end() ) {
+                    $options[$templateIt->getId()] =
+                        explode('-', array_shift(
+                            \TextUtils::parseItems($templateIt->getHtmlDecoded('Options'))));
+                    $templateIt->moveNext();
+                }
+                $field->setDefault(JsonWrapper::encode($options));
+
+                $field->setScript("setFormCheckboxes($('#modal-form form'),this);");
+                $field->draw();
+                break;
+
  			case 'ParentPage':
 			    $object = getFactory()->getObject(get_class($this->getObject()));
 		        $object->addFilter( new FilterBaseVpdPredicate() );
@@ -192,7 +224,7 @@ class WikiBulkForm extends BulkForm
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-                $field->removeCrossProject();
+                $field->setCrossProject(false);
 				
 				$field->draw();
 				$field->drawScripts();
@@ -258,14 +290,19 @@ class WikiBulkForm extends BulkForm
 				return $this->IsAttributeModifiable($attribute);
 
 			case 'Description':
+            case 'ExportParents':
 				return true;
 
             case 'CopyOption':
-            case 'RemoveTag':
                 return false;
 
             case 'ExportTemplate':
-                return getFactory()->getObject('ExportTemplate')->getRecordCount() > 0;
+                return strpos($_REQUEST['operation'], 'MSWord') !== false
+                    && getFactory()->getObject('ExportTemplate')->getRegistry()->Count(
+                            array(
+                                new FilterVpdPredicate()
+                            )
+                        ) > 0;
 
             case 'ExportChildren':
                 $pageIt = $this->getIt();

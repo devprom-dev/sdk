@@ -1,5 +1,4 @@
 <?php
-
 include "ImportanceIterator.php";
 
 class Importance extends MetaobjectCacheable
@@ -11,8 +10,7 @@ class Importance extends MetaobjectCacheable
  		$this->setSortDefault( new SortOrderedClause() );
  	}
 
-	function createIterator() 
-	{
+	function createIterator() {
 		return new ImportanceIterator($this);
 	}
 }

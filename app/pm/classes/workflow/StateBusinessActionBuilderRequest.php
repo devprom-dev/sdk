@@ -8,8 +8,10 @@ include "actions/RequestBusinessActionResolveDuplicates.php";
 include "actions/RequestBusinessActionGetInWorkDuplicates.php";
 include "actions/RequestBusinessActionResolveImplemented.php";
 include "actions/RequestBusinessActionGetInWorkImplementation.php";
-include "actions/RequestBusinessActionMaterializeContent.php";
+include "actions/RequestBusinessActionMakeRealization.php";
+include "actions/RequestBusinessActionMoveToProject.php";
 include "actions/RequestBusinessActionMoveImplementedNextState.php";
+include "actions/RequestBusinessActionMoveImplemented.php";
 include "actions/BusinessActionIssueAutoActionShift.php";
 include "actions/BusinessActionIssueAutoActionWorkflow.php";
 include "actions/RequestBusinessActionSourceAutoActionWorkflow.php";
@@ -35,7 +37,9 @@ class StateBusinessActionBuilderRequest extends StateBusinessActionBuilder
  		$set->registerRule( new RequestBusinessActionGetInWorkDuplicates() );
 		$set->registerRule( new RequestBusinessActionMoveImplementedNextState() );
         $set->registerRule( new RequestBusinessActionSuspectFeatureDocs() );
-        $set->registerRule( new RequestBusinessActionMaterializeContent() );
+        $set->registerRule( new RequestBusinessActionMoveImplemented() );
+        $set->registerRule( new RequestBusinessActionMakeRealization() );
+        $set->registerRule( new RequestBusinessActionMoveToProject() );
 
         $it = getFactory()->getObject('IssueAutoAction')->getRegistry()->Query(
             array(

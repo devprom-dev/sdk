@@ -4,36 +4,31 @@ include_once "sorts/CustomAttributeSortClause.php";
 
 class CustomAttributesModelBuilder extends ObjectModelBuilder
 {
-    private $objectIt = null;
-
-    function __construct($objectIt) {
-        $this->objectIt = $objectIt;
-    }
+    private $restrictedEntities = array(
+        'pm_Project','pm_CustomAttribute','pm_ProjectLink','pm_Participant', 'pm_ParticipantRole', 'pm_ProjectRole',
+        'cms_User'
+    );
 
     public function build( Metaobject $object )
     {
+        if ( in_array($object->getEntityRefName(), $this->restrictedEntities) ) return;
+
         $attributes = array_keys($object->getAttributes());
 		$attr_it = getFactory()->getObject('pm_CustomAttribute')->getRegistry()->Query(
 		    array(
-		        new CustomAttributeObjectPredicate($this->objectIt),
+		        new CustomAttributeEntityPredicate(get_class($object)),
                 new FilterHasNoAttributePredicate('ReferenceName', $attributes),
                 new CustomAttributeSortClause(array_shift($attributes))
             )
         );
-        $policy = getFactory()->getAccessPolicy();
-		
+
     	while( !$attr_it->end() )
 		{
-		    $readable = $policy->can_read_attribute($object,
-                $attr_it->get('ReferenceName'), $object->getAttributeClass($attr_it->get('ReferenceName')));
-            if ( !$readable ) {
-                $attr_it->moveNext();
-                continue;
-            }
-
             $object->addAttribute(
-                $attr_it->get('ReferenceName'), $attr_it->getDBType(),
-                $attr_it->get('Caption'), $attr_it->get('IsVisible') == 'Y',
+                $attr_it->get('ReferenceName'),
+                $attr_it->getDbType(),
+                $attr_it->get('Caption'),
+                $attr_it->get('IsVisible') == 'Y',
                 false, $attr_it->get('Description')
             );
 
@@ -43,16 +38,16 @@ class CustomAttributesModelBuilder extends ObjectModelBuilder
             $object->setAttributeDefault($attr_it->get('ReferenceName'),
                 $attr_it->get('ObjectKind') == '' ? $attr_it->getHtmlDecoded('DefaultValue') : '');
 
-            $object->setAttributeGroups($attr_it->get('ReferenceName'), $attr_it->getGroups());
+            $groups = $attr_it->getGroups();
+            $object->setAttributeGroups($attr_it->get('ReferenceName'), $groups);
             $object->setAttributeOrigin($attr_it->get('ReferenceName'), ORIGIN_CUSTOM);
+            $object->setAttributeEditable($attr_it->get('ReferenceName'), in_array('computed', $groups));
 
 			$attr_it->moveNext();
 		}
 
 		if ( $attr_it->count() > 0 ) {
-    	    $persister = new CustomAttributesObjectPersister();
-            $persister->setObjectIt($this->objectIt);
-            $object->addPersister($persister);
+            $object->addPersister(new CustomAttributesPersister());
         }
     }
 }

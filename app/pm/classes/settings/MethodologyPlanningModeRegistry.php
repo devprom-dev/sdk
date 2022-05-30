@@ -7,7 +7,7 @@ class MethodologyPlanningModeRegistry extends ObjectRegistrySQL
 	const Iterations = 'I';
 	const IterationsOnly = 'T';
 	
-	public function getAll()
+	public function Query($parms = array())
 	{
 		return $this->createIterator( array (
 				array ( 'entityId' => MethodologyPlanningModeRegistry::None, 'Caption' => text(1718) ),

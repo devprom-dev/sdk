@@ -2,19 +2,6 @@
 
 class CustomAttributeFinalForm extends PMPageForm
 {
-	function __construct( $object ) 
-	{
-		$parts = preg_split('/\:/', $_REQUEST['EntityReferenceName']);
-		
-		if ( count($parts) > 1 )
-		{
-			$_REQUEST['EntityReferenceName'] = $parts[0];
-			$_REQUEST['ObjectKind'] = $parts[1];
-		}
-
-		parent::__construct( $object );
-	}
-
 	protected function getAttributeType()
 	{
 		$attr_type = $this->getFieldValue('AttributeType');
@@ -41,10 +28,27 @@ class CustomAttributeFinalForm extends PMPageForm
 			$object->setAttributeCaption('DefaultValue', text(2133));
 			$object->setAttributeDescription('DefaultValue', text(2134));
 		}
+		if ( $type == 'wysiwyg' ) {
+		    $object->setAttributeType('DefaultValue', 'WYSIWYG');
+        }
+        if ( $type == 'char' ) {
+            $object->setAttributeDefault('DefaultValue', 'N');
+        }
 
 		if ( $_REQUEST['formonly'] == '' ) {
-            $object->setAttributeVisible('EntityReferenceName', false);
-            $object->setAttributeVisible('AttributeType', false);
+            foreach( array('EntityReferenceName', 'AttributeType') as $attribute ) {
+                $object->setAttributeVisible($attribute, false);
+                $object->setAttributeRequired($attribute, true);
+            }
+        }
+
+        $parts = preg_split('/\:/', $_REQUEST['EntityReferenceName']);
+        if ( count($parts) > 1 ) {
+            $_REQUEST['EntityReferenceName'] = $parts[0];
+            $object->setAttributeRequired('ObjectKind', true);
+            $object->setAttributeDefault('ObjectKind', $parts[1]);
+            $object->setAttributeVisible('ObjectKind', false);
+            $object->resetAttributeGroup('ObjectKind', 'system');
         }
 	}
 
@@ -54,6 +58,7 @@ class CustomAttributeFinalForm extends PMPageForm
 
 		// check for conflicts with metadata attributes
 		$reserved = array();
+		$titles = array();
 
 		$className = getFactory()->getClass($_REQUEST['EntityReferenceName']);
 		if ( class_exists($className) ) {
@@ -63,9 +68,13 @@ class CustomAttributeFinalForm extends PMPageForm
                 if ( !$entity->IsAttributeStored( $key ) ) continue;
                 if ( $key == 'UID' ) continue;
                 $reserved[] = strtolower($key);
+                $titles[] = mb_strtolower($entity->getAttributeUserName($key));
             }
 
             if ( in_array( strtolower(trim($_REQUEST['ReferenceName'])), $reserved ) ) {
+                return text(1086);
+            }
+            if ( in_array( mb_strtolower(trim($_REQUEST['Caption'])), $titles ) ) {
                 return text(1086);
             }
 
@@ -88,13 +97,12 @@ class CustomAttributeFinalForm extends PMPageForm
         }
 
 		$attr_type = $_REQUEST['AttributeType'];
-		if ( $attr_type == '' )
-		{
+		if ( $attr_type == '' ) {
 			$object_it = $object->getExact( $id );
 			$attr_type = $object_it->get('AttributeType');
 		}
 		
-		if ( $attr_type == 'dictionary' )
+		if ( $attr_type == 2 )
 		{
 			$lines = preg_split('/\n/', trim($_REQUEST['ValueRange'], '\n\r'));
 			
@@ -137,8 +145,24 @@ class CustomAttributeFinalForm extends PMPageForm
 		
 		return parent::validateInputValues( $id, $action );
 	}
-	
-	function IsAttributeVisible( $attr_name )
+
+    function getDefaultValue($attr)
+    {
+        $value = parent::getDefaultValue($attr);
+
+        switch( $attr ) {
+            case 'EntityReferenceName':
+                if ( $value == '' )  {
+                    $parts = preg_split('/\:/', $_REQUEST['EntityReferenceName']);
+                    return $parts[0];
+                }
+                break;
+        }
+
+        return $value;
+    }
+
+    function IsAttributeVisible( $attr_name )
 	{
 		switch ( $attr_name )
 		{
@@ -152,6 +176,8 @@ class CustomAttributeFinalForm extends PMPageForm
                 return in_array($this->getAttributeType(), array('dictionary','reference'));
 			case 'IsUnique':
 				return !in_array($this->getAttributeType(), array('computed'));
+            case 'ObjectKind':
+                return false;
 			default:
 				return parent::IsAttributeVisible( $attr_name );
 		}

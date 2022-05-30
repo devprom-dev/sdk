@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH."ext/zip/createzipfile.php";
 
 class BackupAndRecoveryStrategy
 {
@@ -31,11 +30,7 @@ class BackupAndRecoveryStrategy
  		return $this->file_name;
  	}
 
- 	function getBackupFilePath() {
- 		return SERVER_BACKUP_PATH.$this->getBackupFileName();
- 	}
-
- 	function backup_database() 
+ 	function backup_database()
  	{
  		if ( !is_dir(SERVER_BACKUP_PATH) ) mkdir(SERVER_BACKUP_PATH);
  		
@@ -88,8 +83,6 @@ class BackupAndRecoveryStrategy
  			return;
  		}
  		
- 		$line = '';
-
  		$strings = array (
  			"",
  			"DROP DATABASE IF EXISTS ".DB_NAME.";",
@@ -107,7 +100,7 @@ class BackupAndRecoveryStrategy
  		
  		while ( !feof($dbf) )
  		{
- 			$line = fgets( $dbf );
+ 			$line = fgets( $dbf, 1024 );
  			
  			if ( strpos($line, '/*!') !== false )
  			{
@@ -137,7 +130,7 @@ class BackupAndRecoveryStrategy
 
  	 	while ( !feof($dbf) )
  		{
- 			$line = fgets( $dbf );
+ 			$line = fgets( $dbf, 1024 );
  			
  			if ( strpos($line, '/*!') !== false )
  			{
@@ -152,55 +145,33 @@ class BackupAndRecoveryStrategy
 
  	function backup_htdocs() 
  	{
- 		if ( is_dir(SERVER_BACKUP_PATH) === false )
- 		{
+ 		if ( is_dir(SERVER_BACKUP_PATH) === false ) {
  			$this->writeLog("Backup: make directory ".SERVER_BACKUP_PATH);
- 			 		
  			mkdir(SERVER_BACKUP_PATH, 0700, true);
  		}
 
-		// soruce files backup
-		$htdocs_backup_path = SERVER_BACKUP_PATH.'htdocs/';
-		
-		if ( !is_dir($htdocs_backup_path) )
-		{
-			$this->writeLog("Backup: make directory ".$htdocs_backup_path);
-			 			
-			mkdir($htdocs_backup_path, 0700, true);
-		}
-
 		$this->writeLog("Backup: start copying application");
 		
-		$this->full_copy( SERVER_ROOT_PATH, $htdocs_backup_path );
-		
-		if ( file_exists($htdocs_backup_path.'settings_server.php') )
-		{
-		    unlink( $htdocs_backup_path.'settings_server.php' );
-		}
+		$this->full_copy( DOCUMENT_ROOT, SERVER_BACKUP_PATH, false );
+        unlink( SERVER_BACKUP_PATH.'htdocs/settings_server.php' );
 
  		$this->writeLog("Backup: application copying passed");
  	}
  	
  	function backup_files() 
  	{
- 		if ( !is_dir(SERVER_BACKUP_PATH) ) mkdir(SERVER_BACKUP_PATH);
+ 		if ( !is_dir(SERVER_BACKUP_PATH) ) {
+             mkdir(SERVER_BACKUP_PATH);
+        }
 
 		// files backup destination
-		$files_backup_path = SERVER_BACKUP_PATH.
-			$this->getBackupName().'/';
-		
-		if ( !is_dir($files_backup_path) )
-		{
+		$files_backup_path = SERVER_BACKUP_PATH . $this->getBackupName().'/';
+		if ( !is_dir($files_backup_path) ) {
 			$this->writeLog("Backup: make directory ".$files_backup_path);
-			
 			mkdir($files_backup_path, 0700, true);
 		}
-		
-		$this->writeLog("Backup: start copying files");
-		
-		$this->full_copy( SERVER_FILES_PATH, $files_backup_path, false );
 
- 		$this->writeLog("Backup: files copying passed");
+		$this->full_copy( SERVER_FILES_PATH . '/.', $files_backup_path, true );
  	}
 
  	function recovery_unzip( $backup_file_name ) 
@@ -252,30 +223,27 @@ class BackupAndRecoveryStrategy
 		$files_backup_path = SERVER_BACKUP_PATH.
 			preg_replace('/\.zip/i', '', $parts['basename']).'/';
 		
-		$this->full_copy( $files_backup_path, SERVER_FILES_PATH, false );
+		$this->full_copy( $files_backup_path . '/.', SERVER_FILES_PATH, true );
  	}
 
 	function recovery_htdocs() 
 	{
  		$this->writeLog("Recovery: restore application");
 		
-		if ( !file_exists(SERVER_BACKUP_PATH.'htdocs/common.php') )
-		{
+		if ( !file_exists(SERVER_BACKUP_PATH.'htdocs/common.php') ) {
 			return text(1052).' '.SERVER_BACKUP_PATH.'htdocs/common.php';	
 		}
-		
-		$this->full_delete( SERVER_ROOT_PATH, 
-			array('settings.php', 'settings_server.php') );
-			
-		$this->full_copy( SERVER_BACKUP_PATH.'htdocs/', SERVER_ROOT_PATH );
+
+        \FileSystem::rmdirr( DOCUMENT_ROOT.'ext/' );
+		$this->full_copy( SERVER_BACKUP_PATH.'htdocs', dirname(DOCUMENT_ROOT), false );
 		
 		return '';
 	}
 
 	function recovery_clean($backup_file_name) 
 	{
-		$this->full_delete( SERVER_BACKUP_PATH.'devprom/' );
-		$this->full_delete( SERVER_BACKUP_PATH.'htdocs/' );
+        \FileSystem::rmdirr( SERVER_BACKUP_PATH.'devprom/' );
+        \FileSystem::rmdirr( SERVER_BACKUP_PATH.'htdocs/' );
 
 		$parts = pathinfo($backup_file_name);
 		
@@ -283,7 +251,7 @@ class BackupAndRecoveryStrategy
 		$files_backup_path = SERVER_BACKUP_PATH.
 			$parts['basename'].'/';
 
-		$this->full_delete( $files_backup_path );
+        \FileSystem::rmdirr( $files_backup_path );
 	}
 
  	function update_unzip( $update_file_name ) 
@@ -342,10 +310,20 @@ class BackupAndRecoveryStrategy
 	function update_htdocs() 
 	{
 		$this->writeLog("UPDATE code\n");
-		if ( is_dir(SERVER_UPDATE_PATH.'htdocs/ext') ) {
-			$this->full_delete( SERVER_ROOT_PATH.'ext/' );
-		}
-		$this->full_copy( SERVER_UPDATE_PATH.'htdocs/', SERVER_ROOT_PATH );
+		$this->full_copy(
+            SERVER_UPDATE_PATH.'htdocs',
+            dirname(DOCUMENT_ROOT),
+            false
+        );
+
+        if ( is_dir(SERVER_UPDATE_PATH.'htdocs/ext') ) {
+            \FileSystem::rmdirr( DOCUMENT_ROOT.'ext/' );
+            $this->full_copy(
+                SERVER_UPDATE_PATH.'htdocs/ext',
+                DOCUMENT_ROOT,
+                false
+            );
+        }
 	}
 
 	function update_getinfo( &$update_num ) 
@@ -374,14 +352,14 @@ class BackupAndRecoveryStrategy
 	
 	function update_clean() 
 	{
-		$this->full_delete( SERVER_UPDATE_PATH.'devprom/' );
-		$this->full_delete( SERVER_UPDATE_PATH.'htdocs/' );
+        \FileSystem::rmdirr( SERVER_UPDATE_PATH.'devprom/' );
+        \FileSystem::rmdirr( SERVER_UPDATE_PATH.'htdocs/' );
 	}
 
  	function zip() 
  	{
  		$command = defined('ZIP_APPEND_COMMAND')
- 			? ZIP_APPEND_COMMAND : 'zip -r %1 %2 %3 '; 
+ 			? ZIP_APPEND_COMMAND : 'nohup zip -rm %1 %2 %3 & ';
 
  		chdir( SERVER_BACKUP_PATH );
  		
@@ -393,9 +371,11 @@ class BackupAndRecoveryStrategy
 
         try {
             $this->writeLog('Zip: ' . \FileSystem::execAndSendResponse($command));
-            // remove source backup files
-            $this->full_delete( SERVER_BACKUP_PATH.'devprom/' );
-            $this->full_delete( SERVER_BACKUP_PATH.'htdocs/' );
+            if ( strpos($command, '-rm') === false ) {
+                // remove source backup files manually if no 'm' flag
+                \FileSystem::rmdirr( SERVER_BACKUP_PATH.'devprom/' );
+                \FileSystem::rmdirr( SERVER_BACKUP_PATH.'htdocs/' );
+            }
         }
         catch( \Exception $e ) {
             $this->errorLog("Zip: ".$e->getMessage());
@@ -403,28 +383,7 @@ class BackupAndRecoveryStrategy
         }
  	}
 
- 	function full_zip( &$zip, $path, $zip_directory ) 
- 	{
- 		$zip->addDirectory($zip_directory);
-		$mydir = dir($path.$zip_directory);
-   		while(($file = $mydir->read()) !== false) 
-   		{
-   			if($file == '.' || $file == '..') continue;
-   			$file_path = $path.$zip_directory.'/'.$file;
-   			if(is_dir($file_path)) 
-   			{
-   				$this->full_zip( $zip, $path, 
-   					$zip_directory.'/'.$file );
-   			} else {
-				$f = fopen( $file_path, "r" );
-			 	$zip->addFile(fread($f, filesize($file_path)), $zip_directory.'/'.$file);
-			 	fclose($f);
-   			}
-   		}
-    	$mydir->close();
- 	}
-
- 	function unzip( $zip_file_directory, $zip_file_name ) 
+ 	function unzip( $zip_file_directory, $zip_file_name )
  	{
 		chdir($zip_file_directory);
 
@@ -436,7 +395,7 @@ class BackupAndRecoveryStrategy
  			$command = str_replace('%1', $zip_file_name, UNZIP_COMMAND );
  		}
  		else {
- 			$command = 'unzip '.$zip_file_name;
+ 			$command = 'unzip -q '.$zip_file_name;
  		}
 
         $this->writeLog($command."\n");
@@ -449,73 +408,23 @@ class BackupAndRecoveryStrategy
         }
  	}
  	
- 	function full_copy( $source_path, $destination_path, $application = true ) 
+ 	function full_copy( $source_path, $destination_path, $async = false )
  	{
- 	    if ( realpath($source_path) == realpath(CACHE_PATH) || realpath($source_path) == realpath(SERVER_ROOT_PATH.'cache') )
- 	    {
- 	    	$this->writeLog('skip cache directory: '.$source_path);
- 	        return;
- 	    }
+        if ( $async ) {
+            $command = "nohup cp -rf {$source_path} {$destination_path} & ";
+        } else {
+            $command = "cp -rf {$source_path} {$destination_path} ";
+        }
 
-        $this->writeLog('Copying: '.$source_path);
-
-        if ($dh = opendir($source_path)) {
-           while (($file = readdir($dh)) !== false ) {
-               if( $file != "." && $file != ".." )
-               {
-                   if( is_dir( $source_path . $file ) )
-                   {
-                        $result = !is_dir($destination_path . $file) ?
-                            mkdir($destination_path . $file) : true;
-
-                        if ( !$result )
-                        {
-                            $this->writeLog('Failed mkdir: '.var_export(error_get_last(), true));
-                        }
-
-                        $this->full_copy( $source_path . $file . "/", $destination_path . $file . "/" );
-                   }
-                   else
-                   {
-                        $result = copy($source_path.$file, $destination_path.$file);
-
-                        if ( !$result )
-                        {
-                            $this->writeLog('Failed copying: '.var_export(error_get_last(), true));
-                        }
-                   }
-                   \ZipSystem::sendResponse();
-               }
-           }
-           closedir($dh);
-       }
-       else {
-           $this->writeLog('Failed open dir: '.$source_path.', '.var_export(error_get_last(), true));
-       }
+        $this->writeLog($command."\n");
+        try {
+            $this->writeLog(\FileSystem::execAndSendResponse($command));
+        }
+        catch( \Exception $e ) {
+            $this->errorLog($e->getMessage());
+            throw $e;
+        }
  	}
-
-	function full_delete( $dir, $except = array() )
-	{
-       if (is_dir($dir)) {
-           if ($dh = opendir($dir)) {
-               while (($file = readdir($dh)) !== false ) {
-                   if( $file != "." && $file != ".." && !in_array($file, $except) )
-                   {
-                       if( is_dir( $dir . $file ) )
-                       {
-                           $this->full_delete( $dir . $file . "/" );
-                       }
-                       else
-                       {
-                           unlink( $dir . $file );
-                       }
-                   }
-               }
-               closedir($dh);
-           }
-           rmdir( $dir );
-       }
-	} 	
 
 	function writeLog( $message )
 	{

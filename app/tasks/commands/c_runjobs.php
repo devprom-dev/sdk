@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH.'core/classes/system/GlobalLock.php';
+include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 
 class RunJobs extends Command
 {
@@ -26,16 +27,12 @@ class RunJobs extends Command
 
 		$this->logStart();
 
-		$jobs_to_run = array();
+        $jobs_to_run = array();
 
         // see SessionBuilder for more details
         \FileSystem::rmdirr( SERVER_FILES_PATH . 'sessions' );
 
-		// recover table
-		$this->repairTables();
-        
 		$job = getFactory()->getObject('co_ScheduledJob');
-		$jobrun = getFactory()->getObject('co_JobRun');
 
 		// select jobs to be executed
 		if ( $_REQUEST['job'] > 0 )
@@ -51,10 +48,10 @@ class RunJobs extends Command
 		else
 		{
 			$job_it = $job->getRegistry()->Query(
-					array (
-							new FilterAttributePredicate('ClassName', preg_split('/,/',$_REQUEST['filter'])),
-							new SortOrderedClause()
-					)
+                array (
+                    new FilterAttributePredicate('ClassName', preg_split('/,/',$_REQUEST['filter'])),
+                    new SortOrderedClause()
+                )
 			);
 		}
 
@@ -88,10 +85,17 @@ class RunJobs extends Command
 			$job_it->moveNext();		
 		}
 
+        $this->buildSearchableTexts();
+        $this->execRecurrentActions();
+        $this->execWebhooks();
+
 		// execute jobs
 		if ( count($jobs_to_run) > 0 )
 		{
-			$job_it = $job->getInArray('co_ScheduledJobId', $jobs_to_run);
+			$job_it = $job->getRegistry()->Query(array(
+                    new FilterInPredicate($jobs_to_run)
+                ));
+
 			while ( !$job_it->end() )
 			{
 				$model_factory = new ModelFactoryExtended($plugins);
@@ -124,6 +128,8 @@ class RunJobs extends Command
 
 					try
 					{
+                        $this->setupLogger(strtolower(get_class($command)));
+
 						// pass concrete chunk to be processed
 						if ( $_REQUEST['chunk'] != '' ) $command->setChunk(TextUtils::parseIds($_REQUEST['chunk']));
 
@@ -142,13 +148,27 @@ class RunJobs extends Command
 						if ( is_object($this->getLogger()) ) $this->getLogger()->info(
                             $job_it->getDisplayName().': '.$result.': '.SystemDateTime::date()
                         );
-						
-						getFactory()->getObject('co_JobRun')->add_parms( array ( 
+
+                        $jobRunRegistry = getFactory()->getObject('co_JobRun')->getRegistry();
+                        $jobRunRegistry->Create( array (
 							'ScheduledJob' => $job_it->getId(),
 							'Result' => $result,
 							'IsCompleted' => 'Y',
 							'RecordCreated' => $started_date 
 						));
+
+                        $jobRunRegistry->setLimit(100);
+                        $jobRunRegistry->setOffset(20);
+                        $oldItemIt = $jobRunRegistry->Query(
+                            array(
+                                new FilterAttributePredicate('ScheduledJob', $job_it->getId()),
+                                new SortAttributeClause('RecordCreated.D')
+                            )
+                        );
+                        while( !$oldItemIt->end() ) {
+                            $jobRunRegistry->Delete($oldItemIt);
+                            $oldItemIt->moveNext();
+                        }
 					}
 					catch( Exception $e )
 					{
@@ -156,25 +176,8 @@ class RunJobs extends Command
 						if ( is_object($this->getLogger()) ) {
 							$this->getLogger()->error( get_class($command).': '.$e->getMessage() );
 						}
-					}
-					
-					// remove old results
-					while ( true )
-					{
-						$cnt = $jobrun->getRegistry()->Count(
-						    array(
-						        new FilterAttributePredicate('ScheduledJob', $job_it->getId())
-                            )
-                        );
-						if ( $cnt < 21 ) break;
 
-						$run_it = $jobrun->getRegistry()->Query(
-						    array(
-                                new FilterAttributePredicate('ScheduledJob', $job_it->getId()),
-                                new SortAttributeClause('RecordCreated')
-                            )
-                        );
-						if ( $run_it->delete() < 1 ) break;
+						$this->repairTables();
 					}
 				}
 				
@@ -192,31 +195,30 @@ class RunJobs extends Command
 	
 	function checkForPattern( $value, $pattern )
 	{
-		if ( $pattern == '*' )
-		{
-			return true;	
-		}
-		
+		if ( $pattern == '*' ) return true;
+
 		$period = preg_split('/\//', $pattern);
 		if ( count($period) > 1 )
 		{
 			$checkpoints = array();
-			for ( $i = 0; $i < 100; $i += $period[1] )
-			{
+			for ( $i = 0; $i < 100; $i += $period[1] ) {
 				array_push($checkpoints, $i);
 			}
 			return in_array( $value, $checkpoints );
 		}
 
 		$interval = preg_split('/-/', $pattern);
-		if ( count($interval) > 1 )
-		{
-			if ( $value >= $interval[0] && $value <= $interval[1] )
-			{
+		if ( count($interval) > 1 ) {
+			if ( $value >= $interval[0] && $value <= $interval[1] ) {
 				return true;
 			}
 		}
-		
+
+        $items = explode(',', $pattern);
+        if ( count($items) > 1 ) {
+            return in_array($value, $items);
+        }
+
 		return $pattern == $value;
 	}
 	
@@ -230,4 +232,241 @@ class RunJobs extends Command
         DAL::Instance()->Query("check table co_JobRun");
 	    DAL::Instance()->Query("repair table co_JobRun USE_FRM ");
 	}
+
+	function execRecurrentActions()
+    {
+        global $session;
+
+        $this->setupLogger('recurrentactions');
+
+        $auth_factory = new AuthenticationFactory();
+        $auth_factory->setUser( getFactory()->getObject('cms_User')->getSuperUserIt() );
+
+        $projectRegistry = getFactory()->getObject('Project')->getRegistry();
+        $recurringRegistry = getFactory()->getObject('Recurring')->getRegistry();
+
+        $projectIt = $projectRegistry->Query(
+            array(
+                new ProjectStatePredicate('active'),
+                new FilterVpdPredicate(
+                    $recurringRegistry->Query()->fieldToArray('VPD'))
+            )
+        );
+
+        $log = $this->getLogger();
+
+        if ( $projectIt->count() > 0 ) {
+            if ( is_object($log) ) {
+                $log->info( text(3102) );
+            }
+        }
+
+        while( !$projectIt->end() )
+        {
+            $session = new PMSession($projectIt->copy(), $auth_factory);
+            getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
+            getFactory()->resetCache();
+
+            $recurringRegistry = getFactory()->getObject('Recurring')->getRegistry();
+            $recurringIt = $recurringRegistry->Query(
+                array(
+                    new FilterAttributePredicate('IsActive', 'Y'),
+                    new FilterVpdPredicate($projectIt->get('VPD'))
+                )
+            );
+            $attributes = $recurringIt->object->getAttributesByGroup('recurring');
+            while( !$recurringIt->end() )
+            {
+                if ( is_object($log) ) {
+                    $log->info($recurringIt->getDisplayName());
+                }
+
+                list($minutes, $hours, $days, $dow, $months) = explode(' ', $recurringIt->get('CronSchedule'));
+                $doExec = $this->checkForPattern( SystemDateTime::date('i'), $minutes) &&
+                    $this->checkForPattern( SystemDateTime::date('H'), $hours) &&
+                    $this->checkForPattern( SystemDateTime::date('j'), $days) &&
+                    $this->checkForPattern( SystemDateTime::date('w'), $dow) &&
+                    $this->checkForPattern( SystemDateTime::date('n'), $months);
+
+                if ( !$doExec ) {
+                    \Logger::getLogger('Commands')->info('Not now.');
+                    $recurringIt->moveNext();
+                    continue;
+                }
+
+                foreach( $attributes as $attribute ) {
+                    if ( $recurringIt->get($attribute) == '' ) continue;
+                    $objectIt = $recurringIt->getRef($attribute);
+                    while( !$objectIt->end() ) {
+                        try {
+                            $objectIt->object->processRecurringAction($objectIt, $log);
+                            if ( is_object($log) ) {
+                                $log->info( sprintf(text(3103), $recurringIt->getDisplayName() . ' - ' . $objectIt->getDisplayName()) );
+                            }
+                        }
+                        catch( \Exception $e ) {
+                            if ( is_object($log) ) {
+                                $log->error($e->getMessage());
+                            }
+                        }
+                        $objectIt->moveNext();
+                    }
+                }
+                $recurringIt->moveNext();
+            }
+            $projectIt->moveNext();
+        }
+    }
+
+    function execWebhooks()
+    {
+        $this->setupLogger('webhooks');
+        $log = $this->getLogger();
+
+        $hookIt = getFactory()->getObject('co_WebhookLog')->getRegistry()->Query(
+            array(
+                new FilterAttributeGreaterPredicate('RetriesLeft', 0),
+                new SortKeyClause()
+            )
+        );
+
+        while( !$hookIt->end() )
+        {
+            $curl = CurlBuilder::getCurl();
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($curl, CURLOPT_HEADER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+            curl_setopt($curl, CURLOPT_REFERER, EnvironmentSettings::getServerUrl());
+            curl_setopt($curl, CURLOPT_URL, $hookIt->getHtmlDecoded('Caption'));
+            curl_setopt($curl, CURLOPT_HTTPHEADER,
+                preg_split('/[\r\n]+/i', $hookIt->getHtmlDecoded('Headers')));
+
+            switch($hookIt->get('Method')) {
+                case 'GET':
+                    curl_setopt($curl, CURLOPT_HTTPGET, true);
+                    break;
+                case 'POST':
+                    curl_setopt($curl, CURLOPT_POST, true);
+                    break;
+                default:
+                    curl_setopt($curl, CURLOPT_HTTPGET, false);
+                    curl_setopt($curl, CURLOPT_POST, false);
+                    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $hookIt->get('Method'));
+            }
+
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $hookIt->getHtmlDecoded('Payload'));
+
+            try {
+                if ( is_object($log) ) {
+                    $log->info($hookIt->getHtmlDecoded('Caption'));
+                }
+
+                $result = curl_exec($curl);
+                if ( $result === false ) throw new \Exception(curl_error($curl));
+                if ( is_object($log) ) {
+                    $log->info(var_export($result,true));
+                }
+
+                $info = curl_getinfo($this->curl);
+                if ( is_object($log) ) {
+                    $log->info(var_export($info,true));
+                }
+
+                if ( $info['http_code'] >= 300 ) {
+                    throw new Exception(var_export($info, true));
+                }
+
+                $hookIt->object->modify_parms($hookIt->getId(), array(
+                    'RetriesLeft' => 0,
+                    'Result' => $result
+                ));
+            }
+            catch( \Exception $e ) {
+                if ( is_object($log) ) {
+                    $log->error($e->getMessage());
+                }
+                $hookIt->object->modify_parms($hookIt->getId(), array(
+                    'RetriesLeft' => max(0, $hookIt->get('RetriesLeft') - 1),
+                    'Result' => $e->getMessage()
+                ));
+            }
+
+            curl_close($curl);
+
+            $hookIt->moveNext();
+        }
+    }
+
+    protected function buildSearchableTexts()
+    {
+        $registry = getFactory()->getObject('Searchable')->getRegistry();
+        $registry->setLimit(100);
+        $it = $registry->Query(
+            array(
+                new StaleSearchableFilter(),
+                new SortRecentClause()
+            )
+        );
+
+        while( !$it->end() ) {
+            $className = getFactory()->getClass($it->get('ObjectClass'));
+            if ( !class_exists($className) ) {
+                $registry->Delete($it);
+                $it->moveNext();
+                continue;
+            }
+
+            $objectRegistry = getFactory()->getObject($className)->getRegistryBase();
+            if ( $objectRegistry->getObject() instanceof \WikiPage ) {
+                $objectRegistry = new \WikiPageRegistryContent($objectRegistry->getObject());
+            }
+
+            $objectIt = $objectRegistry->Query(
+                array(
+                    new FilterInPredicate($it->get('ObjectId'))
+                )
+            );
+            if ( $objectIt->getId() == '' ) {
+                $registry->Delete($it);
+                $it->moveNext();
+                continue;
+            }
+
+            $texts = array();
+            $attributes = $objectIt->object->getAttributesByType('wysiwyg');
+            foreach( $attributes as $attribute ) {
+                $texts[] = \TextUtils::getNormalizedString($objectIt->getHtmlDecoded($attribute));
+            }
+
+            $registry->Store($it, array(
+                'SearchContent' => join(' ', $texts),
+                'IsActive' => 'Y'
+            ));
+
+            $it->moveNext();
+        }
+    }
+
+    protected function setupLogger( $command )
+    {
+        $layout = new LoggerLayoutPattern();
+        $layout->setConversionPattern("\n%d %l %n %m");
+        $layout->activateOptions();
+
+        $logFilePath = SERVER_LOGS_PATH . '/' . \TextUtils::getFileSafeString('task-' . $command . '.log');
+
+        $appFile = new LoggerAppenderRollingFile('foo');
+        $appFile->setFile($logFilePath);
+        $appFile->setLayout($layout);
+        $appFile->setAppend(true);
+        $appFile->setThreshold('info');
+        $appFile->activateOptions();
+
+        $logger = Logger::getLogger('Commands');
+        $logger->removeAllAppenders();
+        $logger->addAppender($appFile);
+        $logger->setLevel('info');
+    }
 }

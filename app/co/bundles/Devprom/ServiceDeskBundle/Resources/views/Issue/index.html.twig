@@ -114,6 +114,54 @@
                                 {% endfor %}
                                 </tbody>
                             </table>
+
+                            {% if pagesCount > 1 %}
+
+                                {# the number of first and last pages to be displayed #}
+                                {% set extremePagesLimit = 3 %}
+
+                                {# the number of pages that are displayed around the active page #}
+                                {% set nearbyPagesLimit = 2 %}
+
+                                <nav>
+                                    <ul class="pagination">
+                                        {% if page > 1 %}
+                                            <li><a href="?page={{ page-1 }}">&larr;</a></li>
+
+                                            {% for i in range(1, extremePagesLimit) if ( i < page - nearbyPagesLimit ) %}
+                                                <li><a href="?page={{ i }}">{{ i }}</a></li>
+                                            {% endfor %}
+
+                                            {% if extremePagesLimit + 1 < page - nearbyPagesLimit %}
+                                                <li class="disabled"><a href="#">...</a></li>
+                                            {% endif %}
+
+                                            {% for i in range(page-nearbyPagesLimit, page-1) if ( i > 0 ) %}
+                                                <li><a href="?page={{ i }}">{{ i }}</a></li>
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        <li class="active"><a href="#">{{ page }}</a></li>
+
+                                        {% if page < pagesCount %}
+                                            {% for i in range(page+1, page + nearbyPagesLimit) if ( i <= pagesCount ) %}
+                                                <li><a href="?page={{ i }}">{{ i }}</a></li>
+                                            {% endfor %}
+
+                                            {% if  (pagesCount - extremePagesLimit) > (page + nearbyPagesLimit) %}
+                                                <li class="disabled"><a href="#">...</a></li>
+                                            {% endif %}
+
+                                            {% for i in range(pagesCount - extremePagesLimit+1, pagesCount) if ( i > page + nearbyPagesLimit ) %}
+                                                <li><a href="?page={{ i }}">{{ i }}</a></li>
+                                            {% endfor %}
+
+                                            <li><a href="?page={{ page+1 }}">&rarr;</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            {% endif %}
+
                             <div class="text-center">
                                 <a href="{{ path('issue_new') }}" class="btn btn-lg btn-success" id="create-issue-button">
                                     <i class="icon-plus"></i> {{ 'issue.add'|trans }}

@@ -13,7 +13,7 @@ import ru.devprom.pages.CKEditor;
 
 public class IterationNewPage extends SDLCPojectPageBase {
 
-	@FindBy(id="pm_ReleaseReleaseNumber")
+	@FindBy(id="pm_ReleaseCaption")
 	protected WebElement nameEdit;
 	
 	@FindBy(name="StartDate")

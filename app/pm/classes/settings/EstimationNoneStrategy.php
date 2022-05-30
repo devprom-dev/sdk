@@ -58,4 +58,8 @@ class EstimationNoneStrategy extends EstimationStrategy
 	function hasEstimationValue() {
 		return false;
 	}
+
+    function hasDiscreteValues() {
+        return false;
+    }
 }

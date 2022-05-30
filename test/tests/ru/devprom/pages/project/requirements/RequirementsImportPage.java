@@ -40,7 +40,7 @@ protected WebElement previewBtn;
 		((JavascriptExecutor) driver).executeScript("document.evaluate(\"//input[@id='Excel']\", document, null, 9, null).singleNodeValue.removeAttribute('style')");
 		inputPath.sendKeys(file.getAbsolutePath());
 		importBtn.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//form//div[contains(@class,'alert-success')]")));
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'alert-success')]")));
 		return new RequirementsImportPage(driver);
 	}
 	

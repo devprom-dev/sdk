@@ -9,6 +9,8 @@ class FormStateActionEmbedded extends PMFormEmbedded
  		switch ( $attribute )
  		{
  			case 'ReferenceName':
+            case 'Parameters':
+            case 'IsNotifyUser':
  				return true;
  			default:
  				return false;
@@ -24,9 +26,13 @@ class FormStateActionEmbedded extends PMFormEmbedded
 		switch( $attr_name )
 		{
 			case 'ReferenceName':
-				$object = getFactory()->getObject('StateBusinessAction');
-				$object->addFilter( new StateBusinessEntityFilter($this->entity) );
-				return new FieldDictionary( $object	);
+				return new FieldDictionary(
+                    getFactory()->getObject('StateBusinessAction')->getRegistry()->Query(
+                        array(
+                            new StateBusinessEntityFilter($this->entity)
+                        )
+                    )
+                );
 			default:
 				return parent::createField( $attr_name );
 		}

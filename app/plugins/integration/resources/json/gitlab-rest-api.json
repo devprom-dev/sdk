@@ -2,14 +2,6 @@
   "Iteration": {
     "url": "/api/v4/projects/{project}/milestones/{iid}",
     "url-append": "/api/v4/projects/{project}/milestones",
-    "ReleaseNumber": "title",
-    "Description": "description",
-    "StartDate": "start_date",
-    "FinishDate": "due_date"
-  },
-  "Release": {
-    "url": "/api/v4/projects/{project}/milestones/{iid}",
-    "url-append": "/api/v4/projects/{project}/milestones",
     "Caption": "title",
     "Description": "description",
     "StartDate": "start_date",
@@ -20,6 +12,7 @@
     "url-append": "/api/v4/projects/{project}/issues",
     "Caption": "title",
     "Description": "description",
+    "GitlabLabels": "join(labels)",
     "Author": {"Caption":"author.name"},
     "Owner": {"Caption":"assignee.name"},
     "Estimation": "time_stats.time_estimate",
@@ -32,6 +25,9 @@
     "State": {
       ".": "state",
       "mapping": [{"submitted":"opened"},{"resolved":"closed"},{"submitted":"*"}]
+    },
+    "Priority": {
+      "Caption": "priority"
     }
   },
   "RequestComment": {

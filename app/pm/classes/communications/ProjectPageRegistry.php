@@ -1,7 +1,7 @@
 <?php
 include "predicates/KnowledgeBaseAccessPredicate.php";
 
-class ProjectPageRegistry extends WikiPageRegistry
+class ProjectPageRegistry extends WikiPageRegistryContent
 {
     function getFilters()
     {

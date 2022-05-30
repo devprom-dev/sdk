@@ -6,10 +6,11 @@ include "ApplicationRedmineBuilder.php";
 include "ApplicationTfsBuilder.php";
 include "ApplicationYouTrackBuilder.php";
 include "ApplicationGitlabBuilder.php";
+include "ApplicationDevpromBuilder.php";
 
 class IntegrationApplicationRegistry extends ObjectRegistrySQL
 {
-	public function getAll()
+	public function Query($parms = array())
 	{
 	    $language = strtolower(getSession()->getLanguageUid());
 
@@ -63,7 +64,14 @@ class IntegrationApplicationRegistry extends ObjectRegistrySQL
 					'ReferenceName' => '/plugins/integration/resources/json/reviewboard.json',
                     'ModelBuilder' => 'ApplicationReviewBoardBuilder',
                     'Type' => 'code'
-				)
+				),
+                array (
+                    'entityId' => 'alm',
+                    'Caption' => 'Devprom ALM',
+                    'ReferenceName' => '/plugins/integration/resources/json/alm.json',
+                    'ModelBuilder' => 'ApplicationDevpromBuilder',
+                    'Type' => 'tracker'
+                )
 			)
 		);
 	}

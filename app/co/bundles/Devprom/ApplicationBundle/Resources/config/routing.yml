@@ -29,6 +29,10 @@ join:
     path:  /join-project
     defaults: { _controller: WelcomeBundle:Security:join }
 
+openid:
+    path:  /openid
+    defaults: { _controller: WelcomeBundle:Security:openid }
+
 reset:
     path:  /reset
     defaults: { _controller: WelcomeBundle:Security:reset }
@@ -58,11 +62,6 @@ logoff:
 login_process_success:
     path:  /logged
     defaults: { _controller: WelcomeBundle:Security:authForm }
-
-
-news:
-    path:  /news/{key}
-    defaults: { _controller: ApplicationBundle:Atom:news}
 
 profile:
     path:  /profile
@@ -98,6 +97,11 @@ project_welcome:
     defaults: { _controller: ApplicationBundle:Project:welcome }
     methods:  GET
 
+project_navi_tree:
+    path:  /projects/tree
+    defaults: { _controller: ApplicationBundle:Project:navigationTree }
+    methods:  GET
+
 menu_config:
     path:  /menu/config
     defaults: { _controller: ApplicationBundle:Menu:config }
@@ -114,6 +118,10 @@ _app_tooltip:
 _widgets_shortcuts:
     path:  /widget/shortcut/{language}
     defaults: { _controller: ApplicationBundle:Widget:shortcut }
+
+_widgets_mobileapp:
+    path:  /widget/mobile/{language}
+    defaults: { _controller: ApplicationBundle:Widget:mobile }
 
 _widgets_support:
     path:  /widget/support/{language}

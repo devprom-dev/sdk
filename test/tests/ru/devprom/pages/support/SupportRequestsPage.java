@@ -64,16 +64,21 @@ public class SupportRequestsPage extends SupportPageBase {
     	return new SupportRequestsPage(driver);
 	}
 	
-	public SupportRequestsPage duplicateInProject(Request request, String projectName){
+	public SupportRequestsPage duplicateInProject(Request request, String projectName)
+	{
 		WebElement element = driver.findElement(By.xpath("//table[contains(@id,'requestlist')]//td[@id='uid']/a[text()='["
 				+ request.getId() + "]']/../following-sibling::td[@id='operations']//a[@id='implement']"));
 		clickOnInvisibleElement(element);
-		
+
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated((By.id("ProjectText"))));
 		driver.findElement(By.id("ProjectText")). clear();
 		driver.findElement(By.id("ProjectText")).sendKeys(projectName);
 		autocompleteSelect(projectName);
+		submitDialog(driver.findElement(By.id("SubmitBtn")));
+
+		waitForDialog();
 		submitDialog(driver.findElement(By.id("pm_ChangeRequestSubmitBtn")));
+
 		return new SupportRequestsPage(driver);
 	}
 

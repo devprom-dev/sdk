@@ -2,8 +2,17 @@
 
 class SortKeyClause extends SortClauseBase
 {
- 	function clause()
- 	{
- 		return " ".$this->getObject()->getClassName()."Id ASC ";
+    private $direction;
+
+    function __construct( $direction = 'ASC' ) {
+        $this->direction = $direction;
+    }
+
+    function getDirection() {
+        return $this->direction;
+    }
+
+ 	function clause() {
+ 		return " {$this->getObject()->getIdAttribute()} {$this->direction} ";
  	}
 }

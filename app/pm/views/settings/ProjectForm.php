@@ -10,9 +10,6 @@ class ProjectForm extends SettingsFormBase
 
         $object = $this->getObject();
 
-        foreach( array('FinishDate') as $attribute ) {
-            $object->setAttributeEditable($attribute, false);
-        }
         foreach( array('Features', 'SpentHours', 'SpentHoursWeek') as $attribute ) {
             $object->setAttributeVisible($attribute, false);
         }
@@ -40,17 +37,23 @@ class ProjectForm extends SettingsFormBase
 
     function getFieldDescription( $name )
     {
-        switch ( $name )
-        {
+        switch ( $name ) {
             case 'IsClosed':
                 return text(663);
-
             case 'DaysInWeek':
                 return text(1023);
-
             case 'FinishDate':
-                return str_replace('%1', getFactory()->getObject('Module')->getExact('project-plan-hierarchy')->getUrl(), text(2474));
-
+                return str_replace('%1',
+                    getFactory()->getObject('Module')->getExact('project-plan-hierarchy')->getUrl(),
+                        str_replace('%2',
+                            getSession()->getLanguage()->getDateFormattedShort($this->getObjectIt()->get('EstimatedFinishDate')),
+                                text(2474)));
+            case 'StartDate':
+                return str_replace('%1',
+                    getFactory()->getObject('Module')->getExact('project-plan-hierarchy')->getUrl(),
+                        str_replace('%2',
+                            getSession()->getLanguage()->getDateFormattedShort($this->getObjectIt()->get('EstimatedStartDate')),
+                                text(3321)));
             default:
                 return parent::getFieldDescription( $name );
         }
@@ -93,7 +96,11 @@ class ProjectForm extends SettingsFormBase
     function getRedirectUrl() {
 		return '/pm/'.$this->getObjectIt()->get('CodeName').'/project/settings';
 	}
-    
+
+	function getFormPage() {
+        return $this->getRedirectUrl();
+    }
+
     function getShortAttributes() {
         return array(
             'CodeName', 'StartDate', 'FinishDate', 'Importance', 'Language'

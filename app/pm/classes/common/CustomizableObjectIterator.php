@@ -6,7 +6,7 @@ class CustomizableObjectIterator extends CacheableIterator
     {
         $name = parent::getDisplayName();
 
-        if ( $name == '' ) {
+        if ( $name == '' && $this->get('ReferenceName') != '' ) {
             $name = getFactory()->getObject($this->get('ReferenceName'))->getDisplayName();
         }
 

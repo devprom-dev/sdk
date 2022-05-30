@@ -83,13 +83,11 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
  	$soap->login( $token );
 
 	$wiki_it = getFactory()->getObject('WikiPage')->getRegistry()->Query( 
-			array_merge( 
-					array(
-		 				new ParentTransitiveFilter($wiki_id),
-						new SortDocumentClause()
-					) 
-			)
-	);
+            array(
+                new ParentTransitiveFilter($wiki_id),
+                new SortDocumentClause()
+            )
+    	);
  	
  	if ( $wiki_it->getId() < 1 ) return array();
  	
@@ -124,16 +122,15 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
  // Returns wiki list transformed to Html
  function getWikiListHtml( $token, $nodes )
  {
- 	global $soap, $model_factory;
+ 	global $soap;
  	
  	$soap->login( $token );
  	
- 	$wiki = $model_factory->getObject('WikiPage');
+ 	$wiki = getFactory()->getObject('WikiPage');
  	$wiki_it = $wiki->getExact( $nodes[0]['WikiId'] ); 
  	
  	$ids = array();
- 	foreach( $nodes as $node )
- 	{
+ 	foreach( $nodes as $node ) {
  		array_push( $ids, $node['WikiId'] );
  	}
  	

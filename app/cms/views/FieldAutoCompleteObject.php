@@ -71,32 +71,34 @@ class FieldAutoCompleteObject extends Field
  		return $this->title;
  	}
  	
- 	function setAppendable()
+ 	function setAppendable( $value = true )
  	{
- 		$this->attributes[] = 'itself';
+        if ( $value ) {
+            $this->attributes[] = 'itself';
+        }
+        else {
+            $this->attributes = array_diff($this->attributes, array('itself'));
+        }
  	}
  	
- 	function getAppendable()
- 	{
+ 	function getAppendable() {
  		return in_array('itself', $this->attributes);
  	}
 
-	function setCrossProject()
-	{
-		$this->attributes[] = 'cross';
+	function setCrossProject( $value = true ) {
+        if ( $value ) {
+            $this->attributes[] = 'cross';
+        }
+        else {
+            $this->attributes = array_diff($this->attributes, array('cross'));
+        }
 	}
 
 	function setSystemAttribute($attribute) {
         $this->attributes[] = $attribute;
     }
 
-	function removeCrossProject() {
- 	    $index = array_search('cross', $this->attributes);
- 	    if ( $index ) unset($this->attributes[$index]);
-    }
-
-	function getCrossProject()
-	{
+	function getCrossProject() {
 		return in_array('cross', $this->attributes);
 	}
 
@@ -156,11 +158,7 @@ class FieldAutoCompleteObject extends Field
                 if ( $this->getObject() instanceof MetaobjectCacheable ) {
                     return $this->getObject()->getExact($ids);
                 }
-	 	    	return $registry->Query(
-					array (
-						new FilterInPredicate($ids)
-					)
-				);
+	 	    	return $registry->QueryById($ids);
 	 	    }
 	 	    else {
 				$object_it = $this->getObject()->getExact($value);
@@ -179,11 +177,7 @@ class FieldAutoCompleteObject extends Field
  	        if ( $this->getObject() instanceof MetaobjectCacheable ) {
                 return $this->getObject()->getExact($value);
             }
- 	    	return $registry->Query(
-				array (
-					new FilterInPredicate($value)
-				)
-			);
+ 	    	return $registry->QueryById($value);
  	    }
  	}
  	
@@ -223,7 +217,7 @@ class FieldAutoCompleteObject extends Field
 			$text = $this->getTitle() != '' ? $this->getTitle() : text(868);
 			$displayValue = TextUtils::stripAnyTags($object_it->getDisplayName());
 
-            echo '<input type="text" class="autocomplete-text input-block-level" id="'.$this->getName().'Text" auto-expand="'.($this->auto_expand?'true':'false').'" tabindex="'.$this->getTabIndex().'" style="'.$this->getStyle().'" placeholder="'.text(1338).'" default="'.$displayValue.'" value="'.$displayValue.'" '.($this->getRequired() ? 'required' : '').' multiple="'.var_export($this->multiple, true).'">';
+            echo '<input type="text" class="autocomplete-text input-block-level" for-input="'.$this->getName().'" id="'.$this->getName().'Text" auto-expand="'.($this->auto_expand?'true':'false').'" tabindex="'.$this->getTabIndex().'" style="'.$this->getStyle().'" placeholder="'.text(1338).'" default="'.$displayValue.'" value="'.$displayValue.'" '.($this->getRequired() ? 'required' : '').' multiple="'.var_export($this->multiple, true).'" autocomplete="off">';
             echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$object_it->getId().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" project="'.$project.'">';
 		}
  	}

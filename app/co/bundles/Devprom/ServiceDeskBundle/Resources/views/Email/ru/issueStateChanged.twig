@@ -5,9 +5,26 @@
     <p><b>Выполнено в версии:</b> {{ version | unescapeHtml }}</p>
 {% endif %}
 <br/>
+
+{% set actions = showattribute(issue,'Шаги для решения') %}
+{% if actions != '' %}
+    <p><b>Для решения необходимо выполнить эти шаги:</b></p>
+    <p>{{ actions | unescapeHtml | raw }}</p>
+    <br/>
+{% endif %}
+
 {% if comment != '' %}
     <p><b>Комментарий:</b></p>
     <blockquote>{{ comment | unescapeHtml | raw  }}</blockquote>
     <br/>
 {% endif %}
 <hr>
+{% if issue.state.terminal == 'Y' %}
+    <p>Пожалуйста, оцените нашу работу:
+        {% for e in 1..5 %}
+            <a href="{{ issueLink }}/feedback/{{ e }}" style="font-size: x-large;color:gold;text-decoration: none;">
+                {{ "&#9733;" | unescapeHtml | raw }}
+            </a>
+        {% endfor %}
+    </p>
+{% endif %}

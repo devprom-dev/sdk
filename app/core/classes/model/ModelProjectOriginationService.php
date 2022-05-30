@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/model/ModelEntityOriginationService.php";
 
 class ModelProjectOriginationService extends ModelEntityOriginationService
@@ -8,11 +7,12 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
 	private $shared = null;
     private $sharedSettings = array();
 	private $linked_settings_it = null;
+	private $restrictedVpds = null;
 	
 	public function __construct( $session, $cache_service = null )
 	{
 		$this->session = $session;
-		
+        $this->getRestrictedVpds($this);
 		parent::__construct($cache_service);
 	}
 
@@ -96,7 +96,36 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
 
 		return self::getOrigin($this->session->getProjectIt()->getId());
 	}
-	
+
+	protected function getRestrictedVpds( $object )
+    {
+        if ( !is_array($this->restrictedVpds) ) {
+            $this->restrictedVpds = $this->buildRestrictedVpds();
+        }
+        return $this->restrictedVpds[strtolower(get_class($object))];
+    }
+
+    protected function buildRestrictedVpds()
+    {
+        $vpds = array();
+        $accessIt = getFactory()->getObject('pm_AccessRight')
+            ->getRegistry()->Query(
+                array(
+                    new AccessRightUserPredicate($this->session->getUserIt()->getId()),
+                    new FilterAttributePredicate('ReferenceType', 'Y'),
+                    new FilterTextExactPredicate('AccessType', 'none')
+                )
+            );
+        while( !$accessIt->end() ) {
+            if ( !is_array($vpds[$accessIt->get('ReferenceName')]) ) {
+                $vpds[$accessIt->get('ReferenceName')] = array();
+            }
+            $vpds[$accessIt->get('ReferenceName')][] = $accessIt->get('VPD');
+            $accessIt->moveNext();
+        }
+        return $vpds;
+    }
+
 	public function buildAvailableOrigins( $object )
 	{
 		$vpds = array();
@@ -164,6 +193,11 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
             $settings_it->moveNext();
         }
 
-		return array_unique($vpds);
+        $vpds = array_unique($vpds);
+
+        $restricted = $this->getRestrictedVpds($object);
+        if ( is_array($restricted) ) $vpds = array_diff($vpds, $restricted);
+
+		return $vpds;
 	}		
 }

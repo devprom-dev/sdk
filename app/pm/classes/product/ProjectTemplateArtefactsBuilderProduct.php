@@ -14,7 +14,7 @@ class ProjectTemplateArtefactsBuilderProduct extends ProjectTemplateSectionsRegi
     {
         $registry->addSectionItem('Dictionaries', getFactory()->getObject('FeatureType'));
         $feature = getFactory()->getObject('Feature');
-        $feature->addSort( new SortFeatureHierarchyClause() );
+        $feature->addSort( new SortObjectHierarchyClause() );
         $registry->addSectionItem('ProjectArtefacts', $feature);
 	}
 }

@@ -7,8 +7,6 @@ class ProcessBackup extends TaskCommand
 {
  	function execute()
 	{
-		global $model_factory;
-
 		$configuration = getConfiguration();
 		$backup = $configuration->getBackupAndRecoveryStrategy();
 		
@@ -26,7 +24,11 @@ class ProcessBackup extends TaskCommand
         // remove old notifications of objects changes
         $this->shrinkChangeNotifications();
 
-		$job = $model_factory->getObject('co_ScheduledJob');
+        // remove application cache
+        $this->clearCache();
+
+		$job = getFactory()->getObject('co_ScheduledJob');
+        $backupObject = getFactory()->getObject('cms_Backup');
 		$job_it = $job->getExact($_REQUEST['job']);
 		
 		$parameters = $job_it->getParameters();
@@ -49,6 +51,15 @@ class ProcessBackup extends TaskCommand
 				unlink(SERVER_BACKUP_PATH.$file_it->get('name'));
                 FileSystem::rmdirr(SERVER_BACKUP_PATH.basename($file_it->get('name'), '.zip'));
 
+                $backupIt = $backupObject->getRegistry()->Query(
+                    array(
+                        new FilterAttributePredicate('BackupFileName', $file_it->get('name'))
+                    )
+                );
+                if ( $backupIt->getId() != '' ) {
+                    $backupObject->delete($backupIt->getId());
+                }
+
 				if ( is_object($log) ) {
                     $log->info( str_replace('%1', $file_it->get('name'), text(1230)) );
                 }
@@ -69,8 +80,7 @@ class ProcessBackup extends TaskCommand
             $this->replyError($e->getMessage());
         }
 
-		$backup_cls = $model_factory->getObject('cms_Backup');
-		$backup_cls->add_parms( array (
+        $backupObject->add_parms( array (
 			'Caption' => text(1173),
 			'BackupFileName' => $backup->getBackupFileName()
 		));
@@ -103,7 +113,7 @@ class ProcessBackup extends TaskCommand
 
 	function shrinkTests()
     {
-        $lastDate = date("Y-m-d", strtotime(defined('OLDEST_TEST_RUNS') ? OLDEST_TEST_RUNS : "-12 month"));
+        $lastDate = date("Y-m-d", strtotime(defined('OLDEST_TEST_RUNS') ? OLDEST_TEST_RUNS : "-3 year"));
 
         DAL::Instance()->Query("
           DELETE FROM pm_TestCaseExecution WHERE RecordCreated < '".$lastDate."'
@@ -121,5 +131,15 @@ class ProcessBackup extends TaskCommand
     {
         $lastDate = date("Y-m-d", strtotime("-1 month"));
         DAL::Instance()->Query(" DELETE FROM ObjectChangeNotification WHERE RecordCreated < '".$lastDate."' ");
+    }
+
+    function clearCache()
+    {
+        $lock = new CacheLock();
+        $lock->Lock();
+
+        FileSystem::rmdirr(CACHE_PATH . '/appcache');
+
+        $lock->Release();
     }
 }

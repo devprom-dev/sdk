@@ -35,27 +35,35 @@ class AdminChangeLogNotificator extends ChangeLogNotificator
 
 	function isAttributeVisible( $attribute_name, $object_it, $action )
 	{
-		switch ( $object_it->object->getClassName() )
-		{
-			case 'cms_User':
-				switch ( $attribute_name )
-				{
-					case 'Password':
-					case 'Rating':
-						return false;
-				}
-				break;
-			case 'co_ScheduledJob':
-				switch ( $attribute_name )
-				{
-					case 'RecentLog':
-					case 'ProcessedTotal':
-					case 'LeftToProcess':
-					case 'StatusText':
-						return false;
-				}
-				break;
-		}
+        switch( $attribute_name )
+        {
+            case 'RecordCreated':
+            case 'RecordModified':
+                return false;
+        }
+
+        switch ( $object_it->object->getClassName() )
+        {
+            case 'cms_User':
+                switch ( $attribute_name )
+                {
+                    case 'Password':
+                    case 'Rating':
+                    case 'OrderNum':
+                        return false;
+                }
+                break;
+            case 'co_ScheduledJob':
+                switch ( $attribute_name )
+                {
+                    case 'RecentLog':
+                    case 'ProcessedTotal':
+                    case 'LeftToProcess':
+                    case 'StatusText':
+                        return false;
+                }
+                break;
+        }
 		return parent::isAttributeVisible( $attribute_name, $object_it, $action );
 	}
 }

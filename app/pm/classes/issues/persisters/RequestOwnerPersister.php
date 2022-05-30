@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH . "pm/classes/participants/predicates/ProjectUserGroupPredicate.php";
 
 class RequestOwnerPersister extends ObjectSQLPersister
 {
@@ -7,25 +6,34 @@ class RequestOwnerPersister extends ObjectSQLPersister
 		return array('UserGroup');
 	}
 
-	function map( &$parms )
+    function modify($object_id, $parms)
     {
         if ( array_key_exists('UserGroup', $parms) ) {
-            $userIt = getFactory()->getObject('ProjectUser')->getRegistry()->Query(
+            $registry = $this->getObject()->getRegistry();
+            $requestIt = $registry->Query(
                 array(
-                    new ProjectUserGroupPredicate($parms['UserGroup'] != '' ? $parms['UserGroup'] : 'none')
+                    new FilterInPredicate($object_id),
+                    new RequestOwnerPersister()
                 )
             );
-            $parms['Owner'] = $userIt->getId();
+            if ( $requestIt->get('UserGroup') != $parms['UserGroup'] ) {
+                $registry->Store($requestIt, array(
+                    'Owner' => getFactory()->getObject('ProjectUser')->getRegistry()->Query(
+                        array(
+                            new ProjectUserGroupPredicate($parms['UserGroup'] != '' ? $parms['UserGroup'] : 'none')
+                        )
+                    )->getId()
+                ));
+            }
         }
+        parent::modify($object_id, $parms);
     }
 
-	function getSelectColumns( $alias )
+    function getSelectColumns( $alias )
  	{
 		return array (
-			" IFNULL(
-				(SELECT MIN(l.UserGroup) FROM co_UserGroupLink l, pm_Task s WHERE l.SystemUser = s.Assignee AND s.ChangeRequest = ".$alias.".pm_ChangeRequestId),
-				(SELECT MIN(l.UserGroup) FROM co_UserGroupLink l WHERE l.SystemUser = ".$alias.".Owner)
-			  ) UserGroup "
+			" (SELECT GROUP_CONCAT(CAST(l.UserGroup AS CHAR)) 
+			     FROM co_UserGroupLink l WHERE l.SystemUser = ".$alias.".Owner ) UserGroup "
 		);
  	}
 }

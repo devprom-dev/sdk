@@ -62,13 +62,10 @@ public class AutoActionNewPage extends KanbanPageBase {
 		return this;
 	}
 
-	public AutoActionNewPage save(){
+	public AutoActionNewPage save()
+	{
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(submitBtn));
-		submitBtn.click();
-		try {
-			Thread.sleep(6000);
-		} catch (InterruptedException e) {
-		}
+		submitDialog(submitBtn);
 		return new AutoActionNewPage(driver);
 	}
 

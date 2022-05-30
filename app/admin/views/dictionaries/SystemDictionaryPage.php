@@ -14,11 +14,10 @@ class SystemDictionaryPage extends AdminPage
 			$_REQUEST['dict'] = $object->getEntityRefName();
 		}
 			
-		parent::Page();
+		parent::__construct();
 	}
 
-	function getObject()
-	{
+	function getObject() {
 		return $this->getDictionary();
 	}
 	
@@ -27,28 +26,19 @@ class SystemDictionaryPage extends AdminPage
 		switch ( $_REQUEST['dict'] )
 		{
 			case 'pm_ProjectRole':
-				
 				$object_it = $this->getObjectIt();
-				
 				$object = getFactory()->getObject('ProjectRoleBase');
-				
-				if ( is_object($object_it) && $object_it->get('ReferenceName') == 'lead' )
-				{
+				if ( is_object($object_it) && $object_it->get('ReferenceName') == 'lead' ) {
 					$object->setAttributeVisible('ReferenceName', false);
 				}
-				
 				break;
 
 			case 'pm_TaskType':
-				
 				$object = getFactory()->getObject('TaskTypeBase');
-				
 				break;
 
 			case 'pm_TestExecutionResult':
-				
 				$object = getFactory()->getObject('TestExecutionResultBase');
-				
 				break;
 
 			case 'Priority':
@@ -57,14 +47,12 @@ class SystemDictionaryPage extends AdminPage
 			case 'pm_IssueType':
 			case 'pm_ChangeRequestLinkType':
 			case 'cms_Language':
-				
+            case 'pm_FinancingType':
 			    $object = getFactory()->getObject($_REQUEST['dict']);
-			    
 			    break;
 		}
 		
-		if ( is_object($object) )
-		{
+		if ( is_object($object) ) {
 			$object->addSort( new SortAttributeClause('OrderNum') );
 		}
 		

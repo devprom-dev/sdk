@@ -16,7 +16,7 @@ class MilestonePage extends PMPage
  			{
 				if ( $_REQUEST['Transition'] == '' )
 				{
- 				    $this->addInfoSection( new PageSectionComments($object_it) );
+ 				    $this->addInfoSection( new PageSectionComments($object_it, $this->getCommentObject()) );
                     $this->addInfoSection( new PMLastChangesSection($object_it) );
 				}
  			}

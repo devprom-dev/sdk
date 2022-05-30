@@ -6,7 +6,7 @@ class ModifiedAfterFilterResolver
 {
 	public function __construct( $modifiedFrom = '', $modifiedTo = '', $createdFrom = '', $createdTo = '' )
 	{
-		$this->modifiedFrom = $modifiedFrom;
+        $this->modifiedFrom = $modifiedFrom;
 		$this->modifiedTo = $modifiedTo;
 		$this->createdFrom = $createdFrom;
 		$this->createdTo = $createdTo;
@@ -14,10 +14,13 @@ class ModifiedAfterFilterResolver
 
 	public function resolve()
 	{
-		\EnvironmentSettings::setClientTimeZone('UTC');
 		$filters = array();
 		if ( $this->modifiedFrom != '' ) {
-			$filters[] = new \FilterModifiedAfterPredicate($this->modifiedFrom);
+			$filters[] = new \FilterModifiedAfterPredicate(
+                    (new \DateTime($this->modifiedFrom,
+                        new \DateTimeZone(\EnvironmentSettings::getUTCOffset().':00')))
+                            ->format("Y-m-d H:i:s")
+                    );
 		}
 		if ( $this->modifiedTo != '' ) {
 			$filters[] = new \FilterModifiedBeforePredicate($this->modifiedTo);

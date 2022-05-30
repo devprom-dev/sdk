@@ -4,6 +4,6 @@ class SortRecentNumberClause extends SortClauseBase
 {
  	function clause()
  	{
- 		return " CAST(ReleaseNumber AS UNSIGNED) DESC ";
+ 		return " CAST(Caption AS UNSIGNED) DESC ";
  	}
 }

@@ -46,7 +46,7 @@ class TaskConvertToIssueService
         while( !$comment_it->end() ) {
             $comment_it->object->getRegistry()->Store($comment_it,
                 array(
-                    'ObjectClass' => get_class($requestIt->object),
+                    'ObjectClass' => 'Request',
                     'ObjectId' => $requestIt->getId()
                 )
             );

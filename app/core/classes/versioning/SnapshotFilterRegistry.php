@@ -2,9 +2,9 @@
 
 class SnapshotFilterRegistry extends ObjectRegistrySQL
 {
-	public function getAll()
+	public function Query($parms = array())
 	{
-		$data = parent::getAll()->getRowset();
+		$data = parent::Query($parms)->getRowset();
 
 		array_unshift($data, array (
 				'cms_SnapshotId' => '',

@@ -1,4 +1,5 @@
 <?php
+include "predicates/CustomAttributeValueVpdPredicate.php";
 
 class PMCustomAttributeValue extends Metaobject
 {

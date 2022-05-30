@@ -193,21 +193,11 @@
 	}
 
 	//---------------------------------------------------------------------------------------------------------
-	function useReorderIterator( $it )
-	{
-		if(!is_object($this->it_reorder)) {
-			$this->it_reorder = $this->object->getAll();
-		}
-		return $this->it_reorder;
-	}
-
-	//---------------------------------------------------------------------------------------------------------
 	function drawReorderColumn( $i, $it )
 	{
 		global $_REQUEST;
 		$offset = $_REQUEST['offset'];
 		
-		$this->useReorderIterator( $it );
 	?>
     	<td style="width:14pt;padding:1.5pt;" valign=top>
     		<table style="table-layout:fixed" width=100%>
@@ -381,16 +371,9 @@
 	//---------------------------------------------------------------------------------------------------------
 	function getIterator() 
 	{
-		global $_REQUEST;
 		$offset = $_REQUEST['offset'];
-		$search = $_REQUEST['search'];
-		
-		if($search != '') {
-    		$it = $this->object->getLike( $search );
-		}
-		else {
-    		$it = $this->object->getAll();
-		}
+
+        $it = $this->object->getAll();
     	$it->moveToPos( $offset );
 		
 		return $it;
@@ -459,19 +442,6 @@
 	
  	//---------------------------------------------------------------------------------------------------------
 	function drawHeader() {}
-	
-	//---------------------------------------------------------------------------------------------------------
-	function useReorderIterator( $it )
-	{
-		if(isset($this->it_reorder)) {
-			if($this->it_reorder->getParentId() == $it->getParentId()) return;
-		}
-		if(is_null($it->getParentId())) {
-			$this->it_reorder = $this->object->getAll();
-		} else {
-			$this->it_reorder = $this->object->getChildren( $it->getParentId() );
-		}
-	}
 	
 	//---------------------------------------------------------------------------------------------------------
 	function getPageUrl( $id ) {
@@ -549,72 +519,6 @@
         		</td>
         	</tr>
         </table>
-	<?
-	}
-
-	//---------------------------------------------------------------------------------------------------------
-	function drawTreeItem( $i, $object_it, $levelnum )	
-	{
-		static $layer_id = 0;
-		$children = $object_it->getChildren();
-		
-		$layer = "level_".$layer_id;
-		$layer_id++;
-		
-		$expanded = in_array($object_it->getId(), $this->path_to_parent);
-	?>
-		<tr>
-		  <td style="border:.5pt solid #d5d5df;">
-			<table width=100% cellpadding=0 cellspacing=0 style="border-collapse:collapse;">
-				<tr>
-					<?
-					if($_REQUEST[$this->object->getClassName().'Id'] == $object_it->getId()) {
-					?>
-					<td width=5 style="font-family:wingdings;font-size:13pt;color:#6F32EA;padding-top:1pt;">
-						р
-					</td>
-					<?
-					}
-					?>
-					<td width="<? echo (($levelnum+1)*18); ?>" valign=top align=right style="padding-top:5pt;">
-					<?
-						if( $children->count() > 0)
-						{
-					?>
-						<a href="javascript: { toggleTreeItem ('<? echo $layer; ?>'); }">
-							<img id="<? echo 'img'.$layer; ?>" border=0 src="<? echo ($expanded ? 'images/treeminus.png' : 'images/treeplus.png'); ?>">
-						</a>
-					<?
-						}
-					?>
-					</td>
-    				<td valign=top>
-					<?
-					$this->drawItem( $object_it );
-					?>
-        			</td>
-					<?
-						$this->drawReorderColumn( $i, $object_it );
-						$this->drawActionColumn( $object_it );
-					?>
-				</tr>
-			</table>
-		</td></tr>
-		<tr id="<? echo $layer; ?>" style="display:<? echo ($expanded ? 'block' : 'none'); ?>;">
-			<td>
-				<table width=100% cellpadding=0 cellspacing=0 style="margin-top:-1pt;">
-            	<?
-            		for( $j = 0; $j < $children->count(); $j++) 
-					{
-						//echo $children->getId();
-            			$this->drawTreeItem( $j, $children, $levelnum + 1 );
-						//echo $children->getId();
-            			$children->moveNext();
-            		}
-            	?>
-				</table>
-			</td>
-		</tr>
 	<?
 	}
  }
@@ -744,14 +648,12 @@
 		return getFactory()->getAccessPolicy()->can_delete($this->object);
 	}
 	
-	function IsNeedToSelect()
-	{
-		return $_REQUEST['dashboard'] == '' && $this->IsNeedToDelete();
+	function IsNeedToSelect() {
+		return $_REQUEST['dashboard'] == '';
 	}
 
-	function IsNeedToSelectRow( $object_it )
-	{
-		return $this->IsNeedToDeleteRow( $object_it );
+	function IsNeedToSelectRow( $object_it ) {
+		return true;
 	}
 
 	//---------------------------------------------------------------------------------------------------------

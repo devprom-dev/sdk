@@ -15,7 +15,7 @@ class TaskIssueStatePredicate extends FilterPredicate
             $states = array(0);
         }
         else {
-            $typeDefault = getFactory()->getObject('pm_TaskType')->getRegistry()->Query(
+            $typeDefault = getFactory()->getObject('pm_TaskType')->getRegistry()->QueryKeys(
                     array (
                         new FilterBaseVpdPredicate(),
                         new TaskTypeStateRelatedPredicate($states)

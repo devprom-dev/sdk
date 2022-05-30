@@ -17,7 +17,7 @@ class FieldWikiTagTrace extends FieldTagTrace
  		
 		$tag->addFilter( 
 			new FilterAttributePredicate( 'Wiki', 
-				is_object($anchor_it) ? $anchor_it->getId() : -1 ) );
+				is_object($anchor_it) && $anchor_it->getId() > 0 ? $anchor_it->getId() : 0 ) );
 				
 		return $tag;
 	}

@@ -48,7 +48,7 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
 
         if ( defined('PERMISSIONS_ENABLED') ) {
             $columns[] =
-                "( SELECT SUM(r.Capacity) " .
+                "( SELECT LEAST(8, SUM(r.Capacity)) " .
                 "  	 FROM pm_ParticipantRole r, pm_Participant n " .
                 " 	WHERE r.Participant = n.pm_ParticipantId " .
                 "     AND n.Project IN (" . $linked_ids . ") ".

@@ -37,9 +37,12 @@ class MergeIssueSingleService extends MergeIssueService
             $requestAttribute = $parts[1];
 
             $referenceObject = getFactory()->getObject($class_name);
+            if ( !$referenceObject->IsPersistable() ) continue;
             if ( !$referenceObject->IsAttributeStored($requestAttribute) ) continue;
 
-            $referenceRegistry = $referenceObject->getRegistry();
+            \Logger::getLogger('Commands')->error(var_export($class_name . ',' . $requestAttribute,true));
+
+            $referenceRegistry = $referenceObject->getRegistryBase();
             $refIt = $referenceRegistry->Query(
                 array (
                     new \FilterAttributePredicate($requestAttribute, $dupIds)

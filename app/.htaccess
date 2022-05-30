@@ -16,7 +16,7 @@ RewriteRule ^cache/?$ /cache.php [QSA,L]
 RewriteRule ^module/([^/]+)/([^/]+)/(.+)$ /app/module.php?namespace=$1&module=$2&page=$3 [L,QSA]
 RewriteRule ^module/([^/]+)/(.+)$ /app/module.php?namespace=$1&module=$2 [L,QSA]
 RewriteRule ^methods.*$ /app/methods.php [L,QSA]
-RewriteRule ^(auth|sprite/.*|join-project|login|recovery|reset|404|50[\d]{1})$ /app/non-auth.php [L,QSA]
+RewriteRule ^(openid|auth|sprite/.*|join-project|login|recovery|reset|404|50[\d]{1})$ /app/non-auth.php [L,QSA]
 RewriteRule ^(keys|notifications|profile|logged|invite|logoff|500\.zip|310|projects.*|menu.*|widget.*|tooltip.*|news/.+)$ /app/front.php [L,QSA]
 RewriteRule ^$ /app/front.php [L,QSA]
 

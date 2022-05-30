@@ -4,19 +4,18 @@ class WatcherIterator extends OrderedIterator
 {
  	function getDisplayName() 
  	{
- 		if ( $this->get('SystemUser') == '' ) {
- 			return $this->get('Email');
- 		}
- 		else
- 		{
-			if ( !is_numeric($this->get('SystemUser')) ) {
-				return $this->get('SystemUser');
-			}
-			else {
-				$user_it = $this->getRef('SystemUser', $this->get('SystemUser') > 1000000 ? getFactory()->getObject('IssueAuthor') : null);
-				return $user_it->getDisplayName();
-			}
- 		}
+        if ( $this->get('Email') != '' && $this->get('SystemUser') == '' ) {
+            return $this->get('Email');
+        }
+
+        $user_it = $this->getRef('SystemUser');
+
+        $title = $user_it->getDisplayName();
+        if ( $user_it->get('Blocks') > 0 ) {
+            $title = "<strike>{$title}</strike>";
+        }
+
+        return $title;
  	}
 
 	function getAnchorIt()

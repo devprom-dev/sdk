@@ -28,7 +28,11 @@ class WikiHistoryTable extends ProjectLogTable
 				);
 		}
 
-		return $object_it;
+        if ( $object_it->getId() < 1 ) {
+            $object_it = $object_it->object->getRootIt();
+        }
+
+        return $object_it;
 	}
 	
 	function getList()

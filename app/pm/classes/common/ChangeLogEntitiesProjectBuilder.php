@@ -27,6 +27,7 @@ class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
 			'pm_ObjectAccess',
 			'pm_StateObject',
 			'pm_State',
+            'pm_StateAttribute',
 			'pm_Transition',
 			'Comment',
 			'pm_CustomAttribute',
@@ -34,7 +35,10 @@ class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
         	'pm_FunctionTrace',
             'cms_Snapshot',
             'pm_CustomReport',
-            'pm_Invitation'
+            'pm_Invitation',
+            'pm_Component',
+            'pm_ComponentType',
+            'pm_ComponentTrace'
  		);
         
         if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' )

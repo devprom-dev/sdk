@@ -104,6 +104,9 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  			    else {
 					$field = new FieldAutoCompleteObject($object);
  			    }
+ 			    if ( $object instanceof Task ) {
+                    $field->setCrossProject();
+                }
 				$field->setTitle( $object->getDisplayName() );
 				return $field;
 				

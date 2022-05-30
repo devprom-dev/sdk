@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include "persisters/StateBaseModelPersister.php";
 
@@ -25,10 +24,10 @@ class StateBaseModelBuilder extends ObjectModelBuilder
         $object->setAttributeType('ReferenceName', 'varchar');
         $object->setAttributeVisible('ReferenceName', false);
 
-        foreach( array('Description','OrderNum','ReferenceName','ExcludeLeadTime','SkipEmailNotification','IsNewArtifacts') as $attribute ) {
+        foreach( array('QueueLength', 'Description','OrderNum','ReferenceName','ExcludeLeadTime','SkipEmailNotification','IsNewArtifacts') as $attribute ) {
             $object->addAttributeGroup($attribute, 'additional');
         }
-		foreach( array('QueueLength','RelatedColor') as $attribute ) {
+		foreach( array('QueueLength') as $attribute ) {
 			$object->addAttributeGroup($attribute, 'nonbulk');
 		}
         foreach ( array( 'QueueLength' ) as $attribute ) {

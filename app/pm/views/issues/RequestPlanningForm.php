@@ -23,7 +23,11 @@ class RequestPlanningForm extends RequestForm
 
     function processEmbeddedForms($object_it, $callback = null )
     {
-        $_REQUEST['Release'] = $object_it->get('Iteration');
+        if ( $_REQUEST['Iteration'] == '' ) {
+            $_REQUEST['Iteration'] = $object_it->get('Iteration');
+        }
+        $_REQUEST['Release'] = $_REQUEST['Iteration'];
+
         parent::processEmbeddedForms($object_it, $callback);
     }
 
@@ -109,6 +113,10 @@ class RequestPlanningForm extends RequestForm
 			    if ( is_a($field, 'FieldText') ) {
 			        $field->setRows( 6 );
 			    }
+                $matches = array();
+                if ( preg_match(REGEX_INCLUDE_PAGE, $this->getFieldValue('Description'), $matches) ) {
+                    $field->setReadOnly(true);
+                }
 			    return $field;
     			     
     		default:

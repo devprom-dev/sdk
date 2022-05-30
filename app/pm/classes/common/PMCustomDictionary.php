@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/common/CacheableSet.php";
 include "PMCustomDictionaryRegistry.php";
 
@@ -9,22 +8,18 @@ class PMCustomDictionary extends CacheableSet
  	{
  		$this->object = $object;
  		$this->attribute = $attribute;
- 		
  	    parent::__construct( new PMCustomDictionaryRegistry($this) );
  	}
  	
-	function getCacheCategory()
-	{
+	function getCacheCategory() {
 	    return getSession()->getCacheKey().get_class($this->object).$this->attribute;
 	}
 	
-	function getObjectForAttribute()
-	{
+	function getObjectForAttribute() {
 		return $this->object;
 	}
 	
-	function getAttribute()
-	{
+	function getAttribute() {
 		return $this->attribute;
 	}
 	

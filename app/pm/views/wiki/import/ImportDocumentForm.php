@@ -14,6 +14,7 @@ class ImportDocumentForm extends PMPageForm
 
         $object->setAttributeRequired('Caption', false);
 		foreach( $object->getAttributes() as $attribute => $info ) {
+            $object->resetAttributeGroup($attribute, 'additional');
 			if ( in_array($attribute, $visible) ) continue;
             if ( in_array($attribute, $system) ) continue;
             if ( $object->IsAttributeRequired($attribute) ) continue;
@@ -30,6 +31,8 @@ class ImportDocumentForm extends PMPageForm
 
 		$object->addAttribute('DocumentFile', 'FILE', translate('Файл'), true, false, text(2218), 1);
         $object->addAttribute('Format', 'VARCHAR', '', false, false);
+        $object->addAttribute('ResetStyles', 'CHAR', text(3143), true, false);
+        $object->setAttributeDefault('ResetStyles', 'Y');
 
         if ( !in_array('PageType', $system) ) {
             $typeIt = $object->getAttributeObject('PageType')->getAll();
@@ -78,6 +81,7 @@ class ImportDocumentForm extends PMPageForm
                 'PageType' => $_REQUEST['PageType'],
                 'State' => $_REQUEST['State'],
                 'DocumentVersion'  => $_REQUEST['DocumentVersion'],
+                'ResetStyles' => $_REQUEST['ResetStyles']
             );
 
 			$importObject = getFactory()->getObject(get_class($this->getObject()));
@@ -105,6 +109,7 @@ class ImportDocumentForm extends PMPageForm
                             $service->storeInitialBaseline($documentIt);
                         }
                         $this->redirectOnAdded($documentIt);
+                        return true;
                     }
                 }
                 $importer_it->moveNext();
@@ -116,6 +121,7 @@ class ImportDocumentForm extends PMPageForm
 			$this->setRequiredAttributesWarning();
 			$this->setWarningMessage($e->getMessage());
 			$this->edit('');
+			return false;
 		}
 	}
 

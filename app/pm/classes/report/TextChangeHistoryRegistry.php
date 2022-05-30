@@ -2,13 +2,14 @@
 
 class TextChangeHistoryRegistry extends ObjectRegistrySQL
 {
-	function getQueryClause()
+	function getQueryClause(array $parms)
 	{
 		$startDate = SystemDateTime::date();
 		$finishDate = SystemDateTime::date();
 		$mapper = new ModelDataTypeMappingDateTime();
 
-		foreach( $this->getFilters() as $filter ) {
+		$filters = $this->extractPredicates($parms);
+		foreach( $filters as $filter ) {
 			if ( $filter instanceof FilterModifiedAfterPredicate ) {
 				$startDate = $mapper->map(DAL::Instance()->Escape($filter->getValue()));
 			}
@@ -35,7 +36,7 @@ class TextChangeHistoryRegistry extends ObjectRegistrySQL
 		 				     AND a.ReportDate = i.StartDateOnly) ModifiedPerHour
 					FROM pm_CalendarInterval i 
 							LEFT OUTER JOIN pm_TextChanges t 
-								ON i.StartDateOnly = DATE(t.RecordModified) ".$this->getFilterPredicate('t')."
+								ON i.StartDateOnly = DATE(t.RecordModified) ".$this->getFilterPredicate($filters,'t')."
 				   WHERE i.Kind = 'day' AND i.StartDate BETWEEN '".$startDate."' AND '".$finishDate."'
 				  ) ";
 	}

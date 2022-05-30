@@ -2,7 +2,7 @@
 
 class BaselineRegistry extends ObjectRegistrySQL
 {
-	function getQueryClause()
+	function getQueryClause(array $parms)
 	{
         $snapshot = getFactory()->getObject('cms_Snapshot');
 
@@ -15,7 +15,7 @@ class BaselineRegistry extends ObjectRegistrySQL
 	    if ( (!defined('PLAN_AS_BASELINE') || PLAN_AS_BASELINE == 'true') and class_exists('Issue') ) {
             $sqls[] =
                 "SELECT t.Stage pm_VersionId, CONCAT(t.CaptionPrefix,t.CaptionType) Caption, t.VPD, 10 OrderNum
-		 	       FROM ".getFactory()->getObject('Stage')->getRegistry()->getQueryClause()." t
+		 	       FROM ".getFactory()->getObject('Stage')->getRegistry()->getQueryClause($parms)." t
 		 	      WHERE NOT EXISTS (SELECT 1 FROM cms_Snapshot s WHERE s.Stage = t.Stage)
 		 	        AND ('".SystemDateTime::date('Y-m-d')."' <= IFNULL(t.FinishDate, NOW()) OR (t.UncompletedIssues + t.UncompletedTasks) > 0) ";
 

@@ -35,7 +35,10 @@ class JsonWrapper
     {
         $branch = array();
         foreach ($elements as $key => $element) {
-            if ($element['parent'] == $parentId) {
+            $filterByParent = in_array($parentId,\TextUtils::parseItems($element['parent']))
+                || $parentId == $element['parent'];
+
+            if ( $filterByParent && !in_array($element['key'], \TextUtils::parseItems($element['parent'])) ) {
                 $children = self::buildJSONTree($elements, $element['key']);
                 if (count($children)>0) {
                     $element['children'] = $children;

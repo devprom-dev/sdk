@@ -14,7 +14,13 @@ class CustomAttributeEntityForm extends PMForm
 		return 'customattributeprocess';
  	}
 
-	function getAttributeType( $attribute )
+    function extendModel()
+    {
+        parent::extendModel();
+        $this->getObject()->setAttributeEditable('AttributeType', true);
+    }
+
+    function getAttributeType( $attribute )
 	{
 		switch( $attribute )
 		{

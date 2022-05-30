@@ -11,25 +11,47 @@ class WikiBaselineService
         $this->session = $session;
     }
 
+    function storeBranch( $documentIt, $baselineIt, $title = '', $description = '' )
+    {
+        $snapshot = getFactory()->getObject('Snapshot');
+        return $snapshot->add_parms(
+            array (
+                'Caption' => $baselineIt->getId() != ''
+                                ? html_entity_decode($baselineIt->getDisplayName())
+                                : $title,
+                'Description' => $description,
+                'ListName' => 'branch',
+                'Stage' => $baselineIt->getId(),
+                'ObjectId' => $documentIt->getId(),
+                'ObjectClass' => get_class($documentIt->object),
+                'SystemUser' => $this->session->getUserIt()->getId(),
+                'Type' => 'branch'
+            )
+        );
+    }
+
     function storeBaseline( $objectIt, $caption, $stageId = '' )
     {
         $snapshot = $this->factory->getObject('Snapshot');
         $versioned = new \VersionedObject();
         $versioned_it = $versioned->getExact(get_class($objectIt->object));
 
+        $object = getFactory()->getObject($versioned_it->getId());
+        $object->setRegistry( new \WikiPageRegistryContent() );
+
         $versionId = $snapshot->add_parms( array (
             'Caption' => $caption,
-            'ListName' => get_class($objectIt->object).':'.$objectIt->getId(),
+            'ListName' => get_class($object).':'.$objectIt->getId(),
             'Stage' => $stageId,
             'ObjectId' => $objectIt->getId(),
-            'ObjectClass' => get_class($objectIt->object),
+            'ObjectClass' => get_class($object),
             'SystemUser' => $this->session->getUserIt()->getId(),
             'VPD' => $objectIt->get('VPD')
         ));
 
         return $snapshot->freeze(
             $versionId,
-            $versioned_it->getId(),
+            $object,
             array($objectIt->getId()),
             $versioned_it->get('Attributes')
         );
@@ -103,6 +125,11 @@ class WikiBaselineService
 
     function getComparedPageIt( $pageIt, $compareToIt )
     {
+        if ( $compareToIt->count() > 1 ) {
+            $compareToIt->moveTo('ObjectId', $pageIt->get('DocumentId') == '' ? $pageIt->getId() : $pageIt->get('DocumentId'));
+        }
+        if ( $compareToIt->getId() == '' ) return $pageIt->object->getEmptyIterator();
+
         $registry = new \WikiPageRegistryComparison($pageIt->object);
         $registry->setPageIt($pageIt);
         $registry->setBaselineIt($compareToIt);

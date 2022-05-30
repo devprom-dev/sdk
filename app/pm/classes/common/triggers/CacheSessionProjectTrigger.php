@@ -23,9 +23,8 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
             case 'pm_Transition':
             case 'pm_TransitionPredicate':
             case 'pm_TransitionRole':
-            case 'pm_TransitionAttribute':
             case 'pm_StateAttribute':
-                $this->invalidateProjectCache();
+                getFactory()->invalidateCache();
 			    break;
 
             case 'pm_State':
@@ -39,27 +38,14 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 
             default:
                 if ( $object_it->object instanceof RequestTemplate ) {
-                    $this->invalidateProjectCache();
+                    getFactory()->invalidateCache();
                 }
 		}
 	}
 
-    public function invalidateProjectCache()
-    {
-        getFactory()->getAccessPolicy()->invalidateCache();
-        getFactory()->getEntityOriginationService()->invalidateCache();
-        getFactory()->getCacheService()->setReadonly();
-        getFactory()->getCacheService()->invalidate('sessions');
-        getSession()->truncate();
-    }
-
 	public function invalidateProjectsCache()
 	{
-        getFactory()->getAccessPolicy()->invalidateCache();
-        getFactory()->getEntityOriginationService()->invalidateCache();
-        getFactory()->getCacheService()->setReadonly();
-        getFactory()->getCacheService()->invalidate('sessions');
-        getFactory()->getCacheService()->invalidate('projects');
+        getFactory()->invalidateCache(array('sessions','projects'));
 		$this->invalidate = true;
 	}
 

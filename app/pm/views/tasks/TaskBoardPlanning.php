@@ -2,6 +2,11 @@
 
 class TaskBoardPlanning extends TaskBoardList
 {
+    function __construct( $object ) {
+        $this->strategy = new EstimationHoursStrategy();
+        parent::__construct($object);
+    }
+
     function getBoardAttribute() {
         return 'Release';
     }
@@ -84,48 +89,6 @@ class TaskBoardPlanning extends TaskBoardList
         );
     }
 
-    function buildRelatedDataCache()
-    {
-        parent::buildRelatedDataCache();
-
-        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-        $this->strategy = $methodology_it->TaskEstimationUsed() ? new EstimationHoursStrategy() : new EstimationNoneStrategy();
-
-        if ( $this->getGroup() == 'Assignee' ) {
-            $iteration_it = $this->getBoardAttributeIterator();
-            $user_it = getFactory()->getObject('Participant')->getRegistry()->Query(
-                array (
-                    new FilterVpdPredicate(),
-                    new FilterAttributePredicate('SystemUser',$this->getGroupIt()->idsToArray())
-                )
-            );
-
-            while( !$user_it->end() )
-            {
-                $data = array();
-                $this->workload[$user_it->get('SystemUser')]['Iterations'] = array();
-                if ( $user_it->getId() == '' ) continue;
-
-                while( !$iteration_it->end() )
-                {
-                    $data['leftwork'] = $data['leftwork'] = $iteration_it->getLeftWorkParticipant( $user_it->get('SystemUser') );
-                    if ( $data['leftwork'] < 1 ) {
-                        $iteration_it->moveNext();
-                        continue;
-                    }
-
-                    $data['capacity'] = $iteration_it->getLeftDuration() * $user_it->get('Capacity');
-                    $data['title'] = $this->strategy->getDimensionText($data['capacity']);
-
-                    $this->workload[$user_it->get('SystemUser')]['Iterations'][$iteration_it->getId()] = $data;
-                    $iteration_it->moveNext();
-                }
-                $iteration_it->moveFirst();
-                $user_it->moveNext();
-            }
-        }
-    }
-
     function getHeaderActions( $board_value )
     {
         $actions = parent::getHeaderActions($board_value);
@@ -173,14 +136,14 @@ class TaskBoardPlanning extends TaskBoardList
                     echo $object_it->getDateFormattedShort('StartDate') . " / " . $object_it->getDateFormattedShort('FinishDate');
                     echo '<br/>';
                     if ( getSession()->getProjectIt()->getMethodologyIt()->IsAgile() ) {
-                        $strategy = new EstimationHoursStrategy();
-                        list( $capacity, $maximum, $actual_velocity, $estimation ) = $object_it->getRealBurndownMetrics();
-                        $available = $capacity * $actual_velocity;
+                        $available = $object_it->getParticipantsCapacity() * $object_it->getLeftDuration();
+                        $maximum = $object_it->getParticipantsCapacity() * $object_it->getPlannedDurationInWorkingDays();
+                        $estimation = $object_it->getTotalWorkload();
                         echo sprintf(
                             text(2189),
-                            $available > 0 ? $strategy->getDimensionText(round($available, 1)) : '0',
+                            $available > 0 ? $this->strategy->getDimensionText(round($available, 1)) : '0',
                             $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
-                            $estimation > 0 ? $strategy->getDimensionText(round($estimation, 1)) : '0'
+                            $estimation > 0 ? $this->strategy->getDimensionText(round($estimation, 1)) : '0'
                         );
                     }
                 echo '</div>';
@@ -195,15 +158,21 @@ class TaskBoardPlanning extends TaskBoardList
     function drawCellBasement( $boardValue, $groupValue )
     {
         parent::drawCellBasement( $boardValue, $groupValue );
+        if ( trim($boardValue) == '' ) return;
 
         $workloadData = $this->workload[$groupValue]['Iterations'][intval($boardValue)];
         if ( is_array($workloadData) ) {
             echo $this->getRenderView()->render('pm/UserWorkloadProgress.php', array (
-                'data' => array( 'Iterations' => array($workloadData) ),
+                'data' => $workloadData,
                 'measure' => $this->strategy
             ));
         }
     }
 
+    public function setWorkloadData( $data ) {
+        $this->workload = $data;
+    }
+
     private $board_attribute_iterator = null;
+    private $workload = array();
 }

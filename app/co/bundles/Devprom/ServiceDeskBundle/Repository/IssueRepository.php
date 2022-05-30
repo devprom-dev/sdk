@@ -14,6 +14,8 @@ use Symfony\Component\Locale\Exception\NotImplementedException;
  */
 class IssueRepository extends EntityRepository
 {
+    private $pageSize = 50;
+
     /**
      * @return QueryBuilder
      */
@@ -22,6 +24,7 @@ class IssueRepository extends EntityRepository
             ->from('Devprom\\ServiceDeskBundle\\Entity\\Issue', 'issue')
             ->leftJoin('issue.severity', 'severity')
             ->leftJoin('issue.customer', 'customer')
+            ->leftJoin('issue.author', 'author')
             ->leftJoin('issue.product', 'product')
             ->leftJoin('issue.project', 'project')
             ->leftJoin('issue.assignedTo', 'assignee')
@@ -67,32 +70,53 @@ class IssueRepository extends EntityRepository
          Please use one of specific methods to retrieve Issue");
     }
 
-    public function findByAuthor($authorEmail, $orderBy = null, $state = '', $limit = null, $offset = null) {
+    public function findByAuthor($authorEmail, $orderBy = null, $state = '', $page = 1)
+    {
         /** @var QueryBuilder $qb */
         $qb = $this->getBaseQuery();
-        $qb->andWhere('customer.email = ?1 and state.terminal IN (?2)')
+        $qb->andWhere('(customer.email = ?1 or author.email = ?1) and state.terminal IN (?2)')
             ->setParameter(1, $authorEmail)
             ->setParameter(2, in_array($state, array('','all')) ? array('N','Y','I') : ($state == 'open' ? array('N','I') : array('Y')));
 
         foreach ($orderBy as $column => $direction) {
             $qb->addOrderBy($column, $direction);
         }
-        return $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+
+        $paginator = new \Doctrine\ORM\Tools\Pagination\Paginator($qb);
+        $pagesCount = ceil(count($paginator) / $this->pageSize);
+
+        // now get one page's items:
+        $paginator
+            ->getQuery()
+            ->setFirstResult($this->pageSize * ($page-1))
+            ->setMaxResults($this->pageSize);
+
+        return [$paginator, $pagesCount];
     }
 
-    public function findByCompany($authorEmail, $orderBy = null, $state = '', $limit = null, $offset = null) {
+    public function findByCompany($authorEmail, $orderBy = null, $state = '', $page = 1) {
         /** @var QueryBuilder $qb */
         $qb = $this->getBaseQuery();
         $qb->andWhere(
-        		'customer.email IN (SELECT u2.email FROM Devprom\\ServiceDeskBundle\\Entity\\User u1, Devprom\\ServiceDeskBundle\\Entity\\User u2 '.
-        		'			  WHERE u1.email = ?1 AND u1.company = u2.company) and state.terminal IN (?2)')
+        		'EXISTS (SELECT 1 FROM Devprom\\ServiceDeskBundle\\Entity\\User u1, Devprom\\ServiceDeskBundle\\Entity\\User u2 '.
+        		'			  WHERE (u2.email = customer.email or u2.email = author.email) and u1.email = ?1 AND u1.company = u2.company) and state.terminal IN (?2)')
             ->setParameter(1, $authorEmail)
             ->setParameter(2, in_array($state, array('','all')) ? array('N','Y','I') : ($state == 'open' ? array('N','I') : array('Y')));
 
         foreach ($orderBy as $column => $direction) {
             $qb->addOrderBy($column, $direction);
         }
-        return $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+
+        $paginator = new \Doctrine\ORM\Tools\Pagination\Paginator($qb);
+        $pagesCount = ceil(count($paginator) / $this->pageSize);
+
+        // now get one page's items:
+        $paginator
+            ->getQuery()
+            ->setFirstResult($this->pageSize * ($page-1))
+            ->setMaxResults($this->pageSize);
+
+        return [$paginator, $pagesCount];
     }
     
     /**

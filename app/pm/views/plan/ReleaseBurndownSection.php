@@ -4,13 +4,13 @@ class ReleaseBurndownSection extends InfoSection
 {
     var $release_it;
     
-    function __construct( $release_it )
-    {
+    function __construct( $release_it ) {
 		$this->release_it = $release_it;
+        parent::__construct();
+
     }
     
- 	function getCaption()
- 	{
+ 	function getCaption() {
  		return translate('Burndown');
  	}
  	

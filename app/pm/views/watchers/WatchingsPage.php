@@ -1,21 +1,13 @@
 <?php
-
 include "WatchingsTable.php";
 
 class WatchingsPage extends PMPage
 {
- 	function WatchingsPage()
- 	{
- 		parent::PMPage();
- 	}
-
- 	function getTable() 
- 	{
+ 	function getTable() {
  		return new WatchingsTable();
  	}
  	
- 	function getEntityForm()
- 	{
+ 	function getEntityForm() {
  		return null;
  	}
 }

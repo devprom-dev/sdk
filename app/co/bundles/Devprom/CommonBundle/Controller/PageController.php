@@ -186,7 +186,7 @@ class PageController extends MainController
  		{
  			if ( $request->request->get($fields[$i]) == '' )
  			{
- 				return $this->replyError( text(615) );
+ 				return $this->replyError( text(2) );
  			}
  		}
  	}

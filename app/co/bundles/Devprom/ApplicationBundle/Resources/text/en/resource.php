@@ -55,5 +55,7 @@ $text_array = array
 	53 => 'Adjust templates',
     54 => 'Use the best of <b>Agile and Lean</b> to improve quality of your product development process',
     55 => 'Improve product',
-    56 => 'Choose process <b>adapted</b> for technology and approach you use'
+    56 => 'Choose process <b>adapted</b> for technology and approach you use',
+    59 => 'Tracker',
+    60 => 'Simple task tracker to manage any kind of activity'
 );

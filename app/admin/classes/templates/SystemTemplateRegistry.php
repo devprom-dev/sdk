@@ -75,6 +75,11 @@ class SystemTemplateRegistry extends ObjectRegistrySQL
                 'BackupDirName' => addslashes($serviceDeskPath."views"),
                 'BackupFileName' => addslashes("Issue/index.html.twig")
             ),
+            array (
+                'Caption' => text(3320),
+                'BackupDirName' => addslashes($serviceDeskPath."views"),
+                'BackupFileName' => addslashes("Issue/product.html.twig")
+            ),
 			array (
 				'Caption' => text(2141),
                 'BackupDirName' => addslashes($serviceDeskPath."views/Email/".$language),

@@ -1,7 +1,6 @@
 <?php
 use Devprom\ProjectBundle\Service\Files\UploadFileService;
 include_once SERVER_ROOT_PATH . "cms/c_form.php";
-include_once SERVER_ROOT_PATH . "pm/classes/model/validators/ModelNotificationValidator.php";
 
 class ManageComment extends CommandForm
 {
@@ -20,9 +19,6 @@ class ManageComment extends CommandForm
 		$comment_text = $object_it->utf8towin($_REQUEST['Caption']);
  		$comment->setVpdContext( $object_it );
 
- 		$validator = new ModelNotificationValidator();
-        $validator->validate($comment, $_REQUEST);
-
         $prevCommentIt = $comment->getExact($_REQUEST['PrevComment']);
         if ( $prevCommentIt->get('IsPrivate') == 'Y' ) {
             $_REQUEST['IsPrivate'] = 'Y';
@@ -30,21 +26,21 @@ class ManageComment extends CommandForm
 
         getFactory()->getEventsManager()->delayNotifications();
 
- 		$comment_id = $comment->add_parms( array(
-            'AuthorId' => getSession()->getUserIt()->getId(),
-            'ObjectId' => $object_it->getId(),
-            'ObjectClass' => get_class($object_it->object),
-            'PrevComment' => $prevCommentIt->getId(),
-            'Caption' => $comment_text,
-            'IsPrivate' => $_REQUEST['IsPrivate']
-        ));
-
- 		$comment_it = $comment->getExact($comment_id);
+        $comment_it = getFactory()->createEntity($comment,
+            array_merge( $_REQUEST,
+                array(
+                    'AuthorId' => getSession()->getUserIt()->getId(),
+                    'ObjectId' => $object_it->getId(),
+                    'ObjectClass' => get_class($object_it->object),
+                    'PrevComment' => $prevCommentIt->getId(),
+                    'Caption' => $comment_text
+                )
+            ));
 		$this->processEmbedded( $comment_it );
 
         getFactory()->getEventsManager()->releaseNotifications();
 
-		$comment_id > 0 
+        $comment_it->getId() > 0
 			? $this->replySuccess( text(1178) ) 
 				: $this->replyError( text(1062) );
 	}
@@ -53,20 +49,11 @@ class ManageComment extends CommandForm
 	{
 		$comment = getFactory()->getObject('Comment');
 		$comment_it = $comment->getExact( $object_id ); 
-		
 		if ( $comment_it->getId() < 1 ) $this->replyError( text(1062) );
 
-		$comment_text = IteratorBase::utf8towin($_REQUEST['Caption']);
-	
-		$comment_it = $comment->getExact(
-		        $comment->modify_parms( 
-		        		$comment_it->getId(), 
-		        		array(
-		        				'Caption' => $comment_text
-						)
-				)
-		);
- 
+        $comment_it = getFactory()->modifyEntity($comment_it, array(
+            'Caption' => $_REQUEST['Caption']
+        ));
 		$this->processEmbedded( $comment_it );
 		
 		$this->replySuccess( text(1238) );

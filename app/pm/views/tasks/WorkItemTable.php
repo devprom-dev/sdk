@@ -1,6 +1,5 @@
 <?php
 include "WorkItemList.php";
-include "WorkItemChart.php";
 
 class WorkItemTable extends TaskTable
 {
@@ -10,66 +9,51 @@ class WorkItemTable extends TaskTable
         parent::__construct($object);
     }
 
-    function getList( $mode = '' )
-    {
-        switch( $this->getReportBase() )
-        {
-            case 'workitemchart':
-                return new WorkItemChart($this->getObject());
-            default:
-                return new WorkItemList($this->getObject());
-        }
+    function getList( $mode = '' ) {
+        return new WorkItemList($this->getObject());
     }
 
     function getBulkActions() {
         return array();
     }
 
-    function getNewActions()
-    {
-        $append_actions = array();
-
-        if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )
-        {
-            $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Task'));
-            if ( $method->hasAccess() ) {
-                $parms = array (
-                    'area' => $this->getPage()->getArea(),
-                    'Assignee' => getSession()->getUserIt()->getId()
-                );
-
-                $uid = 'append-task';
-                $append_actions[$uid] = array (
-                    'name' => $method->getObject()->getDisplayName(),
-                    'uid' => $uid,
-                    'url' => $method->getJSCall($parms)
-                );
-            }
-        }
-        else
-        {
-            $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Request'));
-            if ( $method->hasAccess() ) {
-                $parms = array (
-                    'area' => $this->getPage()->getArea(),
-                    'Owner' => getSession()->getUserIt()->getId()
-                );
-
-                $uid = 'append-issue';
-                $append_actions[$uid] = array (
-                    'name' => $method->getObject()->getDisplayName(),
-                    'uid' => $uid,
-                    'url' => $method->getJSCall($parms)
-                );
-            }
-        }
-
-        return $append_actions;
+    function getNewActions() {
+        return array();
     }
+
+    function getImportActions() {
+        return array();
+    }
+
+    function getFilterPredicates($values)
+    {
+        return array_merge(
+            parent::getFilterPredicates($values),
+            array(
+                $this->buildTaskTypePredicate($values['tasktype'])
+            )
+        );
+    }
+
+    function buildTagPredicate($values) {
+        return new WorkItemTagFilter($values['tag']);
+    }
+
+    protected function buildTagsFilter()
+    {
+        $tag = getFactory()->getObject('Tag');
+        $filter = new FilterObjectMethod($tag, translate('Тэги'), 'tag');
+        $filter->setHasAll(false);
+        $filter->setHasNone(false);
+        return $filter;
+    }
+
     protected function buildTypeFilter()
     {
         $type_method = new FilterObjectMethod( getFactory()->getObject('WorkItemType'), translate('Тип'), 'tasktype');
-        $type_method->setIdFieldName( 'ReferenceName' );
+        $type_method->setType('singlevalue');
+        $type_method->setHasAny(false);
+        $type_method->setHasNone(false);
         return $type_method;
     }
 
@@ -84,6 +68,10 @@ class WorkItemTable extends TaskTable
 
     function buildStatePredicate( $value ) {
         return new WorkItemStatePredicate( $value );
+    }
+
+    function buildTaskTypePredicate( $value ) {
+        return new FilterTextExactPredicate('TaskType', $value );
     }
 
     function buildIssueStatePredicate( $values ) {
@@ -109,6 +97,17 @@ class WorkItemTable extends TaskTable
         return new FilterDateBeforePredicate('DueDate', $values['plannedfinish']);
     }
 
+    function getSortAttributeClause( $field )
+    {
+        $parts = preg_split('/\./', $field);
+
+        if ( $parts[0] == 'TaskType' ) {
+            return new WorkItemTypeSortClause();
+        }
+
+        return parent::getSortAttributeClause( $field );
+    }
+
     function getDefaultRowsOnPage() {
         return 20;
     }
@@ -117,7 +116,7 @@ class WorkItemTable extends TaskTable
     {
         return array_merge(
             array(
-                'workitemchart'
+                'resman/resourceload'
             ),
             parent::getChartModules($module)
         );

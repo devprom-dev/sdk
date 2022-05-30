@@ -15,7 +15,7 @@ class ChangeLogAggregatedRegistry extends ChangeLogRegistry
 	public function getGroups()
 	{
 		return array (
-			new GroupAttributeClause('FROM_UNIXTIME(ROUND(UNIX_TIMESTAMP(RecordModified) / 86400)*86400)'),
+			new GroupAttributeClause('FROM_UNIXTIME(ROUND(UNIX_TIMESTAMP(RecordModified) / 600) * 600)'),
 			new GroupAttributeClause('SystemUser'),
             new GroupAttributeClause('ChangeKind'),
             new GroupAttributeClause('Author'),
@@ -25,23 +25,9 @@ class ChangeLogAggregatedRegistry extends ChangeLogRegistry
 		);
 	}
 
-	public function getSelectClause( $alias, $select_all = true ) {
-		return parent::getSelectClause($alias, false);
+	public function getSelectClause( $persisters = array(), $alias = 't', $select_all = true ) {
+		return parent::getSelectClause($persisters, $alias, false);
 	}
-
-    public function Count( $parms = array() )
-    {
-        $this->setParameters( $parms );
-
-        $sql = 'SELECT '.$this->getSelectClause('t').' FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate();
-
-        $group = $this->getGroupClause('t');
-        if ( $group != '' ) $sql .= ' GROUP BY '.$group;
-
-        return $this->createSQLIterator(
-                'SELECT COUNT(1) cnt FROM ('.$sql.') t '
-            )->get('cnt');
-    }
 
 	public function getLimit() {
 		return 256;

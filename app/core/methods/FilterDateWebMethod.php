@@ -30,10 +30,10 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  		);
  	}
 
- 	function parseFilterValue($value)
+ 	function parseFilterValue($value, $context)
     {
         return parent::parseFilterValue(
-            SystemDateTime::parseRelativeDateTime($value, getSession()->getLanguage())
+            SystemDateTime::parseRelativeDateTime($value, getSession()->getLanguage()), $context
         );
     }
 }

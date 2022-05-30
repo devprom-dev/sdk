@@ -11,8 +11,8 @@ class FieldComputed extends Field
 		$this->attribute = $attribute;
 	}
 
-	function render( $view )
-	{
+	function getText()
+    {
         $result = ModelService::computeFormula(
             $this->object_it,
             $this->object_it->object->getDefaultAttributeValue($this->attribute)
@@ -42,11 +42,11 @@ class FieldComputed extends Field
                 $vpds[] = $computedItem->get('VPD');
             }
         }
-		ksort($uids);
+        ksort($uids);
 
-		if ( count($ids) > 0 ) {
+        if ( count($ids) > 0 ) {
             $url = WidgetUrlBuilder::Instance()->buildWidgetUrlIds($className, $ids, $vpds);
-		}
+        }
 
         $html = '';
         if ( count($lines) > 0 ) {
@@ -61,15 +61,14 @@ class FieldComputed extends Field
                 $html .= '<br/><a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
             }
         }
+        return $html;
+    }
 
-        if ( $this->readOnly() )
-        {
-            echo '<span class="input-block-level well well-text" style="width:100%;height:auto;word-break: break-all;">';
-                echo $html;
-            echo '</span>';
-        }
-        else {
+	function render( $view )
+	{
+        $html = $this->getText();
+        echo '<span class="input-block-level well well-text" style="width:100%;height:auto;word-break: break-all;">';
             echo $html;
-        }
+        echo '</span>';
 	}
 }

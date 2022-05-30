@@ -1,5 +1,4 @@
 <?php
-
 include "WikiPageComparableSnapshotRegistry.php";
 
 class WikiPageComparableSnapshot extends Metaobject
@@ -21,8 +20,12 @@ class WikiPageComparableSnapshot extends Metaobject
 	
 	public function getExact( $parms )
 	{
+	    if ( !is_array($parms) ) $parms = array($parms);
 		$iterator = $this->getAll();
-		$iterator->moveToId( $parms );
-		return $iterator->copy();
+		foreach( $parms as $id ) {
+            $iterator->moveToId( $id );
+            if ( $iterator->getId() == $id ) return $iterator->copy();
+        }
+		return $this->getEmptyIterator();
 	}
 }

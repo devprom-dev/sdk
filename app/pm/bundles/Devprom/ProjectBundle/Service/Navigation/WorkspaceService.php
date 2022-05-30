@@ -18,7 +18,7 @@ class WorkspaceService
 	{
 		$data = array();
 		
-		$areas = $this->getFunctionalAreas();
+		$areas = $this->getFunctionalAreas(getSession()->getProjectIt());
 		
 		foreach( $areas as $area )
 		{
@@ -123,11 +123,11 @@ class WorkspaceService
 	public function removeWorkspace( $area_id )
 	{
 		$workspace_it = getFactory()->getObject('Workspace')->getRegistry()->Query( 
-					array (
-							new \FilterTextExactPredicate('UID', $area_id),
-							new \FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
-							new \FilterBaseVpdPredicate()
-					)
+                array (
+                    new \FilterTextExactPredicate('UID', $area_id),
+                    new \FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
+                    new \FilterBaseVpdPredicate()
+                )
 			);
 		
 		if ( $workspace_it->getId() < 1 ) return;
@@ -207,15 +207,13 @@ class WorkspaceService
 		return $reports;
 	}
 	
-	public function getFunctionalAreas()
+	public function getFunctionalAreas( $project_it )
 	{
- 	 	$project_it = getSession()->getProjectIt();
-
         getSession()->insertBuilder( new \FunctionalAreaCommonBuilder() );
- 	    if ( $project_it->get('CodeName') == 'my' ) {
- 	    	getSession()->insertBuilder( new \FunctionalAreaMenuMyProjectsBuilder() );
- 	    }
- 	    else if ( $project_it->IsPortfolio() ) {
+ 	    if ( $project_it->IsPortfolio() ) {
+            if ( $project_it->get('CodeName') == 'my' ) {
+                getSession()->insertBuilder( new \FunctionalAreaMenuMyProjectsBuilder() );
+            }
  	    	getSession()->insertBuilder( new \FunctionalAreaMenuPortfolioBuilder() );
  	    }
  	    else {
@@ -229,16 +227,17 @@ class WorkspaceService
  	    $area_it = $area_set->getAll();
 
  	    $area_menu = new \FunctionalAreaMenuSet();
+        $area_menu->setVpdContext($project_it);
  	    $area_menu_it = $area_menu->getAll();
 
-		$workspace_it = getFactory()->getObject('Workspace')->getRegistry()->getDefault();
+		$workspace_it = getFactory()->getObject('Workspace')
+            ->getRegistry()->getDefault($project_it);
 
 		$areas = array();
  	    while( !$area_it->end() )
  	    {
  	    	$workspace_it->moveTo('UID', $area_it->getId());
- 	    	if ( $workspace_it->get('UID') == $area_it->getId() )
- 	    	{
+ 	    	if ( $workspace_it->get('UID') == $area_it->getId() ) {
  	    		$areas[$area_it->getId()] = $this->loadWorkspace($workspace_it);
  	            $area_it->moveNext();
  	            continue;
@@ -276,27 +275,25 @@ class WorkspaceService
 		);
 		
 		$menu_it = getFactory()->getObject('WorkspaceMenu')->getRegistry()->Query( 
-					array (
-							new \FilterAttributePredicate('Workspace', $workspace_it->getId()),
-							new \SortOrderedClause()
-					)
+                array (
+                    new \FilterAttributePredicate('Workspace', $workspace_it->getId()),
+                    new \SortOrderedClause()
+                )
 			);
 		
 		$items_registry = getFactory()->getObject('WorkspaceMenuItem')->getRegistry();
-		
 		$report = getFactory()->getObject('PMReport');
-		
 		$module = getFactory()->getObject('Module');
-		
+
 		while( !$menu_it->end() )
 		{
 			$items = array();
 			
 			$item_it = $items_registry->Query(
-					array (
-							new \FilterAttributePredicate('WorkspaceMenu', $menu_it->getId()),
-							new \SortOrderedClause()
-					)
+                array (
+                    new \FilterAttributePredicate('WorkspaceMenu', $menu_it->getId()),
+                    new \SortOrderedClause()
+                )
 			);
 			while( !$item_it->end() )
 			{

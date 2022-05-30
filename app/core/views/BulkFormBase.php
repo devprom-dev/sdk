@@ -1,5 +1,4 @@
 <?php
-
 include_once "FormAsync.php";
 		
 class BulkFormBase extends AjaxForm
@@ -74,10 +73,11 @@ class BulkFormBase extends AjaxForm
 			    if ( $this->getObject()->IsReference($attribute) ) {
 			        $ref = $this->getObject()->getAttributeObject($attribute);
 			        if ( $ref instanceof Project ) return $value;
-
-			        $persistedData = array_unique($this->getIt()->fieldToArray($attribute));
-			        if ( count($persistedData) == 1 ) return array_shift($persistedData);
                 }
+
+                $persistedData = array_unique($this->getIt()->fieldToArray($attribute));
+                if ( count($persistedData) == 1 ) return array_shift($persistedData);
+
 				return $value;
 		}
 	}
@@ -102,7 +102,11 @@ class BulkFormBase extends AjaxForm
 			$this->form = $this->buildForm();
 			if ( is_object($this->form) ) {
                 $this->form->setPage($this->getPage());
-				$this->form->setObjectIt($this->getIt());
+                $this->form->buildForm();
+                $this->setObject($this->form->getObject());
+				$this->form->setObjectIt(
+                    $this->form->getObject()->createCachedIterator(
+                        $this->getIt()->getRowset()));
                 $this->form->getRenderParms();
 			}
 		}
@@ -197,17 +201,7 @@ class BulkFormBase extends AjaxForm
 						$this->getObject()->getAttributesByGroup('nonbulk')
 				);
 	    if ( in_array($attr, $system_attributes) ) return false;
-
 	    if ( !$this->getObject()->hasAttribute($attr) ) return true;
-
-	    $type = $this->getObject()->getAttributeType($attr);
-	    switch ( $type )
-	    {
-	        case 'date':
-	        case 'datetime':
-	            return false;
-	    }
-
 	    return parent::IsAttributeModifiable( $attr );
 	}
 
@@ -226,7 +220,7 @@ class BulkFormBase extends AjaxForm
 					$field = $form->createField($attribute);
                     if ( !is_object($field) ) return parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 
-					$field->SetId($attribute);
+					$field->setId($form->getId().$attribute);
 					$field->SetName($attribute);
 					$field->SetValue($value);
 					$field->SetTabIndex($tab_index);
@@ -289,6 +283,7 @@ class BulkFormBase extends AjaxForm
 		
 		echo '<input type="hidden" name="ids" value="'.$value.'">';
 		echo '<input type="hidden" name="object" value="'.strtolower(get_class($object)).'">';
+        echo '<input type="hidden" name="form" value="'.get_class($this->getForm()).'">';
 			
 		$it->moveFirst();
 		while ( !$it->end() && $it->getPos() < 7 )

@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include "persisters/FeatureRequestPersister.php";
 include "persisters/FeatureProgressPersister.php";
 
@@ -11,11 +12,6 @@ class FeatureModelExtendedBuilder extends ObjectModelBuilder
 
 		$object->addAttribute('Progress', '', translate('Прогресс'), false, false, '', 135);
 
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		if ( $methodology_it->IsTimeTracking() ) {
-			$object->addAttribute('Fact', 'FLOAT', translate('Затрачено'), false, false, '', 137);
-            $object->addAttributeGroup('Fact', 'hours');
-		}
 		if ( !getSession()->IsRDD() ) {
             $object->addPersister( new FeatureRequestPersister() );
             $object->addPersister( new FeatureProgressPersister() );
@@ -29,5 +25,7 @@ class FeatureModelExtendedBuilder extends ObjectModelBuilder
         foreach ( array('Request') as $attribute ) {
             $object->addAttributeGroup($attribute, 'trace');
         }
+
+        $object->addPersister( new AttachmentsPersister() );
     }
 }

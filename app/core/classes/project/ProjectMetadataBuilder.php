@@ -7,7 +7,12 @@ class ProjectMetadataBuilder extends ObjectMetadataEntityBuilder
     public function build( ObjectMetadata $metadata )
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Project' ) return;
-    	
+
+        $metadata->addAttribute( 'EstimatedStartDate', 'DATE', translate('Оценка начала'), true, true );
+        $metadata->setAttributeEditable('EstimatedStartDate', false);
+        $metadata->addAttribute( 'EstimatedFinishDate', 'DATE', translate('Оценка окончания'), true, true );
+        $metadata->setAttributeEditable('EstimatedFinishDate', false);
+
  		$metadata->addPersister( new ProjectVPDPersister() );
 
 		$metadata->setAttributeType( 'Importance', 'REF_ProjectImportanceId' );

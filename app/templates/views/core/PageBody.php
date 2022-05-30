@@ -70,8 +70,7 @@
 				<!-- aside item: Menu -->
 				<div id="sidebar">
 				<?php
-
-					$area = array_shift($navigation_parms['areas']);
+                    $area = $navigation_parms['areas']['favs'];
 					echo $view->render('core/VerticalShortMenu.php', array(
 						'items' => $area['menus'],
 						'area_id' => $area['uid'],

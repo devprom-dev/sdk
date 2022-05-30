@@ -29,7 +29,7 @@ class ProcessRevisionLog extends TaskCommand
 		if ( count($ids) < 1 )
 		{
 			$repo = getFactory()->getObject('pm_Subversion');
-			$ids = $repo->getRegistry()->Query(
+			$ids = $repo->getRegistry()->QueryKeys(
 						array( new RepositoryActivePredicate() )
 				)->idsToArray();
 
@@ -69,7 +69,7 @@ class ProcessRevisionLog extends TaskCommand
 			$project_it = $scm_it->getRef('Project');
 
 			$auth_factory = new AuthenticationFactory();
-			$auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
+			$auth_factory->setUser( getFactory()->getObject('cms_User')->getSuperUserIt() );
 			
 			$session = new PMSession($project_it->copy(), $auth_factory);
 			getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));

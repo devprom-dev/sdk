@@ -12,14 +12,10 @@ class AutoActionEventHandler extends ObjectFactoryNotificator
 
  	function add( $object_it ) 
 	{
-		if ( $object_it->object instanceof AutoAction ) {
-            if ( !in_array($object_it->get('EventType'), $this->eventTypes) ) return;
-            $this->applyAutoAction($object_it);
-        }
         if ( $object_it->object instanceof Comment ) {
 		    $anchorIt = $object_it->getAnchorIt();
 		    if ( $anchorIt->object instanceof Request ) {
-		        $this->applyAutoActionsOnComment($anchorIt);
+		        $this->applyAutoActionsOnComment($anchorIt, $object_it);
             }
         }
         if ( $object_it->object instanceof Request ) {
@@ -41,30 +37,7 @@ class AutoActionEventHandler extends ObjectFactoryNotificator
  	{ 
  	}
  	
- 	function applyAutoAction( $object_it )
- 	{ 
- 		$subject = getFactory()->getObject($object_it->object->getSubjectClassName());
- 		$first_state = array_shift($subject->getNonTerminalStates());
- 		
- 		$subject_it = $subject->getRegistry()->Query(
-            array (
-                new StatePredicate($first_state),
-                new FilterBaseVpdPredicate()
-            )
- 		);
-
- 		$action = new BusinessActionIssueAutoActionShift($object_it);
- 		while( !$subject_it->end() )
- 		{
- 			$action->applyContent($subject_it->copy(), array());
- 			$subject_it->moveNext();
- 		}
- 		
-        $lock = new LockFileSystem(get_class($subject));
-        $lock->Release();
- 	}
-
- 	function applyAutoActionsOnComment( $object_it )
+ 	function applyAutoActionsOnComment( $object_it, $commentIt )
     {
         $actionIt = getFactory()->getObject('IssueAutoAction')->getRegistry()->Query(
             array(
@@ -74,6 +47,7 @@ class AutoActionEventHandler extends ObjectFactoryNotificator
         );
         while( !$actionIt->end() ) {
             $action = new BusinessActionIssueAutoActionWorkflow($actionIt);
+            $action->setCommentIt($commentIt);
             $action->apply($object_it);
             $actionIt->moveNext();
         }

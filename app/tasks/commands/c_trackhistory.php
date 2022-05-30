@@ -1,14 +1,10 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
-include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 
 class TrackHistory extends TaskCommand
 {
  	function execute()
 	{
-		global $model_factory;
-
 		$this->logStart();
 		
 		$job_data_it = $this->getData();
@@ -27,7 +23,7 @@ class TrackHistory extends TaskCommand
         }
 		else
 		{
-			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query(
+			$ids = getFactory()->getObject('pm_Project')->getRegistry()->QueryKeys(
 						array( new FilterHasNoAttributePredicate('IsClosed', 'Y') )
 				)->idsToArray();
 			
@@ -51,17 +47,16 @@ class TrackHistory extends TaskCommand
 		global $session;
 		
 		$auth_factory = new AuthenticationFactory();
-		$auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
+		$auth_factory->setUser( getFactory()->getObject('cms_User')->getSuperUserIt() );
 				
 		$history = getFactory()->getObject('PMEntityCluster');
 		$project_it = getFactory()->getObject('pm_Project')->getExact( $projects );
 
 		while ( !$project_it->end() )
 		{
-			$this->logDebug("Track history for: ".$project_it->getDisplayName()." [".$project_it->get('CodeName')."]");
+			$this->logInfo("Track history for: ".$project_it->getDisplayName()." [".$project_it->get('CodeName')."]");
 			
 			$session = new PMSession($project_it->copy(), $auth_factory);
-			$session->addBuilder( new WorkflowModelBuilder() );
 
 			getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
 			getFactory()->resetCache();
@@ -83,9 +78,7 @@ class TrackHistory extends TaskCommand
 				
 				$class_name = getFactory()->getClass($entity);
 				if ( !class_exists($class_name) ) continue;
-				
 				$object = getFactory()->getObject($class_name);
-				$persisters = $object->getPersisters();
 
 				foreach ( $attributes as $attribute )
 				{
@@ -95,7 +88,7 @@ class TrackHistory extends TaskCommand
 					$group = new AggregateBase( $attribute, $object->getClassName().'Id', 'GROUP_CONCAT');
 					$object->addAggregate( $group );
 					
-					$it = $object->getAggregated( 't', array(), $persisters );
+					$it = $object->getAggregated();
 					while ( !$it->end() )
 					{
 						$items = $it->get($group->getAggregateAlias());

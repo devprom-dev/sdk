@@ -8,7 +8,6 @@ class CommentMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( !$metadata->getObject() instanceof Comment) return;
 
-        $metadata->setAttributeType('Caption', 'WYSIWYG');
         $metadata->addPersister( new CommentAuthorPersister() );
 
         foreach( array('EmailMessageId') as $attribute ) {

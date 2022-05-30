@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/views/c_issue_type_view.php";
 include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
 
@@ -8,9 +7,7 @@ class RequestBoard extends PMPageBoard
 	private $terminal_states = array();
  	private $task_terminal_states = array();
  	private $non_terminal_states = array();
- 	private $tasks_array = array();
  	private $priority_actions = array();
-    private $owner_actions = array();
  	private $task_transition_it = array();
  	private $task_target_states_array = array();
  	private $method_comment = null;
@@ -22,7 +19,6 @@ class RequestBoard extends PMPageBoard
  	private $estimation_title = '';
  	private $method_spend_time = null;
 	private $uidVisible = true;
-	private $task = null;
 	private $taskBoardStates = array();
 	private $taskBoardModuleIt = null;
 
@@ -35,45 +31,6 @@ class RequestBoard extends PMPageBoard
 
  	function buildRelatedDataCache()
  	{
-        $this->getTable()->buildRelatedDataCache();
-		$rowset = $this->getIteratorRef()->getRowset();
-
-		$ids = array_map(
-			function($val) {
-				return $val['pm_ChangeRequestId'];
-			},
-			$rowset
-		);
-		if ( count($ids) < 1 ) {
-			$task_it = getFactory()->getObject('Task')->getEmptyIterator();
-		}
-		else {
-			$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
-				array_merge(
-					array (
-						new FilterAttributePredicate('ChangeRequest', $ids),
-						new SortAttributeClause('ChangeRequest')
-					),
-					$this->visible_column['OpenTasks']
-						? array( new StatePredicate('notresolved') )
-						: array()
-				)
-			);
-		}
-
-		foreach( $task_it->getRowset() as $row ) {
-			$this->tasks_array[$row['ChangeRequest']][] = $row;
-		}
-		$this->task = getFactory()->getObject('Task');
-
-		$ids = array_filter(
-			array_map(function($val) {
-				return $val['Type'];
-			}, $rowset),
-			function($value) { return $value > 0; }
-		);
-		if ( count($ids) < 1 ) $ids = array(0);
-
  		$object = $this->getObject();
 		$object_it = $object->getEmptyIterator();
  		
@@ -110,32 +67,6 @@ class RequestBoard extends PMPageBoard
 			}
 			$priority_it->moveNext();
 		}
-
-        // cache assignees
-        $user_it = getFactory()->getObject('ProjectUser')->getAll();
-		$taskIt = getFactory()->getObject('Task')->getEmptyIterator();
-        while( !$user_it->end() )
-        {
-            $method = new ModifyAttributeWebMethod($object_it, 'Owner', $user_it->getId());
-            if ( $method->hasAccess() )
-            {
-                $method->setCallback( "donothing" );
-                $this->owner_actions[$user_it->getId()] = array(
-                    'name' => $user_it->getDisplayName(),
-                    'method' => $method
-                );
-            }
-            $method = new ModifyAttributeWebMethod($taskIt, 'Assignee', $user_it->getId());
-            if ( $method->hasAccess() )
-            {
-                $method->setCallback( "donothing" );
-                $this->assignee_actions[$user_it->getId()] = array(
-                    'name' => $user_it->getDisplayName(),
-                    'method' => $method
-                );
-            }
-            $user_it->moveNext();
-        }
 
 		$scale = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getScale();
 		$this->estimation_scale = array_flip($scale);
@@ -233,7 +164,7 @@ class RequestBoard extends PMPageBoard
 
 	function getGroupFilterValue()
 	{
-		$values = array_filter($this->getFilterValues(), function($value) {
+		$values = array_filter($this->getTable()->getPredicateFilterValues(), function($value) {
 			return !in_array($value, PageTable::FILTER_OPTIONS);
 		});
 
@@ -266,11 +197,28 @@ class RequestBoard extends PMPageBoard
 
 	function buildGroupIt()
 	{
+	    if ( $this->getGroup() == 'Estimation' ) {
+	        $scale = getSession()->getProjectIt()->getMethodologyIt()
+                        ->getEstimationStrategy()->getScale();
+
+	        $idAttribute = $this->getObject()->getIdAttribute();
+	        $data = array();
+	        foreach( $scale as $value ) {
+                $data[] = array(
+                    $idAttribute => $value,
+                    'Caption' => $value
+                );
+            }
+	        return $this->getObject()->createCachedIterator($data);
+        }
+
 		if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::buildGroupIt();
 
 		$groupOrder = $this->getGroupSort();
 		$groupFilter = $this->getGroupFilterValue();
 		$filterValues = $this->getFilterValues();
+
+        if ( $groupFilter == 'any' ) return parent::buildGroupIt();
 
 		foreach( $this->getTable()->getFilterPredicates($filterValues) as $filter ) {
 			if ( $filter instanceof ProjectVpdPredicate && $filter->defined($filter->getValue())) {
@@ -284,10 +232,10 @@ class RequestBoard extends PMPageBoard
 			case 'pm_Version':
 				$object = getFactory()->getObject('Release');
 				$ids = array_merge(
-						$object->getRegistry()->Query(
+						$object->getRegistry()->QueryKeys(
 								array (
                                     $vpd_filter,
-                                    !in_array($groupFilter, array('','any'))
+                                    !in_array($groupFilter, array(''))
                                             ? new FilterInPredicate(preg_split('/,/', $groupFilter))
                                             : new ReleaseTimelinePredicate('not-passed')
 								)
@@ -305,10 +253,10 @@ class RequestBoard extends PMPageBoard
 			case 'pm_Release':
 				$object = getFactory()->getObject('Iteration');
 				$ids = array_merge(
-						$object->getRegistry()->Query(
+						$object->getRegistry()->QueryKeys(
 							array (
                                 $vpd_filter,
-                                !in_array($groupFilter, array('','any'))
+                                !in_array($groupFilter, array(''))
                                     ? new FilterInPredicate(preg_split('/,/', $groupFilter))
                                     : new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
                                 new FilterAttributePredicate('Version', $filterValues['release'])
@@ -327,17 +275,17 @@ class RequestBoard extends PMPageBoard
 			case 'pm_Function':
 				$object = getFactory()->getObject('Feature');
 				$ids = array_merge(
-					$object->getRegistry()->Query(
-						array (
-							new FeatureStateFilter('open'),
-                            new FeatureIssuesAllowedFilter(),
-							$vpd_filter,
-                            !in_array($groupFilter, array('','any'))
-								? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
-						)
-					)->idsToArray(),
-					parent::buildGroupIt()->idsToArray()
-				);
+                            $object->getRegistry()->QueryKeys(
+                                array (
+                                    new FeatureStateFilter('open'),
+                                    new FeatureIssuesAllowedFilter(),
+                                    $vpd_filter,
+                                    !in_array($groupFilter, array(''))
+                                        ? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
+                                )
+                            )->idsToArray(),
+                            parent::buildGroupIt()->idsToArray()
+                        );
 
 				$sortClause = array();
                 if ( $filterValues['sortgroup'] != '' ) {
@@ -367,7 +315,7 @@ class RequestBoard extends PMPageBoard
                     return $registry->Query(
                         array (
                             new UserTitleSortClause(),
-                            !in_array($groupFilter, array('','any'))
+                            !in_array($groupFilter, array(''))
                                 ? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
                         )
                     );
@@ -375,7 +323,7 @@ class RequestBoard extends PMPageBoard
 			case 'Priority':
 				return getFactory()->getObject('Priority')->getRegistry()->Query(
 					array (
-                        !in_array($groupFilter, array('','any'))
+                        !in_array($groupFilter, array(''))
 							? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null,
                         $filterValues['sortgroup'] != ''
                             ? new SortAttributeClause($filterValues['sortgroup'])
@@ -385,7 +333,7 @@ class RequestBoard extends PMPageBoard
             case 'pm_Severity':
                 return getFactory()->getObject('pm_Severity')->getRegistry()->Query(
                     array (
-                        !in_array($groupFilter, array('','any'))
+                        !in_array($groupFilter, array(''))
                             ? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null,
                         $filterValues['sortgroup'] != ''
                             ? new SortAttributeClause($filterValues['sortgroup'])
@@ -397,12 +345,6 @@ class RequestBoard extends PMPageBoard
 		}
 	}
 	
- 	function getColumnVisibility( $attribute )
- 	{
-		if ( $attribute == 'BlockReason' ) return true;
- 		return parent::getColumnVisibility( $attribute );
- 	}
- 	
 	function getGroupBackground( $object_it, $attr_it )
 	{
  		switch ( $this->getGroup() )
@@ -460,7 +402,6 @@ class RequestBoard extends PMPageBoard
 			case 'Tasks':
 			case 'OpenTasks':
 			case 'Tags':
-			case 'BlockReason':
 				break;
 				
 			case 'Author':
@@ -495,10 +436,6 @@ class RequestBoard extends PMPageBoard
 			case 'Basement':
 				parent::drawCell($object_it, $attr);
 
-				$deadline_alert =
-					in_array($object_it->get('State'), $this->non_terminal_states)
-					&& $object_it->get('DueWeeks') < 4 && $object_it->get('Deadlines') != '';
-
                 echo '<div class="item-footer">';
 					echo '<div style="display:table-cell;text-align:left;">';
 						if ( $object_it->get('OwnerPhotoId') != '' )
@@ -516,7 +453,7 @@ class RequestBoard extends PMPageBoard
 						{
 							$states = array();
 
-							$task_it = $this->task->createCachedIterator($this->tasks_array[$object_it->getId()]);
+							$task_it = $object_it->getRef($this->visible_column['OpenTasks'] ? 'OpenTasks' : 'Tasks');
 						 	while( !$task_it->end() )
 					 		{
 					 			$info = $this->task_uid_service->getUidInfo($task_it);
@@ -563,7 +500,8 @@ class RequestBoard extends PMPageBoard
                             }
                            	echo join(' ',$html);
 				        }
-						if ( !$this->visible_column['DeliveryDate'] && $deadline_alert )
+
+						if ( $this->visible_column['DeliveryDate'] && in_array($object_it->get('State'), $this->non_terminal_states) )
 						{
 							echo '<div class="btn-group">';
 								echo '<span class="label '.($object_it->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'">';
@@ -605,22 +543,33 @@ class RequestBoard extends PMPageBoard
                                 echo '<span class="label label-success">'.round($object_it->get('TasksPlanned'), 1).'</span>';
                             echo '</div>';
                         }
-					
-						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 )
-						{
-							echo '<div class="board-item-fact" title="'.$this->spent_time_title.'">';
-								if ( is_object($this->method_spend_time) ) {
-									$this->method_spend_time->setAnchorIt($object_it);
-									echo '<a href="'.$this->method_spend_time->getJSCall().'">'.number_format($object_it->get('Fact'), 1).'</a>';
-								}
-								else {
-									echo number_format($object_it->get('Fact'), 1);
-								}
-							echo '</div>';
-						}
-	
-						if ( $this->visible_column['RecentComment'] && $object_it->get('CommentsCount') > 0 )
-						{
+
+						$attributes = array_intersect(
+						    $this->getObject()->getAttributesByGroup('card-basement'),
+                            $this->getObject()->getAttributesByGroup('hours')
+                        );
+						foreach( $attributes as $attribute ) {
+						    if ( !$this->getColumnVisibility($attribute) ) continue;
+
+						    ob_start();
+                            parent::drawCell($object_it, $attribute);
+						    $value = ob_get_contents();
+						    if ( $attribute == 'Fact' && $object_it->get($attribute) < 1 ) $value = '';
+						    ob_end_clean();
+						    if ( $value == '' ) continue;
+
+						    echo '<div class="board-item-fact" title="'.$this->getObject()->getAttributeUserName($attribute).'">';
+                                if ( $attribute == 'Fact' && is_object($this->method_spend_time) ) {
+                                    $this->method_spend_time->setAnchorIt($object_it);
+                                    echo '<a href="'.$this->method_spend_time->getJSCall().'">'.number_format($object_it->get($attribute), 1).'</a>';
+                                }
+                                else {
+                                    echo $value;
+                                }
+                            echo '</div>';
+                        }
+
+						if ( $this->visible_column['RecentComment'] && $object_it->get('CommentsCount') > 0 ) {
 							echo '<div style="margin-left:4px;display: inline-block;">';
 								echo $this->getRenderView()->render('pm/CommentsIconMini.php', array (
 										'object_it' => $object_it
@@ -635,12 +584,12 @@ class RequestBoard extends PMPageBoard
 			case 'OrderNum':
 			case 'Estimation':
             case 'TasksPlanned':
-			case 'Fact':
             case 'TaskTypeProgress':
 			case 'RecentComment':
 				break;
 
 			default:
+			    if ( in_array($attr, $this->getObject()->getAttributesByGroup('card-basement')) ) break;
 				parent::drawCell( $object_it, $attr );
 		}
 	}
@@ -728,31 +677,6 @@ class RequestBoard extends PMPageBoard
 			);
 		}
 
-        $owner_actions = $this->owner_actions;
-        foreach( $owner_actions as $key => $action ) {
-            if ( $object_it->get('Owner') == $key ) {
-                unset($owner_actions[$key]);
-                continue;
-            }
-            $method = $owner_actions[$key]['method'];
-            $method->setObjectIt($object_it);
-            $owner_actions[$key]['url'] = $method->getJSCall(array());
-        }
-        if ( count($owner_actions) > 1 ) {
-            $pos = array_search(array('uid'=>'middle'), $actions);
-            $actions = array_merge(
-                array_slice($actions, 0, $pos),
-                array(
-                    array(),
-                    array(
-                        'name' => $object_it->object->getAttributeUserName('Owner'),
-                        'items' => $owner_actions
-                    )
-                ),
-                array_slice($actions, $pos)
-            );
-        }
-
 		if ( is_object($this->method_comment) )
 		{
 			$this->method_comment->setAnchorIt($object_it);
@@ -805,29 +729,6 @@ class RequestBoard extends PMPageBoard
 			}
 		}
 
-        $owner_actions = $this->assignee_actions;
-        foreach( $owner_actions as $key => $action ) {
-            if ( $object_it->get('Assignee') == $key ) {
-                unset($owner_actions[$key]);
-                continue;
-            }
-            $method = $owner_actions[$key]['method'];
-            $method->setObjectIt($object_it);
-            $owner_actions[$key]['url'] = $method->getJSCall(array());
-        }
-        if ( count($owner_actions) > 1 ) {
-            $actions = array_merge(
-                $actions,
-                array(
-                    array(),
-                    array(
-                        'name' => $object_it->object->getAttributeUserName('Assignee'),
-                        'items' => $owner_actions
-                    )
-                )
-            );
-        }
-
 		return $actions;
 	}
 	
@@ -838,10 +739,10 @@ class RequestBoard extends PMPageBoard
 		{
 		    case 'state':
 		    	return $object_it->getStateIt()->get('RelatedColor');
-		    case 'priority':
-				return $object_it->get('PriorityColor');
 		    case 'type':
 		    	return $object_it->get('TypeColor');
+            default:
+                return $object_it->get('PriorityColor');
 		}
 	}
 
@@ -870,5 +771,17 @@ class RequestBoard extends PMPageBoard
                 $parms['Type'] = $this->getObject()->getAttributeObject('Type')->getByRef('ReferenceName', $groupValue)->getId();
         }
         return $parms;
+    }
+
+    function getFieldTitle($attr)
+    {
+        if ( $attr == 'Links' ) return '';
+        return parent::getFieldTitle($attr);
+    }
+
+    function hasCommonStates()
+    {
+        if ( $this->getTable()->getReportBase() == 'commonissuesboard' ) return false;
+        return parent::hasCommonStates();
     }
 }

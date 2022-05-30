@@ -10,27 +10,23 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	{
         if ( $kind != TRIGGER_ACTION_MODIFY ) return;
 	    if ( !$this->checkEntity($object_it) ) return;
+        $data = $this->getRecordData();
 
-	    $references = $this->getObjectReferences($object_it);
-	    if ( !is_array($references) ) return;
-
-        $references = array_merge($references, $this->getSnapshotReferences($object_it));
-
-	    if ( !array_key_exists('Project', $content) )
-	    {
-		    $data = $this->getRecordData();
-
+	    if ( array_key_exists('Project', $content) ) {
+            $project_it = getFactory()->getObject('Project')->getExact($content['Project']);
+            if ( $project_it->get('VPD') == $object_it->get('VPD') ) return;
+        }
+	    else {
 		    if ( !array_key_exists('Project', $data) ) return;
 		    if ( $data['Project'] == $object_it->get('Project') ) return;
-
 		    $project_it = getFactory()->getObject('Project')->getExact($data['Project']);
 	    }
-	    else
-	    {
-	    	$project_it = $object_it->getRef('Project');
-	    }
 
-	    $this->moveEntity( $object_it, $project_it, $references, $this->getRecordData() );
+        $references = $this->getObjectReferences($object_it);
+        if ( !is_array($references) ) return;
+        $references = array_merge($references, $this->getSnapshotReferences($object_it));
+
+	    $this->moveEntity( $object_it, $project_it, $references, $data );
 	}
 
 	protected function getSnapshotReferences( $objectIt )
@@ -42,13 +38,13 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
         $snapshot->addFilter(new FilterAttributePredicate('ObjectId', $objectIt->getId()));
         $references[] = $snapshot;
 
-        $ids = $snapshot->getAll()->idsToArray();
+        $ids = $snapshot->getAll()->fieldToArray('cms_SnapshotId');
         if ( count($ids) > 0 ) {
             $snapshotItem = getFactory()->getObject('cms_SnapshotItem');
             $snapshotItem->addFilter(new FilterAttributePredicate('Snapshot', $ids));
             $references[] = $snapshotItem;
 
-            $ids = $snapshotItem->getAll()->idsToArray();
+            $ids = $snapshotItem->getAll()->fieldToArray('cms_SnapshotItemId');
             if ( count($ids) > 0 ) {
                 $snapshotItemValue = getFactory()->getObject('cms_SnapshotItemValue');
                 $snapshotItemValue->addFilter(new FilterAttributePredicate('SnapshotItem', $ids));
@@ -102,10 +98,9 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
                 }
 
 			    if ( in_array($attribute, array('ParentPage','DocumentId')) ) {
-			        $ref_it = $object_it->object->getRegistry()->Query(
+			        $ref_it = $object_it->object->getRegistryBase()->Query(
 			            array (
-			                new FilterInPredicate($object_it->get($attribute)),
-                            new FilterVpdPredicate($target_it->get('VPD'))
+			                new FilterInPredicate($object_it->get($attribute))
                         )
                     );
 			        if ( $ref_it->getId() == '' ) {
@@ -153,16 +148,23 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 						$queryParms = array(
                             new FilterVpdPredicate($target_it->get('VPD'))
                         );
-                        $refIt = $ref->getRegistry()->Query(
+                        $refIt = $ref->getRegistryBase()->Query(
                             array(
                                 new FilterInPredicate($object_it->get($attribute))
                             )
                         );
+                        $useAlternativeKeys = true;
 						foreach( $keys as $key ) {
+                            if ( $refIt->get($key) == '' ) {
+                                $useAlternativeKeys = false;
+                                break;
+                            }
 							$queryParms[] = new FilterAttributePredicate($key, $refIt->get($key));
 						}
-						$ref_it = $ref->getRegistry()->Query($queryParms);
-						$parms[$attribute] = $ref_it->getId();
+                        if ( $useAlternativeKeys ) {
+                            $ref_it = $ref->getRegistryBase()->Query($queryParms);
+                            $parms[$attribute] = $ref_it->getId();
+                        }
 					}
 				}
 			}
@@ -182,13 +184,13 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
                 }
 			}
 
-            $storedIt = getFactory()->modifyEntity(
+            $storedObject->disableVpd();
+            getFactory()->modifyEntity(
                 $storedObject->createCachedIterator(
                     array($object_it->getData())
                 ),
                 $parms
             );
-            getFactory()->getEventsManager()->notify_object_add($storedIt, $parms);
 
 			$object_it->moveNext();
 		}
@@ -222,7 +224,12 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 				new FilterAttributePredicate('ChangeKind', 'modified,commented' )
 			)
 		);
-		DAL::Instance()->Query(" UPDATE ObjectChangeLog SET VPD = '".$target_it->get('VPD')."' WHERE ObjectChangeLogId IN (".join(',',$change_it->idsToArray()).")");
+		if ( $change_it->count() > 0 ) {
+            DAL::Instance()->Query(
+                " UPDATE ObjectChangeLog SET VPD = '{$target_it->get('VPD')}' 
+                   WHERE ObjectChangeLogId IN (".join(',',$change_it->idsToArray()).")"
+            );
+        }
 
 		$change_parms['ChangeKind'] = 'modified';
 		$change_parms['VPD'] = $target_it->get('VPD');

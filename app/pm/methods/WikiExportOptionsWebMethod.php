@@ -15,7 +15,7 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
             'ExportTemplate'
         );
         $parms = array_merge($parms, array_keys($this->getCheckOptions($class)));
-        if ( count(array_intersect(class_parents($class), array('WikiConverterPanDoc','WikiConverterLibreOffice'))) > 0 ) {
+        if ( strpos($class, 'MSWord') !== false ) {
             $parms[] = 'File';
         }
         return "javascript:processBulk('".translate('Экспорт').': '.$title."','?formonly=true&operation=Method:".join(":",$parms)."', '".(is_object($page_it) ? $page_it->getId() : '%ids%')."', '');";
@@ -25,7 +25,8 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
     {
         $options = array(
             'UseNumbering' => 'numbering',
-            'ExportChildren' => 'children'
+            'ExportChildren' => 'children',
+            'ExportParents' => 'parents'
         );
         if ( count(array_intersect(class_parents($class), array('WikiConverterPanDoc','WikiConverterLibreOffice'))) > 0 ) {
             $options['UseSyntax'] = 'syntax';
@@ -76,12 +77,12 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
 
         if ( file_exists($_FILES['File']['tmp_name']) ) {
             $template_it = getFactory()->getObject('ExportTemplate')->
-            getRegistry()->Create(
-                array (
-                    'Caption' => array_shift(explode('.',$_FILES['File']['name'])),
-                    'Options' => join('-',$options)
-                )
-            );
+                                getRegistry()->Create(
+                                    array (
+                                        'Caption' => array_shift(explode('.',$_FILES['File']['name'])),
+                                        'Options' => join('-',$options)
+                                    )
+                                );
             $options[] = 'template='.$template_it->getId();
         }
 
@@ -94,14 +95,6 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
             )
         );
 
-        echo JsonWrapper::encode(
-            array (
-                'state' => 'redirect',
-                'message' => '',
-                'object' => $url
-            )
-        );
-
-        exit();
+        $this->redirect($url);
     }
 }

@@ -12,10 +12,6 @@ class IterationActual extends Metaobject
         return new IterationIterator($this);
     }
 
-    function IsDictionary() {
-        return true;
-    }
-
     function getPage() {
         return getSession()->getApplicationUrl($this).'iterations?';
     }

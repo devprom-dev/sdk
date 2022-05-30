@@ -3,6 +3,7 @@
 class CustomizableObjectRegistry extends ObjectRegistrySQL
 {
  	protected $objects = array();
+ 	private $useTypes = false;
 
  	function add( $class_name, $key = '', $title = '' )
  	{
@@ -12,10 +13,10 @@ class CustomizableObjectRegistry extends ObjectRegistrySQL
  		);
  	}
  	
- 	function createSQLIterator( $sql_query )
+ 	function Query( $parms = array() )
  	{
  		foreach( getSession()->getBuilders('CustomizableObjectBuilder') as $builder ) {
- 		    $builder->build($this);
+ 		    $builder->build($this, $this->useTypes);
  		}
  		
  		$data = array();
@@ -24,14 +25,23 @@ class CustomizableObjectRegistry extends ObjectRegistrySQL
  			$data[] = array (
  				'entityId' => $object['key'],
  				'ReferenceName' => $object['key'],
-				'Caption' => $object['title']
+				'Caption' => $object['title'] != ''
+                                ? $object['title']
+                                : getFactory()->getObject($object['key'])->getDisplayName()
  			);
  		}
- 		
+        usort( $data, function($left, $right) {
+            return $left['Caption'] > $right['Caption'] ? 1 : -1;
+        });
+
  		return $this->createIterator( $data );
  	}
 
 	public function getData() {
 		return $this->object;
 	}
+
+	public function useTypes( $value = true ) {
+ 	    $this->useTypes = $value;
+    }
 }

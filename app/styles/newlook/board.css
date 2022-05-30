@@ -454,7 +454,20 @@ div.card-f {
 	overflow:hidden;
 }
 
+div.card-f .editable:hover {
+	opacity: 0.7;
+}
+
 div.brd-rv {
 	padding:3px 0 3px 0;
 	white-space: nowrap;
+}
+
+a.cell-hidden-ids {
+	display: none;
+	margin: 5px;
+	width: 15px;
+}
+a.cell-hidden-ids:first-child {
+	display: inherit;
 }

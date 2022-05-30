@@ -15,7 +15,9 @@ class TransitionDetailsPersister extends ObjectSQLPersister
             " ( SELECT GROUP_CONCAT(CAST(a.pm_TransitionPredicateId AS CHAR)) ".
             "	  FROM pm_TransitionPredicate a WHERE a.Transition = ".$this->getPK($alias)." ) Predicates ",
             " ( SELECT GROUP_CONCAT(CAST(a.pm_TransitionRoleId AS CHAR)) ".
-            "	  FROM pm_TransitionRole a WHERE a.Transition = ".$this->getPK($alias)." ) ProjectRoles "
+            "	  FROM pm_TransitionRole a WHERE a.Transition = ".$this->getPK($alias)." ) ProjectRoles ",
+            " (SELECT s.OrderNum FROM pm_State s WHERE s.pm_StateId = t.TargetState)
+                  - (SELECT s.OrderNum FROM pm_State s WHERE s.pm_StateId = t.SourceState) WorkflowDirection ",
         );
  	}
 

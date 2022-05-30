@@ -1,21 +1,12 @@
 <?php
 
-include_once "FilterDateWebMethod.php";
-
-class ViewSubmmitedAfterDateWebMethod extends FilterDateWebMethod
+class ViewSubmmitedAfterDateWebMethod extends FilterDateIntervalWebMethod
 {
- 	function getCaption()
- 	{
- 		return translate('Добавлено после');
+ 	function getCaption() {
+ 		return translate('Добавлено');
  	}
 
-	function getStyle()
-	{
-		return 'width:100px;';
-	}
-
-	function getValueParm()
-	{
+	function getValueParm() {
 		return 'submittedon';
 	}
 }

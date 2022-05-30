@@ -3,23 +3,17 @@ include_once "ModelDataTypeMapping.php";
 
 class ModelDataTypeMappingFloat extends ModelDataTypeMapping
 {
-	public function applicable( $type_name )
-	{
+	public function applicable( $type_name ) {
 		return in_array($type_name, array('float'));
 	}
 	
-	public function map( $value )
+	public function map( $value, array $groups = array() )
 	{
 		if ( $value == '' ) return '';
 
-		$match = array();
-		if ( preg_match(SystemDateTime::getTimeParseRegex(), $value, $match) and count($match) > 1 ) {
-			$value = 0;
-			$value += $match[2] * 8 * 60;
-			$value += $match[4] * 60;
-			$value += $match[6];
-			return round($value / 60, 4);
-		}
+        if ( count(array_intersect(array('hours','astronomic-time','working-time','daily-hours'), $groups)) > 0 ) {
+            return SystemDateTime::parseHours($value);
+        }
 
 		$value = str_replace(',', '.', $value);
 		if ( !is_numeric($value) ) return '0';

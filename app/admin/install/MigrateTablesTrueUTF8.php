@@ -25,7 +25,6 @@ class MigrateTablesTrueUTF8 extends Installable
             'WikiPage',
             'WikiPageChange',
             'pm_Question',
-            'BlogPost',
             'pm_AttributeValue',
             'ObjectChangeLog',
             'EmailQueue'

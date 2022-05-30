@@ -25,6 +25,28 @@ class TaskTagPersister extends ObjectSQLPersister
         );
  	}
 
+    function modify( $object_id, $parms )
+    {
+        if ( trim($parms['Tags']) == '' ) return;
+
+        $tag = getFactory()->getObject('TaskTag');
+        $tag->removeTags( $object_id );
+
+        foreach( preg_split('/,/', $parms['Tags']) as $tag_id ) {
+            $tag->bindToObject( $object_id, $tag_id );
+        }
+    }
+
+    function add($object_id, $parms)
+    {
+        if ( trim($parms['Tags']) == '' ) return;
+
+        $tag = getFactory()->getObject('TaskTag');
+        foreach( preg_split('/,/', $parms['Tags']) as $tag_id ) {
+            $tag->bindToObject( $object_id, $tag_id );
+        }
+    }
+
     function IsPersisterImportant() {
         return true;
     }

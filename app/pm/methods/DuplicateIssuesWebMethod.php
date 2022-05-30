@@ -5,14 +5,19 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 {
 	private $type_it = null;
 
-	function __construct( $object_it = null )
+	function __construct( $object_it = null, $type_it = null )
 	{
 		parent::__construct($object_it);
 		$link_type = getFactory()->getObject('RequestLinkType');
-		$this->type_it = $_REQUEST['LinkType'] != '' ? $link_type->getExact($_REQUEST['LinkType']) : $link_type->getEmptyIterator();
-		if ( $this->type_it->getId() < 1 ) {
-			$this->type_it = $link_type->getByRef('ReferenceName', 'duplicates');
-		}
+		if ( is_object($type_it) ) {
+		    $this->type_it = $type_it;
+        }
+		else {
+            $this->type_it = $_REQUEST['LinkType'] != '' ? $link_type->getExact($_REQUEST['LinkType']) : $link_type->getEmptyIterator();
+            if ( $this->type_it->getId() < 1 ) {
+                $this->type_it = $link_type->getByRef('ReferenceName', 'duplicates');
+            }
+        }
 	}
 
 	function getCaption() {

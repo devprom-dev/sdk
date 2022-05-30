@@ -2,7 +2,7 @@
 
 class RequestTypeUnifiedRegistry extends ObjectRegistrySQL
 {
-    function getQueryClause()
+    function getQueryClause(array $parms)
     {
         return "(
             SELECT DISTINCT

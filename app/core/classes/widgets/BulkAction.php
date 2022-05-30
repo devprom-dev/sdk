@@ -1,5 +1,4 @@
 <?php
-
 include "BulkActionRegistry.php";
 
 class BulkAction extends MetaobjectCacheable

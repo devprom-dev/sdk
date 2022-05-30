@@ -10,7 +10,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.bind.DatatypeConverter;
+import java.math.BigInteger;
 
 import org.apache.commons.codec.binary.Base64;
 import org.openqa.selenium.By;
@@ -106,7 +106,7 @@ public class RequirementViewPage extends SDLCPojectPageBase
 	protected WebElement sendBtn;
         
     //корневой каталог в дереве
-    @FindBy (xpath="//ul[contains(@class,'ui-fancytree')]/li//*[@class='fancytree-title']")
+    @FindBy (xpath="//div[@id='wikitree']//ul[contains(@class,'ui-fancytree')]/li//*[@class='fancytree-title']")
 	protected WebElement rootRequirement;
         
 	public RequirementViewPage(WebDriver driver) {
@@ -124,17 +124,6 @@ public class RequirementViewPage extends SDLCPojectPageBase
 		return new RequirementEditPage(driver);
 	}
 	
-	public RequirementViewPage editContent(String clearId, String newContent)
-	{
-		WebElement editorBody = driver.findElement(By.xpath("//div[starts-with(@id,'WikiPageContent"+clearId+"') and contains(@class,'wysiwyg')]"));
-		editorBody.click();
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.attributeContains(editorBody, "class", "cke_editable_inline"));
-		editorBody.clear();
-		editorBody.sendKeys(newContent);
-		sleep(Configuration.getPersistTimeout());
-		return new RequirementViewPage(driver);
-	}
-        
 	public RequirementViewPage addContent(String clearId, String content)
 	{
 		WebElement editableArea = driver.findElement(By.xpath("//div[starts-with(@id,'WikiPageContent"+clearId+"') and contains(@class,'wysiwyg')]"));
@@ -145,7 +134,10 @@ public class RequirementViewPage extends SDLCPojectPageBase
 		} catch (InterruptedException e) {
 		}
 		editableArea.sendKeys(content);
-		sleep(Configuration.getPersistTimeout());
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+		}
 		return new RequirementViewPage(driver);
 	}
 	
@@ -160,7 +152,10 @@ public class RequirementViewPage extends SDLCPojectPageBase
 		} catch (InterruptedException e) {
 		}
 		editableArea.sendKeys(".");
-		sleep(Configuration.getPersistTimeout());
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+		}
 		return new RequirementViewPage(driver);
 	}
         
@@ -291,7 +286,7 @@ public class RequirementViewPage extends SDLCPojectPageBase
 		}
 		catch (MalformedURLException e) {
 			String base64parts[] = attach.getAttribute("src").split(",");
-			byte[] imageData = DatatypeConverter.parseBase64Binary(base64parts[base64parts.length-1]);
+			byte[] imageData = Base64.decodeBase64(base64parts[base64parts.length-1]);
 			return imageData.length;
 		}
 	}
@@ -382,19 +377,13 @@ public class RequirementViewPage extends SDLCPojectPageBase
         }
     }
 
-    public TestScenariosPage menuTestSuit(String id)
+	public TestScenariosPage menuTestSuit(String id)
 	{
-        try {
-			String ids = id.split("-")[1];
-			Thread.sleep(3000);
-			driver.findElement(By.xpath(".//tr[@object-id="+ids+"]//div[contains(@class,'operation')]//a[contains(@class,'actions-button')]")).click();
-			clickOnInvisibleElement(driver.findElement(By.xpath("//tr[@object-id='"+ids+"']//a[@id='trace-testing']")));
-			return new TestScenariosPage(driver);
-        }
-        catch(InterruptedException e) {
-            return null;
-        }
-    }
+		RequirementEditPage page = editRequirement(id);
+		page.clickTraceTab();
+		clickOnInvisibleElement(driver.findElement(By.xpath("//div[@id='fieldRowTestScenario']//a[contains(@class,'items-list')]")));
+		return new TestScenariosPage(driver);
+	}
 
     public void openRootRequirement() {
         rootRequirement.click();

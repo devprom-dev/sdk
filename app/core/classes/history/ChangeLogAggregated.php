@@ -9,6 +9,7 @@ class ChangeLogAggregated extends ChangeLog
 		parent::__construct( new ChangeLogAggregatedRegistry($this) );
 		$this->addAttribute( 'ChangeDate', 'DATE', translate('Дата изменения'), false, false );
         $this->addAttribute( 'ChangeKind', 'VARCHAR', translate('Вид изменения'), false, false );
+        $this->addAttribute( 'Project', 'REF_pm_ProjectId', translate('Проект'), false, false );
 
    		$system_attributes = array (
 			'ObjectId',
@@ -24,5 +25,10 @@ class ChangeLogAggregated extends ChangeLog
 		$this->setSortDefault( array(
 			new SortChangeLogRecentClause()
 		));
+
+        $this->addAttribute('UserAvatar', '', translate('Автор'), true, false, '', 1);
+        $this->setAttributeCaption( 'SystemUser', translate('Имя автора') );
+        $this->setAttributeOrderNum( 'SystemUser', 2 );
+        $this->setAttributeVisible('RecordModified', true);
     }
 }

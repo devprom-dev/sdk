@@ -16,8 +16,6 @@ include_once SERVER_ROOT_PATH."core/methods/ModifyAttributeWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/AutoSaveFieldWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterObjectMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterTextWebMethod.php";
-include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
-include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
 include_once SERVER_ROOT_PATH."admin/methods/BlockUserWebMethod.php";
 include_once SERVER_ROOT_PATH."admin/methods/UnBlockUserWebMethod.php";
 include_once('methods/c_plugin_methods.php');

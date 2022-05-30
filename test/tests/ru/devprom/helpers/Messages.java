@@ -10,7 +10,7 @@ public enum Messages
 	ERROR_MESSAGE_DUPLICATE_PROJECT_CODENAME("должно быть уникальным"),
 	SUCCESS_MESSAGE_ACTION_DONE("Действие успешно выполнено над выбранными объектами"),
 	INFO_MESSAGE_REQUEST_BLOKED("Пожелание заблокировано другим невыполненным пожеланием"), 
-	ERROR_MESSAGE_DUPLICATE_ATTRIBUTE("Внимание! Атрибут с таким ссылочным именем уже определен для объекта");
+	ERROR_MESSAGE_DUPLICATE_ATTRIBUTE("Внимание!");
 
 	private String msg;
 

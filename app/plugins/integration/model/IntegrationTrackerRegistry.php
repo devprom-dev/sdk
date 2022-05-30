@@ -3,12 +3,12 @@ include_once "IntegrationApplicationRegistry.php";
 
 class IntegrationTrackerRegistry extends IntegrationApplicationRegistry
 {
-	public function getAll()
+	public function Query($parms = array())
     {
         return $this->createIterator(
             array_values(
                 array_filter(
-                    parent::getAll()->getRowset(),
+                    parent::Query($parms)->getRowset(),
                     function ($row) {
                         return $row['Type'] == 'tracker';
                     }

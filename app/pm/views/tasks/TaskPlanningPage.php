@@ -4,7 +4,6 @@ include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelCommonBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderTasks.php";
 include_once SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
-
 include "TaskForm.php";
 include "TaskBulkForm.php";
 include "TaskTable.php";
@@ -21,19 +20,15 @@ class TaskPlanningPage extends PMPage
         getSession()->addBuilder( new RequestModelExtendedBuilder() );
         getSession()->addBuilder( new RequestModelPageTableBuilder() );
 
- 		parent::PMPage();
+ 		parent::__construct();
  		
  		if ( $this->needDisplayForm() )
  		{
-            $this->addInfoSection( new PageSectionAttributes($this->getObject(),'deadlines',translate('Сроки')) );
             $this->addInfoSection( new PageSectionAttributes($this->getObject(),'source-issue',translate('Пожелание')) );
-            $this->addInfoSection( new PageSectionAttributes($this->getObject(),'trace',translate('Трассировки')) );
-            $this->addInfoSection( new PageSectionAttributes($this->getObject(),'additional',translate('Дополнительно')) );
-
             $object_it = $this->getObjectIt();
             if ( is_object($object_it) && $object_it->count() > 0 )
             {
-                $this->addInfoSection( new PageSectionComments($object_it) );
+                $this->addInfoSection( new PageSectionComments($object_it, $this->getCommentObject()) );
                 $this->addInfoSection( new StatableLifecycleSection( $object_it ) );
                 $this->addInfoSection( new PMLastChangesSection ( $object_it ) );
                 $this->addInfoSection(new NetworkSection($object_it));
@@ -41,7 +36,11 @@ class TaskPlanningPage extends PMPage
  		}
  	}
 
- 	function buildObject()
+    function getCommentObject() {
+        return new TaskComment();
+    }
+
+    function buildObject()
     {
         $object = getFactory()->getObject('Task');
         foreach(getSession()->getBuilders('TaskViewModelBuilder') as $builder ) {
@@ -95,11 +94,13 @@ class TaskPlanningPage extends PMPage
         return array(
             'mytasks',
             'nearesttasks',
+            'tasksbyassignee',
             'assignedtasks',
+            'assignedissues',
             'newtasks',
             'issuesmine',
             'watchedtasks',
-            'workitemchart'
+            'resman/resourceload'
         );
     }
 }

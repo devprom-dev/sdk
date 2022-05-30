@@ -1,18 +1,18 @@
 [{
   "Request": {
-    "url": "/rest/issue/{id}",
-    "link": "/issue/{id}",
-    "Caption": "field.summary.value",
-    "Description": "field.description.value",
+    "url": "/api/issues/{id}?fields=id,summary,description,reporter(login),created,customFields(name,value(name,login))&",
+    "link": "/issues/{id}",
+    "Caption": "summary",
+    "Description": "description",
     "Priority": {
-      "Caption": "field.Priority.value:first",
+      "Caption": "customFields:(name=Priority).value.name",
       "mapping": [{"Обычный":"Normal"},{"Низкий":"Minor"},{"Высокий":"Major"},{"Критичный":"Critical"},{"":"*"}]
     },
-    "Author": {"Login":"field.reporterName.value"},
-    "Owner": {"Login":"field.Assignee.value"},
+    "Author": {"Login":"reporter.login"},
+    "Owner": {"Login":"customFields:(name=Assignee).value.login"},
     "RecordCreated": "created",
     "State": {
-      ".": "field.State.value:first",
+      ".": "customFields:(name=State).value.name",
       "mapping": [{"submitted":"Backlog"},{"resolved":"Done"},{"resolved":"Fixed"},{"submitted":"*"}]
     },
     "comments": {
@@ -22,27 +22,27 @@
     }
   },
   "RequestAttachment": {
-    "url": "/rest/issue/{parent}/attachment/{id}",
-    "url-append": "/rest/issue/{parent}/attachment",
+    "url": "/api/issues/{parent}/attachments/{id}?fields=name,url&",
+    "url-append": "/api/issues/{parent}/attachments",
     "ObjectId": "{parentId}",
     "FileExt": "name",
     "File": "url"
   },
   "RequestComment": {
-    "url": "/rest/issue/{parent}/comment/{id}",
-    "url-append": "/rest/issue/{parent}/comment",
+    "url": "/api/issues/{parent}/comments/{id}?fields=text,created,updated,author(login)&",
+    "url-append": "/api/issues/{parent}/comments",
     "AuthorId": {"Login":"author"},
     "ObjectId": "{parentId}",
     "Caption": "text",
     "RecordCreated": "created",
     "RecordModified": "updated",
-    "ExternalAuthor": "authorFullName"
+    "ExternalAuthor": "author.login"
   },
-  "ActivityRequest": {
-    "url": "/rest/issue/{parent}/timetracking/workitem/{id}",
+  "Activity": {
+    "url": "/api/issues/{parent}/timeTracking/workItems/{id}?fields=author(login),text,duration,date&",
     "Participant": {"Login":"author.login"},
-    "Task": "{parentId}",
-    "Description": "description",
+    "Issue": "{parentId}",
+    "Description": "text",
     "Capacity": "duration",
     "ReportDate": "date"
   }

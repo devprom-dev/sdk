@@ -5,6 +5,7 @@ include "RequestTraceBaseIterator.php";
 include "RequestInversedTraceBaseIterator.php";
 include "predicates/RequestTraceObjectPredicate.php";
 include "predicates/RequestTracePredicate.php";
+include "predicates/RequestTraceWikiPredicate.php";
 include "predicates/RequestTraceStatePredicate.php";
 include "predicates/RequestTraceRequirementLinkedPredicate.php";
      

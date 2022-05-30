@@ -172,18 +172,10 @@ class TooltipService
 			    return $object_it->getDateFormattedShort($attribute);
 
             case 'float':
-                if ( in_array('hours', $object_it->object->getAttributeGroups($attribute)) ) {
-                    return getSession()->getLanguage()->getHoursWording($object_it->get($attribute));
-                }
-                elseif ( in_array('astronomic-time', $object_it->object->getAttributeGroups($attribute)) ) {
-                    return getSession()->getLanguage()->getDurationWording($object_it->get($attribute), 24);
-                }
-                elseif ( in_array('working-time', $object_it->object->getAttributeGroups($attribute)) ) {
-                    return getSession()->getLanguage()->getDurationWording($object_it->get($attribute), 8);
-                }
-                else {
-                    return number_format(floatval($object_it->get($attribute)), 2, ',', ' ');
-                }
+                return getSession()->getLanguage()->formatFloatValue(
+                    $object_it->get($attribute),
+                    $object_it->object->getAttributeGroups($attribute)
+                );
 
  			default:
 	 	 		if ( $object_it->object->IsReference($attribute) )

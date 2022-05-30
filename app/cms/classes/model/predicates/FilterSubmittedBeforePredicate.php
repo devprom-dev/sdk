@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMappingDate.php";
 
 class FilterSubmittedBeforePredicate extends FilterPredicate

@@ -30,6 +30,7 @@ class ScriptWrtfCKEditorBuilder extends ScriptBuilder
 		$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/resources/js/underi18n.js");
 		$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/ckeditor/plugins/codesnippet/lib/highlight/highlight.pack.js");
 		$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/ckeditor/wysiwyg.js");
+        $object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/ckeditor/diagram-editor.js");
 		$object->addScriptFile(SERVER_ROOT_PATH."/scripts/jquery/jquery.textcomplete.js");
     }
 }

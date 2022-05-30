@@ -1,7 +1,5 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
-
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 
 class ProcessStatistics extends TaskCommand
@@ -33,7 +31,7 @@ class ProcessStatistics extends TaskCommand
 		}
 		else
 		{
-			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query(
+			$ids = getFactory()->getObject('pm_Project')->getRegistry()->QueryKeys(
 					array( new FilterHasNoAttributePredicate('IsClosed', 'Y') )
 				)->idsToArray();
 			
@@ -49,15 +47,22 @@ class ProcessStatistics extends TaskCommand
 			}
 		}
 
+        $service = new StoreMetricsService();
+        $service->executeWorkers();
+
 		$this->logFinish();
 	}
 	
 	function processChunk( $chunk )
 	{
 		$auth_factory = new AuthenticationFactory();
-		$auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
+		$auth_factory->setUser( getFactory()->getObject('cms_User')->getSuperUserIt() );
 
-		$project_it = getFactory()->getObject('pm_Project')->getInArray('pm_ProjectId', $chunk );
+		$project_it = getFactory()->getObject('pm_Project')->getRegistry()->Query(
+                array(
+                    new FilterInPredicate($chunk)
+                )
+            );
 		while ( !$project_it->end() )
 		{
 			$session = new PMSession($project_it->copy(), $auth_factory);

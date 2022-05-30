@@ -21,7 +21,6 @@ class StageModelBuilder extends ObjectModelBuilder
             && getFactory()->getAccessPolicy()->can_read_attribute($iteration, 'FinishDate');
 
         if ( $hasDeadlines ) {
-            $object->addAttribute('Deadlines', 'DATE', translate('Сроки'), true, false, '', 20);
             $object->addAttribute('EstimatedStartDate', 'DATE', translate('Оценка начала'), false, false, '', 30);
             $object->addAttribute('EstimatedFinishDate', 'DATE', translate('Оценка окончания'), false, false, '', 40);
             $object->addAttribute('ActualStartDate', 'DATE', translate('Начало по плану'), false, true, '', 50);

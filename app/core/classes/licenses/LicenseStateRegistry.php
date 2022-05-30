@@ -4,7 +4,7 @@ class LicenseStateRegistry extends ObjectRegistrySQL
 {
     private static $data = array();
 
-	public function getAll()
+	public function Query($parms = array())
 	{
 	    if ( count(self::$data) > 0 ) {
             return $this->createIterator(self::$data);

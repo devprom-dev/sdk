@@ -1,6 +1,7 @@
 <?php
 use Devprom\ProjectBundle\Service\Model\ModelService;
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+use Devprom\ProjectBundle\Service\Tooltip\TooltipProjectService;
 
 class BusinessAction
 {
@@ -30,6 +31,22 @@ class BusinessAction
 
     function setData( $data ) {
         $this->data = $data;
+    }
+
+    function setCommentIt( $objectIt ) {
+ 	    $this->commentIt = $objectIt;
+    }
+
+    function getCommentIt() {
+ 	    return $this->commentIt;
+    }
+
+    function setParameters( $value ) {
+ 	    $this->parameters = $value;
+    }
+
+    function getParameters() {
+ 	    return $this->parameters;
     }
 
     function process( $action_it, $object_it )
@@ -96,7 +113,8 @@ class BusinessAction
                     'ObjectId' => $object_it->getId(),
                     'ObjectClass' => get_class($object_it->object),
                     'Caption' => $action_it->getHtmlDecoded('NewComment'),
-                    'AuthorId' => getSession()->getUserIt()->getId()
+                    'AuthorId' => getSession()->getUserIt()->getId(),
+                    'IsPrivate' => $action_it->get('CommentIsPublic') == 'Y' ? 'N' : 'Y'
                 )
             );
             if ( $commentIt->getId() == '' ) {
@@ -115,6 +133,10 @@ class BusinessAction
             $actionParms['AutoActionErrors'] = join(', ', $errors);
         }
 
+        if ( $action_it->get('WebhookURL') != '' ) {
+            $this->raiseWebhook($modifiedIt, $action_it, $commentIt);
+        }
+
         $notificator = new PMChangeLogNotificator();
         $notificator->setRecordData( $actionParms );
         $notificator->modify( $object_it, $modifiedIt );
@@ -122,7 +144,62 @@ class BusinessAction
         return true;
     }
 
-    protected function checkConditions( $action_it, $object_it )
+    protected function raiseWebhook($object_it, $action_it, $commentIt)
+    {
+        $model = new ModelService();
+        $payload = $action_it->getHtmlDecoded('WebhookPayload');
+        $payload = str_replace('{{timestamp}}', SystemDateTime::date(DateTime::ISO8601), $payload);
+        $payload = str_replace('{{event}}', $action_it->getRef('EventType')->getDisplayName(), $payload);
+
+        $payload = str_replace('"{{entity}}"',
+            \JsonWrapper::encode($model->get($object_it->object, $object_it->getId())), $payload);
+
+        $userIt = getSession()->getUserIt();
+        $payload = str_replace('"{{user}}"',
+            \JsonWrapper::encode($model->get($userIt->object, $userIt->getId())), $payload);
+
+        if ( !is_object($commentIt) ) {
+            $commentIt = $this->getCommentIt();
+        }
+        if ( is_object($commentIt) ) {
+            $payload = str_replace('"{{comment}}"',
+                \JsonWrapper::encode($model->get($commentIt->object, $commentIt->getId())), $payload);
+        }
+        else {
+            $payload = str_replace('"{{comment}}"', "{}", $payload);
+        }
+
+        $htmlRep = (new TooltipProjectService(
+                        get_class($object_it->object), $object_it->getId(), true ))
+                            ->getHtmlRep();
+        $textRep = preg_replace('/[\r\n]+/', "\\n",
+            (new \Html2Text\Html2Text($htmlRep, array('width'=>0)))
+                ->getText()
+        );
+
+        $payload = str_replace('{{text}}', $textRep, $payload);
+
+        $attributes = array_filter(
+            array_keys($this->getData()),
+            function( $value ) {
+                return !is_numeric($value);
+            }
+        );
+        $payload = str_replace('{{item}}', trim(JsonWrapper::encode($attributes),'"'), $payload);
+
+        getFactory()->createEntity(
+            new Metaobject('co_WebhookLog'),
+            array(
+                'Caption' => $action_it->getHtmlDecoded('WebhookURL'),
+                'Payload' => $payload,
+                'Headers' => $action_it->getHtmlDecoded('WebhookHeaders'),
+                'Method' => $action_it->getHtmlDecoded('WebhookMethod'),
+                'AutoAction' => $action_it->getId()
+            )
+        );
+    }
+
+    public function checkConditions( $action_it, $object_it )
     {
         return ModelService::queryXPath(
                 $object_it->copyAll(),
@@ -131,4 +208,6 @@ class BusinessAction
     }
 
  	private $data = array();
+ 	private $parameters = '';
+ 	private $commentIt = null;
 }

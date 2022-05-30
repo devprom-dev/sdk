@@ -11,18 +11,12 @@ class StatePlanFactPersister extends ObjectSQLPersister
  	{
  	    $columns = array();
  	    $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
- 	    $estimationStrategy = $methodologyIt->getEstimationStrategy();
 
         if ( $methodologyIt->HasTasks() && $methodologyIt->TaskEstimationUsed() ) {
             $columns[] = " t.TasksPlanned Planned ";
         }
         else {
-            if ( $estimationStrategy instanceof EstimationHoursStrategy ) {
-                $columns[] = " t.IssuesPlanned Planned ";
-            }
-            else {
-                $columns[] = " 0 Planned ";
-            }
+            $columns[] = " t.IssuesPlanned Planned ";
         }
 
  	    if ( $methodologyIt->IsReportsRequiredOnActivities() ) {

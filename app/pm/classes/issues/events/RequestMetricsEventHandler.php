@@ -16,23 +16,27 @@ class RequestMetricsEventHandler extends SystemTriggersBase
             }
             $this->updateFeatureMetrics($object_it);
             $this->updatePlanMetrics($object_it);
+
+            if ( $object_it->get('Owner') != '' ) {
+                $service = new StoreMetricsService();
+                $service->forceUsersMetrics(
+                    array(
+                        new \FilterInPredicate($object_it->get('Owner'))
+                    )
+                );
+            }
         }
 	}
 
 	protected function updateRequestMetrics( $requestId )
     {
-        register_shutdown_function(function () use ($requestId) {
-            $service = new \Devprom\ProjectBundle\Service\Project\StoreMetricsService();
-            $request = new \Request();
-
-            $service->storeIssueMetrics(
-                $request->getRegistry(),
-                array(
-                    new \FilterInPredicate(array($requestId)),
-                    new \RequestMetricsPersister()
-                )
-            );
-        });
+        $service = new StoreMetricsService();
+        $service->forceIssueMetrics(
+            array(
+                new \FilterInPredicate(array($requestId)),
+                new \StatePredicate('notresolved')
+            )
+        );
     }
 
 	protected function updateFeatureMetrics( $object_it )
@@ -41,24 +45,21 @@ class RequestMetricsEventHandler extends SystemTriggersBase
         if ( $object_it->object->getAttributeType('Function') == '' ) return;
 
         $featureIt = $object_it->getRef('Function')->copy();
-        register_shutdown_function(function() use ( $featureIt ) {
-                $ids = array_filter(
-                    preg_split('/,/',$featureIt->get('ParentPath')),
-                    function($value) {
-                        return $value > 0;
-                    }
-                );
-                if ( count($ids) < 1 ) return;
-
-                $service = new StoreMetricsService();
-                $service->storeFeatureMetrics(
-                    getFactory()->getObject('Feature')->getRegistry(),
-                    array (
-                        new FilterInPredicate($ids),
-                        new FeatureMetricsPersister()
-                    )
-                );
+        $ids = array_filter(
+            preg_split('/,/',$featureIt->get('ParentPath')),
+            function($value) {
+                return $value > 0;
             }
+        );
+        if ( count($ids) < 1 ) return;
+
+        $service = new StoreMetricsService();
+        $service->storeFeatureMetrics(
+            getFactory()->getObject('Feature')->getRegistryBase(),
+            array (
+                new FilterInPredicate($ids),
+                new FeatureMetricsPersister()
+            )
         );
     }
 
@@ -66,17 +67,11 @@ class RequestMetricsEventHandler extends SystemTriggersBase
     {
         if ( $object_it->get('Iteration') != '' && $object_it->object->getAttributeType('Iteration') != '' ) {
             $iterationIt = getFactory()->getObject('Iteration')->getExact($object_it->get('Iteration'));
-            register_shutdown_function(function() use ( $iterationIt ) {
-                    $iterationIt->storeMetrics();
-                }
-            );
+            $iterationIt->storeMetrics();
         }
         if ( $object_it->get('PlannedRelease') != '' && $object_it->object->getAttributeType('PlannedRelease') != '' ) {
             $releaseIt = getFactory()->getObject('Release')->getExact($object_it->get('PlannedRelease'));
-            register_shutdown_function(function() use ( $releaseIt ) {
-                    $releaseIt->storeMetrics();
-                }
-            );
+            $releaseIt->storeMetrics();
         }
     }
 }

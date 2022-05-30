@@ -1,8 +1,6 @@
 <?php
-
 use Devprom\CommonBundle\Service\Emails\RenderService;
 include_once SERVER_ROOT_PATH.'cms/c_mail.php';
-
 
 class UserCreatedEvent extends SystemTriggersBase
 {
@@ -26,7 +24,8 @@ class UserCreatedEvent extends SystemTriggersBase
 	   				'system_url' => EnvironmentSettings::getServerUrl(),
    					'login' => $object_it->get('Login'),
    					'password' => $data['RepeatPassword'],
-   					'reset_url' => EnvironmentSettings::getServerUrl().'/reset?key='.$object_it->getResetPasswordKey().'&redirect='.$_SERVER['ENTRY_URL']
+   					'reset_url' => EnvironmentSettings::getServerUrl().'/reset?key='.$object_it->getResetPasswordKey().'&redirect='.$_SERVER['ENTRY_URL'],
+                    'docs_url' => EnvironmentSettings::getHelpDocsUrl()
    				)
    		));
    		

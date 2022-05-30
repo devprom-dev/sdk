@@ -25,7 +25,7 @@ class IssueAutoActionTaskModelBuilder extends ObjectModelBuilder
 
     	foreach( $attributes as $attribute ) {
             $groups = $task->getAttributeGroups($attribute);
-            if ( !$task->IsAttributeStored($attribute) && $task->getAttributeOrigin($attribute) != ORIGIN_CUSTOM ) continue;
+            if ( !$task->IsAttributePersisted($attribute) ) continue;
             if ( !$task->IsAttributeVisible($attribute) ) continue;
             if ( in_array('computed', $groups) ) continue;
 

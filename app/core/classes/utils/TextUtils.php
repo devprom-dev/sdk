@@ -1,6 +1,7 @@
 <?php
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
+define('REGEX_FIELD_SUBSTITUTION', '/\{\$([^\$]+)\$\}/i' );
 
 class TextUtils
 {
@@ -73,7 +74,7 @@ class TextUtils
 
     public static function stripAnyTags( $text ) {
         $text = preg_replace(
-            '/(?:<|&lt;)\/?(a|p|div|br|h[\d]+|span|ul|ol|font|br|hr|table|tr|td|th|tbody|thead|button|iframe|html|body|link|script|style|i|b|del|strike)\s*[^>]*?(?:>|&gt;)/i',
+            '/(?:<|&lt;)\/?(a|p|div|br|h[\d]+|span|ul|ol|li|strong|font|br|hr|table|tr|td|th|tbody|colgroup|col|thead|button|iframe|html|body|link|script|style|i|b|del|strike|em|code|pre|\!\-\-)\s*[^>]*?(?:>|&gt;)/i',
                 '', self::removeHtmlEntities($text));
         $text = preg_replace('/<img\s+[^>]+>/i', '', $text);
         return trim($text, ' '.PHP_EOL);
@@ -130,20 +131,18 @@ class TextUtils
     {
         return preg_replace(
             array (
-                '/(<[^>]+)\s+style\s*=/i',
-                '/(<[^>]+)\s+class\s*=/i',
+                '#(<[a-z ]+)(style=("|\')(.*?)("|\'))([^>]*>)#',
+                '#(<[a-z ]+)(class=("|\')(.*?)("|\'))([^>]*>)#',
                 '/(<table[^>]+)/i',
                 '/(<\/?span[^>]*>)/i',
-                '/(&nbsp;|\xC2\xA0)/i',
-                '/preservedhtmlattribute/i',
+                '/(&nbsp;|\xC2\xA0)/i'
             ),
             array (
-                '$1 was-style=',
-                '$1 was-class=',
+                '\1 was-stl="\4" \6',
+                '\1 was-cls="\4" \6',
                 '$1 border="1"',
                 '',
-                ' ',
-                'style'
+                ' '
             ), $content);
     }
 
@@ -337,8 +336,18 @@ class TextUtils
         try {
             $ids = self::getHashIdsInstance()->decode($text);
             if ( count($ids) > 0 ) return $ids;
+
+            $query = self::secureData($text, 'decrypt');
+            if ( stripos($query, 'select ') !== false ) {
+                return array_map(
+                    function( $row ) {
+                        return $row[0];
+                    },
+                    DAL::Instance()->QueryAllRows($query)
+                );
+            }
         }
-        catch( Exception $e ) {
+        catch( \Exception $e ) {
         }
 
         return array_unique(
@@ -412,6 +421,10 @@ class TextUtils
         return preg_match("/^[a-zA-Z][a-zA-Z0-9\_]+$/i", $text);
     }
 
+    public static function checkReferenceName( $text ) {
+        return preg_match("/^[a-zA-Z0-9\_\s]+$/i", $text);
+    }
+
     public static function getRandomPassword() {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         $password = substr(str_shuffle($chars), 0, 12);
@@ -437,7 +450,7 @@ class TextUtils
         return join(' ', array_diff(
             preg_split('/\s+/u', self::getAlphaNumericString(self::stripAnyTags(mb_strtolower($text)))),
             JsonWrapper::decode(
-                file_get_contents(SERVER_ROOT_PATH . 'lang/'.strtolower($languageCode).'/stopwords.json')
+                file_get_contents(SERVER_ROOT_PATH . 'lang/ru/stopwords.json')
             )
         ));
     }
@@ -477,8 +490,36 @@ class TextUtils
     public static function getPlantUMLUrl( $uml )
     {
         $uml = "@startuml".PHP_EOL."scale max 2048 width".PHP_EOL. $uml . "@enduml";
-        return
-            trim(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : 'http://plantuml.com', "/ ").
-            '/plantuml/img/'.encode64(gzdeflate($uml, 9));
+        return trim(EnvironmentSettings::getPlantUMLServer(), "/ ").
+                    '/plantuml/img/'.encode64(gzdeflate($uml, 9));
+    }
+
+    public static function isNullValue( $value ) {
+        return !is_array($value) && (trim($value) == '' || strtolower(trim($value)) == "null");
+    }
+
+    public static function isValueDefined( $value ) {
+        return trim($value) != '';
+    }
+
+    public static function secureData( $string, $method = 'encrypt' )
+    {
+        $encrypt_method = "AES-256-CBC";
+        $secret_key = md5(\EnvironmentSettings::getServerSalt());
+
+        // hash
+        $key = hash('sha256', $secret_key);
+
+        // iv - encrypt method AES-256-CBC expects 16 bytes - else you will get a warning
+        $iv = substr(hash('sha256', INSTALLATION_UID), 0, 16);
+
+        if ( $method == 'encrypt' ) {
+            $output = openssl_encrypt($string, $encrypt_method, $key, 0, $iv);
+            $output = base64_encode($output);
+        } else {
+            $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
+        }
+
+        return $output;
     }
 }

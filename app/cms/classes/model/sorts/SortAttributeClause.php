@@ -69,11 +69,11 @@ class SortAttributeClause extends SortClauseBase
  	function getColumn()
  	{
  	    $object = $this->getObject();
- 	    
  	    $attr = $this->getAttributeName();
- 	    
+
  	    return $this->getAlias() != '' && $object->IsAttributeStored($attr) && $object->getAttributeOrigin($attr) == ORIGIN_METADATA 
- 			? $this->getAlias().'.'.$attr : "`".$attr."`";
+ 			? $this->getAlias().'.'.$attr
+            : "`".$attr."`";
  	}
  	
  	function clause()
@@ -95,7 +95,8 @@ class SortAttributeClause extends SortClauseBase
 
 			case 'State':
 			    if ( $object instanceof MetaobjectStatable ) {
-                    return " IFNULL((SELECT s.OrderNum FROM pm_State s WHERE s.ReferenceName = ".$sql_attr." AND s.VPD = t.VPD AND s.ObjectClass = '".strtolower(get_class($object))."'), ".$this->valueInsteadOfNull.") ".$sort_type." ";
+                    return " IFNULL((SELECT CONCAT(LPAD(s.OrderNum,10,'0'),s.ReferenceName
+                    ) FROM pm_State s WHERE s.ReferenceName = ".$sql_attr." AND s.VPD = t.VPD AND s.ObjectClass = '".strtolower(get_class($object))."'), ".$this->valueInsteadOfNull.") ".$sort_type." ";
                 }
 
 			default:
@@ -108,6 +109,10 @@ class SortAttributeClause extends SortClauseBase
 						$alt_sort_column = $ref->IsAttributeStored('Caption') ? 'Caption' : $ref->getIdAttribute();
 						return " IFNULL((SELECT IFNULL(s.OrderNum, s.".$alt_sort_column.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr."), ".$this->valueInsteadOfNull.") ".$sort_type." ";
 					}
+
+					if ( $ref instanceof MetaobjectCacheable ) {
+					    return " IFNULL(".$sql_attr.", '".$this->textInsteadOfNull."') " . $sort_type;
+                    }
 
 					if ( $ref instanceof User ) {
                         $userId = getSession()->getUserIt()->getId();

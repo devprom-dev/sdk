@@ -15,8 +15,8 @@ function uploadFiles(element)
 
     flow.assignBrowse(element.get());
 
-    if ( $('.file-drop-target').length > 0 ) {
-        flow.assignDrop($('.file-drop-target').get());
+    if ( element.parents('.file-drop-target').length > 0 ) {
+        flow.assignDrop(element.parents('.file-drop-target').get());
     }
 
     flow.on("filesSubmitted", function(items, event) {

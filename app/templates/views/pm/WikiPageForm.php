@@ -183,7 +183,7 @@ $buttons = array();
                     <? } else { ?>
 					<span class="document-structure-action">
 						<i class="<?=$action['icon']?>"></i>
-						<a class="" id="<?=$action['uid']?>" onclick="<?=$action['url']?>"><?=$action['name']?></a>
+						<a class="" id="<?=$action['uid']?>" onclick="<?=$action['url']?>" tabindex="-1"><?=$action['name']?></a>
 					</span>
                     <? } ?>
 				<? } ?>

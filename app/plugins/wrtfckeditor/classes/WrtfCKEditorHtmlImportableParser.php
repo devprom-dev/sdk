@@ -26,7 +26,7 @@ class WrtfCKEditorHtmlImportableParser extends WrtfCKEditorHtmlParser
     }
 
     function parseMathTex( $match ) {
-        $url = defined('MATH_TEX_IMG') ? MATH_TEX_IMG : 'http://latex.codecogs.com/gif.latex?';
+        $url = EnvironmentSettings::getMathJaxServer();
         $mathFormula = trim(html_entity_decode($match[1], ENT_QUOTES | ENT_HTML401, APP_ENCODING ));
         $mathText =  join('',
             array_map(function($line) {

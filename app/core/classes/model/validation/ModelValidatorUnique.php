@@ -9,7 +9,7 @@ class ModelValidatorUnique extends ModelValidatorInstance
 		$this->unique_fields = $fields;
 	}
 	
-	public function validate( Metaobject $object, array & $parms )
+	public function validate( Metaobject $object, array $parms )
 	{
 		$predicates = array();
 		$titles = array();
@@ -21,14 +21,19 @@ class ModelValidatorUnique extends ModelValidatorInstance
 		}
 		if ( count($titles) < 1 ) return "";
 
-		if ( $object->getVpdValue() != '' && ! $object instanceof Project ) {
+		if ( count($object->getVpds()) > 0 && ! $object instanceof Project ) {
             $predicates[] = new FilterBaseVpdPredicate();
         }
 
 		$dup_it = $object->getRegistry()->Query($predicates);
 
 		if ( $dup_it->count() > 0 && $parms[$object->getIdAttribute()] != $dup_it->getId() ) {
-			return str_replace('%1', join(',', $titles), text(1176));
+		    if ( count($titles) > 1 ) {
+                return sprintf(
+                    text(3116), join(', ', $titles));
+            } else {
+                return str_replace('%1', array_pop($titles), text(1176));
+            }
 		}
 		return "";
 	}

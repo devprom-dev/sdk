@@ -9,24 +9,20 @@ class PMCustomReport extends Metaobject
  	function __construct( $registry = null ) 
  	{
  		parent::__construct('pm_CustomReport', $registry);
- 		
 		$this->setAttributeVisible( 'IsHandAccess', false );
-		
 		$this->setAttributeRequired( 'Url', false );
+        $this->addAttributeGroup('Caption', 'alternative-key');
  	}
  	
- 	function createIterator() 
- 	{
+ 	function createIterator()  {
  		return new PMCustomReportIterator( $this );
  	}
  	
- 	function getMyRegistry()
- 	{
+ 	function getMyRegistry() {
  		return new CustomReportMyRegistry($this);
  	}
  	
-	function getPage() 
-	{
+	function getPage() {
 		return getSession()->getApplicationUrl($this).'project/reports?';
 	}
 
@@ -53,7 +49,7 @@ class PMCustomReport extends Metaobject
 	{
 		switch ( $name ) {
 			case 'Author':
-				return '-1';
+				return getSession()->getUserIt()->getId();
 			default:
 				return parent::getDefaultAttributeValue($name);
 		}

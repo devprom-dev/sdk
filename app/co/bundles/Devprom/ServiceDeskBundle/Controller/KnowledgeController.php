@@ -43,7 +43,7 @@ class KnowledgeController extends Controller
     }
 
     /**
-     * @Route("/docs/{article}", name="docs_article")
+     * @Route("/docs/{article}", name="docs_article", requirements={"article"=".+"})
      * @Method("GET")
      * @Template("DevpromServiceDeskBundle:Knowledge:show.html.twig")
      */

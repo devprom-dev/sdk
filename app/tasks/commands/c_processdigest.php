@@ -13,7 +13,7 @@ class ProcessDigest extends TaskCommand
 		$job = getFactory()->getObject('co_ScheduledJob');
 
         $auth_factory = new AuthenticationFactory();
-        $auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
+        $auth_factory->setUser( getFactory()->getObject('cms_User')->getSuperUserIt() );
 
 		$job_it = $job->getExact($_REQUEST['job']);
 		$parameters = $job_it->getParameters();
@@ -210,8 +210,6 @@ class ProcessDigest extends TaskCommand
 					
 			$logger->info('Recipient time zone: '.$tz);					
 
-			EnvironmentSettings::setClientTimeZone($tz);
-	   		
 			$till_date_client = SystemDateTime::convertToClientTime($till_date);
 			$from_date_client = SystemDateTime::convertToClientTime($from_date);
 			

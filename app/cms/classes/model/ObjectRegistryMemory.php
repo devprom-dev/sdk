@@ -2,7 +2,7 @@
 
 class ObjectRegistryMemory extends ObjectRegistryArray
 {
-    function getAll()
+    function Query($parms = array())
     {
         global $memoryDb;
         $data = $memoryDb[get_class($this->getObject())];

@@ -83,6 +83,7 @@ public class RequestPlanningPage extends SDLCPojectPageBase {
 	}
 
     public void addContent(String newText) {
+		clickTab("description");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'cke_')]")));
     	CKEditor editor = (new CKEditor(driver)); 
     	editor.changeText(editor.getText() + "\n" + newText);

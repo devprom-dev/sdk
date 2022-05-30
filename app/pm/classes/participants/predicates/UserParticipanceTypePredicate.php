@@ -4,33 +4,32 @@ class UserParticipanceTypePredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 	    global $model_factory;
+ 	    $participant = getFactory()->getObject('Participant');
+ 	    $filter = \TextUtils::parseItems($filter);
+ 	    $sqls = array();
  	    
- 	    $vpds = array();
- 	    
- 	    $participant = $model_factory->getObject('Participant');
-
- 	    $filter = preg_split('/,/', $filter);
- 	    
- 	 	if ( in_array('guest', $filter) )
- 	    {
-    		return " AND NOT EXISTS (SELECT 1 FROM pm_Participant r WHERE r.SystemUser = t.cms_UserId ) ";
+ 	 	if ( in_array('guest', $filter) ) {
+            $sqls[] = " NOT EXISTS (SELECT 1 FROM pm_Participant r 
+                                     WHERE r.SystemUser = t.cms_UserId 
+                                       AND r.VPD IN ('".join("','", $participant->getVpds())."') ) ";
  	    }
- 	    
- 	    if ( in_array('participant', $filter) )
- 	    {
+
+        $vpds = array();
+ 	    if ( in_array('participant', $filter) ) {
  	        $vpds = array_merge($vpds, $participant->getVpds());
  	    }
 
- 	    if ( in_array('linked', $filter) )
- 	    {
+ 	    if ( in_array('linked', $filter) ) {
      	    $vpds = array_merge( $vpds, getSession()->getLinkedIt()->fieldToArray('VPD') );
  	    } 
- 	    
- 	    if ( count($vpds) < 1 ) return " AND 1 = 2 ";
- 	    
-		return " AND ( t.cms_UserId = 0 OR EXISTS (SELECT 1 FROM pm_Participant r " .
-			   "			  WHERE r.SystemUser = t.cms_UserId" .
-			   "			    AND r.VPD IN ('".join("','", $vpds)."') ) ) ";
+
+ 	    if ( count($vpds) > 0 ) {
+ 	        $sqls[] = " ( t.cms_UserId = 0 
+ 	                      OR EXISTS (SELECT 1 FROM pm_Participant r 
+ 	                                  WHERE r.SystemUser = t.cms_UserId
+ 	                                    AND r.VPD IN ('".join("','", $vpds)."') ) ) ";
+        }
+
+		return count($sqls) > 0 ? " AND ".join( ' OR ', $sqls) : " AND 1 = 2 ";
  	}
 }

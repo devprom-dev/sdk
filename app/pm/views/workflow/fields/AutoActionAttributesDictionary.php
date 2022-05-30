@@ -15,17 +15,22 @@ class AutoActionAttributesDictionary extends FieldDictionary
 	    $subject = getFactory()->getObject($this->autoaction->getSubjectClassName());
     	$options = array();
     	
-    	foreach( $this->autoaction->getConditionAttributes() as $attribute )
-    	{
+    	foreach( $this->autoaction->getConditionAttributes() as $attribute ) {
     		if ( $subject->getAttributeType($attribute) == '' ) continue;
+    		$title = translate($subject->getAttributeUserName($attribute));
+    		if ( in_array('astronomic-time', $subject->getAttributeGroups($attribute)) ) {
+                $title .= ', ' . translate('ч.');
+            }
     		$options[] = array (
-    				'value' => $attribute,
-    				'caption' => translate($subject->getAttributeUserName($attribute))
+                'value' => $attribute,
+                'caption' => $title
     		);
     	}
+
 		usort($options, function($left, $right) {
 			return strcmp(translate($left['caption']), translate($right['caption']));
 		});
+
     	return $options;
 	}
 }

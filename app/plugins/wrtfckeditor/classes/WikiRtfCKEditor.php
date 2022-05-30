@@ -99,7 +99,6 @@ class WikiRtfCKEditor extends WikiEditorBase
             'project' => $projectCodeName,
             'annotation' => $object_it instanceof WikiPageIterator ? $object_it->getAnnotationData() : '',
             'attributeName' => $field,
-            'tabindex' => $this->getTabIndex(),
             'version' => $version,
             'userHeight' => $height,
             'appVersion' => $_SERVER['APP_VERSION']

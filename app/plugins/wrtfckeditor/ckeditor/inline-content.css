@@ -8,7 +8,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	padding: 0 0 10px 0;
 	width: 100%;
 	outline: none;
-	overflow: hidden;
+	overflow-y: hidden;
 	word-break: break-word;
 }
 
@@ -44,6 +44,10 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 .editor-area {
 	word-break: break-word;
+	padding-right: 3px;
+}
+.editor-area .wysiwyg {
+	padding-right: 10px;
 }
 .wysiwyg-hover {
 }

@@ -2,7 +2,7 @@
 
 class DateYearWeekRegistry extends ObjectRegistrySQL
 {
-	public function getQueryClause()
+	public function getQueryClause(array $parms)
 	{
 		return " ( SELECT DISTINCT
 		                  YEARWEEK(i.StartDate) entityId,

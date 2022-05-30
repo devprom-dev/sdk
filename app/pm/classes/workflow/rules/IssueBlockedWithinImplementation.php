@@ -16,7 +16,7 @@ class IssueBlockedWithinImplementation extends BusinessRulePredicate
 		foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $link_info)
 		{
 			list($type_name, $link_id, $type_ref, $link_state, $direction) = preg_split('/:/',$link_info);
-			if ( $type_ref == 'implemented' && $direction == 2 && $link_state != 'Y') return false;
+			if ( $type_ref == 'implemented' && $link_state != 'Y' ) return false;
 		}
  		return true;
  	}

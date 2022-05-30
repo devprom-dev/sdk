@@ -74,9 +74,14 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
  	    switch ( $attr )
  	    {
  	        case 'Release':
- 	            $object = getFactory()->getObject('IterationActual');
-                $object->addFilter( new FilterAttributePredicate('Version', $this->releaseId) );
-				return new FieldDictionary( $object );
+				return new FieldDictionary(
+                    getFactory()->getObject('IterationActual')->getRegistry()->Query(
+                        array(
+                            new FilterAttributePredicate('Version', $this->releaseId),
+                            new FilterVpdPredicate()
+                        )
+                    )
+                );
 
             case 'Planned':
                 return new FieldHours();
@@ -166,32 +171,6 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
                 echo '<a class="dashed embedded-add-button tasks-board" target="_blank" href="'.$boardIt->getUrl('issue='.$this->getObjectIt()->getId()).'" tabindex="-1">';
                 echo mb_strtolower($boardIt->getDisplayName());
                 echo '</a>';
-            }
-
-            if ( getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed() ) {
-                $reportIt = getFactory()->getObject('PMReport')->getExact('tasksefforts');
-                if ( $reportIt->getId() != '' ) {
-                    $taskIt = $this->getIteratorRef();
-                    $planned = 0;
-                    $resolved = 0;
-                    $actual = 0;
-                    $taskIt->moveFirst();
-                    while( !$taskIt->end() ) {
-                        $planned += $taskIt->get('Planned');
-                        if ( $taskIt->get('FinishDate') != '' ) {
-                            $resolved++;
-                        }
-                        $actual += $taskIt->get('Fact');
-                        $taskIt->moveNext();
-                    }
-                    $progress = $planned == 0 ? 0 : (round($resolved / $taskIt->count() * 100, 0));
-                    $strategy = new EstimationHoursStrategy();
-                    $ids = $this->getIteratorRef()->idsToArray();
-                    echo '<a class="dashed embedded-add-button tasksefforts" target="_blank" href="'.$reportIt->getUrl('ids=' . \TextUtils::buildIds($ids)).'" tabindex="-1">';
-                        echo $strategy->getDimensionText(round($actual, 0)) . ' / ' .
-                            $strategy->getDimensionText(round($planned, 0)) . ' (' . $progress . '%)';
-                    echo '</a>';
-                }
             }
         }
     }

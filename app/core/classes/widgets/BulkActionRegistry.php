@@ -5,8 +5,9 @@ class BulkActionRegistry extends ObjectRegistrySQL
 	function addModifyAction( $title, $attribute )
 	{
 		$this->actions['modify'][] = array (
-				'name' => $title,
-				'url' => 'Attribute'.$attribute
+            'name' => $title,
+            'url' => 'Attribute'.$attribute,
+            'state' => $attribute
 		);
 		usort($this->actions['modify'], function( $left, $right ) {
 			return $left['name'] > $right['name'];
@@ -49,8 +50,7 @@ class BulkActionRegistry extends ObjectRegistrySQL
 	
 	function createSQLIterator( $sql )
  	{
- 		foreach( getSession()->getBuilders('BulkActionBuilder') as $builder )
- 		{
+ 		foreach( getSession()->getBuilders('BulkActionBuilder') as $builder ) {
  			$builder->build($this);	
  		}
  		

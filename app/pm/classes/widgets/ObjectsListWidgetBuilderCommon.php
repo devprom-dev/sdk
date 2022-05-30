@@ -7,6 +7,8 @@ class ObjectsListWidgetBuilderCommon extends ObjectsListWidgetBuilder
     {
     	$registry->addReport('Request', 'issues-trace', text(808));
     	$registry->addReport('Task', 'tasks-trace', translate('Задачи'));
+        $registry->addModule('ActivityTask', 'worklog');
+        $registry->addModule('ActivityRequest', 'worklog');
         $registry->addModule('Feature', 'features-trace');
     }
 }

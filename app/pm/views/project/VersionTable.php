@@ -1,11 +1,19 @@
 <?php
 include "VersionList.php";
 include "VersionTree.php";
+include "PlanChart.php";
 
 class VersionTable extends PMPageTable
 {
-	function getList() {
-		return new VersionTree( $this->getObject() );
+	function getList( $mode = '' )
+    {
+	    switch( $this->getReportBase() )
+        {
+            case 'projectplan':
+                return new PlanChart();
+            default:
+                return new VersionTree( $this->getObject() );
+        }
 	}
 
 	function getNewActions()
@@ -64,8 +72,7 @@ class VersionTable extends PMPageTable
 	
 	function getSortDefault( $sort_parm = 'sort' )
 	{
-		if ( $sort_parm == 'sort' )
-		{
+		if ( $sort_parm == 'sort' ) {
 			return 'ActualStartDate';
 		}
 		
@@ -74,13 +81,20 @@ class VersionTable extends PMPageTable
 	
 	function getFilters()
 	{
+	    $filters = array (
+            $this->buildStartFilter(),
+            $this->buildFinishFilter(),
+            $this->getCycleStateFilter()
+        );
+
+	    if ( $this->getReportBase() == 'projectplan' ) {
+            $filters[] = $this->buildForecastFilter();
+            $filters[] = $this->buildStageEntityFilter();
+        }
+
 		return array_merge(
 		    parent::getFilters(),
-            array (
-                $this->buildStartFilter(),
-			    $this->buildFinishFilter(),
-			    $this->getCycleStateFilter()
-		    )
+            $filters
         );
 	}
 	
@@ -89,8 +103,8 @@ class VersionTable extends PMPageTable
 	    return array_merge(
 	        parent::getFilterPredicates( $values ),
             array(
-                new FilterDateAfterPredicate('EstimatedFinishDate', $values['start']),
-                new FilterDateBeforePredicate('EstimatedFinishDate', $values['finish']),
+                new FilterDateAfterPredicate('FinishDate', $values['start']),
+                new FilterDateBeforePredicate('FinishDate', $values['finish']),
                 new StageTimelinePredicate($values['state']),
                 $_REQUEST['roots'] == '0'
                     ? new FilterAttributeNullPredicate('ParentStage')
@@ -111,6 +125,25 @@ class VersionTable extends PMPageTable
 	    $filter->setIdFieldName( 'ReferenceName' );
 	    return $filter;
 	}
+
+    function buildForecastFilter()
+    {
+        $filter = new FilterObjectMethod( new ForecastMode(), '', 'forecast' );
+        $filter->setHasNone(false);
+        $filter->setHasAll(false);
+        $filter->setDefaultValue('visible');
+        $filter->setType( 'singlevalue' );
+        $filter->setIdFieldName( 'ReferenceName' );
+        return $filter;
+    }
+
+    function buildStageEntityFilter()
+    {
+        $filter = new FilterObjectMethod( new StageEntity(), '', 'stageentity' );
+        $filter->setHasNone(false);
+        $filter->setIdFieldName( 'ReferenceName' );
+        return $filter;
+    }
 
     function buildStartFilter() {
         return new FilterDateWebMethod(translate('Начало'), 'start');
@@ -140,23 +173,19 @@ class VersionTable extends PMPageTable
 
     protected function getFamilyModules( $module )
     {
-        switch( $module ) {
-            case 'project-plan-hierarchy':
-                return array (
-                    'delivery',
-                    'releases',
-                    'iterations',
-                    'milestones',
-                    'tasksplanningboard',
-                    'iterationplanningboard',
-                    'releaseplanningboard',
-                    'assignedtasks',
-                    'projects',
-                    'process/metrics'
-                );
-            default:
-                return parent::getFamilyModules($module);
-        }
+        return array (
+            'delivery',
+            'releases',
+            'iterations',
+            'milestones',
+            'tasksplanningboard',
+            'iterationplanningboard',
+            'releaseplanningboard',
+            'projects',
+            'process/metrics',
+            'project-plan-hierarchy',
+            'productplan'
+        );
     }
 
     protected function getChartModules( $module )
@@ -165,8 +194,7 @@ class VersionTable extends PMPageTable
             'resman/resourceload',
             'projectburnup',
             'iterationburndown',
-            'scrum/velocitychart',
-            'workitemchart'
+            'scrum/velocitychart'
         );
     }
 
@@ -189,5 +217,23 @@ class VersionTable extends PMPageTable
     function getImportActions()
     {
         return array();
+    }
+
+    function drawScripts()
+    {
+        parent::drawScripts();
+        if ( $this->getReportBase() == 'projectplan' ) {
+            ?>
+            <script type="text/javascript">
+                devpromOpts.updateUI = function() {window.location.reload();};
+            </script>
+            <?php
+        }
+    }
+
+    function getDetailsParms() {
+        return array (
+            'active' => 'form'
+        );
     }
 }

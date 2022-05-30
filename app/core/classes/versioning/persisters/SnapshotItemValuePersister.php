@@ -27,7 +27,7 @@ class SnapshotItemValuePersister extends ObjectSQLPersister
     			"     AND ivl.ReferenceName = '".$attribute."' ".
     			"     AND itm.Snapshot = ".$this->snapshot_it->getId().
                 "     AND itm.ObjectId = ".$this->getPK($alias).
-                "     AND itm.ObjectClass = '".$versioned_it->getId()."') ".$attribute." ";
+                "     AND itm.ObjectClass = '".$versioned_it->getId()."') `".$attribute."` ";
         }
 
         return $columns;

@@ -107,6 +107,14 @@ i.controls i{
     margin-top: 20px;
 }
 
+#menu-configurator .menu-colum {
+    clear: both;
+    overflow: auto;
+    position: relative;
+    max-height: calc(100vh - 150px);
+}
+
+
 #menu-configurator .ui-draggable-dragging, #menu-configurator .ui-sortable-helper{
     border: 1px dotted #999 !important;
 
@@ -129,6 +137,10 @@ i.controls i{
 
 div.pages-column{
     border: 1px solid #FFF;
+    clear: both;
+    overflow: auto;
+    position: relative;
+    max-height: calc(100vh - 150px);
 }
 
 div.pages-column > div.muted{

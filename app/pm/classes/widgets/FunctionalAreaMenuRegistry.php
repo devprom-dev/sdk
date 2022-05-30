@@ -4,27 +4,27 @@ class FunctionalAreaMenuRegistry extends ObjectRegistrySQL
 {
     protected $areas = array();
 	
-	function getAreaMenus( $uid )
- 	{
+	function getAreaMenus( $uid ) {
  	    if ( !array_key_exists($uid, $this->areas) ) return array();
- 	     
  		return $this->areas[$uid]['items'];
  	}
 
-  	function setAreaMenus( $uid, $menus )
- 	{
+  	function setAreaMenus( $uid, $menus ) {
  	    $this->areas[$uid]['items'] = $menus;
  	}
  	
  	function createSQLIterator( $sql )
  	{
-        foreach( getSession()->getBuilders('FunctionalAreaMenuBuilder') as $builder )
-        {
+ 	    $report = getFactory()->getObject('PMReport');
+ 	    $module = getFactory()->getObject('Module');
+
+        foreach( getSession()->getBuilders('FunctionalAreaMenuBuilder') as $builder ) {
+            $builder->setReport($report);
+            $builder->setModule($module);
             $builder->build( $this ); 
         }
  		
  	 	$data = array();
- 		
  		foreach( $this->areas as $key => $area )
  		{
  			foreach( $area['items'] as $group_uid => $group )

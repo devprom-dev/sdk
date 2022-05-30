@@ -16,9 +16,9 @@ abstract class StateBusinessBaseRegistry extends ObjectRegistrySQL
  		array_push( $this->rules, $rule );
  	}
 
- 	function createSQLIterator( $sql )
+ 	function Query( $parms = array() )
  	{
- 		$filters = $this->getFilters();
+ 		$filters = array_merge($this->getFilters(), $this->extractPredicates($parms));
  		
  	    foreach( getSession()->getBuilders($this->getBuilderInterfaceName()) as $builder )
  	    {

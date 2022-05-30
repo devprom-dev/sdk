@@ -44,7 +44,7 @@ class SearchTextTemplateForm extends PMPageForm
 
     function process()
     {
-        if ($this->getAction() != 'add') return '[]';
+        if ($this->getAction() != 'add') return false;
 
         $this->extendModel();
 
@@ -57,7 +57,7 @@ class SearchTextTemplateForm extends PMPageForm
                         'text' => $value_it->getHtmlDecoded('Content')
                     )
                 );
-                exit();
+                return true;
             }
         }
         echo json_encode(
@@ -65,7 +65,7 @@ class SearchTextTemplateForm extends PMPageForm
                 'text' => ''
             )
         );
-        exit();
+        return true;
     }
 
     function getRenderParms()

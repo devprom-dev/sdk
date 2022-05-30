@@ -3,7 +3,7 @@ namespace Devprom\ProjectBundle\Service\Project;
 
 include_once SERVER_ROOT_PATH . "pm/classes/project/MetricIssueBuilder.php";
 include_once SERVER_ROOT_PATH . "pm/classes/product/persisters/FeatureMetricsPersister.php";
-include_once SERVER_ROOT_PATH . "pm/classes/issues/persisters/RequestMetricsPersister.php";
+include_once SERVER_ROOT_PATH . "pm/classes/participants/predicates/UserHasIncompleteWorkPredicate.php";
 
 class StoreMetricsService
 {
@@ -11,7 +11,7 @@ class StoreMetricsService
  	{
  		$this->storeProjectMetrics(
  		    $project_it,
-            getFactory()->getObject('Release')->getRegistry()->Query(
+            getFactory()->getObject('Release')->getRegistryBase()->Query(
                 array (
                     new \FilterAttributePredicate('Project', $project_it->getId()),
                     $force
@@ -19,7 +19,7 @@ class StoreMetricsService
                         : new \ReleaseTimelinePredicate('not-passed')
                 )
             ),
-            getFactory()->getObject('Iteration')->getRegistry()->Query(
+            getFactory()->getObject('Iteration')->getRegistryBase()->Query(
                 array (
                     new \FilterAttributePredicate('Project', $project_it->getId()),
                     new \FilterAttributeNullPredicate('Version'),
@@ -30,35 +30,25 @@ class StoreMetricsService
             )
         );
 
-		$registry = getFactory()->getObject('Request')->getRegistry();
- 		$this->storeIssueMetrics(
-			$registry,
-			array (
-				new \FilterVpdPredicate($project_it->get('VPD')),
-				new \StatePredicate('terminal'),
-				new \FilterAttributePredicate('DeliveryDate', 'none'),
-				new \RequestMetricsPersister()
-			)
-		);
-		$this->storeIssueMetrics(
-			$registry,
-			array (
-				new \FilterVpdPredicate($project_it->get('VPD')),
-				new \StatePredicate('notresolved'),
-				new \RequestMetricsPersister()
-			)
-		);
- 		$this->storeIssueMetrics(
-			$registry,
-			array (
-				new \FilterVpdPredicate($project_it->get('VPD')),
-				new \StatePredicate('notresolved'),
-				new \RequestDependencyFilter('duplicates,implemented,blocked'),
-				new \RequestMetricsPersister()
-			)
-		);
+		$registry = getFactory()->getObject('Request')->getRegistryBase();
+        $customBuilders = getSession()->getBuilders('MetricIssueBuilder');
+        foreach( $customBuilders as $builder ) {
+            $builder->buildAll($registry, array (
+                new \StatePredicate('notresolved'),
+                new \FilterVpdPredicate($project_it->get('VPD'))
+            ));
+        }
 
-		$registry = getFactory()->getObject('Feature')->getRegistry();
+        $registry = getFactory()->getObject('Task')->getRegistryBase();
+        $customBuilders = getSession()->getBuilders('MetricTaskBuilder');
+        foreach( $customBuilders as $builder ) {
+            $builder->buildAll($registry, array (
+                new \StatePredicate('notresolved'),
+                new \FilterVpdPredicate()
+            ));
+        }
+
+		$registry = getFactory()->getObject('Feature')->getRegistryBase();
 		$this->storeFeatureMetrics(
 			$registry,
 			array (
@@ -86,52 +76,39 @@ class StoreMetricsService
             }
         }
 
-        $methodology_it = $project_it->getMethodologyIt();
-        $finishDate = '';
+        $stage = getFactory()->getObject('Stage');
+        $max = new \AggregateBase( 'Project', 'EstimatedFinishDate', 'MAX' );
+        $stage->addAggregate($max);
+        $min = new \AggregateBase( 'Project', 'EstimatedStartDate', 'MIN' );
+        $stage->addAggregate($min);
+        $finishDate = $stage->getAggregated()->get($max->getAggregateAlias());
+        $startDate = $stage->getAggregated()->get($min->getAggregateAlias());
 
-        if ( $methodology_it->HasReleases() || $methodology_it->HasPlanning() ) {
-            $velocity = $project_it->getVelocityDevider();
-        }
-        else {
-            $issue = getFactory()->getObject('Request');
-
-            $registry = $issue->getRegistry();
-            $registry->setLimit(10);
-            $solvedIt = $registry->Query(
-                array (
-                    new \FilterVpdPredicate($project_it->get('VPD')),
-                    new \StatePredicate('terminal')
-                )
-            );
-
-            $aggregateFunc = new \AggregateBase( 'VPD', 'LifecycleDuration', 'AVG' );
-            $issue->addFilter( new \FilterInPredicate($solvedIt->idsToArray()) );
-            $issue->addAggregate($aggregateFunc);
-            $velocity = $issue->getAggregated('t')->get($aggregateFunc->getAggregateAlias());
-
-            $leftRequests = $issue->getRegistry()->Count(
-                array (
-                    new \FilterVpdPredicate($project_it->get('VPD')),
-                    new \StatePredicate('notterminal')
-                )
-            );
-            $leftDays = $leftRequests * $velocity;
-            $finishDate = strftime('%Y-%m-%d', strtotime(round($leftDays,0).' days', strtotime(date('Y-m-d'))));
+        $issue = getFactory()->getObject('Request');
+        $max = new \AggregateBase( 'VPD', 'EstimatedFinishDate', 'MAX' );
+        $issue->addAggregate($max);
+        $min = new \AggregateBase( 'VPD', 'EstimatedFinishDate', 'MIN' );
+        $issue->addAggregate($min);
+        $finishDate = max($finishDate, $issue->getAggregated()->get($max->getAggregateAlias()));
+        if ( $issue->getAggregated()->get($min->getAggregateAlias()) != '' ) {
+            $startDate = min($startDate, $issue->getAggregated()->get($min->getAggregateAlias()));
         }
 
- 		if ( $finishDate == '' )
- 		{
-            $stage = getFactory()->getObject('Stage');
-            $stage_aggregate = new \AggregateBase( 'Project', 'EstimatedFinishDate', 'MAX' );
-            $stage->addAggregate($stage_aggregate);
-            $finishDate = $stage->getAggregated()->get($stage_aggregate->getAggregateAlias());
- 		}
+        $task = getFactory()->getObject('Task');
+        $max = new \AggregateBase( 'VPD', 'EstimatedFinishDate', 'MAX' );
+        $task->addAggregate($max);
+        $min = new \AggregateBase( 'VPD', 'EstimatedFinishDate', 'MIN' );
+        $task->addAggregate($min);
+        $finishDate = max($finishDate, $task->getAggregated()->get($max->getAggregateAlias()));
+        if ( $task->getAggregated()->get($min->getAggregateAlias()) != '' ) {
+            $startDate = min($startDate, $task->getAggregated()->get($min->getAggregateAlias()));
+        }
 
 		$project_it->object->setNotificationEnabled(false);
  		$project_it->object->modify_parms($project_it->getId(), 
             array (
-                'Rating' => $velocity,
-                'FinishDate' => $finishDate,
+                'EstimatedStartDate' => $startDate,
+                'EstimatedFinishDate' => $finishDate,
                 'RecordModified' => $project_it->get('RecordModified')
             )
 		);
@@ -168,47 +145,52 @@ class StoreMetricsService
  			$feature_it->moveNext();
  		}
  	}
- 	
- 	function storeIssueMetrics( $registry, $queryParms  )
- 	{
-		$issue_it = $registry->Query($queryParms);
 
-        getFactory()->resetCachedIterator($issue_it->object);
-        $issue_it->object->setNotificationEnabled(false);
+ 	public function forceIssueMetrics( $queryParms )
+    {
+        $registry = getFactory()->getObject('Request')->getRegistryBase();
 
-        $registry->getObject()->setNotificationEnabled(false);
         $customBuilders = getSession()->getBuilders('MetricIssueBuilder');
-
- 		while( !$issue_it->end() )
- 		{
-			$parms = array();
- 			if ( $issue_it->get('MetricDeliveryDate') != $issue_it->get('DeliveryDate') ) {
-                $parms['DeliveryDate'] = $issue_it->get('MetricDeliveryDate');
-                $parms['DeliveryDateMethod'] = $issue_it->get('MetricDeliveryDateMethod');
-            }
-
-            list($total, $tasks) = preg_split('/:/', $issue_it->get('MetricSpentHoursData'));
- 			if ( !is_array($tasks) ) $tasks = array();
-
-            if ( $issue_it->get('Fact') != $total ) {
-                $parms['Fact'] = $total;
-            }
-            $tasks = join(',',
-                array_filter(array_unique($tasks), function($value){
-                    return $value > 0;
-                })
+        foreach( $customBuilders as $builder ) {
+            $builder->buildAll($registry,
+                array_merge(
+                    $queryParms,
+                    array (
+                        new \FilterVpdPredicate()
+                    )
+                )
             );
-            if ( $issue_it->get('FactTasks') != $tasks ) {
-                $parms['FactTasks'] = $tasks;
-            }
-            foreach( $customBuilders as $builder ) {
-                $builder->build($issue_it, $parms);
-            }
-            if ( count($parms) > 0 ) {
-                $parms['RecordModified'] = $issue_it->get('RecordModified');
-				$registry->Store( $issue_it, $parms );
- 			}
- 			$issue_it->moveNext();
- 		}
- 	}
+        }
+    }
+
+    public function forceTaskMetrics( $queryParms )
+    {
+        $registry = getFactory()->getObject('Task')->getRegistryBase();
+
+        $customBuilders = getSession()->getBuilders('MetricTaskBuilder');
+        foreach( $customBuilders as $builder ) {
+            $builder->buildAll($registry, array_merge(
+                $queryParms,
+                array (
+                    new \FilterVpdPredicate()
+                )
+            ));
+        }
+    }
+
+    public function executeWorkers()
+    {
+        $this->forceUsersMetrics(array(
+            new \UserHasIncompleteWorkPredicate()
+        ));
+    }
+
+    public function forceUsersMetrics( $queryParms )
+    {
+        $registry = getFactory()->getObject('User')->getRegistryBase();
+        $customBuilders = getSession()->getBuilders('MetricUserBuilder');
+        foreach( $customBuilders as $builder ) {
+            $builder->buildAll($registry, $queryParms);
+        }
+    }
 }

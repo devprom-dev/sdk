@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelService;
 include 'AutoActionRegistry.php';
 include 'AutoActionIterator.php';
 
@@ -8,10 +9,15 @@ class AutoAction extends Metaobject
  	{
  		parent::__construct('pm_AutoAction', new AutoActionRegistry($this));
  		$this->setSortDefault(
- 				array (
- 						new SortOrderedClause()
- 				)
+            array (
+                new SortOrderedClause()
+            )
  		);
+ 		foreach( array('WebhookURL','WebhookPayload','WebhookHeaders','WebhookMethod') as $attribute ) {
+ 		    $this->addAttributeGroup($attribute, 'webhook');
+        }
+        $this->setAttributeDefault('WebhookMethod', 'POST');
+        $this->setAttributeDefault('WebhookHeaders', 'Content-Type: application/json');
  	}
 
  	function getAttributeObject($attribute)
@@ -108,14 +114,17 @@ class AutoAction extends Metaobject
  	protected function serializeActions( &$parms )
  	{
  		$data = array();
+
  		foreach( $this->getActionAttributes() as $attribute ) {
  		    if ( !array_key_exists($attribute, $parms) ) continue;
+            if ( is_array($parms[$attribute]) && count($parms[$attribute]) < 1 ) continue;
  		    if ( $attribute == 'State' ) {
                 $data[$attribute] = getFactory()->getObject('pm_State')
                     ->getExact($parms[$attribute])->get('ReferenceName');
             }
             else {
-                $data[$attribute] = $parms[$attribute];
+                $data[$attribute] = is_array($parms[$attribute])
+                    ? join(',',$parms[$attribute]) : $parms[$attribute];
             }
  			unset($parms[$attribute]);
  		}
@@ -148,5 +157,26 @@ class AutoAction extends Metaobject
 
     function getOrderStep() {
         return 1;
+    }
+
+    function processRecurringAction( $objectIt, $logger )
+    {
+        $object = new IssueAutoAction();
+        $actionIt = $object->createCachedIterator($objectIt->getRowset());
+
+        $queryParms = $actionIt->getConditionQueryParms();
+        if ( count($queryParms) < 1 ) return;
+
+        $registry = getFactory()->getObject($object->getSubjectClassName())->getRegistry();
+        $registry->setWrapSQLMode();
+
+        $queryParms[] = new FilterVpdPredicate();
+        $subjectIt = $registry->Query($queryParms);
+
+        $action = new BusinessAction();
+        while( !$subjectIt->end() ) {
+            $action->process($actionIt->copy(), $subjectIt->copy());
+            $subjectIt->moveNext();
+        }
     }
 }

@@ -4,7 +4,14 @@ use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 class ReportList extends PMPageList
 {
 	private $favorite_reports = array();
-	
+
+	function extendModel()
+    {
+        $this->getObject()->addAttribute('Author', 'REF_cms_UserId', translate('Автор'), true, false);
+        $this->getObject()->addAttribute('IsActive', 'CHAR', translate('Активен'), true, false);
+        parent::extendModel();
+    }
+
     function getIterator()
     {
         $it = $this->getObject()->getRegistry()->Query(
@@ -21,16 +28,6 @@ class ReportList extends PMPageList
         return null;
     }
     
-	function IsNeedToDisplay( $attr ) 
-	{
-		switch ( $attr ) {
-			case 'Caption':
-				return true;
-			default:
-				return false;
-		}
-	}
-
 	function IsNeedToDeleteRow( $object_it ) {
 		return is_numeric($object_it->getId()) && parent::IsNeedToDeleteRow( $object_it );
 	}
@@ -39,6 +36,7 @@ class ReportList extends PMPageList
 	{
 		$fields = parent::getColumnFields();
 		unset($fields[array_search('Url', $fields)]);
+        unset($fields[array_search('OrderNum', $fields)]);
 		return $fields;
 	}
 
@@ -46,11 +44,12 @@ class ReportList extends PMPageList
 		return array('Category');
 	}
 
-	function drawGroup( $group_field, $object_it ) 
+	function drawGroup( $group_field, $object_it )
 	{
 		switch ( $group_field ) {
 			case 'Category':
-			    $category_it = getFactory()->getObject('PMReportCategory')->getByRef('ReferenceName', $object_it->get('Category'));
+			    $category_it = getFactory()->getObject('PMReportCategory')
+                    ->getByRef('ReferenceName', $object_it->get('Category'));
 
 			    if ( $category_it->getId() ) {
 				    echo $category_it->getDisplayName();
@@ -59,6 +58,8 @@ class ReportList extends PMPageList
 				    echo translate('Отчеты');
 			    }
 				break;
+            default:
+                parent::drawGroup( $group_field, $object_it );
 		}
 	}
 	
@@ -80,6 +81,7 @@ class ReportList extends PMPageList
 		}
 
         $method = new ObjectCreateNewWebMethod(getFactory()->getObject('DashboardItem'));
+        $method->doSelectProject(false);
         $actions['add-dashboard'] = array(
             'name' => text(2926),
             'url' => $method->getJSCall(
@@ -122,19 +124,15 @@ class ReportList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Caption':
-
 			    echo '<div>';
-    				if ( $object_it->get('Type') == 'chart' )
-    				{
+    				if ( $object_it->get('Type') == 'chart' ) {
     					echo '<img style="height:18px;" src="/images/chart_line.png">';
     				}
-    				else
-    				{
+    				else {
     					echo '<img style="height:18px;" src="/images/table.png">';
     				}
     				
     				$url = $object_it->getUrl().($_REQUEST['pmreportcategory'] != '' ? '&pmreportcategory='.SanitizeUrl::parseUrl($_REQUEST['pmreportcategory']) : '');
-    				
     				echo '<a href="'.$url.'" style="font-weight:bold;padding-left:12px;">'.$object_it->getDisplayName().'</a>';
     			echo '</div>';
     			
@@ -146,4 +144,14 @@ class ReportList extends PMPageList
 				parent::drawCell( $object_it, $attr );
 		}
 	}
+
+    function getReferenceIt( $attribute )
+    {
+        switch( $attribute ) {
+            case 'Author':
+                return $this->getObject()->getAttributeObject($attribute)->getAll();
+            default:
+                return parent::getReferenceIt( $attribute );
+        }
+    }
 }

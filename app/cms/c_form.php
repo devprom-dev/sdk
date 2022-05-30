@@ -61,9 +61,8 @@ class Form
 		}
 	}
 
-	function getIterator( $objectId )
-	{
-        return $this->object->getExact($objectId);
+	function getIterator( $objectId ) {
+        return getFactory()->getEntities($this->getObject(), $objectId);
 	}
 
 	function getAction()
@@ -93,142 +92,130 @@ class Form
 	
 	function process()
 	{
-	    $object_it = $this->getObjectIt();
+	    try {
+            DAL::Instance()->Query("SET autocommit=0");
+            getFactory()->getEventsManager()->delayNotifications();
 
-		// first validate user input values
-		if ( $this->action == 'add' || $this->action == 'modify' )
-		{
-			$validation_result = $this->validateInputValues( 
-			    is_object($object_it) ? $object_it->getId() : '', $this->action );
+            $object_it = $this->getObjectIt();
 
-			if ( $validation_result != '' ) 
-			{
-				$this->setRequiredAttributesWarning();		
-				$this->warning_message = $validation_result;
-				
-				$this->edit(is_object($object_it) ? $object_it->getId() : '');
+            // first validate user input values
+            if ( $this->action == 'add' || $this->action == 'modify' )
+            {
+                $validation_result = $this->validateInputValues(
+                    is_object($object_it) ? $object_it->getId() : '', $this->action );
 
-				// get url from which the form had been called
-				$this->redirect_url = $this->getRedirectUrl();
+                if ( $validation_result != '' ) {
+                    $this->setRequiredAttributesWarning();
+                    $this->warning_message = $validation_result;
+                    $this->edit(is_object($object_it) ? $object_it->getId() : '');
 
-				$this->action = 'show';
-				
-				return;
-			}
-		}
+                    // get url from which the form had been called
+                    $this->redirect_url = $this->getRedirectUrl();
+                    $this->action = 'show';
+                    return false;
+                }
+            }
 
-	    if ( $this->action == 'add' )
-	    {
-			// get url from which the form had been called
-			$this->redirect_url = $this->getRedirectUrl();
-			if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return;
+            if ( $this->action == 'add' )
+            {
+                // get url from which the form had been called
+                $this->redirect_url = $this->getRedirectUrl();
+                if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return;
 
-			try {
-		    	$this->persist();
-				$this->redirectOnAdded($this->object_it, $this->redirect_url);
-			}
-			catch( \Exception $e ) {
-				$this->setRequiredAttributesWarning();
-				$this->warning_message = $e->getMessage();
-				$this->edit('');
-				$this->redirect_url = $this->getRedirectUrl();
-				$this->action = 'show';
-			}
-			return;
-	    }
+                try {
+                    $this->persist();
+                    $this->redirectOnAdded($this->object_it, $this->redirect_url);
+                    return true;
+                }
+                catch( \Exception $e ) {
+                    DAL::Instance()->Query("ROLLBACK");
+                    $this->setRequiredAttributesWarning();
+                    $this->warning_message = $e->getMessage();
+                    $this->edit('');
+                    $this->redirect_url = $this->getRedirectUrl();
+                    $this->action = 'show';
+                    return false;
+                }
+            }
 	    
-	    if ( $this->action == 'cancel' )
-	    {
-			// get url from which the form had been called
-			$this->redirect_url = $this->getRedirectUrl();
-		    $this->redirectOnCancel($object_it, $this->redirect_url);
-		    return;
-	    }
-	    
-	    if ( !is_object($object_it) ) return;
-	    
-	    if ( $object_it->getId() == '' ) return;
+            if ( $this->action == 'cancel' )
+            {
+                // get url from which the form had been called
+                $this->redirect_url = $this->getRedirectUrl();
+                $this->redirectOnCancel($object_it, $this->redirect_url);
+                return true;
+            }
 
-		switch ($this->action)
-		{
-			case 'view':
-				// get url from which the form had been called
-				$this->redirect_url = $this->getRedirectUrl();
-		
-				$this->show($object_it);
+            if ( !is_object($object_it) ) return false;
+            if ( $object_it->getId() == '' ) return false;
 
-				break;
-			//
-			case 'show':
-				// get url from which the form had been called
-				$this->redirect_url = $this->getRedirectUrl();
-				
-				$this->edit($object_it);
+            switch ($this->action)
+            {
+                case 'view':
+                    // get url from which the form had been called
+                    $this->redirect_url = $this->getRedirectUrl();
+                    $this->show($object_it);
+                    break;
+                //
+                case 'show':
+                    // get url from which the form had been called
+                    $this->redirect_url = $this->getRedirectUrl();
+                    $this->edit($object_it);
+                    break;
 
-				break;
+                case 'modify':
+                    $this->redirect_url = $this->getRedirectUrl();
+                    try {
+                        if ( !$this->persist() ) {
+                            $this->required_attributes_warning = true;
+                            $this->warning_message = text(1106);
+                            $this->edit($object_it);
+                        }
+                        else {
+                            $this->redirectOnModified($this->object_it, $this->getRedirectUrl());
+                            return true;
+                        }
+                    }
+                    catch( \Exception $e ) {
+                        DAL::Instance()->Query("ROLLBACK");
+                        $this->setRequiredAttributesWarning();
+                        $this->warning_message = $e->getMessage();
+                        $this->edit($object_it);
+                    }
+                    break;
+                //
+                case 'delete':
+                    // get url from which the form had been called
+                    $this->redirect_url = $this->getRedirectUrl();
+                    if ( getFactory()->getAccessPolicy()->can_delete($this->object_it) ) {
+                        if( !$this->persist() ) {
+                            $this->required_attributes_warning = true;
+                            $this->warning_message = text(1106);
+                            $this->edit($this->object_it->getId());
+                        }
+                        else {
+                            $this->redirectOnDelete( $this->object_it, $this->redirect_url );
+                            return true;
+                        }
+                    }
+                    break;
 
-			//
-			case 'createlike':
-				if ( getFactory()->getAccessPolicy()->can_create($this->getObject()) ) 
-				{
-					$this->edit( $this->object->createlike( $object_it->getId() ) );
-				} 
-
-				// get url from which the form had been called
-				$this->redirect_url = $this->getRedirectUrl();
-		
-				break;
-			//	
-			case 'modify':
-
-				$this->redirect_url = $this->getRedirectUrl();
-
-				try {
-					if ( !$this->persist() ) {
-						$this->required_attributes_warning = true;
-						$this->warning_message = text(1106);
-						$this->edit($object_it);
-					}
-					else {
-						$this->redirectOnModified($this->object_it, $this->getRedirectUrl());
-					}
-				}
-				catch( \Exception $e ) {
-					$this->setRequiredAttributesWarning();
-					$this->warning_message = $e->getMessage();
-					$this->edit($object_it);
-				}
-
-				break;
-			//
-			case 'delete':
-				// get url from which the form had been called
-				$this->redirect_url = $this->getRedirectUrl();
-				
-				if ( getFactory()->getAccessPolicy()->can_delete($this->object_it) ) 
-				{
-					if( !$this->persist() )
-					{
-						$this->required_attributes_warning = true;
-						$this->warning_message = text(1106);
-						
-						$this->edit($this->object_it->getId());
-					} 
-					else
-					{
-						$this->redirectOnDelete( $this->object_it, $this->redirect_url );
-					}
-				}
-				break;
-				
-			//
-			case 'new':
-				exit(header('Location: '.$this->object->getPageName() ));
-			//
-			default:
-				// get url from which the form had been called
-				$this->redirect_url = $this->getRedirectUrl();
-		}	    
+                //
+                case 'new':
+                    header('Location: '.$this->object->getPageName() );
+                    break;
+                //
+                default:
+                    // get url from which the form had been called
+                    $this->redirect_url = $this->getRedirectUrl();
+            }
+            return false;
+        }
+        finally {
+            getFactory()->getEventsManager()->releaseNotifications();
+            DAL::Instance()->Query("COMMIT");
+            DAL::Instance()->Query("SET autocommit=1");
+        }
 	}
 
  	function getValidators() {
@@ -237,8 +224,6 @@ class Form
 
 	protected function persist()
 	{
-        getFactory()->getEventsManager()->delayNotifications();
-
 		switch( $this->getAction() )
 		{
 		    case 'add':
@@ -264,8 +249,6 @@ class Form
 		    	break;
 		}
 
-        getFactory()->getEventsManager()->releaseNotifications();
-
 		return true;
 	}
 	
@@ -285,7 +268,7 @@ class Form
             if ( $embededClass == '' ) continue;
             if ( !class_exists($embededClass) ) continue;
 
-            $embedded = $this->getEmbeddedForm(getFactory()->getObject($embededClass)->getEmptyIterator());
+            $embedded = $this->getEmbeddedForm(getFactory()->getObject($embededClass));
             $embedded->extendModel();
             $embedded->process( $object_it, $e, $callback );
         }
@@ -434,13 +417,7 @@ class Form
 	
 	function redirectOnAdded( $object_it, $redirect_url = '' ) 
 	{
-		if ( !is_object($object_it) ) {
-			$redirect_url = getSession()->getApplicationUrl();
-		}
-		else if ( $object_it->getId() < 1 ) {
-			$redirect_url = getSession()->getApplicationUrl();
-		}
-		else {
+	    if ( is_object($object_it) ) {
             if( $_REQUEST['formonly'] != '' ) {
                 echo json_encode(
                     array(
@@ -448,15 +425,28 @@ class Form
                         'Url' => $object_it->getUidUrl()
                     )
                 );
-                exit();
+                ob_flush();
+                flush();
+                return;
             }
-		}
-		if ( $redirect_url != '' ) {
-			exit(header('Location: '.$redirect_url));
-		}
-		else {
-			exit(header('Location: '.$object_it->getUidUrl() ));
-		}
+            else {
+                if ( $redirect_url == '' ) {
+                    if ( $object_it->getId() < 1 ) {
+                        $redirect_url = getSession()->getApplicationUrl();
+                    }
+                    else {
+                        $redirect_url = $object_it->getUidUrl();
+                    }
+                }
+            }
+	    }
+	    else {
+			$redirect_url = getSession()->getApplicationUrl();
+	    }
+
+        header('Location: '.$redirect_url);
+        ob_flush();
+        flush();
 	}
 	
 	function redirectOnModified( $object_it, $redirect_url = '' )
@@ -468,28 +458,32 @@ class Form
 	{
 	    if ( $redirect_url != '' )
 	    {
-	        exit(header('Location: '.$redirect_url));
+	        header('Location: '.$redirect_url);
 	    }
 	    elseif ( is_object($object_it) )
 	    {
-	        exit(header('Location: '.$object_it->getViewUrl() ));
+	        header('Location: '.$object_it->getViewUrl() );
 	    }
 	    else
 	    {
-	        exit(header('Location: '.$this->object->getPage() ));
+	        header('Location: '.$this->object->getPage() );
 	    }
+        ob_flush();
+        flush();
 	}
 
 	function redirectOnDelete( $object_it, $redirect_url = '' ) 
 	{
 		if ( strpos($redirect_url, $this->object->getEntityRefName().'Id') > 0 )
 		{
-			exit(header('Location: '.$this->object->getPage()));
+			header('Location: '.$this->object->getPage());
 		}
 		else
 		{
-			exit(header('Location: '.$redirect_url));
+			header('Location: '.$redirect_url);
 		}
+        ob_flush();
+        flush();
 	}
 
 	function edit( $objectid )
@@ -654,9 +648,7 @@ class Form
 	    return $this->object->getAttributeUserName($field_name);
 	}
 
-	function getFieldDescription( $field_name )
-	{
-	    if ( $this->getAction() == 'view' ) return '';
+	function getFieldDescription( $field_name ) {
 		return $this->object->getAttributeDescription( $field_name );
 	}
 	
@@ -665,12 +657,15 @@ class Form
 		global $_REQUEST;
 		
 		$object_it = $this->getObjectIt();
-		
+
+		$defaultValue = $this->getObject()->getDefaultAttributeValue($field);
+		if ( !$this->getObject()->getAttributeEditable($field) && $defaultValue != '' ) return $defaultValue;
+
 		$value = is_object($object_it) && $object_it->count() > 0 
 			? ( array_key_exists($field, $_REQUEST)
 				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
-				: ($object_it->get_native( $field ) == '' && $this->getMode() == 'new'
-		  			? $this->getDefaultValue( $field ) 
+				: ($object_it->get_native( $field ) == ''
+		  			? $this->getDefaultValue( $field )
 		  			: $object_it->get_native( $field ) 
 		  		   ) 
 		  	  )
@@ -692,31 +687,12 @@ class Form
 		return $value;
 	}
 
-	function getDefaultValue( $field )
-	{
-		$object_it = $this->getObjectIt();
-
-		return is_object($object_it) && $object_it->count() > 0
-			? ( $_REQUEST[$field] != '' 
-				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
-				: ($object_it->get_native( $field ) == '' && $this->IsAttributeRequired($field)
-		  			? $this->object->getDefaultAttributeValue( $field ) 
-		  			: $object_it->get_native( $field ) 
-		  		   ) 
-		  	  )
-			: ( $_REQUEST[$field] != '' 
-				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
-				: $this->object->getDefaultAttributeValue( $field )
-			  );
+	function getDefaultValue( $field ) {
+		return $this->object->getDefaultAttributeValue( $field );
 	}
 	
 	function draw()
 	{
-		global $_REQUEST, $_SERVER, $model_factory;
-		
-		$id = $_REQUEST['id'];
-		$action = $_REQUEST['action'];
-
 		$has_access = $this->checkAccess();
 		if ( !$has_access )
 		{
@@ -1013,8 +989,11 @@ class Form
         		$field = new FieldShortText;
         		break;
         	case 'integer' :
+        		$field = new FieldNumber;
+        		break;
         	case 'float' :
         		$field = new FieldNumber;
+                $field->setDecimals(1);
         		break;
         	case 'date' :
         		$field = new FieldDate;

@@ -2,7 +2,7 @@
 
 class CustomAttributeTypeIterator extends CacheableIterator
 {
- 	function getDbType()
+ 	function getDbType( $defaultValue = '' )
  	{
  		$type = $this->get('ReferenceName');
  		switch ( strtolower($type) )
@@ -10,8 +10,12 @@ class CustomAttributeTypeIterator extends CacheableIterator
  			case 'dictionary':
  				return 'REF_PMCustomDictionaryId';
  			case 'string':
-			case 'computed':
  				return 'varchar';
+            case 'computed':
+                if( substr($defaultValue,0,1) == '=' ) {
+                    return 'float';
+                }
+                return 'varchar';
             case 'integer':
                 return 'float';
             case 'char':

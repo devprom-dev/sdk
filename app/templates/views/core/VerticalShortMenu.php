@@ -74,7 +74,7 @@ foreach ( $items as $item_key => $item )
         }
         ?>
         <li id="setup-vmenu" class="setup">
-            <a class="" module="" onclick="switchMenuState('normal');" title="<?=str_replace(' ','&nbsp;',text(2192))?>">
+            <a class="" module="" onclick="switchMenuState();" title="<?=str_replace(' ','&nbsp;',text(2192))?>">
                 <i class="icon-arrow-right icon-white" ></i>
             </a>
         </li>

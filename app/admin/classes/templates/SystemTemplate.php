@@ -14,7 +14,7 @@ class SystemTemplate extends MetaobjectCacheable
         parent::__construct('cms_Backup', new SystemTemplateRegistry($this));
 
         $this->addAttribute('Status', 'VARCHAR', text(2038), true, false);
-        $this->addAttribute('Content', 'LARGETEXT', translate('Содержание'), false, false);
+        $this->addAttribute('Content', 'WYSIWYG', translate('Содержание'), false, false);
         $this->addAttribute('Format', 'VARCHAR', translate('Формат'), false, true);
         $this->setAttributeRequired('OrderNum', false);
 

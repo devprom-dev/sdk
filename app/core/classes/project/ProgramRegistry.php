@@ -2,7 +2,7 @@
 
 class ProgramRegistry extends ObjectRegistrySQL
 {
-	function getQueryClause()
+	function getQueryClause(array $parms)
 	{
 		$user_id = getSession()->getUserIt()->getId();
 		

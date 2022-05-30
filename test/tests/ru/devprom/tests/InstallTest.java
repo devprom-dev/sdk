@@ -79,6 +79,10 @@ public class InstallTest extends TestBase {
 		driver.get(baseURL + "/admin/users.php");
 		UsersListPage ulp = new UsersListPage(driver);
 		ulp.addFirstUser(new User(username, password, user, "mail", true, true));
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+		}
 	}
 
 	@Test(groups = "Deployment", priority = 4)

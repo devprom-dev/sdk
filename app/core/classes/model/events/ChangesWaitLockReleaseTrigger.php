@@ -251,6 +251,12 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		    		'TestScenario' => $object_it->getRef('TargetPage')
 		    	);
 
+            case 'pm_FunctionTrace':
+                $traceObjectIt = $object_it->getObjectIt();
+                return array(
+                    get_class($traceObjectIt->object) => $traceObjectIt
+                );
+
 		    case 'pm_AttributeValue':
 		    	$class = getFactory()->getClass($object_it->getRef('CustomAttribute')->get('EntityReferenceName'));
 		    	if ( !class_exists($class) ) return array();

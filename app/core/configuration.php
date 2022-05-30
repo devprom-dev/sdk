@@ -8,21 +8,7 @@ if ( file_exists(DOCUMENT_ROOT.'conf/logger.xml') )
 	try
 	{
 	 	Logger::configure(DOCUMENT_ROOT.'conf/logger.xml');
-	 	
 		Logger::initialize();
-	
-	 	if ( !defined('SERVER_LOGS_PATH') )
-	 	{
-			foreach (Logger::getCurrentLoggers() as $logger) {
-				foreach ($logger->getAllAppenders() as $appender) {
-					$appender = $logger->getAppender($appender->getName());
-					if (is_a($appender, 'LoggerAppenderRollingFile')) {
-						define('SERVER_LOGS_PATH', dirname($appender->getFileName()));
-					}
-				}
-	 		}
-	 	}
-	 	
 	 	$handlers[] = new ExceptionHandlerListenerLogger();
 	}
 	catch(Exception $e)

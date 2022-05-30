@@ -1,5 +1,5 @@
 var messages = {
-	"form-modified": "You entered data on the form, but does not save the changes. If you continue without saving, you will lose the data you entered. Are you sure you want to close the form?",
+	"form-modified": "You entered data on the form, but does not save the changes. If you continue without saving, you will lose the data you entered. Are you sure you want to continue?",
 	"form-submit" : 'Save',
 	"form-complete": "Complete",
 	"form-complete-open": "Complete and open",
@@ -8,6 +8,8 @@ var messages = {
 	"form-cancel": "Cancel",
 	"form-submit-open": "Save and open",
 	"form-delete-msg": "Are you sure you want to delete? There is no way to undo the change.",
+	"form-required-field": "It is required field",
+	"form-continue": "Continue",
 	"sc-context-global": "Global keys and navigation",
 	"sc-key-help": "Display hotkeys settings",
 	"sc-key-new-issue": "Create issue (user story)",
@@ -30,6 +32,7 @@ var messages = {
 	'or': 'or',
 	"sc-context-view": "Board, table, tree and form",
 	"sc-key-view-rightpane": "Toggle panel on right",
+	"sc-key-view-menu": "Toggle main menu",
 	"sc-key-view-new": "Create new artifact",
 	"sc-key-view-all": "Check all",
 	"sc-key-view-edit": "Modify",
@@ -68,5 +71,8 @@ var messages = {
 	"confirm-delete": 'Are you sure you want to delete? There is no way to undo the change.',
 	"error-500": "Internal server error",
 	"error-nodata": "There is no any data",
-	"loading": "Loading..."
+	"loading": "Loading...",
+	"project-tree-nodata": "You have no any projects",
+	"project-tree-error": "Error during load of a projects tree",
+	"editor.button.diagrams": "Diagrams"
 };

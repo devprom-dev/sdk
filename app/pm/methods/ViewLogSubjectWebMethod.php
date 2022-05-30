@@ -15,7 +15,7 @@ class ViewLogSubjectWebMethod extends FilterWebMethod
  			'all' => translate('Все')
  			);
  			
- 		$it = getFactory()->getObject('ProjectUser')->getAll();
+ 		$it = getFactory()->getObject('WorkerUser')->getAll();
  		while ( !$it->end() )
  		{
  			$values[$it->getId()] = $it->getDisplayName();

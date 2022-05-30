@@ -11,31 +11,30 @@ class ReportSpentTimeTable extends PMPageTable
 
 	function getFilters()
 	{
-		return array_merge(
-		    parent::getFilters(),
+	    $filters = array_merge(
+            parent::getFilters(),
             array(
                 $this->buildStartFilter(),
                 new ViewFinishDateWebMethod(),
                 $this->buildUserFilter(),
                 $this->buildFilterState()
             )
-		);
+        );
+        $filters[] = $this->buildUserRoleFilter();
+
+        return $filters;
 	}
 
     function getFilterPredicates( $values )
 	{
- 		$predicates = array(
- 		    new FilterSubmittedAfterPredicate($values['start']),
-            new FilterSubmittedBeforePredicate($values['finish']),
-            new SpentTimeStatePredicate($values['state'])
-        );
- 		if ( !in_array($values['participant'], array('','all','none')) ) {
-			$predicates[] = new FilterAttributePredicate('SystemUser', $values['participant']);
- 		}
-
  		return array_merge(
  		    parent::getFilterPredicates( $values ),
-            $predicates
+            array(
+                new FilterSubmittedAfterPredicate($values['start']),
+                new FilterSubmittedBeforePredicate($values['finish']),
+                new SpentTimeStatePredicate($values['state']),
+                new FilterAttributePredicate( 'SystemUser', $this->getFilterUsers($values['participant'],$values) )
+            )
         );
 	}
 	
@@ -112,7 +111,7 @@ class ReportSpentTimeTable extends PMPageTable
     {
         $values = parent::buildFilterValuesByDefault($filters);
         if ( !array_key_exists('start', $values) ) {
-            $values['start'] = getSession()->getLanguage()->getPhpDate(strtotime('-3 weeks', strtotime(date('Y-m-j'))));
+            $values['start'] = getSession()->getLanguage()->getPhpDate(strtotime(date('Y-m-1')));
         }
         return $values;
     }
@@ -128,10 +127,16 @@ class ReportSpentTimeTable extends PMPageTable
         return $filter;
     }
 
+    function buildSearchPredicate($values) {
+    }
+
     protected function getFamilyModules( $module )
     {
         return array (
-            'worklog'
+            'worklog',
+            'issuesestimation',
+            'requirementseffort',
+            'tasksefforts'
         );
     }
 
@@ -144,6 +149,10 @@ class ReportSpentTimeTable extends PMPageTable
     }
 
     function getDetails() {
+        return array();
+    }
+
+    function buildAttributesPredicates($values) {
         return array();
     }
 }

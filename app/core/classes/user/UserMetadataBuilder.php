@@ -27,6 +27,7 @@ class UserMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->setAttributeRequired( 'Language', false );
         $metadata->setAttributeOrderNum('Photo', 1);
         $metadata->addAttributeGroup('Email', 'alternative-key');
+        $metadata->setAttributeRequired( 'Email', false );
         $metadata->addAttributeGroup('Login', 'alternative-key');
         $metadata->setAttributeVisible( 'LDAPUID', true );
         $metadata->setAttributeType( 'LDAPUID', 'varchar' );

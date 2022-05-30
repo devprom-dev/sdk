@@ -21,12 +21,14 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
 
 		$item = $this->module->getExact('issues-board')->buildMenuItem();
 		$item['order'] = 7;
-		$items['issuesboard'] = $item;
+		$items['issues-board'] = $item;
 
 		$items[] = $this->report->getExact('discussions')->buildMenuItem();
         $items['knowledgebase'] = $this->module->getExact('project-knowledgebase')->buildMenuItem();
         $items['whatsnew'] = $this->module->getExact('whatsnew')->buildMenuItem();
         $items['project-log'] = $this->report->getExact('project-log')->buildMenuItem();
+        $items['mytasks'] = $this->report->getExact('mytasks')->buildMenuItem();
+        $items['attachments'] = $this->module->getExact('attachments')->buildMenuItem();
 
 		$menus['quick']['items'] = array_merge($menus['quick']['items'], $items);
 
@@ -58,4 +60,5 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
     }
 
 	private $report = null;
+    private $module = null;
 }

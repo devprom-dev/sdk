@@ -7,6 +7,7 @@ include "VersionPageSettingBuilder.php";
 
 include_once SERVER_ROOT_PATH."pm/views/plan/IterationForm.php";
 include_once SERVER_ROOT_PATH."pm/views/plan/ReleaseForm.php";
+include_once SERVER_ROOT_PATH."pm/views/project/MilestoneForm.php";
 include_once SERVER_ROOT_PATH."pm/classes/plan/IterationModelMetricsBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/plan/ReleaseModelMetricsBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/plan/ReleaseModelArtefactsBuilder.php";
@@ -39,9 +40,12 @@ class VersionPage extends PMPage
         switch ( $_REQUEST['entity'] ) {
             case 'pm_Release':
             case 'Iteration':
-                return new IterationForm();
+                return new IterationForm(getFactory()->getObject($_REQUEST['entity']));
+            case 'pm_Milestone':
+            case 'Milestone':
+                return new MilestoneForm(getFactory()->getObject($_REQUEST['entity']));
             default:
-                return new ReleaseForm();
+                return new ReleaseForm(getFactory()->getObject('Release'));
         }
     }
 }

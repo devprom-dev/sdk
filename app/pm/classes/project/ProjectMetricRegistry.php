@@ -2,10 +2,10 @@
 
 class ProjectMetricRegistry extends ObjectRegistrySQL
 {
-	function getQueryClause()
+	function getQueryClause(array $parms)
 	{
         $default_metric = '';
-        foreach( $this->getFilters() as $filter ) {
+        foreach( $this->extractPredicates($parms) as $filter ) {
             if ( $filter instanceof MetricReferencePredicate ) {
                 $default_metric = $filter->getValue();
             }

@@ -6,7 +6,7 @@ include_once SERVER_ROOT_PATH."pm/classes/common/CustomizableObjectBuilder.php";
 
 class CustomizableObjectBuilderTest extends CustomizableObjectBuilder
 {
-    public function build( CustomizableObjectRegistry & $set )
+    public function build(CustomizableObjectRegistry & $set, $useTypes)
     {
     	$set->add( 'Request', 'request:RequestSubType', 'Some text' );
     }

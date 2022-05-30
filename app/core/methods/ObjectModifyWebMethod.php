@@ -1,5 +1,4 @@
 <?php
-
 include_once "WebMethod.php";
 
 class ObjectModifyWebMethod extends WebMethod

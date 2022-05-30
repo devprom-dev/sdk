@@ -154,10 +154,6 @@ class PageChart extends StaticPageList
 		        }
 		        $state_it->moveNext();
 		    }
-
-			if ( $this->getGroup() == 'history' ) {
-				$minSizeValuable = count($this->state_sort_index);
-			}
 		}
 
 		if ( count($data) < $minSizeValuable ) {
@@ -375,7 +371,7 @@ class PageChart extends StaticPageList
             $this->getObject()->getAttributesByGroup('skip-chart')
         );
 
-        $clause = $object->getRegistry()->getSelectClause('', false);
+        $clause = $object->getRegistry()->getSelectClause(array(), '', false);
         $skip_types = array('','text','wysiwyg','largetext','char','varchar','date','datetime');
 
         foreach ( $attrs as $key => $attr )
@@ -737,7 +733,7 @@ class PageChart extends StaticPageList
         if ( count($aggs) == 2 && $this->getTableVisible() )
         {
             echo '<div style="clear:both;"></div>';
-            echo '<div style="padding:16px 22px 0;">';
+            echo '<div>';
                 $this->drawLegendTable( $view );
             echo '</div>';
         }
@@ -752,7 +748,7 @@ class PageChart extends StaticPageList
 		    else
 		    {
 				echo '<div style="clear:both;"></div>';
-				echo '<div style="padding:16px 22px 0;">';
+				echo '<div>';
 					$this->drawLegend( $data, $aggs );
 				echo '</div>';
 		    }
@@ -860,4 +856,8 @@ class PageChart extends StaticPageList
 		echo $view->render("core/PageChart.php", 
 			array_merge($parms, $this->getRenderParms()) ); 
 	}
+
+    function getDetailsPaneVisible() {
+        return false;
+    }
 }

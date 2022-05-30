@@ -79,9 +79,6 @@ class DocumentVersionChartWidget extends FlotChartWidget
 		while( !$this->iterator->end() )
 		{
 			$title = $uid->getUidWithCaption($this->iterator);
-			if ( $this->iterator->get('DocumentVersion') != '' ) {
-				$title .= ' ['.$this->iterator->get('DocumentVersion').']';
-			}
 			$groups[] = array (
 				'id' => $this->iterator->getId(),
 				'content' => $title
@@ -103,7 +100,7 @@ class DocumentVersionChartWidget extends FlotChartWidget
                 'title' => $this->iterator->get('DocumentVersion') != ''
                                 ? $this->iterator->get('DocumentVersion')
                                 : $this->iterator->getDisplayName(),
-                'url' => $this->iterator->getViewUrl(),
+                'url' => $this->iterator->getUIDUrl(),
                 'template' => 'base-template',
                 'start' => date('Y-m-d H:i:s', strtotime($this->iterator->getDateFormatUser('RecordCreated', '%Y-%m-%d %H:%M:%S'))),
                 'group' => $this->iterator->getId(),
@@ -126,7 +123,7 @@ class DocumentVersionChartWidget extends FlotChartWidget
 			$items[] = array (
 				'id' => $item_it->getId(),
 				'title' => $item_it->getDisplayName(),
-				'url' => $this->iterator->getViewUrl().'&baseline='.$item_it->getId(),
+				'url' => $this->iterator->getUIDUrl().'&baseline='.$item_it->getId(),
 				'template' => 'base-template',
 				'start' => date('Y-m-d H:i:s', strtotime($item_it->getDateFormatUser('RecordCreated', '%Y-%m-%d %H:%M:%S'))),
 				'group' => $item_it->get('ObjectId'),

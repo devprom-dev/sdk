@@ -9,7 +9,6 @@ include "WikiPageRegistryVersion.php";
 include "WikiPageRegistryBaseline.php";
 include "WikiPageRegistryComparison.php";
 include "WikiPageRegistryVersionStructure.php";
-include "predicates/WikiSectionFilter.php";
 include "predicates/WikiNonRootFilter.php";
 include "predicates/WikiRootFilter.php";
 include "predicates/WikiNonRootEmptyFilter.php";
@@ -18,6 +17,7 @@ include "predicates/WikiTraceBrokenPredicate.php";
 include "predicates/WikiDocumentWaitFilter.php";
 include "predicates/PMWikiTransitiveLinkedStateFilter.php";
 include "persisters/WikiPageRevisionPersister.php";
+include "persisters/WikiPageAfterRevisionPersister.php";
 include 'persisters/WikiPageTracesRevisionsPersister.php';
 include "persisters/WikiPageHistoryPersister.php";
 include 'predicates/WikiSameBranchFilter.php';
@@ -32,8 +32,11 @@ include "predicates/WikiPageSourcePagePredicate.php";
 include "predicates/WikiTraceSourcePagePredicate.php";
 include "predicates/WikiPageSameUIDPredicate.php";
 include "predicates/WikiPageBaselineFilter.php";
+include "predicates/WikiPageHieExportFilter.php";
+include "predicates/WikiPageTypeHieFilter.php";
 include "WikiPageDeleteStrategyMove.php";
 include "persisters/WikiPageBaselineDetailsPersister.php";
+include "persisters/WikiPageEstimationPersister.php";
 include "sorts/SortParentPathClause.php";
 include "sorts/SortDocumentClause.php";
 include "sorts/SortDocumentDescClause.php";
@@ -45,8 +48,7 @@ class WikiPage extends MetaobjectStatable
  	function __construct( $registry = null )
  	{
 		parent::__construct('WikiPage', is_object($registry) ? $registry : new WikiPageRegistry($this));
-		
- 	 	$this->setSortDefault( array( new SortOrderedClause() ));
+ 	 	$this->setSortDefault( array( new SortDocumentClause() ));
 	}
 	
 	function createIterator() 
@@ -93,7 +95,6 @@ class WikiPage extends MetaobjectStatable
 			case 'Author':
 			    return getSession()->getUserIt()->getId();
 			    
-			case 'IsTemplate': return '0';
             case 'ContentEditor': return 'WikiRtfCKEditor';
 
             case 'PageType':
@@ -117,6 +118,15 @@ class WikiPage extends MetaobjectStatable
 	
 	function add_parms( $parms )
 	{
+        if ( $parms['PageType'] != '' && is_numeric($parms['PageType']) ) {
+            $parms['IDProject'] = $this->increaseCounter($parms['PageType'], true);
+        }
+        elseif ( $parms['VPD'] != '' ) {
+            $parms['IDProject'] = $this->createSQLIterator(
+                    " SELECT COUNT(1) + 1 Counter FROM WikiPage WHERE VPD = '{$parms['VPD']}'
+                ")->get('Counter');
+        }
+
 		$parms['ReferenceName'] = $this->getReferenceName();
 		
 		if ( $parms['ContentEditor'] == '' && $parms['PageType'] != '' )
@@ -155,11 +165,7 @@ class WikiPage extends MetaobjectStatable
                 "UPDATE WikiPage w SET w.UID = '" . $result . "' WHERE w.WikiPageId = " . $object_it->getId()
             );
             if ( $documentId > 0 ) {
-                $object_it = $this->getRegistryBase()->Query(
-                    array(
-                        new FilterInPredicate($id)
-                    )
-                );
+                $object_it = $this->getRegistryBase()->QueryById($id);
                 $this->updateUIDs($object_it);
             }
         }
@@ -171,11 +177,13 @@ class WikiPage extends MetaobjectStatable
 	{
 	    if ( $id < 1 ) return -1;
 
+        if ( $parms['PageType'] != '' && is_numeric($parms['PageType']) ) {
+            $parms['IDProject'] = $this->increaseCounter($parms['PageType']);
+        }
+
 		$registry = new ObjectRegistrySQL($this);
 		$registry->setPersisters($this->getPersisters());
-		$object_it = $registry->Query(
-				array( new FilterInPredicate($id) )
-		);
+		$object_it = $registry->QueryById($id);
 
 		if ( $parms['ParentPage'] > 0 )
 		{
@@ -212,8 +220,16 @@ class WikiPage extends MetaobjectStatable
 		$now_it = $this->getExact( $id );
 		$now_content = $now_it->getHtmlDecoded('Content');
 
-		if ( $was_content != $now_content && $parms['Revert'] == '' ) {
-		    $now_it->Version( $was_content ); // make new version of the page
+		if ( $was_content != $now_content ) {
+            $change = getFactory()->getObject('WikiPageChange');
+            $change->setAttributeType('WikiPage', 'REF_'.get_class($this).'Id');
+            getFactory()->createEntity(
+                $change, array(
+                    'WikiPage' => $now_it->getId(),
+                    'Content' => $was_content,
+                    'Author' => getSession()->getUserIt()->getId()
+                )
+            );
         }
 		
 		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') ) {
@@ -300,7 +316,7 @@ class WikiPage extends MetaobjectStatable
         );
     }
 
-    protected function beforeDelete( $object_it )
+    function beforeDelete( $object_it )
     {
         parent::beforeDelete( $object_it );
 
@@ -347,9 +363,7 @@ class WikiPage extends MetaobjectStatable
         $newDocumentId = array_pop($roots);
 
         $registry = new ObjectRegistrySQL($this);
-        $docIt = $registry->Query(
-            array( new FilterInPredicate($newDocumentId) )
-        );
+        $docIt = $registry->QueryById($newDocumentId);
 
         DAL::Instance()->Query(
             "UPDATE WikiPage t 
@@ -401,11 +415,7 @@ class WikiPage extends MetaobjectStatable
 		if ( $object_it->getId() == '' ) return;
 
 		$parentIt = $object_it->get('ParentPage') != ''
-            ? $this->getRegistryBase()->Query(
-                array(
-                    new FilterInPredicate($object_it->get('ParentPage'))
-                )
-            )
+            ? $this->getRegistryBase()->QueryById($object_it->get('ParentPage'))
             : $object_it;
         $documentId = $parentIt->get('DocumentId') == '' ? 'DocumentId' : $parentIt->get('DocumentId');
 		
@@ -510,10 +520,16 @@ class WikiPage extends MetaobjectStatable
         getFactory()->resetCachedIterator($this);
 	}
 
-	function getRootIt()
-	{
-	    return null;
-	}
+    function getRootIt()
+    {
+        return $this->getRegistry()->Query(
+            array (
+                new WikiRootFilter(),
+                new FilterVpdPredicate(),
+                new NativeProjectSortClause($this->getVpdValue())
+            )
+        );
+    }
 	
  	function _fillValues( $object_it, $values, $level, $actual, &$items_count )
  	{
@@ -563,4 +579,14 @@ class WikiPage extends MetaobjectStatable
  		
  		return $values;
  	}
+
+    function increaseCounter( $pageType )
+    {
+        DAL::Instance()->Query(
+                " UPDATE WikiPageType SET Counter = Counter + 1 WHERE WikiPageTypeId = {$pageType}"
+            );
+        return $this->createSQLIterator(
+            " SELECT Counter FROM WikiPageType WHERE WikiPageTypeId = {$pageType}
+            ")->get('Counter');
+    }
 }

@@ -8,14 +8,13 @@ class ModelEventsManager
  	private $delay = false;
  	private $delayedNotifications = array();
  	private $cascade = false;
+ 	private $counter = 0;
 	
- 	public function setCascade( $cascade = true )
- 	{
+ 	public function setCascade( $cascade = true ) {
  		$this->cascade = $cascade;
  	}
 
- 	public function getCascade()
- 	{
+ 	public function getCascade() {
  		return $this->cascade;
  	}
 
@@ -23,23 +22,28 @@ class ModelEventsManager
  	    $this->delay = $value;
     }
  	
-	function registerNotificator( &$notificator_object ) 
-	{
+	function registerNotificator( $notificator_object ) {
 		$this->notificators[get_class($notificator_object)] = $notificator_object;
 	}
 	
 	function removeNotificator( $notificator_object )
 	{
-		if ( is_object($notificator_object) )
-		{
+		if ( is_object($notificator_object) ) {
 			unset($this->notificators[get_class($notificator_object)]);
 		}
-		else
-		{
+		else {
 			unset($this->notificators[$notificator_object]);
 		}
 	}
-	
+
+    function removeNotificatorsExcept( $notificator_object )
+    {
+        foreach ( $this->notificators as $key => $notificator ) {
+            if ( $notificator instanceof $notificator_object ) continue;
+            unset($this->notificators[$key]);
+        }
+    }
+
 	function getNotificators( $base_class_name = '' )
 	{
 	    if ( $base_class_name == '' ) return is_array($this->notificators) ? $this->notificators : array();
@@ -71,6 +75,12 @@ class ModelEventsManager
 		
 		return true;
 	}
+
+	function getDelayKey( $notificator, $objectIt, $action ) {
+ 	    return ($this->counter++)
+            . md5(get_class($notificator).get_class($objectIt).$objectIt->getId())
+                . $action . ' - ' . get_class($notificator);
+    }
 	
  	function notify_object_add( $object_it, $data = array() ) 
  	{
@@ -81,7 +91,7 @@ class ModelEventsManager
 			if ( $this->delay ) {
 			    $delayedObjectIt = $object_it->copy();
 
-			    $notifcationKey = md5(get_class($notificator).get_class($delayedObjectIt).$delayedObjectIt->getId());
+			    $notifcationKey = $this->getDelayKey($notificator, $delayedObjectIt, 'add');
 			    if ( array_key_exists($notifcationKey, $this->delayedNotifications) ) continue;
 
 			    $this->delayedNotifications[$notifcationKey] = function() use ($notificator, $data, $delayedObjectIt) {
@@ -98,21 +108,47 @@ class ModelEventsManager
 
  	function notify_object_modify( $prev_object_it, $object_it, $data = array() ) 
  	{
-		foreach( $this->getNotificators() as $notificator )
- 	    {
+		foreach( $this->getNotificators() as $notificator ) {
 			if ( !$this->notificationEnabled($object_it, $notificator) ) continue;
 
-			$notificator->setRecordData( $data );
-            $notificator->modify( $prev_object_it, $object_it );
+            if ( $this->delay ) {
+                $delayedObjectIt = $prev_object_it->copy();
+                $notifcationKey = $this->getDelayKey($notificator, $delayedObjectIt, 'modify');
+                if ( array_key_exists($notifcationKey, $this->delayedNotifications) ) continue;
+
+                $this->delayedNotifications[$notifcationKey] = function() use ($notificator, $data, $delayedObjectIt) {
+                    $notificator->setRecordData( $data );
+                    $notificator->modify(
+                        $delayedObjectIt,
+                        $delayedObjectIt->object
+                            ->getRegistry()->QueryById($delayedObjectIt->getId())
+                    );
+                };
+            }
+            else {
+                $notificator->setRecordData( $data );
+                $notificator->modify( $prev_object_it, $object_it );
+            }
 		}
 	}
 
  	function notify_object_delete( $object_it ) 
  	{
-		foreach( $this->getNotificators() as $notificator ) 
-		{
+		foreach( $this->getNotificators() as $notificator ) {
 			if ( !$this->notificationEnabled($object_it, $notificator) ) continue;
-			$notificator->delete( $object_it );
+
+            if ( $this->delay ) {
+                $delayedObjectIt = $object_it->copy();
+                $notifcationKey = $this->getDelayKey($notificator, $delayedObjectIt, 'delete');
+                if ( array_key_exists($notifcationKey, $this->delayedNotifications) ) continue;
+
+                $this->delayedNotifications[$notifcationKey] = function() use ($notificator, $delayedObjectIt) {
+                    $notificator->delete( $delayedObjectIt );
+                };
+            }
+            else {
+                $notificator->delete( $object_it );
+            }
 		}
 	}
 	
@@ -123,7 +159,20 @@ class ModelEventsManager
                 if ( !$this->notificationEnabled($object_it, $handler) ) continue;
                 $handler->setObjectIt($object_it->copy());
                 if ( !$handler->readyToHandle() ) continue;
-                $handler->process( $data );
+
+                if ( $this->delay ) {
+                    $delayedObjectIt = $object_it->copy();
+                    $notifcationKey = $this->getDelayKey($handler, $delayedObjectIt, 'workflow');
+                    if ( array_key_exists($notifcationKey, $this->delayedNotifications) ) continue;
+
+                    $this->delayedNotifications[$notifcationKey] = function() use ($handler, $delayedObjectIt, $data) {
+                        $handler->setObjectIt($delayedObjectIt->copy());
+                        $handler->process( $data );
+                    };
+                }
+                else {
+                    $handler->process( $data );
+                }
             }
             $object_it->moveNext();
         }

@@ -224,7 +224,7 @@ public class TasksPage extends SDLCPojectPageBase {
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//a[text()='["+taskId+"]']/../following-sibling::td[@id='spent']//a[contains(@class,'embedded-add-button')]")));
 		return new TasksPage(driver);
 	}
-	
+
 	public boolean isTaskPresent(String taskId){
 		return (!driver.findElements(By.xpath("//td[@id='uid']/a[text()='["+taskId+"]']")).isEmpty() ||  !driver.findElements(By.xpath("//td[@id='uid']/a/strike[contains(.,'"	+ taskId + "')]")).isEmpty());
 	}
@@ -236,7 +236,7 @@ public class TasksPage extends SDLCPojectPageBase {
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(changeTypeBtn));
 		changeTypeBtn.click();
 		waitForDialog();
-		(new Select(driver.findElement(By.id("TaskType")))).selectByVisibleText(type);
+		(new Select(driver.findElement(By.xpath("//form//select[@name='TaskType']")))).selectByVisibleText(type);
 		submitDialog(driver.findElement(By.id("SubmitBtn")));		
 		return new TasksPage(driver);
 	}

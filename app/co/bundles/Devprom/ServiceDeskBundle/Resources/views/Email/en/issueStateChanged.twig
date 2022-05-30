@@ -11,3 +11,12 @@
     <br/>
 {% endif %}
 <hr>
+{% if issue.state.terminal == 'Y' %}
+    <p>Please, provide your feedback:
+        {% for e in 1..5 %}
+            <a href="{{ issueLink }}/feedback/{{ e }}" style="font-size: x-large;color:gold;text-decoration: none;">
+                {{ "&#9733;" | unescapeHtml | raw }}
+            </a>
+        {% endfor %}
+    </p>
+{% endif %}

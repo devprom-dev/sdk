@@ -52,6 +52,7 @@ include SERVER_ROOT_PATH.'core/classes/schedule/DeadlineSwimlane.php';
 include SERVER_ROOT_PATH.'core/classes/user/Invitation.php';
 include SERVER_ROOT_PATH.'core/classes/files/TempFile.php';
 include SERVER_ROOT_PATH.'core/classes/locale/SearchRules.php';
+include SERVER_ROOT_PATH.'core/classes/search/Searchable.php';
 include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttribute.php';
 include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttributeValue.php';
 include_once SERVER_ROOT_PATH.'core/classes/user/Notification.php';

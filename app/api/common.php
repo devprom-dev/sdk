@@ -4,8 +4,9 @@ include ('../common.php');
 include ('nusoap/lib/nusoap.php');
 include ('classes/SoapService.php');
 include ('classes/SOAPSession.php');
+include "classes/model/ModelFactorySOAP.php";
 
-$model_factory = new ModelFactoryProject(
+$model_factory = new ModelFactorySOAP(
     PluginsFactory::Instance(),
     getCacheService(),
     'soap',

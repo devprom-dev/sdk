@@ -34,7 +34,11 @@ class PageSectionAttributes extends InfoSection
     {
         $attributes = array();
         foreach( $this->referenceName as $referenceName ) {
-            foreach( $this->object->getAttributesByGroup($referenceName) as $attribute ) {
+            $groupAttributes = array_diff(
+                $this->object->getAttributesByGroup($referenceName),
+                $this->object->getAttributesByGroup('tab-main')
+            );
+            foreach( $groupAttributes as $attribute ) {
                 if ( in_array($attribute, $skipAttributes) ) continue;
                 $attributes[] = $attribute;
             }

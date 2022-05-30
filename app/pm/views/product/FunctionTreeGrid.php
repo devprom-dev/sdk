@@ -2,9 +2,7 @@
 
 class FunctionTreeGrid extends FunctionList
 {
-    function getTemplate() {
-        return "core/PageTreeGrid.php";
-    }
+    use PageTreeTrait;
 
     function getRenderParms()
     {
@@ -23,7 +21,7 @@ class FunctionTreeGrid extends FunctionList
             array_merge(
                 $predicates,
                 array(
-                    new FeatureRootFilter()
+                    new ObjectRootFilter()
                 )
             )
         );

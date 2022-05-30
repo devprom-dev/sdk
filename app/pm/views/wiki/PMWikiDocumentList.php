@@ -8,17 +8,14 @@ class PMWikiDocumentList extends PMWikiList
     private $trace_source_attribute = array();
     private $trace_attributes = array();
 	private $displayContentHeader = false;
-    private $attributesVisible = false;
     private $attributeFields = array();
     private $previewCount = 0;
-    private $baselineService = null;
 
     function __construct( $object )
     {
     	parent::__construct($object);
     	$this->trace_source_attribute = $this->getObject()->getAttributesByGroup('source-attribute');
         $this->trace_attributes = $this->getObject()->getAttributesByGroup('trace');
-        $this->baselineService = new WikiBaselineService(getFactory(), getSession());
         $this->setInfiniteMode();
     }
     
@@ -34,23 +31,15 @@ class PMWikiDocumentList extends PMWikiList
         $this->pageForm->setObject( $this->getTable()->getPage()->getObject() );
     }
 
-    function buildIterator()
-    {
-        $iterator = parent::buildIterator();
-        $rowData = array_pop($iterator->getRowset());
-        $this->lastItemId = $rowData[$this->getObject()->getIdAttribute()];
-        return $iterator;
-    }
-
     protected function getPersisters( $object, $sorts )
     {
         $persisters = parent::getPersisters($object, $sorts);
 
         $baselineIt = $this->getTable()->getRevisionIt();
-        $compareToIt = $this->getTable()->getCompareToSnapshot();
+        $compareToIt = $this->getTable()->getCompareToSnapshot($_REQUEST);
 
         if ( $baselineIt->getId() > 0 ) {
-            $registry = $this->baselineService->getBaselineRegistry(
+            $registry = $this->getBaselineService()->getBaselineRegistry(
                 $this->getTable()->getDocumentIt(), $baselineIt
             );
             if ( $compareToIt->getId() != '' ) {
@@ -59,7 +48,7 @@ class PMWikiDocumentList extends PMWikiList
             $object->setRegistry($registry);
         }
         else if ( $compareToIt->getId() != '' ) {
-            $registry = $this->baselineService->getComparableRegistry(
+            $registry = $this->getBaselineService()->getComparableRegistry(
                 $this->getTable()->getDocumentIt(), $compareToIt
             );
             $object->setRegistry($registry);
@@ -370,9 +359,9 @@ class PMWikiDocumentList extends PMWikiList
         }
         $form->setSearchText($filter_values['search']);
 
-		$compareto_it = $this->getTable()->getCompareToSnapshot();
+		$compareto_it = $this->getTable()->getCompareToSnapshot($filter_values);
 		if ( $compareto_it->getId() != '' ) {
-            $form->setCompareTo($this->baselineService->getComparedPageIt($object_it, $compareto_it));
+            $form->setCompareTo($this->getBaselineService()->getComparedPageIt($object_it, $compareto_it));
 		}
 
 		$form_render_parms['modifiable'] = $this->itemsEditable;
@@ -403,18 +392,16 @@ class PMWikiDocumentList extends PMWikiList
         $form_render_parms['traces_html'] = ob_get_contents();
         ob_end_clean();
 
-        if ( $this->attributesVisible ) {
-            ob_start();
-            $this->drawAttributes( $object_it );
-            $form_render_parms['attributes_html'] = ob_get_contents();
-            ob_end_clean();
-        }
+        ob_start();
+        $this->drawAttributes( $object_it );
+        $form_render_parms['attributes_html'] = ob_get_contents();
+        ob_end_clean();
 
 		$form->render( $this->getRenderView(), $form_render_parms);
 
 		if ( $this->previewCount == 1 )
 		{
-            $registry = new ObjectRegistrySQL($this->getObject());
+            $registry = $this->getObject()->getRegistry();
             $registry->setLimit(1);
 
             $documentIt = $this->getTable()->getDocumentIt();
@@ -443,14 +430,14 @@ class PMWikiDocumentList extends PMWikiList
 
             if ( $prevIt->getId() != '' ) { ?>
                 <div class="btn-group pull-left hidden-print" style="margin-top:8px;">
-                    <a class="btn append-btn btn-sm btn-secondary" href="javascript: gotoRandomPage(<?=$prevIt->getId()?>,1,false);" title="<?=$prevIt->getDisplayNameSearch()?>">
+                    <a tabindex="-1" class="btn append-btn btn-sm btn-secondary" href="javascript: gotoRandomPage(<?=$prevIt->getId()?>,1,false);" title="<?=$prevIt->getDisplayNameSearch()?>">
                         <i class="icon-backward icon-white"></i> <?=\TextUtils::getWords($prevIt->get('Caption'),3)?>
                     </a>
                 </div>
             <?php }
 
             $method = new ObjectCreateNewWebMethod($this->getObject());
-            if ( $method->hasAccess() && $this->getTable()->getEditable() ) {
+            if ( $method->hasAccess() && $this->getTable()->getEditable() && $documentIt->getId() != '' ) {
                 $method->setVpd($documentIt->get('VPD'));
                 $method->setRedirectUrl('function(jsonText){gotoPageJson(jsonText);}');
                 $doc_section_url = $method->url(array(
@@ -458,7 +445,7 @@ class PMWikiDocumentList extends PMWikiList
                     ));
                 ?>
                 <div id="new-doc-section" class="btn-group pull-left hidden-print" style="margin-top:8px;">
-                    <a class="btn append-btn btn-sm btn-success" href="<?=$doc_section_url?>">
+                    <a tabindex="-1" class="btn append-btn btn-sm btn-success" href="<?=$doc_section_url?>">
                         <i class="icon-plus icon-white"></i> <?=$this->getObject()->getSectionName()?>
                     </a>
                 </div>
@@ -467,7 +454,7 @@ class PMWikiDocumentList extends PMWikiList
 
             if ( $nextIt->getId() != '' ) { ?>
                 <div class="btn-group pull-right hidden-print" style="margin-top:8px;">
-                    <a class="btn append-btn btn-sm btn-secondary" href="javascript: gotoRandomPage(<?=$nextIt->getId()?>,1,false);" title="<?=$nextIt->getDisplayNameSearch()?>">
+                    <a tabindex="-1" class="btn append-btn btn-sm btn-secondary" href="javascript: gotoRandomPage(<?=$nextIt->getId()?>,1,false);" title="<?=$nextIt->getDisplayNameSearch()?>">
                         <i class="icon-forward icon-white"></i> <?= \TextUtils::getWords($nextIt->get('Caption'),3) ?>
                     </a>
                 </div>
@@ -561,9 +548,22 @@ class PMWikiDocumentList extends PMWikiList
 
 	function drawAttributes( $object_it )
 	{
-	    $visibleColumns = array();
-		foreach( $this->getObject()->getAttributes() as $key => $attribute )
-		{
+        $visibleColumns = array();
+
+        $versionedAttributes = array_intersect(
+            $this->getVersionedAttributes(), $this->attributeFields
+        );
+        $compareToIt = $this->getTable()->getCompareToSnapshot($this->getFilterValues());
+        if ( $compareToIt->getId() != '' ) {
+            $comparePageIt = $this->getBaselineService()->getComparedPageIt($object_it, $compareToIt);
+            foreach( $versionedAttributes as $attribute ) {
+                if( $comparePageIt->get($attribute) == '0' && $object_it->get($attribute) == '' ) continue;
+                if( $comparePageIt->get($attribute) == $object_it->get($attribute) ) continue;
+                $visibleColumns[] = $attribute;
+            }
+        }
+
+		foreach( $this->getObject()->getAttributes() as $key => $attribute ) {
 			if ( !in_array($key, $this->attributeFields) ) continue;
 			if ( !$this->getColumnVisibility($key) ) continue;
 			if ( trim($object_it->get($key)) == '' ) continue;
@@ -589,14 +589,6 @@ class PMWikiDocumentList extends PMWikiList
         echo '</div>';
 	}
 	
-	function getAttributesVisible()
-	{
-		foreach( $this->getObject()->getAttributes() as $key => $attribute ) {
-			if ( $this->getColumnVisibility($key) && in_array($key, $this->attributeFields) ) return true;
-		}
-		return false;
-	}
-	
 	function getHeaderAttributes( $attr )
 	{
 		switch ( $attr )
@@ -616,10 +608,11 @@ class PMWikiDocumentList extends PMWikiList
 						'actions' => $compare_actions
 					);
 
-					if ( $this->getTable()->getCompareToSnapshot()->getId() != '' ) {
-                        $documentIt = $this->getTable()->getDocumentIt();
+                    $documentIt = $this->getTable()->getDocumentIt();
+                    $compareToIt = $this->getTable()->getCompareToSnapshot($_REQUEST);
+					if ( $compareToIt->getId() != '' && $documentIt->get('DocumentVersion') != $compareToIt->get('DocumentVersion') && $compareToIt->get('DocumentVersion') != '' ) {
                         $actions = $this->getForm($documentIt)
-                            ->getReintegrateActions( $documentIt, $this->getTable()->getCompareToSnapshot(), 'all' );
+                            ->getReintegrateActions( $documentIt, $compareToIt, 'all' );
 
                         if ( count($actions) > 0 ) {
                             ob_start();
@@ -694,7 +687,6 @@ class PMWikiDocumentList extends PMWikiList
                 )
             );
 
-        $this->attributesVisible = $this->getAttributesVisible();
 		$this->itemsEditable = $this->getTable()->getEditable();
 
         if ( $_REQUEST[strtolower(get_class($this->getObject()))] != '' ) {
@@ -781,10 +773,10 @@ class PMWikiDocumentList extends PMWikiList
 
     function getNoItemsMessage()
     {
-        if ( $this->getTable()->getCompareToSnapshot()->getId() != '' ) {
+        if ( $this->getTable()->getCompareToSnapshot($_REQUEST)->getId() != '' ) {
             return text(2674);
         }
-        return parent::getNoItemsMessage();
+        return text(1312);
     }
 
     function getFilteredReferenceIt( $attr, $value )
@@ -800,7 +792,7 @@ class PMWikiDocumentList extends PMWikiList
         if ( $this->previewCount != 1 )
         {
             $method = new ObjectCreateNewWebMethod($this->getObject());
-            if ( $method->hasAccess() && $this->getTable()->getEditable() ) {
+            if ( $method->hasAccess() && $this->getTable()->getEditable() && $documentIt->getId() != '' ) {
                 $method->setVpd($documentIt->get('VPD'));
                 $method->setRedirectUrl('function(jsonText){gotoPageJson(jsonText);}');
                 $doc_section_url = $method->url(array(
@@ -808,7 +800,7 @@ class PMWikiDocumentList extends PMWikiList
                 ));
                 ?>
                 <div id="new-doc-section" class="btn-group pull-left hidden-print" style="display: none;">
-                    <a class="btn append-btn btn-sm btn-success" href="<?=$doc_section_url?>">
+                    <a tabindex="-1" class="btn append-btn btn-sm btn-success" href="<?=$doc_section_url?>">
                         <i class="icon-plus icon-white"></i> <?=$this->getObject()->getSectionName()?>
                     </a>
                 </div>
@@ -816,7 +808,7 @@ class PMWikiDocumentList extends PMWikiList
             }
             ?>
             <div id="doc-load-more" class="btn-group pull-left" style="display: none;">
-                <a class="btn append-btn btn-sm btn-secondary" href="javascript: buildBottomWaypoint(localOptions);">
+                <a tabindex="-1" class="btn append-btn btn-sm btn-secondary" href="javascript: buildBottomWaypoint(localOptions);">
                     <i class="icon-forward icon-white"></i> <?= text(2822) ?>
                 </a>
             </div>

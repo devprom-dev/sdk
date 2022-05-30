@@ -247,15 +247,21 @@ class RequestBoardPlanning extends RequestBoard
     function drawCellBasement( $boardValue, $groupValue )
     {
         parent::drawCellBasement( $boardValue, $groupValue );
+        if ( trim($boardValue) == '' ) return;
 
         $workloadData = $this->workload[$groupValue]['Iterations'][intval($boardValue)];
         if ( is_array($workloadData) ) {
             echo $this->getRenderView()->render('pm/UserWorkloadProgress.php', array (
-                'data' => array( 'Iterations' => array($workloadData) ),
+                'data' => $workloadData,
                 'measure' => $this->strategy
             ));
         }
     }
 
+    public function setWorkloadData( $data ) {
+        $this->workload = $data;
+    }
+
     private $board_attribute_iterator = null;
+    private $workload = array();
 }

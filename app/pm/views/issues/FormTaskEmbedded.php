@@ -51,36 +51,13 @@ class FormTaskEmbedded extends PMFormEmbedded
         $object->setAttributeRequired( 'OrderNum', true );
     }
 
-    function process( $object_it, $index, $process_record_callback = null )
- 	{
- 		$this->tasks_added = array();
- 		
- 		parent::process($object_it, $index, $process_record_callback);
-
- 		if ( $_REQUEST['dependencies'] != '' )
- 		{
-	 		$trace = getFactory()->getObject('TaskTraceTask');
-
-	 		foreach( $this->tasks_added as $key => $task_id )
-	 		{
-	 			if ( $this->tasks_added[$key + 1] < 1 ) break;
-	 			
-	 			$parms = array( 
-	 					'Task' => $this->tasks_added[$key + 1], 
-	 					'ObjectId' => $task_id
-	 			); 
-	 			
-	 			$trace_it = $trace->getByRefArray($parms);
-	 			
-	 			if ( $trace_it->getId() < 1 ) $trace->add_parms($parms);
-	 		}
-	 	}
+ 	function processAdded( $object_it ){
+        $this->tasks_added[] = $object_it->getId();
  	}
- 	
- 	function processAdded( $object_it )
- 	{ 
- 		array_push( $this->tasks_added, $object_it->getId() );
- 	}
+
+ 	function getAddedTasks() {
+ 	    return $this->tasks_added;
+    }
  	
   	function getDiscriminator()
  	{

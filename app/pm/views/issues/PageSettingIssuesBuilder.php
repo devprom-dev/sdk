@@ -31,7 +31,7 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         
         // board
         $setting = new PageListSetting('RequestBoard');
-        $columns = array('UID','Caption','OpenTasks','RecentComment','Fact','Estimation','Attachment','Links','Tags');
+        $columns = array('UID','Caption','OpenTasks','RecentComment','Fact','Estimation','Attachment','Links','Tags','DeliveryDate');
 
         if ( !$methodology_it->RequestEstimationUsed() ) {
             $columns[] = 'TasksPlanned';
@@ -70,9 +70,13 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         $settings->add( $setting );
 
         $setting = new ReportSetting('issuesestimation');
-        $setting->setVisibleColumns(
-            array('UID', 'Caption', 'Estimation', 'EstimationLeft', 'Tasks', 'Fact', 'Priority', 'TasksPlanned')
-        );
+        $columns = array('UID', 'Caption', 'Estimation', 'EstimationLeft', 'Tasks', 'Fact', 'TasksPlanned');
+        $taskTypeIt = getFactory()->getObject('TaskTypeUnified')->getAll();
+        while( !$taskTypeIt->end() ) {
+            $columns[] = 'Planned'.$taskTypeIt->getId();
+            $taskTypeIt->moveNext();
+        }
+        $setting->setVisibleColumns($columns);
         $setting->setSorts(array('RecordCreated.D'));
         $setting->setGroup( $methodology_it->HasPlanning() ? 'Iteration' : 'PlannedRelease' );
         $settings->add( $setting );
@@ -100,6 +104,14 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
                 'Priority.A'
             )
         );
+        $settings->add( $setting );
+
+        $setting = new ReportSetting('assignedissues');
+        $setting->setVisibleColumns(
+            array('UID', 'Caption', 'Fact', 'Priority', 'Deadlines', 'Estimation', 'EstimationLeft')
+        );
+        $setting->setSorts(array('Priority', 'OrderNum'));
+        $setting->setGroup('Owner.A');
         $settings->add( $setting );
 
     }

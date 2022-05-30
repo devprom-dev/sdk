@@ -12,7 +12,8 @@ class SystemDictionaryRegistry extends ObjectRegistrySQL
                 'pm_Severity',
                 'pm_Importance',
                 'pm_ChangeRequestLinkType',
-                'cms_Language'
+                'cms_Language',
+                'pm_FinancingType'
             ),
             function($class) {
 	            return class_exists(getFactory()->getClass($class));

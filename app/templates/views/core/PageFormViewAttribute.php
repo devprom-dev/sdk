@@ -1,4 +1,6 @@
 <?php
+$script = "javascript:processBulk('".$name."','"
+    .$viewurl."&formonly=true&operation=Attribute".$referenceName."','".$objectid."', devpromOpts.updateUI);";
 
 switch ( $class )
 {
@@ -6,17 +8,34 @@ switch ( $class )
     case 'fieldvelocity':
     case 'fieldhours':
     case 'fieldhourspositivenegative':
-	case 'fieldtext':
-	case 'fieldlargetext':
-	case 'fieldshorttext':
-    case 'fieldcomputed':
-        if ( $editable && $editmode && is_object($field) ) {
-            $field->render( $view );
+        if ( $editable && is_object($field) ) {
+            if ( $editmode ) {
+                $field->render( $view );
+            }
+            else {
+                echo '<a class="btn btn-xs btn-light" onclick="'.$script.'">'.($text != '' ? $text : '...').'</a>';
+            }
         }
         else {
             echo $text;
         }
 		break;
+
+    case 'fieldtext':
+    case 'fieldlargetext':
+    case 'fieldshorttext':
+        if ( $editable && is_object($field) ) {
+            if ( $editmode ) {
+                $field->render( $view );
+            }
+            else {
+                echo $text . ' <a class="btn btn-xs btn-light" onclick="'.$script.'">...</a>';
+            }
+        }
+        else {
+            echo $text;
+        }
+        break;
 
     case 'fielddatetime':
     case 'fielddate':
@@ -37,11 +56,30 @@ switch ( $class )
         echo '</span>';
         break;
 
+    case 'fieldcomputed':
+        if ( $editable ) {
+            $field->render( $view );
+        }
+        else {
+            echo $text;
+        }
+        break;
+
 	default:
         if ( is_object($field) )
         {
             echo '<span name="'.$field->getId().'" class="'.get_class($field).'">';
-                $field->render( $view );
+                if ( $editable && !$editmode && ($field instanceof FieldAutoCompleteObject || $field instanceof FieldDictionary) ) {
+                    if ( html_entity_decode($text) != $text ) {
+                        echo $text . ' <a class="btn btn-xs btn-light" onclick="'.$script.'">...</a>';
+                    }
+                    else {
+                        echo '<a class="btn btn-xs btn-light" onclick="'.$script.'">'.($text != '' ? $text : '...').'</a>';
+                    }
+                }
+                else {
+                    $field->render( $view );
+                }
             echo '</span>';
         }
         else

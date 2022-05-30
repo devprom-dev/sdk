@@ -35,7 +35,7 @@ class CustomResource extends Resource
  	
  	function getAll()
  	{
- 		$predicate = $this->getFilterPredicate();
+ 		$predicate = $this->getRegistry()->getFilterPredicate(array());
  		
  		$items = array();
  		
@@ -76,12 +76,15 @@ class CustomResource extends Resource
      		    $right = $items['contains'];
      		    $value = $resource['ResourceValue'];
      		    $original = $resource['OriginalValue'];
-     		    
-     		    $remove = mb_stripos($value, $right, 0, 'utf-8') === false 
-     		        && mb_stripos($original, $right, 0, 'utf-8') === false;
-     		    
-     			if ( $remove )
-     			{
+
+                $remove = false;
+     		    foreach( explode(' ', $right) as $rightItem ) {
+                    $remove = mb_stripos($value, $rightItem, 0, 'utf-8') === false
+                        && mb_stripos($original, $rightItem, 0, 'utf-8') === false;
+                    if ( $remove ) break;
+                }
+
+     			if ( $remove ) {
  			        unset($data[$key]);
      			}
      		}

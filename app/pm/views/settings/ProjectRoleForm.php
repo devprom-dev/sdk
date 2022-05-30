@@ -58,13 +58,9 @@ class ProjectRoleForm extends PMPageForm
 
 	function createFieldObject( $attr_name ) 
 	{
-		global $model_factory;
-		
-		if( $attr_name == 'ProjectRoleBase') 
-		{
-			return new FieldDictionary( $model_factory->getObject('ProjectRoleBase') );
+		if( $attr_name == 'ProjectRoleBase') {
+			return new FieldDictionary( getFactory()->getObject('ProjectRoleBase') );
 		}
-		
 		return parent::createFieldObject( $attr_name );
 	}
 }

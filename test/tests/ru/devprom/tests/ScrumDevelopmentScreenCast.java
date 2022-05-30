@@ -135,11 +135,10 @@ public class ScrumDevelopmentScreenCast extends ProjectTestBase{
     }
 
     private void planingStage() throws InterruptedException {
-    	RequestsBoardPage historyBoardPage = (new RequestsBoardPage(driver));
+    	RequestsBoardPage historyBoardPage = (new ScrumPageBase(driver)).gotoHistoryBoard();
         historyBoardPage.moveToAnotherSection(userStory1.getNumericId(), "0", "Запланировано в спринт");
         RequestPlanningPage pp = (new RequestPlanningPage(driver)); 
-        pp.addContent("Пользователь не может ввести имя меньше 3 и больше 20 символов");
-        pp.addRate("20");
+        pp.addRate("20 SP");
         task1 = new ScrumTask("Отрефакторить механизм добавления папок, чтобы позволять создавать вложенные папки вплоть до 3 уровня вложенности");
         task1.setType("Проектирование");
         task2 = new ScrumTask("Проапдейтить версию SDK для использования нового механизма локального хранения данных на устройстве");
@@ -149,7 +148,8 @@ public class ScrumDevelopmentScreenCast extends ProjectTestBase{
         (new RequestPlanningPage(driver)).fillTask(1, task1.getName(), task1.getType(), "", 1.0);
         (new RequestPlanningPage(driver)).fillTask(2, task2.getName(), task2.getType(), "", 1.3);
         (new RequestPlanningPage(driver)).fillTask(3, task3.getName(), task3.getType(), "", 1.5);
-        (new RequestPlanningPage(driver)).savePlannedOnBoard();
+        pp.addContent("Пользователь не может ввести имя меньше 3 и больше 20 символов");
+        pp.savePlannedOnBoard();
         
         TasksBoardPage taskBoard = (new ScrumPageBase(driver)).gotoTasksBoard();
         task1.setId(taskBoard.getIdByName(task1.getName()));
@@ -177,7 +177,7 @@ public class ScrumDevelopmentScreenCast extends ProjectTestBase{
     }
 
     private void testingStage() throws IOException, InterruptedException {
-        TasksBoardPage taskBoard = new TasksBoardPage(driver);
+        TasksBoardPage taskBoard = (new ScrumPageBase(driver)).gotoTasksBoard();
         task3.setId(taskBoard.getIdByName(task3.getName()));
         taskBoard.clickToContextMenuItem(task3.getId(), "Взять в работу");
         taskBoard.clickToContextSubMenuItem(task3.getId(), "Создать", "Тестовый сценарий");

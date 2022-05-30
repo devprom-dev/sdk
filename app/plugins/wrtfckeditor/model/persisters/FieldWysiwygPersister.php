@@ -9,7 +9,6 @@ class FieldWysiwygPersister extends ObjectSQLPersister
     private $fields = null;
     private $codeBlocks = array();
     private $tableRowIndex = 0;
-    private $comment_it = null;
 
     function map( & $parms )
 	{

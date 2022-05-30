@@ -2,7 +2,7 @@
 
 namespace Application\Migrations;
 
-use Doctrine\DBAL\Migrations\AbstractMigration;
+use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema;
 
 /**
@@ -10,7 +10,7 @@ use Doctrine\DBAL\Schema\Schema;
  */
 class Version20150128143045 extends AbstractMigration
 {
-    public function up(Schema $schema)
+    public function up(Schema $schema) : void
     {
         if (!$schema->getTable('cms_ExternalUser')->hasColumn('Company')) {
             $this->addSql('ALTER TABLE cms_ExternalUser ADD Company INTEGER');
@@ -29,7 +29,7 @@ class Version20150128143045 extends AbstractMigration
         }
     }
 
-    public function down(Schema $schema)
+    public function down(Schema $schema) : void
     {
         $this->addSql('ALTER TABLE cms_ExternalUser DROP COLUMN Company');
         $this->addSql('ALTER TABLE cms_ExternalUser DROP COLUMN RecordCreated');

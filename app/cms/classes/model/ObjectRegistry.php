@@ -49,8 +49,6 @@ abstract class ObjectRegistry
 		return $iterator;
 	}
 	
-	abstract public function getAll();
-	
 	abstract public function Store( OrderedIterator $object_it, array $data );
 
     public function Create( array $data ) {}

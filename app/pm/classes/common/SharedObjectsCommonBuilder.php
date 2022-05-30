@@ -17,13 +17,12 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
         }
      	$entities = array ( 
             'Request' => $requestSection,
+            'RequestType' => $requestSection,
             'RequestTraceBase' => $requestSection,
             'RequestLink' => $requestSection,
             'Feature' => 'Features',
             'FeatureHasIssues' => 'Features',
             'FeatureTerminal' => 'Features',
-            'PMBlogPost' => 'Blog',
-            'BlogPostFile' => 'Blog',
             'Activity' => '3',
             'ActivityTask' => '3',
             'SpentTime' => '3',

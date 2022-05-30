@@ -2,26 +2,38 @@
 
 class FieldNumber extends Field
 {
-    function readOnly()
-    {
+    private $decimals = 0;
+    private $dimension = '';
+
+    function readOnly() {
          return !$this->getEditMode() || parent::readOnly();
     }
-     
-    function getText()
-    {
-    	return number_format(floatval($this->getValue()), 0, ',', ' ');
-	}
-      
- 	function draw( $view = null )
+
+    function setDecimals( $value ) {
+        $this->decimals = $value;
+    }
+
+    function setDimension( $value ) {
+        $this->dimension = $value;
+    }
+
+    function getText() {
+        return number_format(floatval(parent::getText()), $this->decimals, ',', ' ') . $this->dimension;
+    }
+
+    function draw( $view = null )
 	{
 		if ( $this->readOnly() ) {
-			echo '<input class="input-medium" type="text" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'" readonly>';
+            $readonlyValue = number_format(floatval($this->getValue()), $this->decimals, ',', ' ');
+			echo '<input class="input-medium" type="text" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$readonlyValue.'" readonly>';
 		}
 		else
 		{
-		?>
-			<input class="input-medium" type="text" id="<? echo $this->getId() ?>" name="<? echo $this->getName(); ?>" value="<? echo $this->getValue(); ?>" tabindex="<? echo $this->getTabIndex() ?>" <?=($this->getRequired() ? 'required' : '')?> default="<?=$this->getDefault()?>" >
-		<?
+            echo '<span class="pull-left" style="min-width:210px;">';
+                echo '<input class="pull-left input-small" type="text" id="'.$this->getId().'" autocomplete="off" name="'.$this->getName().'" value="'.$this->getValue().'" tabindex="'.$this->getTabIndex().'" '.($this->getRequired() ? 'required' : '').' default="'.$this->getDefault().'">';
+                echo '<div class="pull-left" style="margin-top:4px;margin-left:6px;">'.$this->dimension.'</div>';
+            echo '</span>';
+            echo '<div class="clearfix"></div>';
 		}
 	}
 }

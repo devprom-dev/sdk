@@ -113,7 +113,7 @@ public class XLTableParser
 		    String name = table[i].get(type);
 		    String sum = table[i].get("Итого").isEmpty() ? "0" : table[i].get("Итого");
 		    String[] columnNames = table[i].keySet().toArray(new String[0]);
-		    String[] days = new String[table[i].size()-2];
+		    String[] days = new String[table[i].size()-4];
 		    for (int j=0; j < days.length; j++){
 				String cell = table[i].get(columnNames[j + 1]);
 				days[j] = cell.equals("") ? "0" : cell;

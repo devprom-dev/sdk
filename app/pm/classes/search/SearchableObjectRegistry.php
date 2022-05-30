@@ -4,12 +4,11 @@ class SearchableObjectRegistry extends ObjectRegistrySQL
 {
  	var $objects = array();
  	
- 	function add( $class_name, $attributes = array(), $report = '' )
+ 	function add( $class_name, $report = '' )
  	{
  		$this->objects[] = array(
  			'class' => $class_name,
             'title' => getFactory()->getObject($class_name)->getDisplayName(),
- 			'attributes' => $attributes,
  			'report' => $report
  		);
  	}
@@ -27,7 +26,6 @@ class SearchableObjectRegistry extends ObjectRegistrySQL
  				'entityId' => $object['class'],
  				'ReferenceName' => $object['class'],
                 'Caption' => $object['title'],
- 				'attributes' => $object['attributes'],
  				'Report' => $object['report']
  			);
  		}

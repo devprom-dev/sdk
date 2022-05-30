@@ -58,14 +58,12 @@ class BackupPage extends AdminPage
 	    switch ( $_REQUEST['export'] )
 	    {
 	        case 'download':
-	            $backupIt = $this->getObject()->getAll();
-                $backupIt->moveToId($_REQUEST['backup_file_name']);
-
+	            $backupIt = $this->getObject()->getExact($_REQUEST['backup']);
                 if ( $backupIt->getId() != '' ) {
                     $downloader = new Downloader;
                     $downloader->echoFile(
-                        SERVER_BACKUP_PATH.$backupIt->get('Caption'),
-                        $backupIt->get('Caption'),
+                        SERVER_BACKUP_PATH.$backupIt->get('BackupFileName'),
+                        $backupIt->get('BackupFileName'),
                         'application/zip'
                     );
                 }

@@ -112,11 +112,11 @@ class SoapService
 	// Loads object data using the given ID
 	function load( $token, $classname, $id )
 	{
-		global $model_factory, $server;
+		global $server;
 
 		$this->login( $token );
 
-		$object = $model_factory->getObject($classname);
+		$object = getFactory()->getObject($classname);
 
 		if ( !getFactory()->getAccessPolicy()->can_read($object) )
 		{
@@ -162,18 +162,15 @@ class SoapService
 
 		$this->setDefaultValues( $object, $attrs, $parms );
 
-		$id = $object->add_parms($parms);
-
-		$it = $object->getExact($id);
-
-        getFactory()->getEventsManager()
-            ->executeEventsAfterBusinessTransaction(
-                $it->copy(), 'WorklfowMovementEventHandler', $parms
-            );
-
-		$result = $this->serializeToSoap( $it );
-
-		return $result;
+		try {
+            $it = getFactory()->createEntity($object, $parms);
+            $result = $this->serializeToSoap( $it );
+            return $result;
+        }
+        catch (\Exception $e) {
+            $server->fault('', $this->logError($e->getMessage() . $e->getTraceAsString()));
+            return;
+        }
 	}
 
 	// Appends array of new objects
@@ -194,8 +191,6 @@ class SoapService
 		}
 
 		$result = array();
-		$ids = array();
-
 		foreach( $parms as $object_parms )
 		{
 			foreach( $object_parms as $key => $param )
@@ -206,18 +201,15 @@ class SoapService
 				
 			$this->storeFiles( $object, $object_parms );
 			$this->setDefaultValues( $object, $attrs, $object_parms );
-				
-			$id = $object->add_parms($object_parms);
-			$it = $object->getExact($id);
 
-			array_push( $result, $this->serializeToSoap( $it ) );
-            $ids[] = $id;
+            try {
+                $it = getFactory()->createEntity($object, $object_parms);
+                array_push($result, $this->serializeToSoap($it));
+            }
+            catch (\Exception $e) {
+                $server->fault('', $this->logError($e->getMessage() . $e->getTraceAsString()));
+            }
 		}
-
-        getFactory()->getEventsManager()
-            ->executeEventsAfterBusinessTransaction(
-                $object->getExact($ids), 'WorklfowMovementEventHandler'
-            );
 
         return $result;
 	}
@@ -225,11 +217,11 @@ class SoapService
 	// Stores object data using the given ID
 	function store( $token, $classname, $id, $parms )
 	{
-		global $model_factory, $server;
+		global $server;
 
 		$this->login( $token );
 
-		$object = $model_factory->getObject($classname);
+		$object = getFactory()->getObject($classname);
 
 		$it = $object->getExact($id);
 
@@ -258,18 +250,15 @@ class SoapService
 		}
 
 		$this->storeFiles( $object, $parms );
-		
 		$this->setDefaultValues( $object, $attrs, $parms );
 
-		$result = $object->modify_parms($id, $parms);
-		if ( $result < 1 ) {
-		    $server->fault('', $this->logError(str_replace('%1', $it->getDisplayName(), text(1216))));
+		try {
+            getFactory()->modifyEntity($object->getExact($id), $parms);
         }
-
-        getFactory()->getEventsManager()
-            ->executeEventsAfterBusinessTransaction(
-                $object->getExact($id), 'WorklfowMovementEventHandler', $parms
-            );
+        catch (\Exception $e) {
+            $server->fault('', $this->logError($e->getMessage() . $e->getTraceAsString()));
+            return;
+        }
 
         return $id;
 	}
@@ -277,13 +266,12 @@ class SoapService
 	// Stores array of objects
 	function storeBatch( $token, $classname, $parms )
 	{
-		global $model_factory, $server;
+		global $server;
 		 
 		$this->login( $token );
 
-		$object = $model_factory->getObject($classname);
+		$object = getFactory()->getObject($classname);
 		$attrs = $this->getAttributes( $object );
-		$ids = array();
 
 		foreach( $parms as $object_parms )
 		{
@@ -313,28 +301,25 @@ class SoapService
 
 			$this->storeFiles( $object, $object_parms );
 			$this->setDefaultValues( $object, $attrs, $object_parms );
-				
-			$result = $object->modify_parms($it->getId(), $object_parms);
-			if ( $result < 1 ) {
-				$server->fault('', $this->logError(str_replace('%1', $it->getDisplayName(), text(1216))));
-			}
-            $ids[] = $it->getId();
-		}
 
-        getFactory()->getEventsManager()
-            ->executeEventsAfterBusinessTransaction(
-                $object->getExact($ids), 'WorklfowMovementEventHandler'
-            );
+			try {
+                getFactory()->modifyEntity($it, $object_parms);
+            }
+            catch (\Exception $e) {
+                $server->fault('', $this->logError($e->getMessage() . $e->getTraceAsString()));
+                return;
+            }
+		}
     }
 
 	// Deletes an object using the given ID
 	function delete( $token, $classname, $id )
 	{
-		global $model_factory, $server;
+		global $server;
 		 
 		$this->login( $token );
 
-		$object = $model_factory->getObject($classname);
+		$object = getFactory()->getObject($classname);
 		$it = $object->getExact($id);
 
 		if ( $it->count() < 1 )
@@ -355,11 +340,11 @@ class SoapService
 	// Deletes array of objects
 	function deleteBatch( $token, $classname, $parms)
 	{
-		global $model_factory, $server;
+		global $server;
 		 
 		$this->login( $token );
 
-		$object = $model_factory->getObject($classname);
+		$object = getFactory()->getObject($classname);
 
 		foreach( $parms as $values )
 		{
@@ -427,13 +412,13 @@ class SoapService
 	// Returns collection of objects found by given condition
 	function find( $token, $classname, $parms )
 	{
-		global $model_factory, $server;
+		global $server;
 		 
 		$result = array();
 		 
 		$this->login( $token );
 
-		$object = $model_factory->getObject($classname);
+		$object = getFactory()->getObject($classname);
 
 		if ( !getFactory()->getAccessPolicy()->can_read($object) )
 		{

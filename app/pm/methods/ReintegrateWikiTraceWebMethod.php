@@ -102,11 +102,13 @@ class ReintegrateWikiTraceWebMethod extends WebMethod
                 continue;
             }
 
+            $data = array();
             $copyAttributes = $_REQUEST['CopyAttributes'];
             foreach( $copyAttributes as $attribute ) {
                 $data[$attribute] = $targetIt->getHtmlDecoded($attribute);
             }
             $data['ReintegratedTargetPageId'] = $targetIt->getId();
+            $data['DataHash'] = $targetIt->get('DataHash');
 
             if ( $object->modify_parms($sourceIt->getId(), $data) > 0 ) {
                 $text = sprintf(text(2942),

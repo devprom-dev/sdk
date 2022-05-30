@@ -67,9 +67,16 @@ abstract class IntegrationChannel
         return array();
     }
 
+    protected function getEscapedUrl( $url ) {
+        return str_replace(' ', '%20', $url);
+    }
+
     protected function binaryGet( $url, $data = array() )
     {
-        curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($data));
+        $location = $this->getEscapedUrl($url)
+            . (strpos($url, '?') === FALSE ? '?' : '') . http_build_query($data);
+
+        curl_setopt($this->curl, CURLOPT_URL, $location);
         curl_setopt($this->curl, CURLOPT_HTTPGET, true);
         curl_setopt($this->curl, CURLOPT_POST, false);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "GET");
@@ -79,7 +86,8 @@ abstract class IntegrationChannel
 
     protected function binaryPost( $url, $content )
     {
-        curl_setopt($this->curl, CURLOPT_URL, $url);
+        $location = $this->getEscapedUrl($url);
+        curl_setopt($this->curl, CURLOPT_URL, $location);
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, true);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "POST");
@@ -102,7 +110,9 @@ abstract class IntegrationChannel
         $content = array (
             'file' => $fileInfo
         );
-        curl_setopt($this->curl, CURLOPT_URL, $url);
+
+        $location = $this->getEscapedUrl($url);
+        curl_setopt($this->curl, CURLOPT_URL, $location);
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, true);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "POST");
@@ -115,8 +125,9 @@ abstract class IntegrationChannel
     {
         if ( $this->curlDelay > 0 ) sleep($this->curlDelay);
 
-        $url = $this->object_it->get('URL').$url;
-        $url .= (strpos($url, '?') === FALSE ? '?' : '').http_build_query($data);
+        $url = $this->getEscapedUrl($this->object_it->get('URL') . $url);
+        $url .= (strpos($url, '?') === FALSE ? '?' : '') . http_build_query($data);
+
         $this->getLogger()->info("GET: ".$url);
 
         curl_setopt($this->curl, CURLOPT_URL, $url);
@@ -134,15 +145,17 @@ abstract class IntegrationChannel
 
     protected function jsonPost( $url, $post = array(), $parms = array(), $verbose = true )
     {
-        $url = $this->object_it->get('URL').$url;
+        $url = $this->getEscapedUrl($this->object_it->get('URL') . $url);
         $post = $this->buildPostFields($post);
 
-        $this->getLogger()->info('POST: '.$url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
+        $url .= (strpos($url, '?') === FALSE ? '?' : '') . http_build_query($parms);
+        $this->getLogger()->info('POST: ' . $url);
+
         if ( $verbose ) {
             $this->getLogger()->debug('jsonPost data: '.var_export($post,true));
         }
 
-        curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
+        curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, true);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "POST");
@@ -176,16 +189,18 @@ abstract class IntegrationChannel
     protected function jsonPut( $url, $post = array(), $parms = array(), $verbose = true )
     {
         if ( strpos($url, 'http') === false ) {
-            $url = $this->object_it->get('URL').$url;
+            $url = $this->getEscapedUrl($this->object_it->get('URL') . $url);
         }
         $post = $this->buildPostFields($post);
+
+        $url .= (strpos($url, '?') === FALSE ? '?' : '') . http_build_query($parms);
 
         $this->getLogger()->info('PUT: '.$url);
         if ( $verbose ) {
             $this->getLogger()->debug(var_export($post,true));
         }
 
-        curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
+        curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, false);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "PUT");
@@ -218,12 +233,14 @@ abstract class IntegrationChannel
         }
         $post = $this->buildPatchFields($post);
 
+        $url .= (strpos($url, '?') === FALSE ? '?' : '') . http_build_query($parms);
+
         $this->getLogger()->info('PATCH: '.$url);
         if ( $verbose ) {
             $this->getLogger()->debug(var_export($post,true));
         }
 
-        curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
+        curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, false);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
@@ -285,10 +302,11 @@ abstract class IntegrationChannel
 
     protected function jsonDelete( $url, $parms = array() )
     {
-        $url = $this->object_it->get('URL').$url;
+        $url = $this->getEscapedUrl($this->object_it->get('URL') . $url);
+        $url .= (strpos($url, '?') === FALSE ? '?' : '') . http_build_query($parms);
         $this->getLogger()->info('DELETE: '.$url);
 
-        curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
+        curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, false);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -302,7 +320,10 @@ abstract class IntegrationChannel
     private function parseResult()
     {
         $result = curl_exec($this->curl);
-        if ( $result === false ) throw new Exception(curl_error($this->curl));
+        if ( $result === false ) {
+            throw new Exception("curl_exec failed: "
+                . curl_errno($this->curl) . ", " . curl_error($this->curl));
+        }
 
         $info = curl_getinfo($this->curl);
         if ( $info['http_code'] >= 300 ) {
@@ -367,7 +388,7 @@ abstract class IntegrationChannel
                 $value = $this->mapToInternal($class, $id, $source, $column, $getter);
                 if ( $column['type'] != '' ) {
                     $value = $value['reference'];
-                    $id = $value[$this->getKeyField()];
+                    $id = is_array($value) ? $value[$this->getKeyField()] : $value;
                     if ( $id == '' ) continue; // skip one-to-many reference
                     // process one-to-one reference
                     $data[$attribute] = $this->idsMapRead[$column['type'].$id];
@@ -556,6 +577,14 @@ abstract class IntegrationChannel
             $value = $parentItem[array_shift($attribute_path)];
             foreach( $attribute_path as $field ) $value = $value[$field];
 
+            $parentId = $queueItem[$this->getKeyField()];
+            if ( $parentId != '' && $queueItem['class'] == 'RequestLink' ) {
+                $result[] = array (
+                    'class' => $queueItem['class'],
+                    'id' => $parentId
+                );
+            }
+
             if ( $value[$this->getKeyField()] == '' ) {
                 // one-to-many
                 foreach( $value as $item ) {
@@ -563,7 +592,7 @@ abstract class IntegrationChannel
                     $result[] = array (
                         'class' => $column['type'],
                         'id' => $item[$this->getKeyField()],
-                        'parentId' => $queueItem[$this->getKeyField()]
+                        'parentId' => $parentId
                     );
                 }
             }
@@ -573,7 +602,7 @@ abstract class IntegrationChannel
                 $result[$value[$this->getKeyField()]] = array (
                     'class' => $column['type'],
                     'id' => $value[$this->getKeyField()],
-                    'parentId' => $queueItem[$this->getKeyField()]
+                    'parentId' => $parentId
                 );
             }
         }
@@ -608,12 +637,12 @@ abstract class IntegrationChannel
         return str_replace('{'.$this->getKeyField().'}', $id, $this->parseUrl($url));
     }
 
-    public function setHtmlAllowed( $value = true ) {
-        $this->htmlAllowed = $value;
+    public function setWysiwygMode( $value ) {
+        $this->wysiwygMode = $value;
     }
 
-    public function getHtmlAllowed() {
-        return $this->htmlAllowed;
+    public function getWysiwygMode() {
+        return $this->wysiwygMode;
     }
 
     abstract public function buildDictionaries();
@@ -630,5 +659,5 @@ abstract class IntegrationChannel
     private $idsMapWrite = array();
     private $mapping = array();
     private $curlDelay = 0;
-    private $htmlAllowed = false;
+    private $wysiwygMode = false;
 }

@@ -4,8 +4,6 @@
 
  $mode = $_REQUEST['mode'];
  
- $blog_id = $_REQUEST['blog_id'];
- 
  if( $mode == '' || $mode == 'log' )
  {
  	include('views/communications/ProjectLogPage.php');

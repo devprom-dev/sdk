@@ -18,8 +18,8 @@ class ReleaseMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addAttributeGroup('Caption', 'alternative-key');
 
         $metadata->setAttributeCaption('Caption', translate('Название'));
-    	$metadata->addAttribute( 'PlannedCapacity', 'FLOAT', text(1421), false );
-        $metadata->addAttribute( 'LeftCapacityInWorkingDays', 'FLOAT', text(1422), false );
+    	$metadata->addAttribute( 'PlannedDurationInWorkingDays', 'FLOAT', text(1421), false );
+        $metadata->addAttribute( 'LeftDurationInWorkingDays', 'FLOAT', text(1422), false );
  	    $metadata->addPersister( new CapacityPersister() );
         $metadata->setAttributeType('StartDate', 'DATE');
         $metadata->setAttributeType('FinishDate', 'DATE');

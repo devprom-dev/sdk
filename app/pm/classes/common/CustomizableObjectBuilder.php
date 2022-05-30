@@ -14,5 +14,5 @@ abstract class CustomizableObjectBuilder
         return $this->session;
     }
     
-    abstract function build( CustomizableObjectRegistry & $set );
+    abstract function build(CustomizableObjectRegistry & $set, $useTypes);
 }

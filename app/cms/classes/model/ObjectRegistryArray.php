@@ -5,7 +5,7 @@ class ObjectRegistryArray extends ObjectRegistrySQL
 {
     function Query( $parms = array() )
     {
-        $rowset = $this->getAll()->getRowset();
+        $rowset = parent::Query($parms)->getRowset();
 
         foreach( $parms as $parm )
         {

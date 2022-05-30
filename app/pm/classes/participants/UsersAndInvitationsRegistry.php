@@ -17,12 +17,12 @@ class UsersAndInvitationsRegistry extends ObjectRegistrySQL
 		);
 	}
 	
-  	function getQueryClause()
+  	function getQueryClause(array $parms)
  	{
- 	    return " ( SELECT t.cms_UserId, t.Caption, t.Email, t.Phone, t.RecordModified, t.RecordCreated, t.RecordVersion, 0 Invitation, t.IsReadonly, '' VPD ".
+ 	    return " ( SELECT t.cms_UserId, t.Caption, t.Email, t.Phone, t.RecordModified, t.RecordCreated, t.RecordVersion, 0 Invitation, t.IsReadonly, '' VPD, PlannedWorkload ".
  	           "	 FROM cms_User t ".
 			   "    UNION ALL ".
-			   "   SELECT 0, t.Addressee, t.Addressee, '', t.RecordModified, t.RecordCreated, t.RecordVersion, t.pm_InvitationId, 'N', t.VPD  ".
+			   "   SELECT 0, t.Addressee, t.Addressee, '', t.RecordModified, t.RecordCreated, t.RecordVersion, t.pm_InvitationId, 'N', t.VPD, 0  ".
 			   "	 FROM pm_Invitation t ".
 			   "	 WHERE t.Project = ".$this->project." ) ";
  	}

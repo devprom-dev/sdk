@@ -6,7 +6,6 @@ class WikiEditorBuilder
     {
 		if ( $class != '' && class_exists($class, false) ) return new $class;
         $class = getSession()->getProjectIt()->get('WikiEditorClass');
-        if ( $class == '' ) $class = 'WikiRtfCKEditor';
-		return new $class;
+		return $class != '' && class_exists($class) ? new $class : new WikiRtfCKEditor;
     }
 }

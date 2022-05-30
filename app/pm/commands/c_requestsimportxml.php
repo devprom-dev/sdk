@@ -1,4 +1,5 @@
 <?php
+use \PhpOffice\PhpSpreadsheet\IOFactory;
 include 'c_requestsimport.php';
 
 class RequestsImportXml extends RequestsImport
@@ -27,7 +28,7 @@ class RequestsImportXml extends RequestsImport
         if ( !file_exists($filePath) ) return array();
 
         try {
-            $objPHPExcel = PHPExcel_IOFactory::load($filePath);
+            $objPHPExcel = IOFactory::load($filePath);
             return $objPHPExcel->getActiveSheet()->toArray(null,false,false,true);
         }
         catch( Exception $e ) {

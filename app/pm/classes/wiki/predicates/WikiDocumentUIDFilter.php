@@ -10,7 +10,7 @@ class WikiDocumentUIDFilter extends FilterPredicate
  	    if ( count($filter) < 1 ) return " AND 1 = 2 ";
 
 		$idsFilter = array_filter($filter, function($value) { return is_numeric($value);} );
-		$document_it = $this->getObject()->getRegistry()->Query(
+		$document_it = getFactory()->getObject(get_class($this->getObject()))->getRegistry()->Query(
 			array (
 				count($idsFilter) > 0
 					? new FilterInPredicate($idsFilter)

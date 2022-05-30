@@ -1,31 +1,17 @@
 <?php
-
+$needShortSection = true;
 $last_key = key( array_slice( $attributes, -1, 1, TRUE ) );
 
-$colspan_attributes = array();
-if ( $attributes['Caption']['visible'] ) {
-	$colspan_attributes[] = $attributes['Caption']['id'];
-}
-if ( $attributes['ReleaseNumber']['visible'] ) {
-    $colspan_attributes[] = $attributes['ReleaseNumber']['id'];
-}
-if ( $attributes['UID']['visible'] ) {
-	$colspan_attributes[] = $attributes['UID']['id'];
-}
-
-if ( array_key_exists('Description', $attributes) && ($form->getObject() instanceof Request || $form->getObject() instanceof Task) ) {
-	$colspan_attributes[] = $attributes['Description']['id'];
-}
-if ( array_key_exists('Conditions', $attributes) && count($shortAttributes) > 0 ) {
-	$colspan_attributes[] = $attributes['Conditions']['id'];
+$top = array();
+foreach( $attributes as $key => $attribute ) {
+    if ( in_array($key, array('Caption','UID')) ) {
+        $top[$key] = $attribute;
+        unset($attributes[$key]);
+    }
 }
 
 $invisible = array_filter( $attributes, function(&$value) {
     return !$value['visible'];
-});
-
-$colspan_visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
-	return $value['visible'] && in_array($value['id'], $colspan_attributes);
 });
 
 $shortVisible = array();
@@ -33,7 +19,6 @@ foreach( $attributes as $key => $attribute ) {
 	if ( !in_array($key, $shortAttributes) ) continue;
 	if ( !$attribute['visible'] ) continue;
 	$shortVisible[$key] = $attribute;
-	unset($attributes[$key]);
 }
 $shortVisible = array_chunk(
     $shortVisible,
@@ -54,19 +39,13 @@ $singleRow1= array_chunk(
     true
 );
 
-$visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
-	return $value['visible'] && !in_array($value['id'], $colspan_attributes);
+$visible = array_filter( $attributes, function(&$value) {
+	return $value['visible'];
 });
 
 $attributes_per_column = count($visible) > 12 && $formonly ? max(9, ceil(count($visible) / 2)) : count($visible);
 $chunked_attributes = array_chunk($visible, $attributes_per_column, true);
 
-$top = array();
-foreach( $attributes as $key => $attribute ) {
-	if ( in_array($key, array('Caption','UID')) && in_array($attribute['id'], $colspan_attributes) ) {
-		$top[$key] = $attribute;
-	}
-}
 ?>
 
 <?php if ( $warning != '' ) { ?>
@@ -98,48 +77,44 @@ foreach( $attributes as $key => $attribute ) {
 	<? } ?>
 </div>
 
-<?php foreach( $colspan_visible as $key => $attribute ) { ?>
-	<? if ( $key == 'Caption' ) continue; ?>
-	<? if ( $key == 'UID' ) continue; ?>
-	  <div class="control-group row-fluid" id="fieldRow<?=$key?>">
-	    <label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
-	    <div class="controls">
-			<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
-	      
-	        <?php if ( $attribute['description'] != '' ) { ?>
-				<span class="help-block"><?=$attribute['description']?></span>
-			<?php } ?>
-	    </div>
-	  </div>
-	
-<?php } ?>
-
-<div class="control-set">
-	<?php foreach( $shortVisible as $index => $attributes ) { ?>
-		<div class="control-column">
-			<?php foreach( $attributes as $key => $attribute ) { ?>
-				<div class="control-group row-fluid" id="fieldRow<?=$key?>">
-					<label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
-					<div class="controls">
-						<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
-						<?php if ( $attribute['description'] != '' ) { ?>
-							<span class="help-block"><?=$attribute['description']?></span>
-						<?php } ?>
-					</div>
-				</div>
-			<?php } ?>
-		</div>
-	<?php } ?>
-</div>
-
 <div class="control-set">
 	<?php foreach( $chunked_attributes as $index => $attributes ) { ?>
 
 	<?php $style = ($formonly ? "width: ".ceil(100/count($chunked_attributes))."%;padding-left: ".($index > 0 ? '20px;' : 0).";" : ""); ?>
-	
+
 	<div class="control-column" style="<?=$style?>">
 	
 	<?php foreach( $attributes as $key => $attribute ) { ?>
+
+        <?php if ( in_array($key, $shortAttributes) ) {
+            if ( $needShortSection ) {
+            ?>
+            </div></div>
+            <div class="control-set">
+                <?php foreach( $shortVisible as $shortVisibleAttributes ) { ?>
+                    <div class="control-column">
+                        <?php foreach( $shortVisibleAttributes as $key => $attribute ) { ?>
+                            <div class="control-group row-fluid" id="fieldRow<?=$key?>">
+                                <label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
+                                <div class="controls">
+                                    <? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
+                                    <?php if ( $attribute['description'] != '' ) { ?>
+                                        <span class="help-block"><?=$attribute['description']?></span>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                        <?php } ?>
+                    </div>
+                <?php } ?>
+            </div>
+            <div class="control-set">
+                <div class="control-column" style="<?=$style?>">
+            <?php
+            $needShortSection = false;
+            }
+            continue;
+        }
+        ?>
 
 		<?php if ( $attribute['type'] == 'char' ) { ?>
 	

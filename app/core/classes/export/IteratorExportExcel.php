@@ -1,11 +1,19 @@
 <?php
+use \PhpOffice\PhpSpreadsheet\IOFactory;
+use \PhpOffice\PhpSpreadsheet\Spreadsheet;
+use \PhpOffice\PhpSpreadsheet\Cell;
+use \PhpOffice\PhpSpreadsheet\Style;
+use \PhpOffice\PhpSpreadsheet\Shared;
 include_once "IteratorExport.php";
 
 class IteratorExportExcel extends IteratorExport
 {
-	function IteratorExportExcel( $iterator )
+	function __construct( $iterator )
 	{
-		parent::IteratorExport( $iterator );
+		parent::__construct( $iterator );
+
+        PhpOffice\PhpSpreadsheet\Shared\Date::setDefaultTimezone(
+            \EnvironmentSettings::getClientTimeZone());
 	}
 	
 	function getWidth( $field )
@@ -44,7 +52,7 @@ class IteratorExportExcel extends IteratorExport
 
     function worksheet()
     {
-        $objPHPExcel = new PHPExcel();
+        $objPHPExcel = new Spreadsheet();
 
         $userIt = getSession()->getUserIt();
         $objPHPExcel->getProperties()
@@ -60,20 +68,20 @@ class IteratorExportExcel extends IteratorExport
 
         foreach( array_keys($fields) as $key => $fieldName )
         {
-            $black = new PHPExcel_Style_Color(PHPExcel_Style_Color::COLOR_BLACK);
-            $sheet->setCellValueByColumnAndRow($key, 1, $fields[$fieldName])
-                ->getStyleByColumnAndRow($key, 1)
+            $column = $key + 1;
+            $sheet->setCellValueByColumnAndRow($column, 1, $fields[$fieldName])
+                ->getStyleByColumnAndRow($column, 1)
                     ->getFill()
-                    ->setStartColor($black)
-                    ->setEndColor($black)
-                    ->setFillType(PHPExcel_Style_Fill::FILL_SOLID);
-            $sheet->getStyleByColumnAndRow($key, 1)
+                    ->setFillType(Style\Fill::FILL_SOLID)
+                    ->getStartColor()
+                    ->setARGB(Style\Color::COLOR_BLACK);
+            $sheet->getStyleByColumnAndRow($column, 1)
                     ->getFont()
                     ->getColor()
-                    ->setARGB(PHPExcel_Style_Color::COLOR_WHITE);
+                    ->setARGB(Style\Color::COLOR_WHITE);
 
             if ( in_array($it->object->getAttributeType($fieldName), array('date','datetime')) ) {
-                $sheet->getStyleByColumnAndRow($key, 1)
+                $sheet->getStyleByColumnAndRow($column, 1)
                     ->getNumberFormat()
                     ->setFormatCode(getSession()->getLanguage()->getExcelDateFormat());
             }
@@ -85,51 +93,52 @@ class IteratorExportExcel extends IteratorExport
             $row = $it->getPos() + 2;
             foreach( array_keys($fields) as $key => $fieldName )
             {
-                $formula = $this->getFormula($row, $key, PHPExcel_Cell::stringFromColumnIndex($key));
+                $column = $key + 1;
+                $formula = $this->getFormula($row, $column, Cell\Coordinate::stringFromColumnIndex($column));
                 if ( $formula != '' ) {
-                    $sheet->setCellValueByColumnAndRow($key, $row, $formula);
+                    $sheet->setCellValueByColumnAndRow($column, $row, $formula);
                     continue;
                 }
 
                 list( $value, $type ) = $this->getValue( $fieldName, $it );
                 if ( $type != '' ) {
                     if ( $type == 'DateTime' ) {
-                        $sheet->getStyleByColumnAndRow($key, $row)
+                        $sheet->getStyleByColumnAndRow($column, $row)
                             ->getNumberFormat()
                             ->setFormatCode(getSession()->getLanguage()->getExcelDateTimeFormat());
                         if ( $value != '' ) {
-                            $sheet->setCellValueByColumnAndRow($key, $row, PHPExcel_Shared_Date::PHPToExcel($value));
+                            $sheet->setCellValueByColumnAndRow($column, $row, Shared\Date::PHPToExcel($value));
                         }
                     }
                     elseif ( $type == 'Date' ) {
-                        $sheet->getStyleByColumnAndRow($key, $row)
+                        $sheet->getStyleByColumnAndRow($column, $row)
                             ->getNumberFormat()
                             ->setFormatCode(getSession()->getLanguage()->getExcelDateFormat());
                         if ( $value != '' ) {
-                            $sheet->setCellValueByColumnAndRow($key, $row, PHPExcel_Shared_Date::PHPToExcel( $value ));
+                            $sheet->setCellValueByColumnAndRow($column, $row, Shared\Date::PHPToExcel( $value ));
                         }
                     }
                     else {
-                        $sheet->setCellValueExplicitByColumnAndRow($key, $row, $value, $type);
+                        $sheet->setCellValueExplicitByColumnAndRow($column, $row, $value, $type);
                         if ( $fieldName == 'Caption' && $it->get('ParentPath') != '' ) {
-                            $sheet->getStyleByColumnAndRow($key, $row)
+                            $sheet->getStyleByColumnAndRow($column, $row)
                                 ->getAlignment()->setIndent((count(explode(',', $it->get('ParentPath'))) - 3)*2 );
                         }
                     }
                 }
                 else {
-                    $sheet->setCellValueByColumnAndRow($key, $row, $value);
+                    $sheet->setCellValueByColumnAndRow($column, $row, $value);
                 }
 
                 $comment = $this->comment($fieldName);
                 if ( $comment != "" ) {
-                    $sheet->getCommentByColumnAndRow($key, $row)
+                    $sheet->getCommentByColumnAndRow($column, $row)
                         ->setText($comment);
                 }
 
-                $sheet->getStyleByColumnAndRow($key, $row)
+                $sheet->getStyleByColumnAndRow($column, $row)
                     ->getAlignment()
-                    ->setVertical(PHPExcel_Style_Alignment::VERTICAL_TOP)
+                    ->setVertical(Style\Alignment::VERTICAL_TOP)
                     ->setWrapText(true);
             }
             $it->moveNext();
@@ -147,7 +156,8 @@ class IteratorExportExcel extends IteratorExport
         }
         $sheet->getDefaultRowDimension()->setRowHeight(-1);
 
-        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+        $objWriter = IOFactory::createWriter($objPHPExcel,
+            defined('UI_EXTENSION') && !UI_EXTENSION ? 'Xls' : 'Xlsx');
         $objWriter->save("php://output");
     }
 
@@ -198,12 +208,12 @@ class IteratorExportExcel extends IteratorExport
                     $iterator->object->IsAttributeStored($key)
                         ? $iterator->get($key)
                         : $uid->getObjectUid( $iterator->getCurrentIt() ),
-                    PHPExcel_Cell_DataType::TYPE_STRING
+                    Cell\DataType::TYPE_STRING
                 );
 
             case 'StateDuration':
             case 'LeadTime':
-                return array($iterator->get($key), PHPExcel_Cell_DataType::TYPE_NUMERIC);
+                return array($iterator->get($key), Cell\DataType::TYPE_NUMERIC);
         }
 
         switch ( strtolower($type) )
@@ -211,11 +221,11 @@ class IteratorExportExcel extends IteratorExport
             case 'integer':
             case 'float':
                 $value = $this->get( $key );
-                $type = PHPExcel_Cell_DataType::TYPE_NUMERIC;
+                $type = Cell\DataType::TYPE_NUMERIC;
                 break;
             case 'date':
                 $type = "Date";
-                $value = strtotime(SystemDateTime::convertToClientTime($iterator->get($key)));
+                $value = $iterator->get($key);
                 break;
             case 'datetime':
                 $type = "DateTime";
@@ -226,7 +236,7 @@ class IteratorExportExcel extends IteratorExport
                 $content = $this->parser->parse($iterator->getHtmlDecoded($key));
                 $html2text = new \Html2Text\Html2Text($content, array('width'=>0));
                 $value = $html2text->getText();
-                $type = PHPExcel_Cell_DataType::TYPE_STRING;
+                $type = Cell\DataType::TYPE_STRING;
                 break;
             default:
                 $value = $this->get($key);
@@ -239,10 +249,10 @@ class IteratorExportExcel extends IteratorExport
                     );
                 }
                 if ( is_numeric($value) ) {
-                    $type = PHPExcel_Cell_DataType::TYPE_NUMERIC;
+                    $type = Cell\DataType::TYPE_NUMERIC;
                 }
                 else {
-                    $type = PHPExcel_Cell_DataType::TYPE_STRING;
+                    $type = Cell\DataType::TYPE_STRING;
                 }
         }
  		return array( $value, $type );
@@ -250,12 +260,12 @@ class IteratorExportExcel extends IteratorExport
 
  	function export()
  	{
-
+        $ext = defined('UI_EXTENSION') && !UI_EXTENSION ? 'xls' : 'xlsx';
 	 	header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-control: no-store");
 		header('Content-Type: application/vnd.ms-excel');
-		header(EnvironmentSettings::getDownloadHeader($this->getName().'.xls'));
+		header(EnvironmentSettings::getDownloadHeader("{$this->getName()}.{$ext}"));
 
 		echo $this->worksheet();
  	}

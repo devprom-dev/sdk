@@ -2,7 +2,7 @@
 
 class DateYearRegistry extends ObjectRegistrySQL
 {
- 	function getAll()
+ 	function Query($parms = array())
  	{
  		$this->items = array();
  		

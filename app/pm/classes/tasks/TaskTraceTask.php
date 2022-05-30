@@ -8,7 +8,11 @@ class TaskTraceTask extends TaskTraceBase
  		return 'Task';
  	}
 
- 	function getValidators() {
+    function duplicateInRelatedRequest() {
+        return false;
+    }
+
+    function getValidators() {
         return array_merge(
             parent::getValidators(),
             array(

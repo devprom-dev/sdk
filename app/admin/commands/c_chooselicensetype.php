@@ -6,7 +6,7 @@ class ChooseLicenseType extends CommandForm
 	{
 		$this->checkRequired( array('LicenseType') );
 
-		$license_it = getFactory()->getObject('License')->getRegistry()->getAll();
+		$license_it = getFactory()->getObject('License')->getRegistry()->Query(array());
 		
 		if ( in_array($_REQUEST['LicenseType'], $license_it->fieldToArray('LicenseType')) ) return true;
 		

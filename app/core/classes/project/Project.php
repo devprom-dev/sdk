@@ -7,12 +7,13 @@ include "predicates/ProjectLinkedPredicate.php";
 include "predicates/ProjectParticipatePredicate.php";
 include "predicates/ProjectRolePredicate.php";
 include "predicates/ProjectStatePredicate.php";
-include "predicates/ProjectUserLeadPredicate.php";
+include "predicates/ProjectUserParticipatesPredicate.php";
 include "predicates/ProjectVpdPredicate.php";
 include "predicates/ProjectNoGroupsPredicate.php";
 include "predicates/ProjectAccessiblePredicate.php";
 include "persisters/ProjectVPDPersister.php";
 include "persisters/ProjectLeadsPersister.php";
+include "persisters/ProjectLinksPersister.php";
 include_once "persisters/ProjectLinkedPersister.php";
 include "validators/ModelValidatorProjectCodeName.php";
 include "validators/ModelValidatorProjectIntegration.php";
@@ -36,14 +37,16 @@ class Project extends Metaobject
 			)
 		);
  	}
-	
- 	function createIterator() 
-	{
+
+ 	function createIterator() {
 		return new ProjectIterator( $this );
 	}
 
-	function getValidators()
-    {
+	function getVpdValue() {
+        return '';
+    }
+
+    function getValidators() {
         return array(
             new ModelValidatorProjectCodeName()
         );
@@ -55,6 +58,7 @@ class Project extends Metaobject
 	    {
 	        case 'pm_ProjectLink':
 	        case 'pm_Methodology':
+            case 'co_CompanyProject':
 	            return true;
 	            
 	        default:
@@ -68,13 +72,12 @@ class Project extends Metaobject
 		{
 		    case 'Caption':
 		    	return translate('Проект').' '.($this->getRegistry()->Count() + 1);
-		    	
 		    case 'OrderNum':
-		    	return '';
-		    	
+		    	return 10;
 		    case 'Importance':
 		    	return 3;
-		    	
+            case 'StartDate':
+                return date('Y-m-d');
 		    default:
 		    	return parent::getDefaultAttributeValue( $attr );
 		}

@@ -9,12 +9,13 @@ class ModelValidatorObligatory extends ModelValidatorInstance
 		$this->attributes = $attributes;
 	}
 	
-	public function validate( Metaobject $object, array & $parms )
+	public function validate( Metaobject $object, array $parms )
 	{
         $attributes = $this->attributes;
 	    if ( count($attributes) < 1 ) {
             foreach( array_keys($object->getAttributes()) as $attribute ) {
                 if (!$object->IsAttributePersisted($attribute)) continue;
+                if (!$object->getAttributeEditable($attribute)) continue;
                 $attributes[] = $attribute;
             }
         }
@@ -22,6 +23,7 @@ class ModelValidatorObligatory extends ModelValidatorInstance
 		foreach( $attributes as $attribute )
 		{
 			if ( !$object->IsAttributeRequired($attribute) ) continue;
+            if ( !$object->getAttributeEditable($attribute) ) continue;
 			if ( $object->getAttributeType($attribute) == 'file' ) continue;
             if ( !array_key_exists($attribute, $parms) ) continue;
 
@@ -32,11 +34,8 @@ class ModelValidatorObligatory extends ModelValidatorInstance
 
             if ( !$valueDefined ) {
                 $defaultValue = $object->getDefaultAttributeValue($attribute);
-                if ( $defaultValue != '' ) {
-                    $parms[$attribute] = $defaultValue;
-                }
-                else {
-                    return text(2).': '.translate($object->getAttributeUserName($attribute))." [".$attribute."]";
+                if ( $defaultValue == '' ) {
+                    return text(2).': '.$object->getDisplayName().'.'.translate($object->getAttributeUserName($attribute))." [".get_class($object).'.'.$attribute."]";
                 }
             }
 		}

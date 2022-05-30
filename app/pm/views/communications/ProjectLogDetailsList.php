@@ -12,7 +12,11 @@ class ProjectLogDetailsList extends PMDetailsList
         parent::extendModel();
     }
 
-	function drawCell( $object_it, $attr )
+    protected function getPersisters( $object, $sorts ) {
+        return array();
+    }
+
+    function drawCell( $object_it, $attr )
 	{
 		echo '<ul class="nav">';
 			echo '<li class="nav-cell nav-left">';

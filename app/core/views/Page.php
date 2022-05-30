@@ -15,6 +15,7 @@ include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 include SERVER_ROOT_PATH.'core/methods/ObjectModifyWebMethod.php';
 
 include_once 'PageInfoSection.php';
+include 'PageTreeTrait.php';
 include 'PageTable.php';
 include 'PageTableStatic.php';
 include 'PageList.php';
@@ -40,7 +41,7 @@ class Page
     private $navigation_parms = null;
  	private $render_parms = array();
  	
- 	function Page() 
+ 	function __construct()
  	{
  		global $plugins;
 
@@ -48,12 +49,14 @@ class Page
  	    $this->form = $this->buildForm();
  		
  		if ( is_a($this->form, 'MetaobjectForm') && $this->form->getAction() != '' ) {
-			if ( $this->needDisplayForm() && $this->hasAccess() ) {
+			if ( $this->needDisplayForm() && $this->form->checkAccess() ) {
                 \FeatureTouch::Instance()->touch(strtolower(get_class($this->form)));
-				$this->form->process();
+				if ( $this->form->process() ) {
+                    exit();
+                }
 			}
 		}
-		
+
 		$this->table = $this->getTable();
 		if ( is_object($this->table) && is_a($this->table, 'PageTable') )
 		{
@@ -81,6 +84,10 @@ class Page
  		$infosection_object->setPage( $this );
  		$this->infosections[$infosection_object->getId()] = $infosection_object;
  	}
+
+ 	function setInfoSections( $sections ) {
+ 	    $this->infosections = $sections;
+    }
  	
  	function & getInfoSections()
  	{
@@ -258,7 +265,6 @@ class Page
  		    $queryParms = array();
  			if ( is_object($table) && is_a($table, 'PageTable') )
  			{
-                $table->getListIterator();
                 $queryParms = array_merge(
                     $queryParms,
                     $table->getListRef()->getSorts()
@@ -333,7 +339,7 @@ class Page
                 }
 			}
 			
-			if ( $_REQUEST['caption'] == '' ) $_REQUEST['caption'] = $table->getCaption();
+			if ( $_REQUEST['title'] == '' ) $_REQUEST['title'] = $table->getCaption();
 		}
 
 		$eit = new $_REQUEST['class']( $it );
@@ -342,7 +348,7 @@ class Page
         }
 		$eit->setTable($table);
 		$eit->setFields($fields);
-		$eit->setName($_REQUEST['caption']);
+		$eit->setName($_REQUEST['title']);
 		$eit->export();
 			
 		return true;
@@ -431,6 +437,7 @@ class Page
         	$active_area_uid = 'favs';
         	$tab_item['url'] = getSession()->getApplicationUrl().$active_url;
         }
+        if ( $active_area_uid == 'stg' ) $active_area_uid = 'favs';
 
         return array(
                 'area_uid' => $active_area_uid,
@@ -624,24 +631,30 @@ class Page
  	{
  		return '';
  	}
- 	
+
+    function getDefaultRedirectUrl()
+    {
+        if ( $_REQUEST['tour'] != '' && preg_match('/[a-zA-Z0-9]+/i', $_REQUEST['tour']) ) {
+            setcookie($_REQUEST['tour'].'Skip', "1", mktime(0, 0, 0, 1, 1, date('Y') + 1), '/');
+        }
+        return '/404?redirect='.urlencode($_SERVER['REQUEST_URI']);
+    }
+
  	function render( $view = null )
  	{
-        if ( !$this->hasAccess() ) {
-            if ( $_REQUEST['tour'] != '' && preg_match('/[a-zA-Z0-9]+/i', $_REQUEST['tour']) ) {
-                setcookie($_REQUEST['tour'].'Skip', "1", mktime(0, 0, 0, 1, 1, date('Y') + 1), '/');
-            }
-            exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+        $render_parms = $this->getRenderParms();
+
+        if ( $_REQUEST['export'] != '' ) {
+            $this->export();
+            die();
         }
 
-		$render_parms = $this->getRenderParms();
- 	    if ( !is_object($view) ) $view = $this->getRenderView();
+        if ( !$this->hasAccess() ) {
+            $defaultUrl = $this->getDefaultRedirectUrl();
+            exit(header('Location: '.$defaultUrl));
+        }
 
- 		if ( $_REQUEST['export'] != '' ) {
-			$this->export();
-			die();
-		}
-
+        if ( !is_object($view) ) $view = $this->getRenderView();
 		if ( $_REQUEST['tableonly'] != '' && is_object($this->table) )
 		{
 			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past

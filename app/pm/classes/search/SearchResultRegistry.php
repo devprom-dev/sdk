@@ -3,25 +3,24 @@ include SERVER_ROOT_PATH."pm/classes/common/predicates/CustomAttributeSearchPred
 
 class SearchResultRegistry extends ObjectRegistrySQL
 {
- 	function createSQLIterator( $sql )
+    private $wordsMode = FilterSearchAttributesPredicate::WORDS_MODE_ALL;
+
+ 	function Query( $parms = array() )
  	{
  	    $searchString = "";
         $searchEntities = array();
         $searchPredicates = array();
 
-        foreach( $this->getFilters() as $filter ) {
+        $filters = $this->extractPredicates($parms);
+        foreach( $filters as $filter ) {
             if ( $filter instanceof FilterAttributePredicate ) {
                 if ( $filter->getAttribute() == 'entityId' ) {
-                    $searchEntities = array_filter(
-                            preg_split('/[,-]/', $filter->getValue()),
-                            function ($value) {
-                                return !in_array($value, array('','all','hide'));
-                            }
-                        );
+                    $searchEntities = \TextUtils::parseFilterItems($filter->getValue());
                 }
             }
             if ( $filter instanceof FilterSearchAttributesPredicate ) {
                 $searchString = $filter->getValue();
+                $this->wordsMode = $filter->getWordsMode();
                 if ( in_array($searchString,array('hide','all')) ) $searchString = '';
             }
             if ( $filter instanceof StateCommonPredicate ) {
@@ -35,14 +34,17 @@ class SearchResultRegistry extends ObjectRegistrySQL
         $module = getFactory()->getObject('Module');
         $searchable = getFactory()->getObject('SearchableObjectSet');
         $searchable_it = $searchable->getAll();
-        $search_items = SearchRules::getSearchItems($searchString, getSession()->getLanguageUid());
+
+        if ( $this->wordsMode != FilterSearchAttributesPredicate::WORDS_MODE_EXACT ) {
+            $search_items = SearchRules::getSearchItems($searchString, getSession()->getLanguageUid());
+        }
+        else {
+            $search_items = array($searchString);
+        }
 
         $data = array();
         $lists = array();
-        $results = array_merge(
-            $this->searchByUid($searchString),
-            $this->searchByAttributes($searchString, $searchEntities, $searchPredicates)
-        );
+        $results = $this->searchByAttributes($searchString, $searchEntities, $searchPredicates);
 
         foreach( $results as $item ) {
             $object_it = $item['object'];
@@ -80,9 +82,11 @@ class SearchResultRegistry extends ObjectRegistrySQL
                         '<span class="label label-found">\\0</span>',
                         $text
                     );
-                    $userName = $object_it->object->getAttributeUserName($attribute);
-                    if ( $userName == '' ) $userName = $attribute;
-                    $textsFound[] = translate($userName) . ': ' . $text;
+                    if ( strpos($text, 'label-found') !== false ) {
+                        $userName = $object_it->object->getAttributeUserName($attribute);
+                        if ( $userName == '' ) $userName = $attribute;
+                        $textsFound[] = translate($userName) . ': ' . $text;
+                    }
                 }
 
                 $data[$entityId][] = array (
@@ -99,6 +103,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
                 $object_it->moveNext();
             }
         }
+
         $rows = array();
         foreach( $data as $item ) {
             $rows = array_merge($rows, $item);
@@ -109,6 +114,17 @@ class SearchResultRegistry extends ObjectRegistrySQL
     protected function searchByAttributes( $search, $paramters, $predicates )
     {
         $results = array();
+
+        $uid = new ObjectUID();
+        $objectItByUid = $uid->getObjectIt($search);
+        if ( $objectItByUid->count() > 0 ) {
+            if ( !in_array($objectItByUid->object->getEntityRefName(), array('pm_ChangeRequest','WikiPage')) ) {
+                $results[get_class($objectItByUid->object)] = array(
+                    'object' => $objectItByUid,
+                    'attributes' => array()
+                );
+            }
+        }
 
         $searchable = getFactory()->getObject('SearchableObjectSet');
         $searchable_it = $searchable->getAll();
@@ -139,7 +155,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
             if ( $object instanceof CacheableSet ) {
                 $object_it = $registry->Query(
                     array(
-                        new FilterSearchAttributesPredicate($search, array('Caption','ReferenceName'))
+                        new FilterSearchAttributesPredicate($search, array('Caption','ReferenceName'), $this->wordsMode)
                     )
                 );
                 if ( $object_it->count() > 0 ) {
@@ -157,31 +173,13 @@ class SearchResultRegistry extends ObjectRegistrySQL
             }
             $sorts[] = new SortRecentClause();
 
-            if ( is_numeric($search) ) {
-                $object_it = $registry->Query(
-                    array_merge(
-                        $parms,
-                        array(
-                            new FilterInPredicate($search),
-                            new FilterVpdPredicate()
-                        ),
-                        $sorts
-                    )
-                );
-                if ( $object_it->getId() != '' ) {
-                    $results[$searchable_it->getId()] = array (
-                        'object' => $object->createCachedIterator($object_it->getRowset())
-                    );
-                }
-            }
-
             if ( strlen($search) > $this->length_constraint ) {
                 $object_it = $registry->Query(
                     array_merge(
                         $parms,
                         $predicates,
                         array(
-                            new FilterSearchAttributesPredicate($search, $searchable_it->get('attributes')),
+                            new FilterSearchAttributesPredicate($search, $object->getSearchableAttributes(), $this->wordsMode),
                             new FilterVpdPredicate()
                         ),
                         $sorts
@@ -190,7 +188,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
                 if ( $object_it->count() > 0 ) {
                     $results[$searchable_it->getId()] = array(
                         'object' => $object->createCachedIterator($object_it->getRowset()),
-                        'attributes' => $searchable_it->get('attributes')
+                        'attributes' => $object->getSearchableAttributes()
                     );
                 }
             }
@@ -199,46 +197,5 @@ class SearchResultRegistry extends ObjectRegistrySQL
         }
 
         return $results;
-    }
-
-    protected function searchByUid( $uid )
-    {
-        $results = array();
-        $searchable = getFactory()->getObject('SearchableObjectSet');
-        $searchable_it = $searchable->getAll();
-
-        while( !$searchable_it->end() ) {
-            $object = getFactory()->getObject($searchable_it->get('ReferenceName'));
-            if ( $object instanceof WikiPage ) {
-                $registry = $object->getRegistryBase();
-                $object_it = $registry->Query(
-                    array(
-                        new DocumentVersionPersister(),
-                        new FilterTextExactPredicate('UID', $uid),
-                        new FilterVpdPredicate(),
-                        new SortRecentClause()
-                    )
-                );
-                if ( $object_it->count() > 0 ) {
-                    $results[$searchable_it->getId()] = array(
-                        'object' => $object->createCachedIterator($object_it->getRowset()),
-                        'attributes' => array('UID', 'Caption')
-                    );
-                }
-            }
-            $searchable_it->moveNext();
-        }
-        if ( count($results) > 0 ) return $results;
-
-        $object_uid = new ObjectUid;
-        if ( !$object_uid->isValidUid($uid) ) return array();
-
-        $object_it = $object_uid->getObjectIt($uid);
-        return array(
-            array (
-                'object' => $object_it,
-                'attributes' => array('UID', 'Caption')
-            )
-        );
     }
 }

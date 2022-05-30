@@ -14,7 +14,8 @@ class InstallLicenseTypeForm extends AjaxForm
 
 	function getAttributes()
 	{
-		$attributes = getFactory()->getObject('License')->getRegistry()->getAll()->fieldToArray('LicenseType');
+		$attributes = getFactory()->getObject('License')
+            ->getRegistry()->Query(array())->fieldToArray('LicenseType');
 		
 		$attributes[] = 'Redirect';
 		
@@ -30,7 +31,7 @@ class InstallLicenseTypeForm extends AjaxForm
 	{
 		global $tab_index;
 		
-		$license_it = getFactory()->getObject('License')->getRegistry()->getAll();
+		$license_it = getFactory()->getObject('License')->getRegistry()->Query(array());
 		
 		$installed_it = getFactory()->getObject('LicenseInstalled')->getAll();
 	
@@ -48,9 +49,14 @@ class InstallLicenseTypeForm extends AjaxForm
 			
 			$license_it->moveNext();
 		}
-		
+
+		$script = '';
+		if ( class_exists('AccountSiteJSBuilder') ) {
+            $script = AccountSiteJSBuilder::getScriptToBuy($attribute);
+        }
+
 		echo '<label class="radio">';
-		    echo '<input type="radio" name="LicenseType" value="'.$attribute.'" '.($checked ? 'checked' : '').' getlicense="'.AccountSiteJSBuilder::getScriptToBuy($attribute).'">';
+		    echo '<input type="radio" name="LicenseType" value="'.$attribute.'" '.($checked ? 'checked' : '').' getlicense="'.$script.'">';
 		        echo '<h4 class="bs">'.$title.'</h4>';
 		echo '</label>';
 		

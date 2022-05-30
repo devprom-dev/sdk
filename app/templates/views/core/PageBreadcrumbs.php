@@ -22,9 +22,6 @@
                     'listWidgetIt' => $listWidgetIt
                 )).'</li>';
         }
-        if ( $nextUrl != '' ) {
-            echo '<li class="hidden-phone next-item">&#10140; <a class="btn btn-link" title="'.text(2333).'" href="'.$nextUrl.'">'.$nextTitle.'</a></li>';
-        }
     }
     else {
         ?>

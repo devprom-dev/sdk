@@ -181,7 +181,7 @@ public class UserAttributesTest extends ProjectTestBase {
 	    //Create a new attribute for Request:bug objects, type "string"
 		AttributeNewPage nap = naep.selectEntity("request", "Строка текста");
 		nap.enterNewAttribute("Пользовательский тип", referenceName, "Для теста пользовательских атрибутов", false);
-		Assert.assertEquals(nap.createWithError(), Messages.ERROR_MESSAGE_DUPLICATE_ATTRIBUTE.getText(),
+		Assert.assertTrue(nap.createWithError().contains(Messages.ERROR_MESSAGE_DUPLICATE_ATTRIBUTE.getText()),
 				 "Нет правильного сообщения об ошибке при попытке создать атрибут с существующим именем");
 		referenceName = "type" + DataProviders.getUniqueStringAlphaNum(); 
 		nap.enterNewAttribute("Пользовательский тип", referenceName, "Для теста пользовательских атрибутов", false);
@@ -236,7 +236,7 @@ public class UserAttributesTest extends ProjectTestBase {
         Assert.assertTrue(itr.isFieldVisibleByLabel("Пользовательский атрибут 1"), "Не виден первый атрибут");
         Assert.assertTrue(itr.isFieldVisibleByLabel("Пользовательский атрибут 2"), "Не виден второй атрибут");
         Assert.assertTrue(itr.isFieldRequired("userattr1"), "Первый атрибут не определен как обязательный");
-        itr.fillUserStringField("userattr1", "some text");
+        itr.fillUserStringField("pm_ChangeRequestuserattr1", "some text");
         rvp = itr.includeToRelease("0");
         Assert.assertTrue(rvp.readState().contains("В релизе"), "Неверное состояние Пожелания после перевода в релиз");
         
@@ -348,7 +348,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		RequestEditPage rep = rbp.editRequest(request.getNumericId());
 		Assert.assertTrue(rep.isAttributePresent("new"), "На форме редактирования Пожелания нет нового атрибута");
 		
-		rep.setUserOptionAttributeByVisibleText("new", "Первое значение");
+		rep.setUserOptionAttribute("new", "1");
 		RequestViewPage rvp = rep.saveEdited();
 		rbp = rvp.gotoRequestsBoard();
 		

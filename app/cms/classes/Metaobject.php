@@ -375,10 +375,11 @@ class Metaobject extends StoredObjectDB
 		global $array_to_delete, $deleted_list;
 
 		if ( $deleted_it->getId() < 1 ) return;
+		if ( !$this->IsPersistable() ) return;
 
 		parent::beforeDelete($deleted_it);
 
-		$key = get_class($this).','.$deleted_it->getId();
+		$key = $this->getEntityRefName().','.$deleted_it->getId();
 
 		// check if object has been deleted already
 		if( !is_array($array_to_delete) ) $array_to_delete = array();
@@ -386,47 +387,57 @@ class Metaobject extends StoredObjectDB
 
 		$array_to_delete[] = $key;
 
-		$self_it = $deleted_it;
+		if ( UndoLog::Instance()->valid($deleted_it) ) {
+		    UndoLog::Instance()->put($deleted_it);
+        }
 
-		if ( UndoLog::Instance()->valid($deleted_it) ) UndoLog::Instance()->put($deleted_it);
+        $this->deleteReferences($deleted_it, $deleted_list);
+	}
 
-		// get items references to the current one
-		$references = getFactory()->getModelReferenceRegistry()->getBackwardReferences($this);
+    function deleteReferences($deleted_it, &$deleted_list)
+    {
+        $self_it = $deleted_it;
 
-		// delete objects have references to the given one
-		foreach ( $references as $attribute_path => $class_name )
-		{
-			$parts = preg_split('/::/', $attribute_path);
-			$attribute = $parts[1];
+        // get items references to the current one
+        $references = getFactory()->getModelReferenceRegistry()->getBackwardReferences($this);
+
+        // delete objects have references to the given one
+        foreach ( $references as $attribute_path => $class_name )
+        {
+            $parts = preg_split('/::/', $attribute_path);
+            $attribute = $parts[1];
 
             $class_name = getFactory()->getClass($class_name);
             if ( !class_exists($class_name, false) ) continue;
 
-			$object = getFactory()->getObject($class_name);
-			if ( !$object->IsAttributeStored($attribute) ) continue;
+            $object = getFactory()->getObject($class_name);
+            if ( !$object->IsAttributeStored($attribute) ) continue;
+            if ( !$object->IsPersistable() ) continue;
 
-			if ( $this->DeletesCascade($object) && $object->IsDeletedCascade($this) ) {
-				$object_it = $object->getRegistry()->Query(
-					array (
-						new FilterAttributePredicate($attribute,$deleted_it->getId())
-					)
-				);
-				while( $object_it->getId() != '' ) {
-					$deleted_list[] = $object_it->copy();
-					$object->deleteInternal( $object_it );
-					$object_it->moveNext();
-				}
-			}
-			elseif ( $object->IsUpdatedCascade($this) ) {
-				$reference_it = $object->getRegistry()->Query(
-					array (
-						new FilterAttributePredicate($attribute,$deleted_it->getId())
-					)
-				);
-				$this->UpdatesCascade( $attribute, $self_it, $reference_it );
-			}
-		}
-	}
+            if ( $this->DeletesCascade($object) && $object->IsDeletedCascade($this) ) {
+                $object_it = $object->getRegistryBase()->Query(
+                    array (
+                        new FilterAttributePredicate($attribute,$deleted_it->getId()),
+                        new SortKeyClause()
+                    )
+                );
+                while( $object_it->getId() != '' ) {
+                    $deleted_list[] = $object_it->copy();
+                    $object->deleteInternal( $object_it );
+                    $object_it->moveNext();
+                }
+            }
+            elseif ( $object->IsUpdatedCascade($this) ) {
+                $reference_it = $object->getRegistryBase()->Query(
+                    array (
+                        new FilterAttributePredicate($attribute,$deleted_it->getId()),
+                        new SortKeyClause()
+                    )
+                );
+                $this->UpdatesCascade( $attribute, $self_it, $reference_it );
+            }
+        }
+    }
 
 	//----------------------------------------------------------------------------------------------------------
 	function delete( $object_id, $record_version = '' )
@@ -452,7 +463,9 @@ class Metaobject extends StoredObjectDB
 	function UpdatesCascade( $attribute, & $self_it, & $reference_it )
 	{
 		while( $reference_it->getId() != '' ) {
-            if ( UndoLog::Instance()->valid($reference_it) ) UndoLog::Instance()->putReference($reference_it, $attribute);
+            if ( UndoLog::Instance()->valid($reference_it) ) {
+                UndoLog::Instance()->putReference($reference_it, $attribute);
+            }
             $reference_it->object->removeNotificator( 'EmailNotificator' );
 			$reference_it->object->modify_parms($reference_it->getId(), array( $attribute => '' ));
 			$reference_it->moveNext();
@@ -482,19 +495,20 @@ class Metaobject extends StoredObjectDB
             $searchAttributes[] = 'Caption';
         }
         $object = $this;
-        return array_diff(
+        return array_unique(array_diff(
             array_filter(
                 array_merge( $searchAttributes,
                     $this->getAttributesByType('wysiwyg'),
                     $this->getAttributesByType('text'),
-                    $this->getAttributesByType('varchar')
+                    $this->getAttributesByType('varchar'),
+                    $this->getAttributesByType('file')
                 ),
                 function( $item ) use ($object) {
                     return $object->IsAttributeStored($item);
                 }
             ),
             $this->getAttributesByGroup('system')
-        );
+        ));
     }
 
 	public function __sleep()

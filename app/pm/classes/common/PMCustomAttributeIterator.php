@@ -16,23 +16,15 @@ class PMCustomAttributeIterator extends CacheableIterator
  	function toDictionary()
  	{
  		$lov = array();
- 		
- 		$lines = preg_split('/\n\r?/', $this->get('ValueRange'));
-
- 		foreach( $lines as $line )
- 		{
+ 		foreach( preg_split('/\n\r?/', $this->get('ValueRange')) as $line ) {
  			if ( trim($line) == '' ) continue;
- 			
  			$parts = preg_split('/:/', $line );
- 			
- 			$lov[trim($parts[0], ' '.chr(10))] = trim($parts[1]);
+ 			$lov[trim($parts[0], ' '.chr(10))] = html_entity_decode(trim($parts[1]));
  		}
- 		
  		return $lov;
  	}
  	
- 	function getEntityDisplayName()
- 	{
+ 	function getEntityDisplayName() {
  		return $this->object->getEntityDisplayName($this->get('EntityReferenceName'), $this->get('ObjectKind'));
  	}
 
@@ -48,26 +40,21 @@ class PMCustomAttributeIterator extends CacheableIterator
 		$filters[] = new FilterVpdPredicate();
 
 		if ( $this->get('ObjectKind') != '' ) {
-			switch($ref->getEntityRefName()) {
-				case 'pm_ChangeRequest':
-					$filters[] = new FilterAttributePredicate('Type', $this->get('ObjectKind'));
-					break;
-				case 'pm_Task':
-					$filters[] = new FilterAttributePredicate('TaskType', $this->get('ObjectKind'));
-					break;
-				case 'WikiPage':
-					$filters[] = new FilterAttributePredicate('PageType', $this->get('ObjectKind'));
-					break;
-			}
+            $attributes = $ref->getAttributesByGroup('customattribute-descriptor');
+            if ( count($attributes) > 0 ) {
+                $filters[] = new FilterAttributePredicate($attributes[0], $this->get('ObjectKind'));
+            }
 		}
 
 		$registry->setFilters($filters);
 		return $registry;
 	}
 
-	function getDBType()
+	function getDbType()
     {
-        $db_type = $this->getRef('AttributeType')->getDbType();
+        $db_type = $this->getRef('AttributeType')
+            ->getDbType($this->getHtmlDecoded('DefaultValue'));
+
         if ( $db_type == '' ) {
             $db_type = 'VARCHAR';
         }
@@ -93,6 +80,10 @@ class PMCustomAttributeIterator extends CacheableIterator
 
         if ( $this->get('IsMultiple') == 'Y' ) {
             $groups[] = 'multiselect';
+        }
+
+        if ( $this->get('IsNotificationVisible') == 'N' ) {
+            $groups[] = 'skip-notification';
         }
 
         foreach( \TextUtils::parseItems($this->get('Groups')) as $group ) {

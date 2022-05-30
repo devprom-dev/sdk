@@ -10,16 +10,15 @@ class ProjectLogList extends PMPageList
 		$this->getObject()->setAttributeType( 'Author', 'REF_IssueAuthorId' );
  	}
 
- 	function extendModel()
-    {
-        $this->getObject()->addAttribute('UserAvatar', '', translate('Автор'), true, false, '', 1);
-        $this->getObject()->setAttributeCaption( 'SystemUser', translate('Имя автора') );
-        $this->getObject()->setAttributeOrderNum( 'SystemUser', 2 );
-        parent::extendModel();
+    protected function getPersisters( $object, $sorts ) {
+        return array();
     }
 
-    function buildItemsHash($object, $predicates)
-    {
+    protected function getShorten() {
+         return true;
+    }
+
+    function buildItemsHash($registry, $predicates) {
         return '';
     }
 
@@ -100,10 +99,42 @@ class ProjectLogList extends PMPageList
 
                 $content = $object_it->get('Content');
 
-                if ( $anchor_it->object instanceof WikiPage ) {
-                    $content = preg_replace('/\[url=[^\]]+\]/i',
-                        str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$object_it->getDateTimeFormat('RecordModified'), text(2319)),
-                        $content);
+                if ( $anchor_it->object instanceof WikiPage && $this->getShorten() ) {
+                    if ( strpos($content, 'history?object') !== false ) {
+                        $url = '\\1';
+                        foreach( explode(ChangeLogAggregatePersister::CONTENT_SEPARATOR, $object_it->getHtmlDecoded('ObjectUrl')) as $data ) {
+                            if ( strpos($data, 'history') !== false ) {
+                                $url = $data;
+                                break;
+                            }
+                        }
+                        $content = preg_replace('/\[url=([^\]\s]+)(\s[^\]]+)?\]/i',
+                            str_replace('%1', $url, text(2319)),
+                            $content);
+                    }
+                    else {
+                        // new way to display a wiki changes
+                        $start = date('Y-m-j%20H:i:s',
+                            strtotime('-10 seconds',
+                                strtotime($object_it->getDateTimeFormat('RecordCreated'))));
+
+                        $history_url = $anchor_it->getHistoryUrl() . "&start={$start}";
+                        $lines = preg_split('/reset\s+wysiwyg/i', $content);
+                        if ( count($lines) > 1 ) {
+                            $historyUrl = '';
+                            $content = '';
+
+                            foreach( $lines as $line ) {
+                                $parts = explode('wysiwyg-finish', $line);
+                                $text = '';
+                                if ( $historyUrl == '' ) {
+                                    $historyUrl = str_replace('%1', $history_url, text(2319));
+                                    $text = $historyUrl;
+                                }
+                                $content .= '<div class="">' . $text . '</div><span class="' . $parts[1];
+                            }
+                        }
+                    }
                 }
 
                 if ( $content != '' )

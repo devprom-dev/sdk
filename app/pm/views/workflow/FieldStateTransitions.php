@@ -37,7 +37,7 @@ class FieldStateTransitions extends Field
 					{
 						$checked = $this->state_it->getId() != '' ? in_array($state_it->getId(), $targets) : true;  
 						echo '<label class="checkbox">';
-			  				echo '<input type="checkbox" class="checkbox" name="ForwardRequired'.$state_it->get('ReferenceName').'" '.($checked ? 'checked' : '').'>';
+			  				echo '<input type="checkbox" class="checkbox" name="ForwardRequired'.$state_it->getId().'" '.($checked ? 'checked' : '').'>';
 			  				echo $state_it->getDisplayName();
 						echo '</label>';
 						$state_it->moveNext();
@@ -51,7 +51,7 @@ class FieldStateTransitions extends Field
 					{
 						$checked = $this->state_it->getId() != '' ? in_array($state_it->getId(), $sources) : true;  
 						echo '<label class="checkbox">';
-			  				echo '<input type="checkbox" class="checkbox" name="BackwardRequired'.$state_it->get('ReferenceName').'" '.($checked ? 'checked' : '').'>';
+			  				echo '<input type="checkbox" class="checkbox" name="BackwardRequired'.$state_it->getId().'" '.($checked ? 'checked' : '').'>';
 			  				echo $state_it->getDisplayName();
 						echo '</label>';
 						$state_it->moveNext();

@@ -524,9 +524,8 @@ public class RequirementsTest extends ProjectTestBase {
 	/**This method creates a several objects, link them to a Requirement, then add the Requirement to baseline creating a copy,
 	 * and checks that the new Requirement has all the links like the original one. 
 	 *  */
-	@Test
-		public void copyLinksWhenAddingToBaseline() {
-		
+	@Test public void copyLinksWhenAddingToBaseline()
+	{
 		String baseline1 = "Бейзлайн один";
 		String index = DataProviders.getUniqueString();
 		Request testRequest = new Request("TestCR-"+ index,
@@ -682,7 +681,7 @@ public class RequirementsTest extends ProjectTestBase {
 		ratb = rvp.makeBranch();
 		rvp = ratb.Submit(document, baseline2, "");
 		
-		Assert.assertTrue(rvp.isTextPresent(content), "Удаленный раздел не виден в новом бейзлайне");
+		Assert.assertFalse(rvp.isTextPresent(content), "Удаленный раздел не виден в новом бейзлайне");
 	}
 		
 

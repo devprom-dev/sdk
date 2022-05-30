@@ -17,6 +17,7 @@ include "predicates/ChangeLogVisibilityFilter.php";
 include "predicates/ChangeLogAccessFilter.php";
 include "predicates/ChangeLogStartServerFilter.php";
 include "sorts/SortChangeLogRecentClause.php";
+include "sorts/SortChangeLogRecentProjectClause.php";
 
 class ChangeLog extends Metaobject
 {
@@ -26,7 +27,8 @@ class ChangeLog extends Metaobject
  		
  		$this->setAttributeType( 'Author', 'REF_pm_ParticipantId' );
  		$this->setAttributeType( 'Content', 'WYSIWYG' );
- 		
+        $this->setAttributeEditable( 'SystemUser', false );
+
  		$this->setSortDefault( array(
  		    new SortAttributeClause('RecordCreated.D')
  		));

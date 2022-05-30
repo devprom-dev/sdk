@@ -5,7 +5,7 @@ class TaskFactPersister extends ObjectSQLPersister
  	function getSelectColumns( $alias )
  	{
  		return array (
- 			"(SELECT SUM(ac.Capacity) FROM pm_Activity ac WHERE ac.Task = ".$this->getPK($alias)." ) Fact "
+ 			"(SELECT SUM(ac.Capacity) FROM pm_Activity ac WHERE ac.Task = {$this->getPK($alias)} ) Fact "
 		);
  	}
 

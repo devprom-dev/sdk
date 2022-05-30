@@ -1,5 +1,4 @@
 <?php
-
 include_once "ObjectSQLPersister.php";
 
 class ObjectAffectedDatePersister extends ObjectSQLPersister
@@ -9,8 +8,7 @@ class ObjectAffectedDatePersister extends ObjectSQLPersister
  		$columns = array();
 
  		if ( $this->getObject()->getAttributeType('RecordModified') == '' ) return $columns;
-		if ( $this->getObject() instanceof ChangeLogAggregated ) return $columns;
-		
+
         $columns[] =
             " IFNULL((SELECT UNIX_TIMESTAMP(RecordModified) * 100000 + co_AffectedObjectsId ".
             "	 FROM co_AffectedObjects o ".

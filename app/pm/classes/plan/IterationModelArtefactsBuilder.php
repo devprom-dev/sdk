@@ -12,16 +12,16 @@ class IterationModelArtefactsBuilder extends ObjectModelBuilder
         if ( getSession()->IsRDD() ) {
             $object->addAttribute('Issues', 'REF_IssueId', translate('Пожелания'), true, false, '', 90);
             $object->addAttribute('Increments', 'REF_IncrementId', text(2032), true, false, '', 95);
-            $object->addAttributeGroup('Increments', 'tab-increments');
+            $object->addAttributeGroup('Increments', 'tabincrements');
         }
         else {
             $object->addAttribute('Issues', 'REF_pm_ChangeRequestId', text(808), false, false, '', 90);
         }
-		$object->addAttributeGroup('Issues', 'tab-issues');
+		$object->addAttributeGroup('Issues', 'tabissues');
 
 		if ( $methodology_it->HasPlanning() && $methodology_it->HasTasks() ) {
 			$object->addAttribute('Tasks', 'REF_pm_TaskId', translate('Задачи'), false, false, '', 100);
-			$object->addAttributeGroup('Tasks', 'tab-tasks');
+			$object->addAttributeGroup('Tasks', 'tabtasks');
 		}
 
 		$object->addPersister( new IterationArtefactsPersister() );

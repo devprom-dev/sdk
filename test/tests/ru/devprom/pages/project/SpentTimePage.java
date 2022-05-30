@@ -47,7 +47,7 @@ public class SpentTimePage extends SDLCPojectPageBase {
 			spentList.add(
 				new Spent(
 					"",
-					Double.parseDouble(row.findElement(By.xpath("./td[@id='capacity']")).getText().replace("ч", "")),
+						convertToDouble(row.findElement(By.xpath("./td[@id='capacity']")).getText()),
 					"",
 					row.findElement(By.xpath("./td[@id='description']")).getText()
 				)

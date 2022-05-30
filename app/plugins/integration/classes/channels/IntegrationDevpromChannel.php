@@ -54,7 +54,6 @@ class IntegrationDevpromChannel extends IntegrationChannel
         $mapping = $this->getMapping();
         $attachment = getFactory()->getObject('Attachment');
         $requestLink = getFactory()->getObject('RequestLink');
-        $activity = getFactory()->getObject('Activity');
 
         $items = array();
         $lastTimestamp = '';
@@ -151,41 +150,26 @@ class IntegrationDevpromChannel extends IntegrationChannel
                     );
                     $link_it->moveNext();
                 }
-                $it = $activity->getRegistry()->Query(
-                    array (
-                        new FilterAttributePredicate('Issue', $items[$key]['id']),
-                        new FilterModifiedAfterPredicate($timestamp)
-                    )
-                );
-                while( !$it->end() ) {
-                    $items[] = array (
-                        'class' => 'ActivityRequest',
-                        'id' => $it->getId(),
-                        'parentId' => $it->get('Issue')
-                    );
-                    $it->moveNext();
-                }
-            }
-
-            if ( $class == 'Task' ) {
-                $it = $activity->getRegistry()->Query(
-                    array (
-                        new FilterAttributePredicate('Task', $items[$key]['id']),
-                        new FilterModifiedAfterPredicate($timestamp)
-                    )
-                );
-                while( !$it->end() ) {
-                    $items[] = array (
-                        'class' => 'ActivityTask',
-                        'id' => $it->getId(),
-                        'parentId' => $it->get('Task')
-                    );
-                    $it->moveNext();
-                }
             }
 
             $lastTimestamp = $log_it->get('RecordCreated');
             $log_it->moveNext();
+        }
+
+        $activityIt = getFactory()->getObject('Activity')->getRegistry()->Query(
+            array (
+                new FilterVpdPredicate(),
+                new FilterModifiedAfterPredicate($timestamp)
+            )
+        );
+        while( !$activityIt->end() ) {
+            $items[] = array (
+                'class' => 'Activity',
+                'id' => $activityIt->getId(),
+                'parentId' => $activityIt->get('Issue') != ''
+                                    ? $activityIt->get('Issue') : $activityIt->get('Task')
+            );
+            $activityIt->moveNext();
         }
 
         return array($items, $lastTimestamp);
@@ -194,7 +178,7 @@ class IntegrationDevpromChannel extends IntegrationChannel
     public function readItem($mapping, $class, $id, $parms = array())
     {
         try {
-            return $this->model->get($class, $id, $this->getHtmlAllowed() ? 'html' : 'text');
+            return $this->model->get($class, $id, $this->getWysiwygMode());
         }
         catch (\Exception $e) {
             $this->getLogger()->error($e->getMessage().PHP_EOL.$e->getTraceAsString());
@@ -209,6 +193,16 @@ class IntegrationDevpromChannel extends IntegrationChannel
         $this->getLogger()->debug('Devprom writeItem: '.var_export($data,true));
 
         if ( $class == 'Request' ) $class = $this->issueClassName;
+
+        if ( $class == 'User' && $data['Email'] != '' ) {
+            // skip update user if there is one
+            $userIt = getFactory()->getObject('User')->getByRef('Email', $data['Email']);
+            if ( $userIt->getId() != '' ) {
+                $this->getLogger()->info('Skip user exists already: '.$data['Email']);
+                return array();
+            }
+        }
+
         $result = $this->model->set($class, $data, $id);
 
         if ( $id == $result['Id'] ) {
@@ -216,6 +210,32 @@ class IntegrationDevpromChannel extends IntegrationChannel
         }
         else {
             $this->getLogger()->info('Item has been created: '.$result['Id']);
+        }
+
+        if ( in_array($class, array('Issue','Request','Task')) )
+        {
+            $userId = $result['Owner']['Id'] > 0 ? $result['Owner']['Id'] : $result['Assignee']['Id'];
+            if ( $userId > 0 && defined('PERMISSIONS_ENABLED') ) {
+                // make assignee participant of the project
+                $participantObject = getFactory()->getObject('Participant');
+                $participantIt = $participantObject->getByRef('SystemUser', $userId);
+
+                if ( $participantIt->getId() == '' ) {
+                    $participantIt = $participantObject->getRegistry()->Create(
+                        array(
+                            'SystemUser' => $userId
+                        )
+                    );
+                    getFactory()->getObject('pm_ParticipantRole')->getRegistry()->Create(
+                        array(
+                            'Participant' => $participantIt->getId(),
+                            'Capacity' => 8,
+                            'ProjectRole' => getFactory()->getObject('ProjectRole')
+                                                ->getByRef('ReferenceName','lead')->getId()
+                        )
+                    );
+                }
+            }
         }
 
         return array($result);

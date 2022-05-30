@@ -4,6 +4,7 @@ class FilterIterationMethod extends FilterObjectMethod
 {
     function __construct( $parmName = 'iteration' ) {
         parent::__construct(getFactory()->getObject('IterationRecent'), '', $parmName);
+        $this->setLazyLoad(true);
     }
 
     function getValues()
@@ -21,14 +22,14 @@ class FilterIterationMethod extends FilterObjectMethod
         );
     }
 
-    function parseFilterValue($value)
+    function parseFilterValue($value, $context)
     {
         $value = preg_replace_callback('/notpassed/i', function() {
                 return join(',',getFactory()->getObject('IterationActual')->getAll()->idsToArray());
             }, $value);
 
         $value = preg_replace_callback('/current/i', function() {
-                return join(',',getFactory()->getObject('Iteration')->getRegistry()->Query(array(
+                return join(',',getFactory()->getObject('Iteration')->getRegistry()->QueryKeys(array(
                             new FilterVpdPredicate(),
                             new IterationTimelinePredicate(IterationTimelinePredicate::CURRENT)
                         ))->idsToArray()

@@ -176,34 +176,35 @@ public class PageBase {
 
 	}
 
-	public SDLCPojectPageBase gotoSDLCProject(String projectname) {
+	public void waitForProjectsTreeMenu()
+	{
 		companyLink.click();
-		driver.findElement(
-				By.xpath(".//a[@id='navbar-project']/following-sibling::ul//a[text()='"
-						+ projectname + "']")).click();
+		waitUntilElementPresent(
+				".//a[@id='navbar-project']/following-sibling::ul//li[contains(@role,'treeitem')]");
+		sleep(3);
+	}
+
+	public SDLCPojectPageBase gotoSDLCProject(Project project) {
+		driver.navigate().to(Configuration.getBaseUrl() + "/pm/" + project.getCodeName());
 		return new SDLCPojectPageBase(driver);
 	}
 
-	public IProjectBase gotoProject(Project project) {
-		companyLink.click();
-
-		clickOnInvisibleElement(driver
-				.findElement(By
-						.xpath(".//a[@id='navbar-project']/following-sibling::ul//a[text()='"
-								+ project.getName() + "']")));
+	public IProjectBase gotoProject(Project project)
+	{
+		driver.navigate().to(Configuration.getBaseUrl() + "/pm/" + project.getCodeName());
 		switch (project.getTemplate().getName()) {
-		case "Scrum":
-			return new ScrumPageBase(driver, project);
-			// RuScrumSimpleFavsPage(driver, project);
-		case "Kanban":
-			return new KanbanPageBase(driver, project);
-		case "Waterfall":
-			return new SDLCPojectPageBase(driver, project);
-		case "Поддержка":
-			return new SupportPageBase(driver, project);
-		default:
-			throw new RuntimeException("The class for project type "
-					+ project.getTemplate().getName() + " is not implemented");
+			case "Scrum":
+				return new ScrumPageBase(driver, project);
+				// RuScrumSimpleFavsPage(driver, project);
+			case "Kanban":
+				return new KanbanPageBase(driver, project);
+			case "Waterfall":
+				return new SDLCPojectPageBase(driver, project);
+			case "Поддержка":
+				return new SupportPageBase(driver, project);
+			default:
+				throw new RuntimeException("The class for project type "
+						+ project.getTemplate().getName() + " is not implemented");
 		}
 	}
 
@@ -357,28 +358,21 @@ public class PageBase {
 	}
 
 	public boolean isAllProjectsEnabled() {
+		waitForProjectsTreeMenu();
 		return !driver
 				.findElements(
 						By.xpath("//a[@id='navbar-project']/following-sibling::ul//a[text()='Все проекты']"))
 				.isEmpty();
 	}
 
-	public AllProjectsPageBase gotoAllProjects() {
-		companyLink.click();
-		WebElement allProjectsLink = driver
-				.findElement(By
-						.xpath("//a[@id='navbar-project']/following-sibling::ul//a[text()='Все проекты']"));
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
-				.visibilityOf(allProjectsLink));
-		allProjectsLink.click();
+	public AllProjectsPageBase gotoAllProjects()
+	{
+		driver.navigate().to(Configuration.getBaseUrl() + "/pm/all");
 		return new AllProjectsPageBase(driver);
 	}
 
 	public MyProjectsPageBase gotoMyProjects() {
-		companyLink.click();
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
-				.visibilityOf(myProjectsLink));
-		myProjectsLink.click();
+		driver.navigate().to(Configuration.getBaseUrl() + "/pm/my");
 		return new MyProjectsPageBase(driver);
 	}
 
@@ -458,7 +452,9 @@ public class PageBase {
 
 	public void waitForFilterActivity() {}
 
-	public List<String> getProjectsList() {
+	public List<String> getProjectsList()
+	{
+		sleep(3);
 		WebElement link = driver.findElement(By.id("navbar-project"));
 		link.click();
 		List<String> result = new ArrayList<String>();
@@ -611,7 +607,7 @@ public class PageBase {
 	public void setFilter(String filtername, String filtervalue)
 	{
 		((JavascriptExecutor) driver).executeScript("filterLocation.setup('" + filtername + "=" + filtervalue +"', 1);");
-		if ( filtervalue != "all" ) {
+		if ( filtername != "search" && filtervalue != "all" ) {
 			(new WebDriverWait(driver, waiting)).until(
 					ExpectedConditions.presenceOfElementLocated(
 							By.xpath("//a[contains(@class,'btn-filter') and @uid='"+filtername+"']")));
@@ -628,5 +624,9 @@ public class PageBase {
 
 	public void removeColumn(String columnname) {
 		((JavascriptExecutor) driver).executeScript("filterLocation.hideColumn('" + columnname + "', 1)");
+	}
+
+	public double convertToDouble(String value) {
+		return Double.parseDouble(value.replaceAll("[^\\d]+", "").trim());
 	}
 }

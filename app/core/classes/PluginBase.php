@@ -2,11 +2,11 @@
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
 
-include ('PluginSectionBase.php');
-include ('PluginAPISectionBase.php');
-include ('PluginCoSectionBase.php');
-include ('PluginPMSectionBase.php');
-include ('PluginAdminSectionBase.php');
+include 'PluginSectionBase.php';
+include 'PluginAPISectionBase.php';
+include 'PluginCoSectionBase.php';
+include 'PluginPMSectionBase.php';
+include 'PluginAdminSectionBase.php';
 
 class PluginBase
 {

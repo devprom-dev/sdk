@@ -18,7 +18,7 @@ CKEDITOR.plugins.add( 'productivity',
 				};
 				data[objectClass] = editor.element.getAttribute('objectid');
                 if ( objectClass == "ProjectPage" ) {
-                    editor.insertText(' [I-] ');
+                    editor.insertText('[I-]');
 				}
 
 				workflowNewObject(baseUrl+'/issues/board?mode=request&class=metaobject&entity=pm_ChangeRequest','Request','pm_ChangeRequest','', data, function(id)
@@ -26,7 +26,7 @@ CKEDITOR.plugins.add( 'productivity',
                     if ( objectClass != "ProjectPage" ) return;
                     var focusedEditor = CKEDITOR.instances[focusedName];
 					if ( focusedEditor.element.hasClass('wysiwyg-input') ) return;
-                    focusedEditor.setData(focusedEditor.getData().replace(/\[I\-\]/g, '[I-'+id+']'));
+                    focusedEditor.setData(focusedEditor.getData().replace(/\[I\-\]/g, 'I-'+id));
 				}, "false");
 			}
 		});
@@ -42,7 +42,7 @@ CKEDITOR.plugins.add( 'productivity',
 				};
 				data[objectClass] = editor.element.getAttribute('objectid');
                 if ( objectClass == "ProjectPage" ) {
-                    editor.insertText(' [T-] ');
+                    editor.insertText('[T-]');
                 }
 
 				workflowNewObject(baseUrl+'/tasks/board?class=metaobject&entity=pm_Task','Task','pm_Task','', data, function(id)
@@ -50,7 +50,7 @@ CKEDITOR.plugins.add( 'productivity',
                     if ( objectClass != "ProjectPage" ) return;
 					var focusedEditor = CKEDITOR.instances[focusedName];
 					if ( focusedEditor.element.hasClass('wysiwyg-input') ) return;
-                    focusedEditor.setData(focusedEditor.getData().replace(/\[T\-\]/g, '[T-'+id+']'));
+                    focusedEditor.setData(focusedEditor.getData().replace(/\[T\-\]/g, 'T-'+id));
 				}, "false");
 			}
 		});

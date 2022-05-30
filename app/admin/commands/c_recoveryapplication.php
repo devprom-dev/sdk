@@ -11,6 +11,13 @@ class RecoveryApplication extends MaintenanceCommand
 	
 	function create()
 	{
+        $backupObject = getFactory()->getObject('cms_Backup');
+        $backupIt = $backupObject->getRegistry()->Query(
+            array(
+                new FilterAttributePredicate('BackupFileName', $_REQUEST['parms'])
+            )
+        );
+
 	    $recovery = getConfiguration()->getBackupAndRecoveryStrategy();
 	    try {
             $recovery->recovery_database();

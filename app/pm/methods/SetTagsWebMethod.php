@@ -17,7 +17,7 @@ abstract class SetTagsWebMethod extends WebMethod
         }
 
         if ( array_key_exists('RemoveTag', $_REQUEST) ) {
-            $this->removeTag( $this->objectIt->idsToArray() );
+            $this->removeTag( $this->objectIt->idsToArray(), \TextUtils::parseIds($_REQUEST['RemoveTag']) );
         }
     }
 
@@ -43,7 +43,7 @@ abstract class SetTagsWebMethod extends WebMethod
         }
     }
 
-    function removeTag( $ids )
+    function removeTag( $ids, $tagIds )
     {
         $request_tag = $this->getTagObject();
 
@@ -53,7 +53,7 @@ abstract class SetTagsWebMethod extends WebMethod
         $request_it = $request->getExact($ids);
         while ( !$request_it->end() )
         {
-            $request_tag->removeTags( $request_it->getId() );
+            $request_tag->removeTags( $request_it->getId(), $tagIds );
             $request_it->moveNext();
         }
     }

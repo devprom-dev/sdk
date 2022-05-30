@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDurationPersister.php";
 
 class FormLinkedEmbedded extends PMFormEmbedded
 {
@@ -35,8 +34,7 @@ class FormLinkedEmbedded extends PMFormEmbedded
 
 		$target_it = $object_it->object->getAttributeObject($attribute)->getRegistry()->Query(
 			array (
-					new FilterInPredicate($object_it->get($attribute)),
-					new StateDurationPersister()
+                new FilterInPredicate($object_it->get($attribute))
 			)
 		);
         $target_it = $target_it->getSpecifiedIt();

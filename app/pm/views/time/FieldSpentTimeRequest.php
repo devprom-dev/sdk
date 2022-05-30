@@ -1,11 +1,9 @@
 <?php
-
 include_once "FieldSpentTime.php";
 
 class FieldSpentTimeRequest extends FieldSpentTime
 {
-    function getAnchorField()
-    {
+    function getAnchorField() {
         return 'Issue';
     }
 
@@ -23,7 +21,7 @@ class FieldSpentTimeRequest extends FieldSpentTime
  		$object_it = $this->getObjectIt();
  		
  		$activity = getFactory()->getObject('ActivityRequest');
- 		$activity->addFilter( new FilterInPredicate($object_it->get('Spent') == '' ? '0' : $object_it->get('Spent') ) );
+ 		$activity->addFilter( new FilterInPredicate($object_it->get('Spent') == '' ? '-1' : $object_it->get('Spent') ) );
 
 		return $activity;
  	}

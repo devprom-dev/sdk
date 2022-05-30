@@ -22,16 +22,16 @@ class ChangeLogRegistry extends ObjectRegistrySQL
 		);
 	}
 	
- 	function getQueryClause()
+ 	function getQueryClause(array $parms)
  	{
- 	    $query = $this->_getQuery();
+ 	    $query = $this->_getQuery($parms);
 
- 	    if ( $query == '' ) return parent::getQueryClause(); 
+ 	    if ( $query == '' ) return parent::getQueryClause($parms);
  	    
  	    return "(".$query.")";
  	}
 	
-	private function _getQuery()
+	private function _getQuery(array $parms)
  	{
 		$queries = array();
 		
@@ -39,13 +39,13 @@ class ChangeLogRegistry extends ObjectRegistrySQL
 		
  		if ( in_array('-', $this->getObject()->getVpds()) ) return ' SELECT t.* FROM ObjectChangeLog t WHERE 1 = 2 ';
 		
-		$base_predicate = $this->getObject()->getVpdPredicate('t');
+		$base_predicate = $this->getFilterPredicate($this->extractPredicates($parms));
 
 		$query_classes = array();
         $query_predicate = '';
 
 		// simplify the query when the filter by ClassName is required
- 		foreach( $this->getFilters() as $predicate )
+ 		foreach( $this->extractPredicates($parms) as $predicate )
  		{
  			$predicate->setObject( $this->getObject() );
  			
@@ -103,7 +103,8 @@ class ChangeLogRegistry extends ObjectRegistrySQL
         }
 
 		foreach( $include_classes as $predicate => $entity ) {
-			$queries[] = " SELECT t.* FROM ObjectChangeLog t WHERE t.ClassName IN ('".join("','", $entity)."') ".$predicate;
+			$queries[] = " SELECT t.* FROM ObjectChangeLog t 
+                            WHERE t.ClassName IN ('".join("','", $entity)."') ".$base_predicate.$predicate;
 		}
 
 		if ( count($query_classes) < 1 ) {
@@ -116,4 +117,34 @@ class ChangeLogRegistry extends ObjectRegistrySQL
 
 		return join(" UNION ", $queries);
  	}
+
+    public function QueryById( $ids )
+    {
+        $ids = \TextUtils::parseIds($ids);
+        if ( count($ids) < 1 ) return $this->getObject()->getEmptyIterator();
+
+        $filter = new FilterInPredicate($ids);
+        $filter->setAlias('t');
+        $filter->setObject( $this->getObject() );
+        $queryClause = parent::getQueryClause(array());
+
+        return $this->createSQLIterator(
+            "SELECT {$this->getSelectClause($this->extractPersisters(array()), 't')} 
+                       FROM {$queryClause} t WHERE 1 = 1 {$filter->getPredicate()}"
+        );
+    }
+
+    public function Count( $parms = array() )
+    {
+        $sql = "SELECT {$this->getSelectClause($this->extractPersisters($parms),'t')} 
+                  FROM {$this->getQueryClause($parms)} t 
+                 WHERE 1 = 1 {$this->getFilterPredicate($this->extractPredicates($parms))}";
+
+        $group = $this->getGroupClause('t');
+        if ( $group != '' ) $sql .= ' GROUP BY '.$group;
+
+        return $this->createSQLIterator(
+            'SELECT COUNT(1) cnt FROM ('.$sql.') t '
+        )->get('cnt');
+    }
 }

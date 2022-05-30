@@ -1,6 +1,5 @@
 <?php
 namespace Devprom\MobileAppBundle\Service\App;
-include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 
 class MobileDataService
 {
@@ -537,9 +536,6 @@ class MobileDataService
     public function buildObject( $className )
     {
         $object = getFactory()->getObject($className);
-
-        $builder = new \WorkflowModelBuilder();
-        $builder->build($object);
 
         if ( $object instanceof \Task ) {
             $object->setAttributeType('Assignee', 'REF_ProjectUserId');

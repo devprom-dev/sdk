@@ -242,7 +242,8 @@ public class RequestTest extends ProjectTestBase {
 	 * @throws InterruptedException 
 	 */
 	@Test
-	public void editRequest() throws InterruptedException {
+	public void editRequest() throws InterruptedException
+	{
 		new PageBase(driver).gotoProject(webTest);
 		DocumentsPage dp = (new SDLCPojectPageBase(driver)).gotoDocuments();
 		DocumentNewPage ndp = dp.clickNewDoc();
@@ -269,8 +270,7 @@ public class RequestTest extends ProjectTestBase {
 		testRequest.addSpentTimeRecord("", 2, user,
 				"some test description 2");
 		testRequest.setVersion("0.1");
-		rep.addLinkedReqs(linkedRequest.getName(),
-				Request.getRandomLinkType());
+		rep.addLinkedReqs(linkedRequest.getName(), Request.getRandomLinkType());
 		RTask task = new RTask("Task" + DataProviders.getUniqueString(),
 				coordinator, RTask.getRandomType(),
 				testRequest.getEstimation() - 9);
@@ -655,10 +655,10 @@ public class RequestTest extends ProjectTestBase {
 		rvp = mip.clickToRequest(testRequest.getId());
 		String[] testResults = rvp.readTestResults();
 		Assert.assertEquals(testResults.length, 2);
-		Assert.assertTrue(testResults[0].contains(testScenario.getName()));
-		Assert.assertTrue(testResults[0].contains("Провален"));
 		Assert.assertTrue(testResults[1].contains(testScenario.getName()));
-		Assert.assertTrue(testResults[1].contains("Пройден"));
+		Assert.assertTrue(testResults[1].contains("Провален"));
+		Assert.assertTrue(testResults[0].contains(testScenario.getName()));
+		Assert.assertTrue(testResults[0].contains("Пройден"));
 	}
 	
 
@@ -778,9 +778,7 @@ public class RequestTest extends ProjectTestBase {
 		
 		//Move Request to devTest
 		mip = rvp.moveRequest(devTest.getName());
-		mip.showAll();
-		Assert.assertFalse(mip.isRequestPresent(request.getId()), "The request is still present in the original project");
-		
+
 		//Go to devTest and find replaced Request
 		favspage = (SDLCPojectPageBase) mip.gotoProject(devTest);
 		mip = favspage.gotoRequests();
@@ -1154,26 +1152,20 @@ public class RequestTest extends ProjectTestBase {
 	    Assert.assertEquals(rvp.readDescription(), requestDescription1, "Не верное поле Описание");
 	}
 	
-	
-
 	/**
 	 */
 	@Test (priority = 20)
-	public void checkRequiredSpentFieldInComplete(){
-		
-	        //Default Test Project
-	    		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
-	    				new Template(this.waterfallTemplateName));
-			//Test Project
-			String p = DataProviders.getUniqueString();
-			Project testProject = new Project("Project"+p, "project"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
-			
-		    ProjectNewPage pnp = new PageBase(driver).createNewProject();
-			pnp.createNew(testProject);
-			
-			FILELOG.debug("Created new project " + testProject.getName());
-			
-		
+	public void checkRequiredSpentFieldInComplete()
+	{
+		//Test Project
+		String p = DataProviders.getUniqueString();
+		Project testProject = new Project("Project"+p, "project"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
+
+		ProjectNewPage pnp = new PageBase(driver).createNewProject();
+		pnp.createNew(testProject);
+
+		FILELOG.debug("Created new project " + testProject.getName());
+
 		RequestsStatePage rsp = (new SDLCPojectPageBase(driver)).gotoRequestsStatePage();
 		
 		StateEditPage sep =  rsp.editState("Выполнено");
@@ -1192,8 +1184,5 @@ public class RequestTest extends ProjectTestBase {
 		rdp.tryToComplete("Комментарий", "0");
 		Assert.assertTrue(rdp.isErrorAlert(), "Нет предупреждения об ошибке");
 	    rvp = rdp.cancel();
-		rvp.gotoProject(webTest);
-		}
-	
-	
+	}
 }

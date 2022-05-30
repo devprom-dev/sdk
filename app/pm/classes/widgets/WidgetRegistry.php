@@ -2,7 +2,7 @@
 
 class WidgetRegistry extends ObjectRegistrySQL
 {
-	function createSQLIterator( $sql )
+	function Query( $parms = array() )
  	{
  		$data = array();
 
@@ -58,7 +58,7 @@ class WidgetRegistry extends ObjectRegistrySQL
  			$report_it->moveNext();
  		}
 
-		foreach( $this->getFilters() as $filter ) {
+		foreach( $this->extractPredicates($parms) as $filter ) {
 			if ( $filter instanceof FilterSearchAttributesPredicate ) {
 				$words = SearchRules::getSearchItems($filter->getValue(), getSession()->getLanguageUid());
 				$data = array_filter($data, function($value) use ($words) {

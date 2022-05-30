@@ -1,5 +1,4 @@
 <?php
-
 include "WikiTypeBaseIterator.php";
 include "WikiTypeBaseRegistry.php";
 
@@ -11,6 +10,7 @@ class WikiTypeBase extends Metaobject
         $this->setAttributeType('DefaultPageTemplate', 'REF_TextTemplateId');
 		$this->addAttributeGroup('PageReferenceName', 'system');
         $this->addAttributeGroup('ReferenceName', 'alternative-key');
+        $this->addAttributeGroup('IsNoIdentity', 'additional');
         $this->setSortDefault(
             array(
                 new SortAttributeClause('Caption')

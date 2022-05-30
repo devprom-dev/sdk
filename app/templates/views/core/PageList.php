@@ -1,12 +1,12 @@
 <?php 
 
 $table_row_id = $table_id.'_row_';
-
+$uid = new ObjectUID();
 $columns_info = array();
 
 foreach( $columns as $key => $attr )
 {
-	if ( !$list->getColumnVisibility($attr) || $group_field == $attr ) {
+	if ( !$list->getColumnVisibility($attr) ) {
 		unset($columns[$key]); continue;
 	}
 	
@@ -88,7 +88,7 @@ if ( $show_header && $need_to_select ) $columns_number++;
 				else {
 					echo $header_attrs['name'];
 				}
-                if ( in_array($attr, array('Caption','File')) && $group_field != '' ) {
+                if ( in_array($attr, $collapseAttributes) && $group_field != '' ) {
                     echo ' <a class="dashed" onclick="collapseGroups()" style="padding-left: 8px;"> '.translate('свернуть').'</a> ';
                     echo ' <a class="dashed" onclick="restoreGroups()" style="padding-left: 8px;"> '.translate('развернуть').'</a> ';
                 }
@@ -146,7 +146,7 @@ if ( $show_header && $need_to_select ) $columns_number++;
                         $guid = md5($group_field_value . $it->get('VPD'));
 					?>
                     <tr id="<?=($table_row_id.'g_'.$group_field_value)?>" class="info" group-id="<?=$group_field_value?>" >
-                        <?php $list->drawGroupRow($group_field, $group_field_value, $it, $columns_number, $guid); ?>
+                            <?php $list->drawGroupRow($group_field, $group_field_value, $it, $columns_number, $guid); ?>
                     </tr>
                     </tbody>
                     <tbody id="gor<?=$guid?>" class="in collapse">
@@ -188,20 +188,55 @@ if ( $show_header && $need_to_select ) $columns_number++;
 					
 						$color = $list->getRowColor( $it, $attr );
 						
-						if( $columns_info[$attr]['reference'] ) 
-						{
-							echo '<td id="'.$cell_id.'" '.($width != '' ? 'width="'.$width.'"' : '').' title="'.$comment.'" style="text-align:'.$align.';color:'.$color.'">';
-							
-								$list->drawRefCell( $list->getFilteredReferenceIt($attr, $it->get($attr)), $it, $attr);
-								
-       						echo '</td>';
-						} 
-						else 
-						{
-							echo '<td id="'.$cell_id.'" '.($width != '' ? 'width="'.$width.'"' : '').' title="'.$comment.'" style="text-align:'.$align.';color:'.$color.'">';
-								$list->drawCell( $it, $attr );
-							echo '</td>';
-						}
+                        echo '<td id="'.$cell_id.'" '.($width != '' ? 'width="'.$width.'"' : '').' title="'.$comment.'" style="text-align:'.$align.';color:'.$color.'">';
+
+                        $script = '';
+                        if ( in_array($attr, $bulkAttributes) ) {
+                            $script = "javascript:processBulk(
+                                    '{$it->object->getAttributeUserName($attr)}',
+                                    '{$it->getEditUrl()}&formonly=true&operation=Attribute{$attr}',
+                                    '{$it->getId()}', 
+                                    devpromOpts.updateUI);";
+                        }
+
+                        if( $columns_info[$attr]['reference'] ) {
+                            $refIt = $list->getFilteredReferenceIt($attr, $it->get($attr));
+                            if ( $script != '' ) {
+                                if ( !$uid->hasUid($refIt) ) {
+                                    echo '<a class="btn btn-xs btn-light" href="'.$script.'">';
+                                        if ( $it->get($attr) == '' ) {
+                                            echo '...';
+                                        }
+                                        $list->drawRefCell( $refIt, $it, $attr);
+                                    echo '</a>';
+                                }
+                                else {
+                                    $list->drawRefCell( $refIt, $it, $attr);
+                                    echo ' <a class="btn btn-xs btn-light" href="'.$script.'">...</a>';
+                                }
+                            }
+                            else {
+                                $list->drawRefCell( $refIt, $it, $attr);
+                            }
+                        }
+                        else {
+                            if ( $script != '' ) {
+                                echo '<a class="btn btn-xs btn-light" href="'.$script.'">';
+                                    if ( $it->get($attr) == '' ) {
+                                        echo '...';
+                                    }
+                                    $list->drawCell( $it, $attr );
+                                echo '</a>';
+                            }
+                            else {
+                                $list->drawCell( $it, $attr );
+                            }
+                        }
+
+                        if ( in_array($attr, $bulkAttributes) ) {
+                            echo '</a>';
+                        }
+                        echo '</td>';
 					}
 
 					if ( $display_operations ) 

@@ -11,7 +11,7 @@ class WikiPageRegistryVersionStructure extends ObjectRegistrySQL
 		$this->snapshot_it = $snapshot_it->copy();
 	}
 	
-	function getQueryClause()
+	function getQueryClause(array $parms)
 	{
 		$versioned = new VersionedObject();
 		$versionedIt = $versioned->getExact(get_class($this->getObject()));
@@ -31,7 +31,7 @@ class WikiPageRegistryVersionStructure extends ObjectRegistrySQL
 	    }
 
         $sqlPredicate = '';
-        foreach( $this->getFilters() as $filter ) {
+        foreach( $this->extractPredicates($parms) as $filter ) {
             if ( $filter instanceof FilterInPredicate ) {
                 $filter->setAlias('t');
                 $filter->setObject( $this->getObject() );

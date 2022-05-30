@@ -62,8 +62,8 @@ public class LoadTemplatePage extends SDLCPojectPageBase {
 	public void importTemplate(String templateName){
 		selectTemplate(templateName);
 		loadBtn.click();
-		new WebDriverWait(driver,waiting).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//form//div[contains(@class,'alert-success')]")));
-		new WebDriverWait(driver,waiting).until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//form//div[contains(@class,'alert-success')]")));
+		new WebDriverWait(driver,waiting).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'alert-success')]")));
+		new WebDriverWait(driver,waiting).until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//div[contains(@class,'alert-success')]")));
 	}
 	
 	public void checkAll(){

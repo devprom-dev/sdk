@@ -3,7 +3,7 @@ include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.ph
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderIssues.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelCommonBuilder.php";
-include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
+include_once SERVER_ROOT_PATH.'pm/classes/issues/RequestTaskTypeModelBuilder.php';
 include_once SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
 
 
@@ -47,18 +47,17 @@ class RequestPage extends PMPage
             }
 
             if ( $_REQUEST['mode'] == 'group' ) {
-                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
-                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
-                $this->addInfoSection(new PageSectionComments($object_it));
+                $this->setInfoSections(array());
+                $object = $form->getObject();
+                $object->addAttributeGroup('Description', 'description');
+                $this->addInfoSection(new PageSectionAttributes($object, 'description', translate('Описание')));
+                $this->addInfoSection(new PageSectionAttributes($object, 'additional', translate('Дополнительно')));
+                $this->addInfoSection(new PageSectionAttributes($object, 'trace', translate('Трассировки')));
+                $this->addInfoSection(new PageSectionComments($object_it, $this->getCommentObject()));
             }
             else {
-                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'deadlines', translate('Сроки')));
-                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'sla', 'SLA'));
-                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
-                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
-
                 if (is_object($object_it) && $object_it->getId() > 0) {
-                    $this->addInfoSection(new PageSectionComments($object_it));
+                    $this->addInfoSection(new PageSectionComments($object_it, $this->getCommentObject()));
 
                     $ids = $object_it->getImplementationIds();
                     if (count($ids) > 0 && $_REQUEST['formonly'] == '') {
@@ -67,7 +66,7 @@ class RequestPage extends PMPage
                             array(new FilterInPredicate($ids))
                         );
                         while (!$it->end()) {
-                            $section = new PageSectionComments($it->copy());
+                            $section = new PageSectionComments($it->copy(), $this->getCommentObject());
                             $uid = $it->get('UID');
                             if ( $uid == '' ) $uid = $uidService->getObjectUidInt(get_class($it->object), $it->getId());
                             $section->setCaption($section->getCaption() . ' {'.$it->get('ProjectCodeName').'} ' . $uid);
@@ -84,7 +83,7 @@ class RequestPage extends PMPage
                 }
             }
 		}
-	}
+    }
 
 	function getObject()
 	{
@@ -93,6 +92,10 @@ class RequestPage extends PMPage
 		foreach (getSession()->getBuilders('RequestViewModelBuilder') as $builder) {
 			$builder->build($object);
 		}
+        if ( $this->getReportBase() == 'issuesestimation' ) {
+            $builder = new RequestTaskTypeModelBuilder();
+            $builder->build($object);
+        }
 
 		if ($_REQUEST['view'] != 'chart') {
 			$builder = new RequestModelExtendedBuilder();
@@ -104,6 +107,10 @@ class RequestPage extends PMPage
 
 		return $object;
 	}
+
+    function getCommentObject() {
+        return new RequestComment();
+    }
 
     function getTable()
 	{
@@ -154,7 +161,7 @@ class RequestPage extends PMPage
 	}
 
 	function getPageWidgets() {
-		return array('kanbanboard', 'issuesboard', 'issues-backlog');
+		return array('kanbanboard', 'issues-board', 'issues-backlog');
 	}
 
     function buildExportIterator( $object, $ids, $iteratorClassName, $queryParms )

@@ -4,6 +4,7 @@ class FilterReleaseMethod extends FilterObjectMethod
 {
     function __construct( $parmName = 'release' ) {
         parent::__construct(getFactory()->getObject('ReleaseRecent'), '', $parmName);
+        $this->setLazyLoad(true);
     }
 
     function getValues()
@@ -19,14 +20,14 @@ class FilterReleaseMethod extends FilterObjectMethod
         );
     }
 
-    function parseFilterValue($value)
+    function parseFilterValue($value, $context)
     {
         $value = preg_replace_callback('/notpassed/i', function() {
                 return join(',',getFactory()->getObject('ReleaseActual')->getAll()->idsToArray());
             }, $value);
 
         $value = preg_replace_callback('/current/i', function() {
-                    return join(',',getFactory()->getObject('Release')->getRegistry()->Query(array(
+                    return join(',',getFactory()->getObject('Release')->getRegistry()->QueryKeys(array(
                         new FilterVpdPredicate(),
                         new ReleaseTimelinePredicate('current')
                     ))->idsToArray()

@@ -2,7 +2,7 @@
 
 class TagRegistry extends ObjectRegistrySQL
 {
-	function getQueryClause()
+	function getQueryClause(array $parms)
 	{
 	    return " (
             SELECT t.TagId, t.RecordCreated, t.RecordModified, t.VPD, t.OrderNum, t.Caption, t.RecordVersion

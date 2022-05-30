@@ -64,36 +64,46 @@ class ModelReferenceRegistry extends ObjectRegistrySQL
  	function addReference( $from, $to, $attribute )
 	{
 		$from_class = $this->getClassName($from);
-
 		$to_class = $this->getClassName($to);
 		
-		if ( !is_array($this->reference_backward[$to_class]) ) $this->reference_backward[$to_class] = array();
+		if ( !is_array($this->reference_backward[$to_class]) ) {
+		    $this->reference_backward[$to_class] = array();
+        }
 		
-		$this->reference_backward[$to_class] = array_merge($this->reference_backward[$to_class], array (
+		$this->reference_backward[$to_class] =
+            array_merge($this->reference_backward[$to_class], array (
 		        $from_class.'::'.$attribute => $from_class
-		)); 
+		    ));
 
-		if ( !is_array($this->reference_forward[$from_class]) ) $this->reference_forward[$from_class] = array();
+		if ( !is_array($this->reference_forward[$from_class]) ) {
+		    $this->reference_forward[$from_class] = array();
+        }
 		
-		$this->reference_forward[$from_class] = array_merge($this->reference_forward[$from_class], array(
+		$this->reference_forward[$from_class] =
+            array_merge($this->reference_forward[$from_class], array(
 		        $to_class.'::'.$attribute => $to_class 
-		)); 
+		    ));
 	}
 
 	function getBackwardReferences( $object )
 	{
-		$key = $this->getClassName($object);
-		
-		$references = is_array($this->reference_backward[$key]) ? $this->reference_backward[$key] : array();
+        $keys = array(
+            $this->getClassName($object)
+        );
+        if ( is_object($object) ) {
+            $keys[] = get_parent_class($object);
+            $keys[] = $object->getEntityRefName();
+        }
 
-		// inherited references
-		
-		if ( is_object($object) )
-		{
-			$references = array_merge($references, is_array($this->reference_backward[$object->getEntityRefName()]) 
-			    ? $this->reference_backward[$object->getEntityRefName()] : array());
-		}
-		
+        $references = array();
+        foreach( $keys as $key ) {
+            $references = array_merge( $references,
+                is_array($this->reference_backward[$key])
+                    ? $this->reference_backward[$key]
+                    : array()
+            );
+        }
+
 		return $references;
 	}
 	

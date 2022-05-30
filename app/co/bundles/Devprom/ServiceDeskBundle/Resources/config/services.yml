@@ -52,6 +52,13 @@ services:
         tags:
             - { name: twig.extension }
 
+    servicedesk_twig_show_attribute:
+        class: Devprom\ServiceDeskBundle\Twig\ShowAttributeTwigExtention
+        arguments:
+            $container: "@service_container"
+        tags:
+            - { name: twig.extension }
+
     servicedesk_twig_text_wysiwyg:
         class: Devprom\ServiceDeskBundle\Twig\WysiwygTextTwigExtention
         arguments:
@@ -66,11 +73,6 @@ services:
             $router: "@router"
         tags:
             - { name: twig.extension }
-
-    kernel.listener.your_listener_name:
-            class: Devprom\ServiceDeskBundle\EventListener\ServiceDeskExceptionListener
-            tags:
-                - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
 
     request_listener:
             class: Devprom\ServiceDeskBundle\EventListener\RequestListener
@@ -88,7 +90,6 @@ services:
                 $objectChangeLogger: "@object_change_logger"
             tags:
                 - { name: kernel.event_subscriber }
-
 
     model_factory:
         class: ModelFactory
@@ -177,8 +178,22 @@ services:
         tags:
             - { name: form.type }
 
+    form_issue_feedback:
+        class: Devprom\ServiceDeskBundle\Form\Type\IssueFeedbackFormType
+        arguments: ["@doctrine.orm.entity_manager", "@translator"]
+        tags:
+            - { name: form.type }
+
     registration_complete:
         class: Devprom\ServiceDeskBundle\EventListener\RegistrationConfirmListener
         arguments: ["@router","@user_service"]
+        tags:
+            - { name: kernel.event_subscriber }
+
+    user_logged_listener:
+        class: Devprom\ServiceDeskBundle\EventListener\UserLoggedListener
+        arguments:
+            $userService: "@user_service"
+            $objectChangeLogger: "@object_change_logger"
         tags:
             - { name: kernel.event_subscriber }

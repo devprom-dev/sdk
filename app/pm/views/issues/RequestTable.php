@@ -1,6 +1,5 @@
 <?php
 include_once SERVER_ROOT_PATH."pm/methods/StateExFilterWebMethod.php";
-include_once SERVER_ROOT_PATH."pm/methods/FilterStateTransitionMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/ViewRequestTaskStateWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/ViewRequestEstimationWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/views/plan/FilterReleaseMethod.php";
@@ -17,25 +16,12 @@ class RequestTable extends PMPageTable
 {
 	private $estimation_strategy = null;
     private $workloadReportIt = null;
-    private $workloadProjectIt = null;
 
- 	function __construct( & $object )
+ 	function __construct( $object )
  	{
-		$this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
 		parent::__construct( $object );
-    }
-
-    function buildRelatedDataCache()
-    {
-        $portfolio = getFactory()->getObject('Portfolio');
-        $this->workloadProjectIt = $portfolio->getByRef('CodeName', 'my');
-        if ( $this->workloadProjectIt->getId() == '' ) {
-            $this->workloadProjectIt = $portfolio->getByRef('CodeName', 'all');
-            if ( $this->workloadProjectIt->getId() == '' ) {
-                $this->workloadProjectIt = getSession()->getProjectIt();
-            }
-        }
-        $this->workloadReportIt = getFactory()->getObject('PMReport')->getExact('workitemchart');
+        $this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
+        $this->workloadReportIt = getFactory()->getObject('Module')->getExact('resman/resourceload');
     }
 
     function getListIterator()
@@ -100,13 +86,6 @@ class RequestTable extends PMPageTable
 	function getActions()
 	{
 		$actions = array();
-
-        $type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
-            array(
-                new FilterVpdPredicate(),
-                new SortOrderedClause()
-            )
-        );
 
     	$method = new BoardExportWebMethod();
 		array_push($actions, array( 'name' => $method->getCaption(),
@@ -218,12 +197,13 @@ class RequestTable extends PMPageTable
         return $actions;
     }
 
-    function getNewCardActions( $project_it )
+    function getNewCardActions( $project_it, $doSelectProject = true )
 	{
 		$method = new ObjectCreateNewWebMethod($this->getObject());
 		if ( !$method->hasAccess() ) return array();
 
         $method->setVpd($project_it->get('VPD'));
+        if ( !$doSelectProject ) $method->doSelectProject(false);
 		$parms = array (
 				'area' => $this->getPage()->getArea()
 		);
@@ -320,14 +300,19 @@ class RequestTable extends PMPageTable
 			new ViewSubmmitedBeforeDateWebMethod(),
             new ViewModifiedAfterDateWebMethod(),
 			new ViewModifiedBeforeDateWebMethod(),
-            new FilterDateWebMethod(text(2539), 'finishedafter'),
-            new FilterDateWebMethod(text(2538), 'finishedbefore'),
+            new FilterDateIntervalWebMethod(translate('Выполнено'), 'finishedafter'),
+            new FilterDateIntervalWebMethod(translate('Выполнено'), 'finishedbefore'),
 			$this->buildFilterOwner(),
 			$this->buildTagsFilter(),
 			$this->buildFilterAuthor(),
 			$this->buildFilterTaskType(),
 			new ViewRequestTaskStateWebMethod()
 		);
+
+        if ( $methodology_it->IsTimeTracking() ) {
+            $filters[] = new FilterDateIntervalWebMethod(text(2334), 'spentafter');
+            $filters[] = new FilterDateIntervalWebMethod(text(2334), 'spentbefore');
+        }
 
 		if ( class_exists(getFactory()->getClass('Severity')) ) {
             $filters[] = $this->buildFilterSeverity();
@@ -356,8 +341,6 @@ class RequestTable extends PMPageTable
 			$filters[] = new FilterIterationMethod();
 		}
 
-		$filter = $this->buildUserGroupFilter();
-		if ( is_object($filter) ) $filters[] = $filter;
 		$filters[] = $this->buildUserRoleFilter();
 
 		$filter = $this->buildFilterEstimation();
@@ -375,26 +358,25 @@ class RequestTable extends PMPageTable
 	{
  		$predicates = array();
 
-		$predicates[] = new StatePredicate( $values['state'] );
-		$predicates[] = new FilterAttributePredicate('Priority', $values['priority']);
-        $predicates[] = new FilterAttributePredicate('Severity', $values['severity']);
 		$predicates[] = $this->buildOwnerPredicate($values);
-		$predicates[] = new FilterAttributePredicate('Type', $values['type']);
-		$predicates[] = new FilterAttributePredicate('SubmittedVersion',$values['subversion']);
+        unset($values['owner']); // override default attribute-based filter at parents
+
 		$predicates[] = new FilterAttributeHiePredicate('Function', $values['function']);
+        unset($values['function']); // override default attribute-based filter at parents
+
+        $predicates[] = new FilterAttributePredicate('SubmittedVersion',$values['subversion']);
+        $predicates[] = new StatePredicate( $values['state'] );
 		$predicates[] = new RequestTagFilter($values['tag']);
 		$predicates[] = new RequestReleasePredicate('PlannedRelease', $values['release']);
-		$predicates[] = new RequestReleasePredicate('PlannedRelease', $_REQUEST['plannedrelease']);
 		$predicates[] = new RequestTestResultPredicate($_REQUEST['test']);
 		$predicates[] = new RequestAuthorFilter( $values['author'] );
-		$predicates[] = new TransitionObjectPredicate( $this->getObject(), $values['transition'] );
 		$predicates[] = new RequestTaskTypePredicate( $values['tasktype'] );
 		$predicates[] = new RequestTaskStatePredicate( $values['taskstate'] );
 		$predicates[] = new FilterAttributePredicate('ClosedInVersion', $values['version']);
-		$predicates[] = new FilterAttributePredicate('Iteration',$values['iteration']);
 		$predicates[] = new FilterAttributePredicate('Iteration',$_REQUEST['iterations']);
         $predicates[] = new FilterDateAfterPredicate('FinishDate', $values['finishedafter']);
         $predicates[] = new FilterDateBeforePredicate('FinishDate', $values['finishedbefore']);
+        $predicates[] = new SpentTimeReportDatePredicate($values['spentafter'], $values['spentbefore']);
 
 		$trace = getFactory()->getObject('pm_ChangeRequestTrace');
 		array_push($predicates, new RequestTracePredicate( $_REQUEST['trace'] ) );
@@ -405,7 +387,7 @@ class RequestTable extends PMPageTable
         if ( $this->getPage()->getReportBase() == 'sincelastview' ) {
             $predicates[] = new SinceNotificationFilter(getSession()->getUserIt());
         }
-        if ( getSession()->IsRDD() ) {
+        if ( getSession()->IsRDD() && $this->getPage()->getReportBase() != 'commonissuesboard' ) {
             $predicates[] = new RequestSelectivePredicate();
         }
 
@@ -442,7 +424,8 @@ class RequestTable extends PMPageTable
 	}
 	
 	protected function buildFilterOwner() {
-		return new FilterObjectMethod( getFactory()->getObject('ProjectUser'), translate($this->getObject()->getAttributeUserName('Owner')), 'owner' );
+		return new FilterObjectMethod( getFactory()->getObject('WorkerUser'),
+            translate($this->getObject()->getAttributeUserName('Owner')), 'owner' );
 	}
 	
 	protected function buildFilterAuthor()
@@ -545,28 +528,37 @@ class RequestTable extends PMPageTable
 				$project_it = $this->getListRef()->getGroupIt();
 				$project_it->moveToId($object_it->get($group_field));
 				echo $this->getRenderView()->render('pm/RowGroupActions.php', array (
-					'actions' => $this->getNewCardActions($project_it)
+					'actions' => $this->getNewCardActions($project_it, false)
 				));
 				break;
 
             case 'Owner':
-                $workload = $this->getAssigneeWorkload();
-                if ( count($workload) > 0 )
-                {
-                    echo $this->getRenderView()->render('pm/UserWorkload.php', array (
-                        'user' => $object_it->getRef('Owner')->getDisplayName(),
-                        'data' => $workload[$object_it->get($group_field)],
-                        'report_url' => $this->workloadReportIt->getId() != ''
-                            ? $this->workloadReportIt->getUrl('taskassignee='.$object_it->get('Owner'), $this->workloadProjectIt)
-                            : ""
-                    ));
-                }
+                $assigneeIt = $object_it->getRef('Owner');
+                echo $this->getRenderView()->render('pm/UserWorkload.php', array (
+                    'workload' => $assigneeIt->get('PlannedWorkload'),
+                    'date' => $assigneeIt->get('FreeWorkingDate'),
+                    'report_url' => $this->workloadReportIt->getId() != ''
+                        ? $this->workloadReportIt->getUrl('taskassignee='.$object_it->get('Owner'))
+                        : ""
+                ));
                 break;
-		}
-	}
 
-	function getAssigneeWorkload() {
-		return $this->workload;
+            case 'Iteration':
+            case 'PlannedRelease':
+                $methodology_it = $object_it->getRef('Project')->getMethodologyIt();
+                if ( $methodology_it->IsAgile() && $object_it->get($group_field) != '' ) {
+                    $strategy = $methodology_it->getIterationEstimationStrategy();
+                    $iterationIt = $object_it->getRef($group_field);
+                    list( $capacity, $maximum, $actual_velocity, $estimation ) = $iterationIt->getRealBurndownMetrics();
+                    $available = $capacity * $actual_velocity;
+                    echo ' &nbsp; <span>'.sprintf(
+                            text(2189),
+                            $available > 0 ? $strategy->getDimensionText(round($available, 1)) : '0',
+                            $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
+                            $estimation > 0 ? $strategy->getDimensionText(round($estimation, 1)) : '0'
+                        ) . '</span>';
+                }
+		}
 	}
 
 	protected function buildOwnerPredicate( $values ) {
@@ -583,66 +575,12 @@ class RequestTable extends PMPageTable
         if ( is_object($filter) && $this->getReportBase() == 'releaseplanningboard' ) {
             $filter->setDefaultValue(getSession()->getProjectIt()->getId());
         }
-        return $filter;
-    }
-
-	protected function buildAssigneeWorkload()
-	{
-		$object = getFactory()->getObject(get_class($this->getObject()));
-		$object->setRegistry(new ObjectRegistrySQL($object));
-        $object->addFilter( new FilterVpdPredicate() );
-        $object->addFilter( new StatePredicate('notresolved') );
-
-		// cache aggregates on workload and spent time
-		$planned_aggregate = new AggregateBase( 'Owner', 'Estimation', 'SUM' );
-		$object->addAggregate( $planned_aggregate );
-
-		$left_aggregate = new AggregateBase( 'Owner', 'EstimationLeft', 'SUM' );
-		$object->addAggregate( $left_aggregate );
-
-		$fact_aggregate = new AggregateBase( 'Owner', 'Fact', 'SUM' );
-		$object->addAggregate( $fact_aggregate );
-
-		$object_it = $object->getAggregated();
-		while( !$object_it->end() )
-		{
-			$value = $object_it->get($planned_aggregate->getAggregateAlias());
-			if ( $value == '' ) $value = 0;
-			$this->workload[$object_it->get('Owner')]['Planned'] = $value;
-
-			$value = $object_it->get($left_aggregate->getAggregateAlias());
-			if ( $value == '' ) $value = 0;
-			$this->workload[$object_it->get('Owner')]['LeftWork'] = $value;
-
-			$value = $object_it->get($fact_aggregate->getAggregateAlias());
-			if ( $value == '' ) $value = 0;
-			$this->workload[$object_it->get('Owner')]['Fact'] = $value;
-
-			$object_it->moveNext();
-		}
-	}
-
-    function getDetails()
-    {
-        $values = $this->getFilterValues();
-        $userFilter = $this->getFilterUsers($values['owner'], $values);
-
-        $details = parent::getDetails();
-        if ( !getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Participant')) ) {
-            return $details;
+        if ( $this->getReportBase() != 'commonissuesboard' && $this->getPage()->getModule() == 'issues-board' ) {
+            if ( getSession()->getProjectIt()->IsProgram() || getSession()->getProjectIt()->IsSubproject() ) {
+                $filter->setDefaultValue(getSession()->getProjectIt()->getId());
+            }
         }
-
-        return array_merge(
-            array_slice($details, 0, 1),
-            array (
-                'workload' => array (
-                    'image' => 'icon-user',
-                    'title' => text(716),
-                    'url' => getSession()->getApplicationUrl().'details/workload?tableonly=true&users='.$userFilter
-                ),
-            ),
-            array_slice($details, 1)
-        );
+        return $filter;
     }
 
     function getDetailsParms()
@@ -659,30 +597,14 @@ class RequestTable extends PMPageTable
         }
     }
 
-    function getRenderParms( $parms )
-	{
-		$parms = parent::getRenderParms($parms);
-
-		$list = $this->getListRef();
-		if ( $list->getGroup() == 'Owner' ) {
-			$this->buildAssigneeWorkload();
-		}
-
-		return $parms;
-	}
-
     protected function getFamilyModules( $module )
     {
         $taskReports = array(
-            'mytasks',
-            'nearesttasks',
-            'assignedtasks',
-            'newtasks',
             'issuesmine',
-            'watchedtasks',
             'project-plan-hierarchy',
             'customs/workflowanalysis',
-            'tasks-board'
+            'tasks-board',
+            'tasks-list'
         );
         switch( $module ) {
             case 'kanban/requests':
@@ -727,7 +649,7 @@ class RequestTable extends PMPageTable
     {
         return array(
             'issues-chart',
-            'workitemchart'
+            'resman/resourceload'
         );
     }
 

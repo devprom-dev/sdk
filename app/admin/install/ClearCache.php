@@ -6,7 +6,7 @@ class ClearCache extends Installable
 
 	public function __construct() {
 		parent::__construct();
-		$this->setCachePath(defined('CACHE_PATH') ? CACHE_PATH : SERVER_ROOT_PATH.'cache');
+		$this->setCachePath(CACHE_PATH);
 	}
 
 	public function setCachePath( $path ) {
@@ -37,6 +37,7 @@ class ClearCache extends Installable
         $lock->Lock();
 
         FileSystem::rmdirr($this->cachePath);
+        FileSystem::rmdirr(SERVER_ROOT_PATH.'cache');
 
         $cmd = $this->getPhpExecutable() . ' "' . SERVER_ROOT_PATH . 'servicedesk/console" cache:warmup --env=prod 2>&1';
         $this->info('Warmup the symfony2 cache: ' . $cmd);

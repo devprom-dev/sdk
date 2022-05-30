@@ -57,7 +57,8 @@ class WikiImporterContentBuilder
             $pageIt = $registry->Query(
                 array(
                     new FilterAttributePredicate('ParentPage', $parentId),
-                    new FilterTextExactPredicate('SectionNumber', $sectionNumber)
+                    new FilterTextExactPredicate('SectionNumber', $sectionNumber),
+                    new SortDocumentClause()
                 )
             );
             if ( $pageIt->getId() != '' ) {

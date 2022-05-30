@@ -28,7 +28,6 @@ class ApplyTemplateService
  		$objects = count($sections) > 0
  				? $this->getSectionObjects($sections, $except_sections) 
  				: $this->getAllObjects($except_sections);
-
 		foreach ( $objects as $object )
 		{
             $class_name = get_class($object);
@@ -37,17 +36,12 @@ class ApplyTemplateService
             }
             $class_name = strtolower($class_name);
 
-            if ( $this->entities[$class_name] == '' ) {
-                if ( $class_name == 'projectroleinherited' ) {
-                    $class_name = 'projectrole';
-                    $object = getFactory()->getObject($class_name);
-                }
-                else {
-                    \Logger::getLogger('System')->info('Entity '.$class_name.' is missed in project template file');
-                    continue;
-                }
+            if ( count($this->entities[$class_name]) < 1 ) {
+                \Logger::getLogger('System')->info('Entity '.$class_name.' is missed in project template file');
+                continue;
             }
 
+            $object = getFactory()->getObject($class_name);
             $iterator = $object->createXmlIterator($this->entities[$class_name]);
             if ( $iterator->count() < 1 ) continue;
 
@@ -63,17 +57,8 @@ class ApplyTemplateService
 			{
 				case 'cms_Resource':
 				case 'cms_Snapshot':
-				case 'pm_Transition':
-				case 'pm_TransitionAttribute':
-				case 'pm_TransitionResetField':
-				case 'pm_TransitionRole':
-				case 'pm_TransitionPredicate':
-                case 'pm_TransitionAction':
 				case 'pm_TaskTypeStage':
-				case 'pm_Predicate':
-				case 'pm_StateAction':
                 case 'pm_AutoAction':
-				case 'pm_StateAttribute':
                 case 'pm_TaskTypeState':
 				case 'pm_AccessRight':
 				case 'pm_Workspace':
@@ -83,32 +68,49 @@ class ApplyTemplateService
 
                 case 'pm_State':
                     $newStates = array();
+                    $templateStates = array();
                     while( !$iterator->end() ) {
+                        $templateStates[] = $iterator->get('ObjectClass');
                         $newStates[] = $iterator->get('ObjectClass').':'.$iterator->get('ReferenceName');
                         $iterator->moveNext();
                     }
                     $iterator->moveFirst();
 
                     $oldStates = array();
-                    $oldIt = $object->getAll();
+                    $oldIt = $object->getRegistry()->Query(
+                        array(
+                            new \FilterAttributePredicate('ObjectClass', array_unique($templateStates)),
+                            new \FilterVpdPredicate()
+                        )
+                    );
                     while( !$oldIt->end() ) {
                         $oldStates[] = $oldIt->get('ObjectClass').':'.$oldIt->get('ReferenceName');
                         $oldIt->moveNext();
                     }
 
-                    $removeStates = array_diff($oldStates, $newStates);
-                    if ( count($removeStates) > 0 ) {
-                        foreach( $removeStates as $removeState ) {
-                            list($objectClass, $referenceName) = preg_split('/:/', $removeState);
-                            $stateIt = $object->getRegistry()->Query(
-                                array(
-                                    new \FilterVpdPredicate(),
-                                    new \FilterAttributePredicate('ReferenceName', $referenceName),
-                                    new \FilterAttributePredicate('ObjectClass', $objectClass)
-                                )
-                            );
-                            $stateIt->delete();
-                        }
+                    foreach( array_diff($oldStates, $newStates) as $removeState ) {
+                        list($objectClass, $referenceName) = preg_split('/:/', $removeState);
+                        $stateIt = $object->getRegistry()->Query(
+                            array(
+                                new \FilterVpdPredicate(),
+                                new \FilterAttributePredicate('ReferenceName', $referenceName),
+                                new \FilterAttributePredicate('ObjectClass', $objectClass)
+                            )
+                        );
+                        $stateIt->delete();
+                    }
+
+                    foreach( array_intersect($oldStates, $newStates) as $removeState ) {
+                        list($objectClass, $referenceName) = preg_split('/:/', $removeState);
+                        $stateIt = $object->getRegistry()->Query(
+                            array(
+                                new \FilterVpdPredicate(),
+                                new \FilterAttributePredicate('ReferenceName', $referenceName),
+                                new \FilterAttributePredicate('ObjectClass', $objectClass)
+                            )
+                        );
+                        $temp = array();
+                        $object->deleteReferences($stateIt, $temp);
                     }
 					break;
 
@@ -235,11 +237,21 @@ class ApplyTemplateService
     {
         if ( strtolower($tag_name) != 'entity' ) return false;
 
+        if ( $entity['attrs']['CLASS'] == 'transitionattribute' ) {
+            $entity['attrs']['CLASS'] = 'stateattribute';
+        }
         $class_name = getFactory()->getClass($entity['attrs']['CLASS']);
         if ( !class_exists($class_name, false) ) return true;
 
         $class_name = strtolower($class_name);
-        $this->entities[$class_name] = $entity;
+        if ( is_array($this->entities[$class_name]) ) {
+            if ( is_array($entity['children']) ) {
+                $this->entities[$class_name]['children'] =
+                    array_merge($this->entities[$class_name]['children'], $entity['children']);
+            }
+        } else {
+            $this->entities[$class_name] = $entity;
+        }
 
         return true;
     }

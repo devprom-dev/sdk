@@ -94,6 +94,15 @@ class ProfileForm extends SettingsFormBase
         }
     }
 
+    function getDefaultValue($field)
+    {
+        switch( $field ) {
+            case 'NotificationEmailType':
+                return '';
+        }
+        return parent::getDefaultValue($field);
+    }
+
     function getActions()
 	{
 	    return array();

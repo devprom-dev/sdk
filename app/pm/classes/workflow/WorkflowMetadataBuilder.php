@@ -1,6 +1,7 @@
 <?php
 include_once "persisters/TransitionAttributesPersister.php";
 include_once "persisters/TransitionCommentPersister.php";
+include_once "persisters/StateDurationPersister.php";
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
 
 class WorkflowMetadataBuilder extends ObjectMetadataEntityBuilder
@@ -38,5 +39,6 @@ class WorkflowMetadataBuilder extends ObjectMetadataEntityBuilder
             $metadata->addAttributeGroup($attribute, 'tooltip');
         }
         $metadata->addPersister(new TransitionCommentPersister());
+        $metadata->addPersister(new StateDurationPersister());
     }
 }

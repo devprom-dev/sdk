@@ -15,6 +15,14 @@ var shortcutContexts = [
                 },
                 path: ['f','/','а','.']
             }, {
+                title: text('sc-key-view-menu'),
+                path: ['<',',','б'],
+                handler: function(e) {
+                    setTimeout(function() {
+                        switchMenuState();
+                    }, 100);
+                }
+            }, {
                 title: text('sc-key-new-issue'),
                 handler: '.quick-btn a#issue',
                 path: ['a i','c','ф ш','с']

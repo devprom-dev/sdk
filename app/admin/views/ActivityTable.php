@@ -20,7 +20,7 @@ class ActivityTable extends PageTable
 
 		$date = new FilterDateWebMethod();
 		$date->setValueParm( 'modified' );
-		$date->setCaption( translate('Изменено после') );
+		$date->setCaption( translate('Изменено') );
 
 		$filters[] = $date; 
 		

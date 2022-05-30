@@ -25,46 +25,49 @@ class WikiPageDetailsPersister extends ObjectSQLPersister
             " (SELECT i.State FROM WikiPage i WHERE i.WikiPageId = t.Includes) IncludesState "
 		);
 
+        if ( in_array('PageType', array_keys($this->getObject()->getAttributes())) ) {
+            $columns[] = " (SELECT i.IsNoIdentity FROM WikiPageType i WHERE i.WikiPageTypeId = t.PageType) IsNoIdentity ";
+        }
+
  		return $columns;
  	}
 
  	function map( & $parms )
     {
-        if ( $parms['ParentPage'] == '' ) return;
-
-        if ( is_numeric($parms['ParentPage']) ) {
-            $parms['IsDocument'] = 0;
-            return;
-        }
-
-        if ( preg_match('/\[([^\]]+)\]/', $parms['ParentPage'], $matches) ) {
-            $uid = new ObjectUID;
-            $objectIt = $uid->getObjectIt($matches[1]);
-            if ( $objectIt->getId() != '' ) {
-                $parms['ParentPage'] = $objectIt->getId();
+        if ( $parms['ParentPage'] != '' ) {
+            if ( is_numeric($parms['ParentPage']) ) {
                 $parms['IsDocument'] = 0;
                 return;
             }
-        }
 
-        $objectIt = $this->getObject()->getByRef('Caption', $parms['ParentPage']);
-        if ( $objectIt->getId() == '' ) {
-            $parentParms = array (
-                'Caption' => $parms['ParentPage'],
-                'IsTemplate' => 0,
-                'IsDocument' => 1
-            );
-            if ( $parms['Project'] != '' ) {
-                $projectIt = getFactory()->getObject('Project')->getExact($parms['Project']);
-                $parentParms['Project'] = $projectIt->getId();
-                $parentParms['VPD'] = $projectIt->get('VPD');
+            if ( preg_match('/\[([^\]]+)\]/', $parms['ParentPage'], $matches) ) {
+                $uid = new ObjectUID;
+                $objectIt = $uid->getObjectIt($matches[1]);
+                if ( $objectIt->getId() != '' ) {
+                    $parms['ParentPage'] = $objectIt->getId();
+                    $parms['IsDocument'] = 0;
+                    return;
+                }
             }
-            $parms['ParentPage'] = getFactory()->createEntity($this->getObject(), $parentParms)->getId();
+
+            $objectIt = $this->getObject()->getByRef('Caption', $parms['ParentPage']);
+            if ( $objectIt->getId() == '' ) {
+                $parentParms = array (
+                    'Caption' => $parms['ParentPage'],
+                    'IsDocument' => 1
+                );
+                if ( $parms['Project'] != '' ) {
+                    $projectIt = getFactory()->getObject('Project')->getExact($parms['Project']);
+                    $parentParms['Project'] = $projectIt->getId();
+                    $parentParms['VPD'] = $projectIt->get('VPD');
+                }
+                $parms['ParentPage'] = getFactory()->createEntity($this->getObject(), $parentParms)->getId();
+            }
+            else {
+                $parms['ParentPage'] = $objectIt->getId();
+            }
+            $parms['IsDocument'] = 0;
         }
-        else {
-            $parms['ParentPage'] = $objectIt->getId();
-        }
-        $parms['IsDocument'] = 0;
     }
 
  	function IsPersisterImportant() {

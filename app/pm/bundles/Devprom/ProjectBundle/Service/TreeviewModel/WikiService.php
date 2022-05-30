@@ -85,6 +85,7 @@ class WikiService
                 'expanded' => false,
                 'lazy' => $object_it->get('TotalCount') > 0,
                 'data' => array(
+                    'caption' => $object_it->getHtmlDecoded('Caption'),
                     'documentid' => $object_it->get('DocumentId')
                 )
             );

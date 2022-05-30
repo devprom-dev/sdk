@@ -6,7 +6,7 @@ class AttachmentsPage extends PMPage
 {
 	function __construct()
 	{
-		parent::PMPage();
+		parent::__construct();
 		getSession()->addBuilder( new AttachmentsPageSettingBuilder() );
 	}
 

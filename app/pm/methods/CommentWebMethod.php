@@ -7,6 +7,7 @@ class CommentWebMethod extends ObjectCreateNewWebMethod
  	
  	function __construct( $object_it = null ) {
  		parent::__construct( getFactory()->getObject('Comment') );
+ 		$this->doSelectProject(false);
  		$this->setAnchorIt($object_it);
  	}
 
@@ -23,7 +24,7 @@ class CommentWebMethod extends ObjectCreateNewWebMethod
             if ( !getFactory()->getAccessPolicy()->can_modify_attribute($this->object_it->object, 'RecentComment') )
                 return false;
         }
-		return getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Comment'));
+		return getFactory()->getAccessPolicy()->can_create($this->getObject());
 	}
 	
 	function getNewObjectUrl()

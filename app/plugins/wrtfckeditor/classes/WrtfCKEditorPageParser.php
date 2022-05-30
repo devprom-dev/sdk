@@ -1,20 +1,31 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelService;
+
 include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiParser.php";
 include_once SERVER_ROOT_PATH . "pm/views/wiki/diff/WikiHtmlDiff.php";
 define( 'REGEX_MATH_TEX', '/<span\s+class="math-tex"[^>]*>([^<]+)<\/span>/i' );
 define( 'REGEX_IFRAME_UPDATE', '/<iframe\s+([^>]+)>/i' );
 define( 'REGEX_UPDATE_UID_TITLE', '/<a\s+([^<]+)<\/a>/i' );
+define( 'REGEX_WIDGET_URL', '/alm-widget-module="([^"]+)"/i' );
+define( 'REGEX_WIDGET_PARMS', '/alm-widget-parms="([^"]+)"/i' );
 
 class WrtfCKEditorPageParser extends WikiParser
 {
     private $tableRowIndex = 0;
     private $codeBlocks = array();
     private $imageBlocks = array();
+    private $imageRestoreCallback = null;
+
+    function __construct($wiki_it) {
+        parent::__construct($wiki_it);
+        $this->imageRestoreCallback = function( $data ) {
+            return $data;
+        };
+    }
 
     function parse( $content = null )
     {
         $this->tableRowIndex = 0;
-        $this->setInlineSectionNumbering(true);
 
         $callbacks = array(
             CODE_ISOLATE => array($this, 'codeIsolate'),
@@ -23,6 +34,8 @@ class WrtfCKEditorPageParser extends WikiParser
             REGEX_UPDATE_UID_TITLE => array($this, 'updateUIDTitle'),
             REGEX_UPDATE_UID => array($this, 'parseUpdateUidCallback'),
             REGEX_IFRAME_UPDATE => array($this, 'parseIframeAttributes'),
+            REGEX_WIDGET_URL => array($this, 'parseWidgetUrl'),
+            REGEX_WIDGET_PARMS => array($this, 'parseWidgetParms'),
             TextUtils::REGEX_SHARE => array(TextUtils::class, 'shrinkLongShare')
         );
 
@@ -54,7 +67,7 @@ class WrtfCKEditorPageParser extends WikiParser
     }
 
     function parseMathTex( $match ) {
-        $url = defined('MATH_TEX_IMG') ? MATH_TEX_IMG : 'http://latex.codecogs.com/gif.latex?';
+        $url = EnvironmentSettings::getMathJaxServer();
         return '<img src="'.$url.rawurlencode(trim(html_entity_decode($match[1], ENT_QUOTES | ENT_HTML401, APP_ENCODING ))).'">';
     }
 
@@ -78,8 +91,12 @@ class WrtfCKEditorPageParser extends WikiParser
         return '<img'.array_push($this->imageBlocks, $match[0]).'/>';
     }
 
+    function setImageRestoreCallback( callable $callable ) {
+        $this->imageRestoreCallback = $callable;
+    }
+
     function imageRestore( $match ) {
-        return $this->imageBlocks[$match[1] - 1];
+        return call_user_func($this->imageRestoreCallback, $this->imageBlocks[$match[1] - 1]);
     }
 
     function parseIframeAttributes( $match )
@@ -91,6 +108,32 @@ class WrtfCKEditorPageParser extends WikiParser
         else {
             return preg_replace('/src="([^&]+)([^"]+)"/i', 'src="\\1&'.$timeKey.'='.uniqid().'&\\2"', $match[0]);
         }
+    }
+
+    function parseWidgetUrl( $match )
+    {
+        if ( $this->getObjectIt()->object instanceof PMCustomAttribute ) return $match[0];
+
+        $moduleIt = getFactory()->getObject('Module')->getExact($match[1]);
+        if ( $moduleIt->getId() == '' ) {
+            $moduleIt = getFactory()->getObject('PMReport')->getExact($match[1]);
+            if ( $moduleIt->getId() == '' ) {
+                return $match[0];
+            }
+        }
+        return $match[0] . " alm-widget-url=\"{$moduleIt->getUrl('w')}\" ";
+    }
+
+    function parseWidgetParms( $match )
+    {
+        if ( $this->getObjectIt()->object instanceof PMCustomAttribute ) return $match[0];
+
+        $items = array();
+        foreach( ModelService::computeFormula($this->getObjectIt(), $match[1]) as $computedItem ) {
+            $items[] = $computedItem;
+        }
+        $result = join(',',$items);
+        return $match[0] . " alm-widget-query=\"{$result}\" ";
     }
 
     function parseUpdateUidCallback ( $match )

@@ -1,17 +1,14 @@
 <?php
-include_once "persisters/DocumentVersionPersister.php";
 
 class WikiDocumentRegistry extends ObjectRegistrySQL
 {
-	function getPersisters()
-    {
+	function getPersisters() {
         return array(
             new DocumentVersionPersister()
         );
     }
 
-    function getFilters()
-    {
+    function getFilters() {
         return array_merge(
             parent::getFilters(),
             array(

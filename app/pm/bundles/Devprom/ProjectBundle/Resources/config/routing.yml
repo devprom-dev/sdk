@@ -14,6 +14,10 @@ _project_worklog_report:
     path: /pm/{project}/worklog/{report}
     defaults: { _controller: ProjectBundle:Time:worklog }
 
+_project_worklog_chart:
+    path: /pm/{project}/worklog/chart/{report}
+    defaults: { _controller: ProjectBundle:Time:chart }
+
 _project_autoactions:
     path: /pm/{project}/autoactions
     defaults: { _controller: ProjectBundle:Workflow:autoaction }
@@ -66,16 +70,32 @@ _projectlist:
     path:  /pm/{project}/projects
     defaults: { _controller: ProjectBundle:Project:list }
 
+_projectlist_report:
+    path:  /pm/{project}/projects/{report}
+    defaults: { _controller: ProjectBundle:Project:list }
+
 _planreleases:
     path:  /pm/{project}/releases
+    defaults: { _controller: ProjectBundle:Release:list }
+
+_planreleases_report:
+    path:  /pm/{project}/releases/{report}
     defaults: { _controller: ProjectBundle:Release:list }
 
 _planiterations:
     path:  /pm/{project}/iterations
     defaults: { _controller: ProjectBundle:Iteration:list }
 
+_planiterations_report:
+    path:  /pm/{project}/iterations/{report}
+    defaults: { _controller: ProjectBundle:Iteration:list }
+
 _roadmap:
     path:  /pm/{project}/roadmap
+    defaults: { _controller: ProjectBundle:Project:roadmap }
+
+_roadmap_report:
+    path:  /pm/{project}/roadmap/{report}
     defaults: { _controller: ProjectBundle:Project:roadmap }
 
 _whatsnew:
@@ -172,6 +192,22 @@ view_form:
     path:  /pm/{project}/form/{classname}/{objectid}
     defaults: { _controller: ProjectBundle:View:form }
 
+component_list:
+    path:  /pm/{project}/components/list
+    defaults: { _controller: ProjectBundle:Component:index }
+
+component_tree:
+    path:  /pm/{project}/components/tree
+    defaults: { _controller: ProjectBundle:Component:tree }
+
+component_chart:
+    path:  /pm/{project}/components/chart
+    defaults: { _controller: ProjectBundle:Component:chart }
+
+component_trace:
+    path:  /pm/{project}/components/trace
+    defaults: { _controller: ProjectBundle:Component:trace }
+
 pages:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\PagesController
@@ -190,6 +226,14 @@ functional_areas:
 _widget_share_report:
     path:  /pm/{project}/widget/share
     defaults: { _controller: ProjectBundle:Widget:share }
+
+_widget_project_select:
+    path:  /pm/{project}/widget/project
+    defaults: { _controller: ProjectBundle:Widget:project }
+
+_widget_entity_select:
+    path:  /pm/{project}/widget/entity
+    defaults: { _controller: ProjectBundle:Widget:entity }
 
 rest_iteration:
     type:     rest

@@ -2,5 +2,5 @@
 
 abstract class ModelValidatorInstance
 {
-	abstract public function validate( Metaobject $object, array & $parms ); 
+	abstract public function validate( Metaobject $object, array $parms );
 }

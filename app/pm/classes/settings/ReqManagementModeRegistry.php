@@ -6,7 +6,7 @@ class ReqManagementModeRegistry extends ObjectRegistrySQL
 	const RDD = 'Y';
 	const Documenting = 'I';
 
-	public function getAll()
+	public function Query($parms = array())
 	{
 		return $this->createIterator( array (
 				array ( 'entityId' => self::None, 'Caption' => text(2179) ),

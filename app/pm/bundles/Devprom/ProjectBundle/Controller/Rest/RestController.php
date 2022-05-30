@@ -28,8 +28,11 @@ abstract class RestController extends FOSRestController implements ClassResource
 	        		$this->view(
 			        		$this->getModelService($request)->find(
 								$this->getEntity($request),
-								$request->get('limit'),
-								$request->get('offset')
+								intval($request->get('limit')),
+								intval($request->get('page')) - 1,
+                                $request->get('output') != ''
+                                            ? $request->get('output')
+                                            : ModelService::OUTPUT_HTML
 							), 200
 					));
 		}
@@ -53,7 +56,9 @@ abstract class RestController extends FOSRestController implements ClassResource
 			        		$this->getModelService($request)->get(
 								$this->getEntity($request),
 								$id,
-								'text'
+                                $request->get('output') != ''
+                                            ? $request->get('output')
+                                            : ModelService::OUTPUT_HTML
 							), 200
 					));
 		}
@@ -75,8 +80,12 @@ abstract class RestController extends FOSRestController implements ClassResource
 	        return $this->handleView(
 	        		$this->view(
 			        		$this->getModelService($request)->set(
-			        				$this->getEntity($request),
-				        			$this->getPostData($request)
+                                $this->getEntity($request),
+				        		$this->getPostData($request),
+                                '',
+                                $request->get('output') != ''
+                                            ? $request->get('output')
+                                            : ModelService::OUTPUT_HTML
 							), 200
 					));
 		}
@@ -101,7 +110,10 @@ abstract class RestController extends FOSRestController implements ClassResource
 			        		$this->getModelService($request)->set(
 			        				$this->getEntity($request),
 				        			$this->getPostData($request),
-			        				$id
+			        				$id,
+                                $request->get('output') != ''
+                                            ? $request->get('output')
+                                            : ModelService::OUTPUT_HTML
 							), 200
 					));
 		}
@@ -125,7 +137,10 @@ abstract class RestController extends FOSRestController implements ClassResource
 	        		$this->view(
 			        		$this->getModelService($request)->delete(
 			        				$this->getEntity($request),
-			        				$id
+			        				$id,
+                                $request->get('output') != ''
+                                            ? $request->get('output')
+                                            : ModelService::OUTPUT_HTML
 							), 200
 					));
 		}

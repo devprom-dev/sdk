@@ -9,18 +9,19 @@ class WikiPageFeatureTracesPersister extends ObjectSQLPersister
 	function getSelectColumns( $alias )
  	{
  		return array (
-			" (SELECT GROUP_CONCAT(r.Issues) ".
-            "    FROM pm_FunctionTrace r, WikiPage c " .
-            "   WHERE c.WikiPageId = ".$this->getPK($alias).
-            "     AND FIND_IN_SET(r.ObjectId, c.ParentPath) > 0 ".
-            "     AND r.IsActual = 'N' ".
-            "     AND r.ObjectClass IN ('Requirement','TestScenario','HelpPage') ) FeatureIssues ",
+			" (SELECT GROUP_CONCAT(r.Issues) 
+                FROM pm_FunctionTrace r, WikiPage c, WikiPage cparent  
+               WHERE c.WikiPageId = {$this->getPK($alias)}
+                 AND c.ParentPath LIKE CONCAT(cparent.ParentPath, '%') 
+                 AND cparent.WikiPageID = r.ObjectId 
+                 AND r.IsActual = 'N' 
+                 AND r.ObjectClass IN ('Requirement','TestScenario','HelpPage') ) FeatureIssues ",
 
-            " (SELECT GROUP_CONCAT(r.Requirements) ".
-            "    FROM pm_FunctionTrace r " .
-            "   WHERE r.ObjectId = ".$this->getPK($alias).
-            "     AND r.IsActual = 'N' ".
-            "     AND r.ObjectClass IN ('Requirement','TestScenario','HelpPage') ) FeatureRequirements "
+            " (SELECT GROUP_CONCAT(r.Requirements) 
+                FROM pm_FunctionTrace r 
+               WHERE r.ObjectId = {$this->getPK($alias)}
+                 AND r.IsActual = 'N'
+                 AND r.ObjectClass IN ('Requirement','TestScenario','HelpPage') ) FeatureRequirements "
 		);
  	}
 }

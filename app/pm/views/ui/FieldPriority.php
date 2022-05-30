@@ -2,8 +2,8 @@
 
 class FieldPriority extends Field
 {
-	private $actions = null;
-	private $moreActions = array();
+	private $actions;
+	private $moreActions;
 
 	function __construct( $object_it = null, $moreActions = array() ) {
         $this->object_it = $object_it;
@@ -31,6 +31,7 @@ class FieldPriority extends Field
 			$method->setObjectIt($this->object_it);
 			$this->actions[$key]['url'] = $method->getJSCall();
 		}
+        unset($this->moreActions['modify']);
 
 		$priorityIt = $this->object_it->getRef('Priority');
 

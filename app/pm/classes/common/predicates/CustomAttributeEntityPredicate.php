@@ -4,8 +4,6 @@ class CustomAttributeEntityPredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
  		$entities = array();
  		 		
  		$sql = array();
@@ -16,11 +14,11 @@ class CustomAttributeEntityPredicate extends FilterPredicate
  		    
  		    if ( count($parts) > 1 )
  		    {
- 		        $class_name = $model_factory->getClass($parts[0]);
+ 		        $class_name = getFactory()->getClass($parts[0]);
  		        
  		        if ( !class_exists($class_name, false) ) continue;
  		        
-    	 		$object = $model_factory->getObject($class_name);
+    	 		$object = getFactory()->getObject($class_name);
     	 		
     	 		if ( !is_subclass_of( $object, 'Metaobject') ) continue;
 	 		
@@ -28,11 +26,11 @@ class CustomAttributeEntityPredicate extends FilterPredicate
  		    }
  		    else
  		    {
- 		        $class_name = $model_factory->getClass($item);
+ 		        $class_name = getFactory()->getClass($item);
  		        
  		        if ( !class_exists($class_name, false) ) continue;
  		        
-	 		    $object = $model_factory->getObject($class_name);
+	 		    $object = getFactory()->getObject($class_name);
 	 		
 	 		    if ( !is_subclass_of( $object, 'Metaobject') ) continue;
  		        

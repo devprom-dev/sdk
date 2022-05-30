@@ -37,6 +37,7 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
             $object->addPersister( new TaskSpentTimePersister(array('Spent')) );
             $object->addAttributeGroup('Spent', 'hours');
             $object->addAttributeGroup('Spent', 'workload');
+            $object->addAttributeGroup('Spent', 'trace');
         }
 
 		$object->addPersister( new TaskPhotoPersister() );
@@ -49,7 +50,7 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
         $object->setAttributeVisible('Priority', true);
         $object->setAttributeRequired('Assignee', !$methodology_it->IsParticipantsTakesTasks());
 
-        if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED ) {
+        if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED ) {
             $object->addAttribute('UserGroup', 'REF_UserGroupId', text('user.group.name'), false);
         }
 

@@ -5,7 +5,7 @@ class CommentAPIModelBuilder extends ObjectModelBuilder
 {
     public function build( Metaobject $object )
     {
-    	if ( ! $object instanceof CommentBase ) return;
+    	if ( ! $object instanceof Comment ) return;
         $object->resetAttributeGroup('ObjectClass', 'system');
         $object->resetAttributeGroup('ObjectId', 'system');
         $object->resetAttributeGroup('PrevComment', 'system');

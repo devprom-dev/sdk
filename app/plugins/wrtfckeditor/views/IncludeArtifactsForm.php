@@ -44,7 +44,7 @@ class IncludeArtifactsForm extends PMPageForm
 
     function process()
     {
-        if ($this->getAction() != 'add') return;
+        if ($this->getAction() != 'add') return false;
 
         $this->extendModel();
         $uid = new ObjectUID();
@@ -63,14 +63,14 @@ class IncludeArtifactsForm extends PMPageForm
                     'Url' => '{{'.$info['uid'].'}}'
                 )
             );
-            exit();
+            return true;
         }
         echo json_encode(
             array(
                 'Id' => 0, 'Url' => ''
             )
         );
-        exit();
+        return true;
     }
 
     function getRenderParms()

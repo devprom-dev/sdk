@@ -8,10 +8,6 @@ include_once "ProjectWelcomeStylesheetBuilder.php";
 
 class COSession extends SessionBase
 {
- 	function getSite() {
- 	    return 'co';
- 	}
-
  	function getCacheKey() {
         return 'apps/'.$this->getUserIt()->getId();
     }

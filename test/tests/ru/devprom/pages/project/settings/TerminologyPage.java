@@ -61,13 +61,9 @@ public class TerminologyPage extends SDLCPojectPageBase {
 		return new TerminologyPage(driver);
 	}
 	
-	public TerminologyPage filterBy(String text){
-		filterInput.clear();
-		filterInput.sendKeys(text + "\n");
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-		}
+	public TerminologyPage filterBy(String text)
+	{
+		this.setFilter("search", text);
 		return new TerminologyPage(driver);
 	}
 	

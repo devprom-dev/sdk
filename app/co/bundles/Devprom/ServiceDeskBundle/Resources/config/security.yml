@@ -42,9 +42,8 @@ security:
             http_basic:   false
             remember_me:
                 secret:   servicedesk_registration_form
-                lifetime: 31536000
                 path:     /
-                always_remember_me: true
+                always_remember_me: false
 
     access_control:
         - { path: ^/css, roles: IS_AUTHENTICATED_ANONYMOUSLY }

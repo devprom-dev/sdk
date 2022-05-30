@@ -12,7 +12,7 @@ class CommentHandler extends EmailNotificatorHandler
 	
 	function getSubject( $subject, $object_it, $prev_object_it, $action, $recipient ) 
 	{
-		$commented_it = $object_it->getAnchorIt();
+		$commented_it = $this->getEntityIt($object_it);
 		if ( $commented_it->getId() == '' ) return '';
 
 		return parent::getSubject( $subject, $commented_it, $commented_it, $action, $recipient );
@@ -23,21 +23,20 @@ class CommentHandler extends EmailNotificatorHandler
 		$result = array();
 		if ( $action != 'add' ) return $result;
 
-		$anchor_it = $object_it->getAnchorIt();
+		$anchor_it = $this->getEntityIt($object_it);
 		if ( $anchor_it->getId() == '' ) return $result;
 		
 		switch( $anchor_it->object->getClassName() )
 		{
 			case 'pm_ChangeRequest':
-                $result = array_merge($result,
-                    $taskAssignee = getFactory()->getObject('Task')->getRegistry()->Query(
-                        array(
-                            new FilterAttributePredicate('ChangeRequest', $anchor_it->getId())
-                        )
-                    )->fieldToArray('Assignee')
-                );
                 if ( $anchor_it->get('Owner') != '' ) $result[] = $anchor_it->get('Owner');
-                if ( $anchor_it->get('Author') != '' ) $result[] = $anchor_it->get('Author');
+                if ( $anchor_it->get('Author') != '' ) {
+                    if ( $object_it->getRef('Project')->getMethodologyIt()->get('IsSupportUsed') == 'Y' ) {
+                        // don't send email to author inside of support, other handler is used
+                        break;
+                    }
+                    $result[] = $anchor_it->get('Author');
+                }
 			    break;
 
 			case 'pm_Question':
@@ -79,7 +78,7 @@ class CommentHandler extends EmailNotificatorHandler
 	
 	function getRenderParms($action, $object_it, $prev_object_it)
 	{
-		$anchor_it = $object_it->getAnchorIt();
+		$anchor_it = $this->getEntityIt($object_it);
 		if ( $anchor_it->getId() == '' ) return array();
 
 		$uid = new ObjectUID();
@@ -134,4 +133,8 @@ class CommentHandler extends EmailNotificatorHandler
  		
  		return $data;
  	}
+
+    public function getEntityIt( $objectIt ) {
+        return $objectIt->getAnchorIt();
+    }
 }

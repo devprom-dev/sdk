@@ -47,6 +47,7 @@ class DashboardTable extends PMPageTable
         }
 
         $appendUrl = new ObjectCreateNewWebMethod($cellIt->object);
+        $appendUrl->doSelectProject(false);
 
         $reorderUrl = new ModifyAttributeWebMethod(
             $cellIt->object->createCachedIterator(

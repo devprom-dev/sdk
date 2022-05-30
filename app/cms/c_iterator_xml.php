@@ -85,8 +85,13 @@ class IteratorXml extends IteratorBase
  		$this->pos++;
 		$this->setData( $this->records[$this->pos] );
  	}
- 	
- 	function setData( $data )
+
+    function getRowset()
+    {
+        return $this->records;
+    }
+
+    function setData( $data )
  	{
  	    global $_FILES;
  	    

@@ -8,7 +8,7 @@ class DeliveryStatePredicate extends FilterPredicate
 		$metastate->setAggregatedStateObject(getFactory()->getObject('IssueState'));
 	 	$metastate->setStatesDelimiter("-");
 	 	
-		$states = $metastate->getRegistry()->getAll()->fieldToArray('ReferenceName');
+		$states = $metastate->getRegistry()->Query(array())->fieldToArray('ReferenceName');
  		
 		$filter = array_filter( preg_split('/,/', $filter), function($value) use ($states) {
 					return in_array($value, $states);

@@ -205,7 +205,7 @@ class ModulesSettingsService implements SettingsService
 		);
 
         $workspace = getFactory()->getObject('Workspace');
-        $workspace_it = $workspace->getRegistry()->getDefault();
+        $workspace_it = $workspace->getRegistry()->getDefault(getSession()->getProjectIt());
 
         $iterators[] = $workspace->getRegistry()->Query(
             array (

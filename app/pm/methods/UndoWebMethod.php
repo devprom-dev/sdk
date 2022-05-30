@@ -6,7 +6,6 @@ class UndoWebMethod extends WebMethod
 {
 	private $transaction = '';
     private $projectCode = '';
-    private $entitiesProcessed = 0;
 
  	function __construct( $transaction = '', $projectCode = '' ) {
 		$this->transaction = $transaction;
@@ -53,23 +52,28 @@ class UndoWebMethod extends WebMethod
 
 		\Logger::getLogger('System')->info('Start undone transaction '.$this->transaction);
 
+        DAL::Instance()->Query("SET autocommit=0");
+
 		$this->context = new CloneContext();
 		$this->context->setUseExistingReferences(true);
 		$this->context->setResetState(false);
 		$this->context->setResetDates(false);
 		$this->context->setResetAssignments(false);
 		$this->context->setRestoreFromTemplate(false);
+        $this->context->setRaiseExceptions(true);
 
 		$this->project_it = getSession()->getProjectIt();
+
 		$this->processXml(
 			file_get_contents(UndoLog::Instance()->getPath($this->transaction))
 		);
-
-		if ( $this->entitiesProcessed < 1 ) {
-            \Logger::getLogger('System')->error('No entities were restored');
+        if ( count($this->processErrors) > 0 ) {
+            echo JsonWrapper::encode(array (
+                "message" => "denied",
+                "description" => join(', ', $this->processErrors)
+            ));
             return;
         }
-		\Logger::getLogger('System')->info('Transaction '.$this->transaction.' has been undone');
 
 		$log_it = getFactory()->getObject('ChangeLog')->getRegistry()->Query(
 			array (
@@ -78,23 +82,21 @@ class UndoWebMethod extends WebMethod
 		);
         $redirect_url = '';
 
-        $log = new Metaobject('ObjectChangeLog');
 		while( !$log_it->end() ) {
             $object_it = $log_it->getObjectIt();
             if ( $object_it->getId() != '' && $redirect_url == '' ) {
-                $redirect_url = $object_it->getUidUrl();
+                $redirect_url = $object_it->object->getPage();
+                break;
             }
-			$log->delete($log_it->getId());
 			$log_it->moveNext();
 		}
 
-		if ( $redirect_url != '' ) {
-            echo json_encode(
-                array (
-                    'url' => $redirect_url
-                )
-            );
-        }
+        \Logger::getLogger('System')->info('Transaction '.$this->transaction.' has been undone');
+
+        DAL::Instance()->Query("COMMIT");
+        getFactory()->invalidateCache(array('sessions','project'));
+
+        $this->redirect($redirect_url);
  	}
 
 	function processEntity( $tag_name, $entity )
@@ -104,9 +106,11 @@ class UndoWebMethod extends WebMethod
 		$class_name = getFactory()->getClass($entity['attrs']['CLASS']);
 		if ( !class_exists($class_name, false) ) return true;
 
+        getFactory()->getEventsManager()->removeNotificatorsExcept(new \PMChangeLogNotificator);
 		$object = getFactory()->getObject($class_name);
-        $object->removeNotificator('ChangeLogNotificator');
-        $object->removeNotificator('EmailNotificator');
+        foreach( $object->getAttributes() as $attribute => $data ) {
+            $object->setAttributeRequired($attribute, false);
+        }
 
 		$registry = new ObjectRegistrySQL($object);
 		$iterator = $object->createXMLIterator($entity);
@@ -114,21 +118,7 @@ class UndoWebMethod extends WebMethod
 
 		// exclude items exist already
 		$object_it = $registry->Query(array(new FilterInPredicate($ids)));
-		$foundIds = $object_it->idsToArray();
-
-		foreach( $foundIds as $foundId ) {
-		    if ( $foundId < 1 ) continue;
-
-            $iterator->moveFirst();
-            while( !$iterator->end() ) {
-                if ( $iterator->getId() == $foundId ) {
-                    $object_it->object->modify_parms($foundId, $iterator->getData());
-                }
-                $iterator->moveNext();
-            }
-        }
-
-		$ids = array_diff($ids, $foundIds);
+		$ids = array_diff($ids, $object_it->idsToArray());
 		if ( count($ids) < 1 ) return true;
 
 		$idsMap = $this->context->getIdsMap();
@@ -140,7 +130,6 @@ class UndoWebMethod extends WebMethod
 
 		$iterator->moveFirst();
 		CloneLogic::Run( $this->context, $object, $iterator, $this->project_it);
-		$this->entitiesProcessed++;
 
 		return true;
 	}
@@ -211,6 +200,7 @@ class UndoWebMethod extends WebMethod
         }
         catch (Exception $e) {
             $this->accumulateData = false;
+            $this->processErrors[] = $e->getMessage();
             \Logger::getLogger('System')->error(
                 $e->getMessage().$e->getTraceAsString()
             );
@@ -227,6 +217,7 @@ class UndoWebMethod extends WebMethod
 	private $project_it = null;
 	private $context = null;
 	private $accumulateData = false;
+    private $processErrors = array();
 	private $nodeData = array();
 	private $resParser = null;
 }

@@ -20,6 +20,7 @@ class CloneWikiPageWebMethod extends DuplicateWebMethod
     {
         $context = parent::buildContext();
         $context->setResetUids(true);
+        $context->setResetBaseline(true);
         return $context;
     }
 
@@ -30,7 +31,6 @@ class CloneWikiPageWebMethod extends DuplicateWebMethod
         if ( $_REQUEST['Snapshot'] != '' )
         {
             $version_it = getFactory()->getObject('Snapshot')->getExact($_REQUEST['Snapshot']);
-
             $registry = new WikiPageRegistryVersion();
             $registry->setSnapshotIt($version_it);
             $registry->setDocumentIt($this->getObjectIt());
@@ -49,6 +49,7 @@ class CloneWikiPageWebMethod extends DuplicateWebMethod
         $references[] = getFactory()->getObject('WikiTypeBase');
 
         $object_it = $this->getSourceIt();
+        $object_it->object->setRegistry(new WikiPageRegistryContent());
         $ids = $object_it->idsToArray();
         $references[] = $object_it->object;
 

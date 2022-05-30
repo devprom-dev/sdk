@@ -9,17 +9,12 @@ class TagParentPersister extends ObjectSQLPersister
         if ( $parms['Tag'] == '' ) return;
 
         $tag = getFactory()->getObject('Tag');
-        if ( is_numeric($parms['Tag']) ) {
+        if ( ctype_digit($parms['Tag']) ) {
             $tagIt = $tag->getExact($parms['Tag']);
             if ( $tagIt->getId() != '' ) {
                 $this->tagIds[] = $tagIt->getId();
                 return;
             }
-        }
-
-        $tagParms = array();
-        if ( getSession()->getProjectIt()->IsPortfolio() ) {
-            $tagParms['VPD'] = '';
         }
 
         foreach( preg_split('/[,;]/', $parms['Tag']) as $tagName ) {

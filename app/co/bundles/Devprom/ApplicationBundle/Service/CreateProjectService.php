@@ -23,38 +23,35 @@ class CreateProjectService
  		$this->skip_demo_data = !$parms['DemoData'];
 
  		$template = getFactory()->getObject('pm_ProjectTemplate');
- 		
  		$template->setRegistry( new \ObjectRegistrySQL() );
- 		
  		$template_it = $template->getExact( $parms['Template'] );
 
- 		if ( $template_it->count() > 0 )
- 		{
+ 		if ( $template_it->count() > 0 ) {
 	 		$this->language = $template_it->get('Language');
 	 		$this->methodology = $template_it->get('FileName');
  		}
- 		else
- 		{
+ 		else {
 	 		$this->language = 'RU';
 	 		$this->methodology = '1';
  		}
  		
  		$this->access = '';
- 		
- 		$project_it = $this->createProject();
- 		if ( ! $project_it instanceof \OrderedIterator ) return $project_it;
 
-		if ( $this->portfolioId > 0 && $project_it->getId() > 0 ) {
-			// join the project to the portfolio given
-			if ( class_exists('ProjectGroupLink') ) {
-				getFactory()->getObject('ProjectGroupLink')->add_parms(
-					array (
-						'ProjectGroup' => $this->portfolioId,
-						'Project' => $project_it->getId()
-					)
-				);
-			}
-		}
+
+        $project_it = $this->createProject();
+        if ( ! $project_it instanceof \OrderedIterator ) return $project_it;
+
+        if ( $this->portfolioId > 0 && $project_it->getId() > 0 ) {
+            // join the project to the portfolio given
+            if ( class_exists('ProjectGroupLink') ) {
+                getFactory()->getObject('ProjectGroupLink')->add_parms(
+                    array (
+                        'ProjectGroup' => $this->portfolioId,
+                        'Project' => $project_it->getId()
+                    )
+                );
+            }
+        }
         if ( $this->programId > 0 && $project_it->getId() > 0 ) {
             // make the project to be subproject of the program given
             $className = getFactory()->getClass('ProjectLink');
@@ -75,8 +72,7 @@ class CreateProjectService
                 );
             }
         }
-
-		return $project_it;
+        return $project_it;
  	}
  	
  	function createProject()
@@ -123,11 +119,7 @@ class CreateProjectService
 		}
 		
 		$project_id = $prj_cls->add_parms($parms);
-
-		if( $project_id < 1 ) 
-		{
-			return -4;
-		}
+		if( $project_id < 1 ) return -4;
 
 		$parms = array();
 		$parms['VPD'] = \ModelProjectOriginationService::getOrigin($project_id);
@@ -144,61 +136,41 @@ class CreateProjectService
 		$parms['IsActive'] = 'Y';
 		$parms['Project'] = $project_id;
 		$parms['VPD'] = \ModelProjectOriginationService::getOrigin($project_id);
-		$parms['NotificationTrackingType'] = 'system';
-        $parms['NotificationEmailType'] = 'direct';
+		$parms['NotificationTrackingType'] = $user_it->get('NotificationTrackingType');
+        $parms['NotificationEmailType'] = $user_it->get('NotificationEmailType');
 
 		$id = $part_cls->add_parms($parms);
-
-		if( $id < 1 ) return -5; 
+		if( $id < 1 ) return -5;
 
 		$part_it = $part_cls->getExact($id);
 
 		getFactory()->resetCachedIterator( $prj_cls );
-		
+
 		$auth_factory = new \AuthenticationFactory();
-			
 		$auth_factory->setUser( $user_it );
 		
 		$session = new \PMSession($project_it, $auth_factory);
         getFactory()->getEventsManager()->removeNotificator( new \PMChangeLogNotificator() );
+        getFactory()->setAccessPolicy( new \AccessPolicy(\CacheEngineVar::Instance(), getSession()->getCacheKey()) );
 
 		// включаем VPD
 		getFactory()->enableVpd(true);
 		
-		$parms = array();
-		
-		// создаем блог проекта
-		$blog = new \Metaobject('Blog');
-		$parms['Caption'] = translate('Блог');
-		$blog_id = $blog->add_parms($parms);
-		
 		// looking for template
 		$template = getFactory()->getObject('pm_ProjectTemplate');
-		
 		$template->setRegistry( new \ObjectRegistrySQL() );
-		
 		$template_it = $template->getByRef( 'FileName', $this->methodology );
 
 		// create the project from template
 		$this->createByTemplate( $template_it, $project_it );
 
-		$parms = array(
-            'Blog' => $blog_id
-		);
-		
-		$prj_cls->modify_parms($project_it->getId(),$parms);
-		$project_it = $prj_cls->getExact($project_it->getId());  
-
 		$project_roles = getFactory()->getObject('ProjectRole');
-
-		// check the template has been imported
-		if ( $project_roles->getRecordCount() < 1 ) return -11;
-
 		$rolesRegistry = $project_roles->getRegistry();
 		// append additional (system) project roles
 		$rolesRegistry->Merge(
 			array (
 				'Caption' => translate('Все пользователи'),
+				'Description' => text(3129),
 				'ReferenceName' => 'guest',
 				'ProjectRoleBase' => '0'
 			),
@@ -210,6 +182,7 @@ class CreateProjectService
         $rolesRegistry->Merge(
 			array (
 				'Caption' => translate('Участники связанных проектов'),
+                'Description' => text(3130),
 				'ReferenceName' => 'linkedguest',
 				'ProjectRoleBase' => '0'
 			),
@@ -220,40 +193,34 @@ class CreateProjectService
 
         $lead_it = $project_roles->getByRef( 'ReferenceName', 'lead' );
 
-        $role_cls = getFactory()->getObject('pm_ParticipantRole');
-		$result_it = $role_cls->getRegistry()->Query(
-				array (
-						new \FilterAttributePredicate('Participant', $part_it->getId()),
-						new \FilterAttributePredicate('ProjectRole', $lead_it->getId())
-				)
-		);
-		
-		if ( $result_it->getId() < 1 )
-		{
-			$parms['Participant'] = $part_it->getId();
-			$parms['Capacity'] = 1;
-			$parms['IsActive'] = 'Y';
-			$parms['ProjectRole'] = $lead_it->getId();
-			$role_cls->add_parms($parms);
-		}
+        getFactory()->createEntity(
+                getFactory()->getObject('pm_ParticipantRole'),
+                array(
+                    'Participant' => $part_it->getId(),
+                    'Capacity' => 8,
+                    'IsActive' => 'Y',
+                    'ProjectRole' => $lead_it->getId(),
+                    'Project' => $project_it->getId()
+                )
+            );
 
 		$test_result = getFactory()->getObject('pm_TestExecutionResult');
 		if ( $test_result->getRegistry()->Count(array(new \FilterAttributePredicate('ReferenceName', 'succeeded'))) < 1 )
 		{
 			$test_result->add_parms(
-					array (
-							'Caption' => translate('Пройден'),
-							'ReferenceName' => 'succeeded'
-					)
+                array (
+                    'Caption' => translate('Пройден'),
+                    'ReferenceName' => 'succeeded'
+                )
 			);
 		}
  		if ( $test_result->getRegistry()->Count(array(new \FilterAttributePredicate('ReferenceName', 'failed'))) < 1 )
 		{
 			$test_result->add_parms(
-					array (
-							'Caption' => translate('Провален'),
-							'ReferenceName' => 'failed'
-					)
+                array (
+                    'Caption' => translate('Провален'),
+                    'ReferenceName' => 'failed'
+                )
 			);
 		}
 
@@ -313,19 +280,20 @@ class CreateProjectService
 
 		// add changed objects into the log
 		$change_log = new \Metaobject('ObjectChangeLog');
-		
-		$parms['Caption'] = $part_it->getDisplayName();
-		$parms['ObjectId'] = $part_it->getId();
-		$parms['ClassName'] = strtolower(get_class($part_it->object));
-		$parms['EntityName'] = $part_it->object->getDisplayName();
-		$parms['ChangeKind'] = 'added';
-		$parms['Author'] = $part_it->getId();
-		$parms['Content'] = '';
-		$parms['VisibilityLevel'] = 1;
-		$parms['SystemUser'] = $this->user_id;
-	
-		$change_log->add_parms($parms);
-		
+
+		if ( $part_it->getId() != '' ) {
+            $parms['Caption'] = $part_it->getDisplayName();
+            $parms['ObjectId'] = $part_it->getId();
+            $parms['ClassName'] = strtolower(get_class($part_it->object));
+            $parms['EntityName'] = $part_it->object->getDisplayName();
+            $parms['ChangeKind'] = 'added';
+            $parms['Author'] = $part_it->getId();
+            $parms['Content'] = '';
+            $parms['VisibilityLevel'] = 1;
+            $parms['SystemUser'] = $this->user_id;
+            $change_log->add_parms($parms);
+        }
+
 		$parms['Caption'] = $project_it->getDisplayName();
 		$parms['ObjectId'] = $project_it->getId();
 		$parms['ClassName'] = strtolower(get_class($project_it->object));

@@ -1,6 +1,6 @@
 <?php
 
-class WrtfCKEditorSupportParser extends WrtfCKEditorPageParser
+class WrtfCKEditorSupportParser extends WrtfCKEditorHtmlParser
 {
     private $router;
 
@@ -11,6 +11,12 @@ class WrtfCKEditorSupportParser extends WrtfCKEditorPageParser
 
         $this->setHrefResolver(
             function($wiki_it) use($router) {
+                $parents = explode(',', trim($wiki_it->get('ParentPath'),','));
+                if ( count($parents) > 3 ) {
+                    $parentIt = $wiki_it->object->getExact($parents[2]);
+                    return $router->generate('docs_article',
+                        array('article' => $parentIt->getDisplayName(), '_fragment' => $wiki_it->getId()));
+                }
                 return $router->generate('docs_article', array('article' => $wiki_it->getDisplayName()));
             }
         );

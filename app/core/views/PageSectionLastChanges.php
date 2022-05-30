@@ -1,16 +1,14 @@
 <?php
 include_once SERVER_ROOT_PATH."core/views/PageInfoSection.php";
 
-class LastChangesSection extends InfoSection
+class PageSectionLastChanges extends InfoSection
 {
  	var $object, $iterator, $items;
  	
- 	function LastChangesSection( $object ) 
+ 	function __construct( $object )
  	{
- 		parent::InfoSection();
- 		
+ 		parent::__construct();
  		$this->object = $object;
- 		
  		$this->items = 8;
  	}
  	
@@ -35,7 +33,6 @@ class LastChangesSection extends InfoSection
 			array (
 				new ChangeLogItemDateFilter($this->object),
 				new FilterBaseVpdPredicate(),
-				new SortReverseKeyClause(),
                 new FilterAttributePredicate('ChangeKind', 'added,modified,deleted')
 			)
 		);
@@ -62,7 +59,7 @@ class LastChangesSection extends InfoSection
 	}
 
 	function getContent( $objectIt ) {
-        return $objectIt->get('Content');
+        return $objectIt->getHtmlDecoded('Content');
     }
 
 	function getRenderParms()
@@ -80,13 +77,22 @@ class LastChangesSection extends InfoSection
 
 			$content = $this->getContent($it);
             $anchor_it = $it->getObjectIt();
-            if ( strpos($content, '[url') !== false && $anchor_it->object instanceof WikiPage ) {
-                $content = str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$it->getDateTimeFormat('RecordModified'), text(2319));
+            if ( $anchor_it->object instanceof WikiPage ) {
+                $url = '\\1';
+                foreach( explode(ChangeLogAggregatePersister::CONTENT_SEPARATOR, $it->getHtmlDecoded('ObjectUrl')) as $data ) {
+                    if ( strpos($data, 'history') !== false ) {
+                        $url = $data;
+                        break;
+                    }
+                }
+                $content = preg_replace('/\[url=([^\]\s]+)(\s[^\]]+)?\]/i',
+                                str_replace('%1', $url, text(2319)),
+                                    $content);
             }
 
 			$rows[] = array(
 				'author' => $it->get('UserName') != '' ? $it->get('UserName') : $it->get('AuthorName'),
-			 	'datetime' => $it->getDateTimeFormat('RecordModified'),
+			 	'datetime' => $it->getDateTimeFormat('RecordCreated'),
 			    'caption' => $content,
 				'icon' => $it->get('ChangeKind') == 'added' ? 'icon-plus-sign' : 'icon-pencil'
 			); 
@@ -94,15 +100,9 @@ class LastChangesSection extends InfoSection
 			$it->moveNext();
 		}
 
-		$className = strtolower(get_class($this->object->object));
 		return array_merge( parent::getRenderParms(), array (
 			'section' => $this,
-			'rows' => $rows,
-            'moreUrl' => count($rows) >= 5
-                ? getFactory()->getObject('PMReport')->getExact('project-log')->getUrl(
-                        'entities='.$className.'&'.$className.'='.$this->object->getId().'&start='.$this->object->getDateFormatted('RecordCreated')
-                    )
-                : ''
+			'rows' => $rows
 		));
 	}
 }

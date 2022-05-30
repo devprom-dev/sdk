@@ -7,6 +7,7 @@
 		<?php
 		foreach ( $sections as $key => $section )
 		{
+            $section->setId( $section->getId() . $tag );
 			if ( $placement != "" ) {
 				$section->setPlacement($placement);
 			}

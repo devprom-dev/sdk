@@ -9,7 +9,7 @@ class DeleteObjectWebMethod extends WebMethod
  	function __construct( $object_it = null )
  	{
  		$this->object_it = $object_it;
- 		$this->setBeforeCallback('devpromOpts.updateUI');
+ 		$this->setRedirectUrl('function(){devpromOpts.updateUI();}');
  		parent::WebMethod();
  	}
  	
@@ -26,9 +26,14 @@ class DeleteObjectWebMethod extends WebMethod
 	
 	function getJSCall($parms = array())
 	{
+        $className = strtolower(get_class($this->object_it->object));
+        if ( $className == 'metaobject' ) {
+            $className = $this->object_it->object->getEntityRefName();
+        }
+
 		return parent::getJSCall( 
 			array( 'object' => $this->object_it->getId(),
-				   'class' => strtolower(get_class($this->object_it->object))));
+				   'class' => $className ));
 	}
 
 	function hasAccess()
@@ -41,14 +46,20 @@ class DeleteObjectWebMethod extends WebMethod
 		if ( $_REQUEST['object'] == '' ) throw new Exception('Object should be specified');
 		
 		$class = getFactory()->getClass($_REQUEST['class']);
+		if ( !class_exists($class) ) {
+            $object = new \Metaobject($class);
+        }
+        else {
+            $object = getFactory()->getObject($class);
+        }
 		
-		if ( !class_exists($class) ) throw new Exception('Class name given doesn\'t exist');
-		
-		$object_it = getFactory()->getObject($class)->getExact( $_REQUEST['object'] );
+		$object_it = $object->getExact( $_REQUEST['object'] );
 		
 		if ( $object_it->getId() == '' ) throw new Exception('Object given was not found');
 		
-		if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) throw new Exception('You have no permissions to delete object');
+		if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) {
+            throw new Exception('You have no permissions to delete object');
+        }
 
 		if ( $object_it->delete() < 1 ) throw new Exception('The object wasn\'t deleted');
 

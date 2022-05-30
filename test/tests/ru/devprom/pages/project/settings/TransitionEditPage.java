@@ -48,10 +48,10 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 		obligatoryFieldAddBtn.click();
 		WebElement selectElem = driver
 				.findElement(By
-						.xpath("//input[@value='transitionattribute']/following-sibling::div[contains(@id,'fieldRowReferenceName')]//select[contains(@id,'ReferenceName')]"));
+						.xpath("//input[@value='stateattribute']/following-sibling::div[contains(@id,'fieldRowReferenceName')]//select[contains(@id,'ReferenceName')]"));
 		(new Select(selectElem)).selectByVisibleText(field);
 		driver.findElement(
-				By.xpath("//input[@value='transitionattribute']/following-sibling::div[contains(@class,'embedded_footer')]/input[contains(@id,'saveEmbedded')]"))
+				By.xpath("//input[@value='stateattribute']/following-sibling::div[contains(@class,'embedded_footer')]/input[contains(@id,'saveEmbedded')]"))
 				.click();
 	}
 

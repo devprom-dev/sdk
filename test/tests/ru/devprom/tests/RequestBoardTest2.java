@@ -88,15 +88,15 @@ public class RequestBoardTest2 extends ProjectTestBase {
 	Assert.assertTrue(rbp.isRequestInSection(requests.get(1).getNumericId(), "Обнаружено в версии: 0.1", "Добавлено"), "Пожелание не было перемещено в секцию 'Обнаружено в версии: 0.1'");
 	
 	rvp = rbp.clickToRequest(requests.get(1).getId());
-	Assert.assertEquals(rvp.readUserAttribute("Обнаружено в версии:"), "0.1", "Неверная версия в режиме просмотра");
+	Assert.assertTrue(rvp.readUserAttribute("Обнаружено в версии:").contains("0.1"), "Неверная версия в режиме просмотра");
 	rbp = rvp.gotoRequestsBoard();
 	
 	rbp.setupGrouping("Estimation");
 	groups = rbp.getAllGroupingSections();
-	Assert.assertTrue(groups.contains("Оценка, ч.: 8"), "На доске нет группы с именем 'Оценка, ч.: 8'");
-	Assert.assertTrue(rbp.isRequestInSection(requests.get(3).getNumericId(), "Оценка, ч.:", "Добавлено"), "Ошибка теста, пожелание " +requests.get(3).getId()+ " изначально находится в секции отличной от Оценка, ч.: 0");
-	rbp = rbp.moveToAnotherSection(requests.get(3).getNumericId(), "Оценка, ч.: 8", "Добавлено");
-	Assert.assertTrue(rbp.isRequestInSection(requests.get(3).getNumericId(), "Оценка, ч.: 8", "Добавлено"), "Пожелание не было перемещено в секцию 'Оценка, ч.: 8'");
+	Assert.assertTrue(groups.contains("Оценка: 8"), "На доске нет группы с именем 'Оценка: 8'");
+	Assert.assertTrue(rbp.isRequestInSection(requests.get(3).getNumericId(), "Оценка:", "Добавлено"), "Ошибка теста, пожелание " +requests.get(3).getId()+ " изначально находится в секции отличной от Оценка: 0");
+	rbp = rbp.moveToAnotherSection(requests.get(3).getNumericId(), "Оценка: 8", "Добавлено");
+	Assert.assertTrue(rbp.isRequestInSection(requests.get(3).getNumericId(), "Оценка: 8", "Добавлено"), "Пожелание не было перемещено в секцию 'Оценка: 8'");
 	rvp = rbp.clickToRequest(requests.get(3).getId());
 	Assert.assertEquals(rvp.readEstimates(), 8.0,"Неверная трудоемкость в режиме просмотра");
 	rbp = rvp.gotoRequestsBoard();
@@ -217,7 +217,7 @@ public class RequestBoardTest2 extends ProjectTestBase {
 			driver.navigate().refresh();
 			rvp = rbp.clickToRequest(request.getId());
 			
-			Assert.assertEquals(rvp.readUserAttribute(attrName),cattr1value, "Неверное значение атрибута 1 после перевода пожелания в релиз");
+			Assert.assertTrue(rvp.readUserAttribute(attrName).contains(cattr1value),"Неверное значение атрибута 1 после перевода пожелания в релиз");
 	}
 	
 }

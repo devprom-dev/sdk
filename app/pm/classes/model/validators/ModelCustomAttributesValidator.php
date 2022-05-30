@@ -3,7 +3,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorInsta
 
 class ModelCustomAttributesValidator extends ModelValidatorInstance
 {
-	public function validate( Metaobject $object, array & $parms )
+	public function validate( Metaobject $object, array $parms )
 	{
         $id = $parms[$object->getIdAttribute()];
 

@@ -1,0 +1,39 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}
+    {{ 'issue_feedback'|trans }}
+{% endblock %}
+
+{% block content -%}
+    <section class="card-section">
+        <div class="container">
+            <div class="col-lg-10 col-lg-offset-1">
+                <div class="card text-center">
+                    <div class="body">
+                        {{ form_start(edit_form, {'method':"PUT", "attr": {"class":"form-horizontal","action":path('issue_feedback', { 'id' : issue.id })}}) }}
+                            {{ form_widget(edit_form) }}
+                            <div class="row">
+                                <button type="submit" class="btn btn-primary">{{ 'issue.update'|trans }}</button>
+                            </div>
+                        {{ form_end(edit_form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="//{{ app.request.getHttpHost() ~ '/plugins/wrtfckeditor/ckeditor/ckeditor.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/locale/underi18n.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/plugins/wrtfckeditor/resources/js/locals/ru/resource.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/jquery/paste.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/scripts/flow/flow.min.js?v=' ~ app_version }}"></script>
+    <script src="//{{ app.request.getHttpHost() ~ '/co/bundles/Devprom/ServiceDeskBundle/public/js/wysiwyg.js?v=' ~ app_version }}"></script>
+    <script type="text/javascript">
+        $(document).ready( function() {
+            setupEditorGlobal();
+            setupWysiwygEditor('issue_feedback_form_feedbackText', 200);
+        });
+    </script>
+{% endblock %}

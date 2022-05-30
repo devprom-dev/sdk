@@ -2,7 +2,7 @@
 
 class ProjectImportanceRegistry extends ObjectRegistryArray
 {
-	public function getAll()
+	public function Query($parms = array())
 	{
 		return $this->createIterator(
             array (

@@ -12,22 +12,22 @@ class ClearCommentsEvent extends ObjectFactoryNotificator
 
  	function delete( $object_it ) 
 	{
-		$comment_it = getFactory()->getObject('Comment')->getAllForObject($object_it);
-		while( !$comment_it->end() ) 
-		{
+		$comment_it = getFactory()->getObject('Comment')
+            ->getAllForObject($object_it, array( new SortKeyClause() ));
+
+		while( !$comment_it->end() ) {
 			$comment_it->object->delete($comment_it->getId());
 			$comment_it->moveNext();
 		}
 		
 		$log = new ChangeLog(new ObjectRegistrySQL());
 		$log_it = $log->getRegistry()->Query(
-				array ( 
-						new ChangeLogItemFilter($object_it),
-						new ChangeLogActionFilter('commented')
-				)
+            array (
+                new ChangeLogItemFilter($object_it),
+                new ChangeLogActionFilter('commented')
+            )
 		);
-		while( !$log_it->end() ) 
-		{
+		while( !$log_it->end() ) {
 			$log->delete($log_it->getId());
 			$log_it->moveNext();
 		}		

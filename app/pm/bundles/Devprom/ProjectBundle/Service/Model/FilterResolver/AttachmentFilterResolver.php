@@ -13,7 +13,11 @@ class AttachmentFilterResolver
 	public function resolve()
 	{
 		$predicates = array(
-				new \FilterAttributePredicate('ObjectClass', $this->class_name)
+            new \FilterAttributePredicate('ObjectClass',
+                $this->class_name == 'request'
+                        ? array('request','issue')
+                        : $this->class_name
+                )
 		);
 		if ( $this->object_id != '' ) {
 			$predicates[] = new \FilterAttributePredicate('ObjectId', $this->object_id);

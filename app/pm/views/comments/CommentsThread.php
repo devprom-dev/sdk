@@ -13,12 +13,13 @@ class CommentsThread
  	private $sortOrder = 'asc';
  	private $baseline = '';
  	private $options = null;
+ 	private $systemName = '';
  	
- 	function __construct( $object_it, $baseline = '' )
+ 	function __construct( $object_it, $commentObject, $baseline = '', $uid = '' )
  	{
  		$this->object_it = $object_it;
  		$this->baseline = $baseline;
- 		$this->object = getFactory()->getObject('Comment');
+ 		$this->object = $commentObject;
  		
  		if ( $this->baseline != '' ) {
  			$snapshot = getFactory()->getObject('Snapshot');
@@ -40,10 +41,12 @@ class CommentsThread
 
 		$this->comments = 0;
 
-		$this->control_uid = md5($this->object_it->object->getClassName().$this->object_it->getId().$_REQUEST['formonly']);
+		$this->control_uid = md5($this->object_it->object->getClassName().$this->object_it->getId().$uid.$_REQUEST['formonly']);
 		$this->uid_service = new ObjectUID();
         $this->autorefresh = array_key_exists('dorefresh', $_REQUEST) ? $_REQUEST['dorefresh'] == 1 : true;
         $this->options = new CommentNotificationService($this->object_it);
+
+        $this->systemName = getFactory()->getObject('SystemSettings')->getAll()->getDisplayName();
  	}
  	
  	function setControlUID( $uid ) {
@@ -63,8 +66,8 @@ class CommentsThread
  	}
 
  	function getSelfUrl() {
-        return getSession()->getApplicationUrl($this->object_it).
-            '?'.http_build_query(
+        return $this->object_it->object->getPage().
+            http_build_query(
                     array (
                         'export' => 'commentsthread',
                         'object' => $this->object_it->getId(),
@@ -137,7 +140,7 @@ class CommentsThread
 	
  	function getRenderParms()
 	{
-		$form = new CommentForm( getFactory()->getObject('Comment') );
+		$form = new CommentForm( getFactory()->getObject(get_class($this->object)) );
 		$form->setAnchorIt( $this->object_it );
 		$form->setControlUID( $this->control_uid );	
 
@@ -209,17 +212,17 @@ class CommentsThread
  			$comments[] = array (
  				'id' => $comment_it->getId(),
                 'uid' => md5($this->control_uid.$comment_it->getId()),
- 				'author' => $comment_it->get('AuthorName'),
+ 				'author' => $comment_it->get('AuthorName') != '' ? $comment_it->get('AuthorName') : $this->systemName,
  			    'author_id' => $comment_it->get('AuthorId'),
 				'photo_id' => $comment_it->get('AuthorPhotoId'),
  				'created' => $comment_it->getDateFormattedShort('RecordCreated').', '.$comment_it->getTimeFormat('RecordCreated'),
  				'actions' => $readonly ? array() : $this->getActions( $comment_it ),
  				'html' => $text,
-                'text' => \TextUtils::stripAnyTags($text),
+                'text' => \TextUtils::getWords(\TextUtils::stripAnyTags($text), 25),
  				'thread_it' => $comment_it->getThreadIt(),
  			    'files' => $files,
  				'uid_info' => $_REQUEST['formonly'] != '' ? '' : $this->uid_service->getUidInfo($comment_it),
-                'modified' => strtotime($comment_it->get('RecordCreated')),
+                'modified' => strtotime(\SystemDateTime::convertToUTC0($comment_it->get('RecordCreated'))),
                 'private' => $comment_it->get('IsPrivate') == 'Y',
                 'closed' => $comment_it->get('Closed') == 'Y',
                 'attributes' => join(' ', $attributes)

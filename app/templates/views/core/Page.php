@@ -28,7 +28,8 @@
 	devpromOpts.project = '<?=$project_code?>';
 	devpromOpts.mathJaxLib = '<?=(defined('MATH_JAX_LIB_SRC') ? MATH_JAX_LIB_SRC : "")?>';
     devpromOpts.extraPlugins = '<?=(defined('CKEDITOR_EXTRAPLUGINS') && CKEDITOR_EXTRAPLUGINS != "" ? ",".CKEDITOR_EXTRAPLUGINS : "")?>';
-	devpromOpts.plantUMLServer = '<?=(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : "")?>';
+	devpromOpts.plantUMLServer = '<?=EnvironmentSettings::getPlantUMLServer()?>';
+    devpromOpts.diagramsNetServer = '<?=EnvironmentSettings::getDiagramsServer()?>';
     devpromOpts.iid = "<?=$public_iid?>";
     devpromOpts.serviceUrl = "<?=(defined('SERVICE_URL') ? SERVICE_URL : 'devprom.ru')?>";
     devpromOpts.uiExtensionsEnabled = <?=(!defined('UI_EXTENSION') || UI_EXTENSION ? 'true' : 'false' )?>;

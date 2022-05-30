@@ -31,7 +31,7 @@ import ru.devprom.pages.project.testscenarios.TestScenarioTestingPage;
 
 public class RequestViewPage extends SDLCPojectPageBase
 {
-	@FindBy(xpath = "//a[@id='workflow-inprogress']")
+	@FindBy(xpath = "//a[@id='workflow-inprogress' and contains(.,'В работу')]")
 	protected WebElement analyseBtn;
 
 	@FindBy(xpath = "//a[contains(@id,'requirement')]")
@@ -160,20 +160,7 @@ public class RequestViewPage extends SDLCPojectPageBase
 				|| estimatesLabel.getText().equals(""))
 			return 0.0;
 		else
-			return Double.parseDouble(estimatesLabel.getText().trim());
-	}
-
-	public String readFunctionName() {
-		try {
-			String name = driver
-					.findElement(
-							By.xpath("//th[contains(.,'Функция')]/following-sibling::td"))
-					.getText().trim();
-			return name.split("\\]")[1].trim();
-		} catch (NoSuchElementException e) {
-			FILELOG.debug("No function found");
-			return "";
-		}
+			return convertToDouble(estimatesLabel.getText());
 	}
 
 	public String readOriginator() {
@@ -214,7 +201,6 @@ public class RequestViewPage extends SDLCPojectPageBase
 				readPriority());
 		r.setOriginator(readOriginator());
 		r.setEstimation(readEstimates());
-		r.setPfunction(readFunctionName());
 		// TODO fill with other parameters
 		return r;
 	}
@@ -362,11 +348,9 @@ public class RequestViewPage extends SDLCPojectPageBase
 						.id("PlannedReleaseText")));
 
 		WebElement input = driver.findElement(By.id("PlannedReleaseText"));
-		if ( !input.getAttribute("value").equals(releaseNumber) ) {
-			input.clear();
-			input.sendKeys(releaseNumber); 
-	   		autocompleteSelect(releaseNumber);
-		}
+		input.clear();
+		input.sendKeys(releaseNumber);
+		autocompleteSelect(releaseNumber);
 
 		submitDialog(submitBtn);
 		(new WebDriverWait(driver, waiting))
@@ -515,18 +499,22 @@ public class RequestViewPage extends SDLCPojectPageBase
 		return tags;
 	}
 
-	public RequestViewPage duplicateRequest(String projectName) {
+	public RequestViewPage duplicateRequest(String projectName)
+	{
 		actionsBtn.click();
-		(new WebDriverWait(driver, 5)).until(ExpectedConditions
-				.visibilityOf(duplicateRequest));
-		duplicateRequest.click();
+		clickOnInvisibleElement(duplicateRequest);
 
+		waitForDialog();
 		(new WebDriverWait(driver, 20)).until(ExpectedConditions
 				.presenceOfElementLocated(By.id("ProjectText")));
 		driver.findElement(By.id("ProjectText")).clear();
 		driver.findElement(By.id("ProjectText")).sendKeys(projectName);
 		autocompleteSelect(projectName);
+		submitDialog(driver.findElement(By.id("SubmitBtn")));
+
+		waitForDialog();
 		submitDialog(driver.findElement(By.id("pm_ChangeRequestSubmitBtn")));
+
 		return new RequestViewPage(driver);
 	}
 
@@ -656,16 +644,16 @@ public class RequestViewPage extends SDLCPojectPageBase
 		return new RequirementNewPage(driver);
 	}
 
-	public void doAnalyse(String time) {
-		try
-		{
-			(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(analyseBtn));
-			analyseBtn.click();
-			Thread.sleep(2000);
+	public void doAnalyse(String time)
+	{
+		(new WebDriverWait(driver,waiting))
+				.until(ExpectedConditions.visibilityOf(analyseBtn));
+		analyseBtn.click();
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		catch(InterruptedException e)
-		{
-		}
+		driver.navigate().refresh();
 	}
-
 }

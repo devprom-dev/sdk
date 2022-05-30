@@ -1,17 +1,17 @@
 <?php
-
 include "ParticipantIterator.php";
 include "predicates/ParticipantActivePredicate.php";
 include "predicates/ParticipantBaseRoleNamePredicate.php";
 include "predicates/ParticipantBaseRolePredicate.php";
 include "predicates/ParticipantIterationInvolvedPredicate.php";
 include "predicates/ParticipantRolePredicate.php";
-include "predicates/ParticipantTeamAtWorkPredicate.php";
 include "predicates/ParticipantUserGroupPredicate.php";
 include "predicates/ParticipantUserPredicate.php";
 include "predicates/ParticipantWorkerPredicate.php";
 include "predicates/ParticipantWorkloadPredicate.php";
 include "predicates/UserWorkerPredicate.php";
+include "predicates/ProjectUserPredicate.php";
+include "predicates/ProjectUserGroupPredicate.php";
 include "persisters/ParticipantDetailsPersister.php";
 include "persisters/ParticipantOthersPersister.php";
 include "persisters/ParticipantRolesPersister.php";
@@ -33,7 +33,7 @@ class Participant extends Metaobject
 		$this->setAttributeRequired('ProjectRole', true);
 		$this->addPersister( new ParticipantRolesPersister() );
 		
-		$this->setAttributeCaption('Capacity', translate('Ежедневная загрузка, ч.'));
+		$this->setAttributeCaption('Capacity', translate('Ежедневная доступность, ч.'));
 		$this->setAttributeOrderNum('Capacity', 102);
 		$this->setAttributeRequired('Capacity', true);
 		$this->setAttributeDescription('NotificationEmailType', text(1913));
@@ -162,14 +162,17 @@ class Participant extends Metaobject
 		return $this->createSQLIterator($sql);
 	}
 
-	function hasTeamMembers( $role_it )
+	function hasTeamMembers( $role_it, $projectIt )
 	{
-		$sql = "SELECT COUNT(1) items ".
-			   "  FROM pm_Participant p " .
-			   " WHERE EXISTS (SELECT 1 FROM pm_ParticipantRole r, pm_ProjectRole l" .
-			   "				WHERE r.Participant = p.pm_ParticipantId " .
-			   "                  AND r.ProjectRole = ".$role_it->getId().") " .
-			   "   AND p.Project = ".getSession()->getProjectIt()->getId();
+		$sql = "SELECT COUNT(1) items 
+		          FROM pm_Participant p, cms_User u 
+		        WHERE EXISTS (SELECT 1 FROM pm_ParticipantRole r, pm_ProjectRole l
+		                       WHERE r.Participant = p.pm_ParticipantId 
+		                         AND r.ProjectRole = {$role_it->getId()}) 
+		          AND p.Project = {$projectIt->getId()}
+                  AND p.SystemUser = u.cms_UserId
+                  AND NOT EXISTS (SELECT 1 FROM cms_Blacklist bl WHERE bl.SystemUser = p.SystemUser)
+		";
 
 		$it = $this->createSQLIterator($sql);
 		return $it->get('items') > 0;

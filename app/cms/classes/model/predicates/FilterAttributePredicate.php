@@ -3,6 +3,7 @@
 class FilterAttributePredicate extends FilterPredicate
 {
  	private $attr = '';
+ 	private $referenceSearchField = 'ReferenceName';
  	private $ids = array();
  	private $has_multiple_values = true;
  	
@@ -36,6 +37,10 @@ class FilterAttributePredicate extends FilterPredicate
  	{
  		return $this->ids;
  	}
+
+ 	function setReferenceSearchAttribute( $attribute ) {
+ 	    $this->referenceSearchField = $attribute;
+    }
 
     function check( $filter )
     {
@@ -96,7 +101,7 @@ class FilterAttributePredicate extends FilterPredicate
                 $registry = $ref->getRegistry();
                 $registry->setPersisters(array());
 
-                if ( $is_numeric_value || $ref->getAttributeDbType('ReferenceName') == '' ) {
+                if ( $is_numeric_value || $ref->getAttributeDbType($this->referenceSearchField) == '' ) {
                     $values = array_filter($values, function( $val ) {
                         return is_numeric($val);
                     });
@@ -114,7 +119,7 @@ class FilterAttributePredicate extends FilterPredicate
                 }
                 elseif ( $ref->getEntityRefName() != 'entity' ) {
                     $ref_it = $registry->Query( array (
-                        new FilterAttributePredicate('ReferenceName', $values),
+                        new FilterAttributePredicate($this->referenceSearchField, $values),
                         new FilterVpdPredicate($object->getVpds())
                     ));
                     $values = $ref_it->idsToArray();

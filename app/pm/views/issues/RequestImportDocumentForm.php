@@ -65,7 +65,7 @@ class RequestImportDocumentForm extends PMPageForm
                                          )
                             )
                         );
-                        exit();
+                        return true;
                     }
                 }
                 $importer_it->moveNext();
@@ -77,6 +77,7 @@ class RequestImportDocumentForm extends PMPageForm
 			$this->setRequiredAttributesWarning();
 			$this->setWarningMessage($e->getMessage());
 			$this->edit('');
+			return false;
 		}
 	}
 

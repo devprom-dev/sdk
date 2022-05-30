@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/classes/notificators/EntityModifyProjectTrigger.php';
 
 class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
@@ -20,10 +19,11 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
         if ( $kind != TRIGGER_ACTION_MODIFY ) return;
         if ( !$this->checkEntity($object_it) ) return;
 
-        $references = $this->getObjectReferences($object_it);
-        if ( !is_array($references) ) return;
+        if ( getSession()->getProjectIt()->IsPortfolio() )
+        {
+            $references = $this->getObjectReferences($object_it);
+            if ( !is_array($references) ) return;
 
-        if ( getSession()->getProjectIt()->IsPortfolio() ) {
             if ( array_key_exists('PlannedRelease', $content) )
             {
                 $release_it = getFactory()->getObject('Release')->getExact($content['PlannedRelease']);

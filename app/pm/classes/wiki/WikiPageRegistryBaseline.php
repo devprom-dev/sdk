@@ -11,7 +11,7 @@ class WikiPageRegistryBaseline extends ObjectRegistrySQL
 		$this->baseline_it = $baseline_it;
 	}
 	
-	function getQueryClause()
+	function getQueryClause(array $parms)
 	{
 		$attributes = array();
 
@@ -23,8 +23,13 @@ class WikiPageRegistryBaseline extends ObjectRegistrySQL
 	    }
 
         $sqlPredicate = '';
-        foreach( $this->getFilters() as $filter )
-        {
+	    $filters = array_filter(
+	        $this->extractPredicates($parms),
+            function($filter) {
+                return !$filter instanceof FilterVpdPredicate and !$filter instanceof FilterBaseVpdPredicate;
+            });
+
+        foreach( $filters as $filter ) {
             if ( $filter instanceof FilterInPredicate ) {
                 $filter->setAlias('t');
                 $filter->setObject( $this->getObject() );
@@ -43,12 +48,6 @@ class WikiPageRegistryBaseline extends ObjectRegistrySQL
 	    	   "					  WHERE p.UID = t.UID ".
 	    	   "						AND p.DocumentId = ".$this->document_it->getId()." ) ".
 	    	   "  ) ";
-	}
-
-	function getFilters() {
-		return array_filter(parent::getFilters(), function($filter) {
-			return !$filter instanceof FilterVpdPredicate and !$filter instanceof FilterBaseVpdPredicate;
-		});
 	}
 
 	private $baseline_it;

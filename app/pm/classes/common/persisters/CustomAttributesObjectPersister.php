@@ -11,6 +11,10 @@ class CustomAttributesObjectPersister extends CustomAttributesPersister
         $this->objectIt = $objectIt;
     }
 
+    function modify( $object_id, $parms ) {
+        $this->set($object_id, $parms, true, false);
+    }
+
     protected function getAttributeIt() {
         return getFactory()->getObject('pm_CustomAttribute')->getRegistry()->Query(
             array(

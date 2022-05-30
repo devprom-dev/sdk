@@ -23,6 +23,8 @@ class BusinessActionIssueAutoActionShift extends BusinessActionShift
  	
 	function applyContent( $object_it, $attributes, $action = '' )
  	{
+ 	    $this->setData($attributes);
+
         $checkEventType =
             $action == TRIGGER_ACTION_ADD && in_array(
                 $this->action_it->get('EventType'),

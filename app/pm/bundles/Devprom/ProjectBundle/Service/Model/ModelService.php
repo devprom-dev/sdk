@@ -3,6 +3,10 @@ namespace Devprom\ProjectBundle\Service\Model;
 
 class ModelService
 {
+    const OUTPUT_TEXT = 'text';
+    const OUTPUT_HTML = 'html';
+    const OUTPUT_ASIS = 'asis';
+
     private $recursive = false;
 
 	public function __construct( $validator_serivce = null, $mapping_service = null, $filter_resolver = array(), $uidService = null, $recursive = false )
@@ -14,7 +18,7 @@ class ModelService
         $this->recursive = $recursive;
 	}
 	
-	public function set( $entity, $data, $id = '' )
+	public function set( $entity, $data, $id = '', $output = self::OUTPUT_TEXT )
 	{
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
         if ( count($data) < 1 ) return array();
@@ -34,7 +38,7 @@ class ModelService
 			}
 			else {
 				if ( $key == 'Id' || is_null($value) || strtolower($value) == 'null' ) {
-					unset($data[$key]); continue;
+					unset($data[$key]);
 				}
 				else {
                     if ( $object->IsReference($key) && !is_numeric($value) ) {
@@ -89,10 +93,12 @@ class ModelService
 				throw new \Exception('Lack of permissions to create object of '.get_class($object));
 			}
 
-			$result = $this->create($object, $data);
+			$objectIt = getFactory()->createEntity($object, $data);
+
+			$result = $objectIt->getId();
 			if ( $result < 1 ) throw new \Exception('Unable create new record of '.get_class($object));
 
-			return $this->get($entity, $result, "text", $this->recursive);
+			return $this->get($entity, $result, $output);
 		}
 		else
 		{
@@ -102,17 +108,22 @@ class ModelService
 			if ( $this->modify($object_it, $data) < 1 ) {
 				throw new \Exception('Unable update the record ('.$object_it->getId().') of '.get_class($object));
 			}
-			return $this->get($entity, $object_it->getId(), "text", $this->recursive);
+
+			return $this->get($entity, $object_it->getId(), $output);
 		}
 	}
 	
-	public function get( $entity, $id = '', $output = 'text' )
+	public function get( $entity, $id = '', $output = self::OUTPUT_TEXT )
 	{
         $ids = \TextUtils::parseIds($id);
         if ( count($ids) < 1 ) return array();
 
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
-        $object_it = $object->getExact($ids);
+        if ( !getFactory()->getAccessPolicy()->can_read($entity) ) {
+            return array();
+        }
+
+        $object_it = getFactory()->getEntities($object, $ids);
 
 		if ( $object_it->getId() < 1 ) {
 			throw new \Exception('There is no record ('.$id.') of '.get_class($object));
@@ -120,13 +131,19 @@ class ModelService
 		return $this->sanitizeData($object_it->object, $this->getData($object_it, $this->recursive), $output);
 	}
 	
-	public function find( $entity, $limit = '', $offset = '' )
+	public function find( $entity, $limit = 0, $page = 0, $output = self::OUTPUT_TEXT )
 	{
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
+        if ( !getFactory()->getAccessPolicy()->can_read($object) ) {
+            return array();
+        }
 
 		$registry = $object->getRegistry();
-		if ( $limit > 0 ) $registry->setLimit($limit);
-		
+		if ( $limit > 0 ) {
+            $registry->setLimit($limit);
+            if ( $page > 0 ) $registry->setOffset($limit * $page);
+        }
+
 		$query = array(
 			new \FilterVpdPredicate()
 		);
@@ -136,16 +153,16 @@ class ModelService
 		
 		$result = array();
 
-		$object_it = $registry->Query($query);
+		$object_it = getFactory()->getEntities($object, $registry->QueryKeys($query)->idsToArray());
 		while( !$object_it->end() ) {
-			$result[] = $this->sanitizeData($object, $this->getData($object_it, $this->recursive));
+			$result[] = $this->sanitizeData($object, $this->getData($object_it, $this->recursive), $output);
 			$object_it->moveNext();
 		}
 
 		return $result;
 	}
 
-	public function delete( $entity, $id )
+	public function delete( $entity, $id, $output = self::OUTPUT_TEXT )
 	{
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
 
@@ -160,7 +177,8 @@ class ModelService
 
 		return $this->sanitizeData(
 			$object_it->object,
-			$object_it->object->getEmptyIterator()->getData()
+			$object_it->object->getEmptyIterator()->getData(),
+            $output
 		);
 	}
 
@@ -174,18 +192,38 @@ class ModelService
 		$xml = '';
 		while( !$object_it->end() )
 		{
-			$xml .= '<Object id="'.$object_it->getId().'">';
+            $it = $object_it->copy();
+
+            $data = $it->getData();
+            foreach( $it->object->getAttributesByGroup('computed') as $attribute ) {
+                $items = array();
+                $result = self::computeFormula( $it,
+                    $it->object->getDefaultAttributeValue($attribute)
+                );
+                foreach( $result as $computedItem ) {
+                    if ( !is_object($computedItem) ) {
+                        $items[] = $computedItem;
+                    }
+                    else {
+                        $items[] = $computedItem->getId();
+                    }
+                }
+                $data[$attribute] = join(',',$items);
+            }
+            $it = $it->object->createCachedIterator(array($data));
+
+			$xml .= '<Object id="'.$it->getId().'">';
 			foreach( $attributes as $attribute )
 			{
-			    $attributeType = $object_it->object->getAttributeType($attribute);
+			    $attributeType = $it->object->getAttributeType($attribute);
 				if ( in_array($attributeType, array('integer','float')) ) {
-					$xml .= '<'.$attribute.'>'.$object_it->get($attribute).'</'.$attribute.'>';
+					$xml .= '<'.$attribute.'>'.$it->get($attribute).'</'.$attribute.'>';
 				}
 				else {
 				    $values = array();
-					if ( $object_it->object->IsReference($attribute) )
+					if ( $it->object->IsReference($attribute) )
 					{
-					    $refIt = $object_it->getRef($attribute);
+					    $refIt = $it->getRef($attribute);
 					    if ( $refIt->get('ParentPath') != '' ) {
 					        $parents = \TextUtils::parseIds($refIt->get('ParentPath'));
 					        if ( count($parents) < 1 ) continue;
@@ -205,10 +243,10 @@ class ModelService
 					}
 					else {
 					    if ( $attribute == 'State' ) {
-                            $values[] = $object_it->getStateIt()->getDisplayName();
+                            $values[] = $it->getStateIt()->getDisplayName();
                         }
                         else {
-                            $values[] = $object_it->getHtmlDecoded($attribute);
+                            $values[] = $it->getHtmlDecoded($attribute);
                         }
 					}
                     $xml .= '<'.$attribute.'><![CDATA['.implode(explode(']]>', mb_strtolower(join(',', $values))), ']]]]><![CDATA[>').']]></'.$attribute.'>';
@@ -235,24 +273,12 @@ class ModelService
 		$id_attribute = $object_it->object->getIdAttribute();
 		
 		return $object_it->object->createCachedIterator(
+		    array_values(
 				array_filter( $object_it->getRowset(), function($row) use($id_attribute, $ids) {
 						return in_array($row[$id_attribute], $ids);
 				})
-			);
-	}
-	
-	protected function create( $object, $data )
-	{
-		$object_id = $object->add_parms($data);
-		
-		getFactory()->getEventsManager()
-	    	->executeEventsAfterBusinessTransaction(
-	    		$object->getExact($object_id)->copyAll(),
-                'WorklfowMovementEventHandler',
-                $data
-            );
-		
-	    return $object_id;
+			)
+        );
 	}
 	
 	protected function modify( $object_it, $data )
@@ -274,12 +300,8 @@ class ModelService
 		if ( count($data) < 1 ) return 1; // do not modify if there were no changes
 
         $data['WasRecordVersion'] = $object_it->get('RecordVersion');
-		$result = $object_it->object->modify_parms($object_it->getId(), $data);
-
-        getFactory()->getEventsManager()
-            ->executeEventsAfterBusinessTransaction(
-                $object_it->object->getExact($object_it->getId()), 'WorklfowMovementEventHandler', $data
-            );
+        $modifiedIt = getFactory()->modifyEntity($object_it, $data);
+		$result = $modifiedIt->getId();
 
         return $result;
 	}
@@ -337,7 +359,7 @@ class ModelService
 		return $dataset;
 	}
 
-	protected function sanitizeData( $object, $data, $output = 'text' )
+	protected function sanitizeData( $object, $data, $output = self::OUTPUT_TEXT )
 	{
 		$id_attribute = $object->getIdAttribute();
 		$system_attributes =
@@ -389,7 +411,7 @@ class ModelService
 					    html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING)
                     );
 
-					if ( in_array($type, array('wysiwyg')) )
+					if ( in_array($type, array('wysiwyg')) && $output != self::OUTPUT_ASIS )
 					{
                         $editor = \WikiEditorBuilder::build($result['ContentEditor']);
                         $editor->setObject($object);
@@ -397,7 +419,7 @@ class ModelService
                         $parser->setObjectIt( $object->createCachedIterator(array($data)) );
                         $result[$attribute] = $parser->parse($result[$attribute]);
 
-						if ( $output != 'html' ) {
+						if ( $output == self::OUTPUT_TEXT ) {
 							$html2text = new \Html2Text\Html2Text($result[$attribute], array('width'=>0));
 							$result[$attribute] = $html2text->getText();
 						}
@@ -457,6 +479,10 @@ class ModelService
             $object->setRegistry($registry);
         }
 
+        foreach( getSession()->getBuilders('RestAttributesModelBuilder') as $builder ) {
+            $builder->build($object);
+        }
+
 		return $object;
 	}
 	
@@ -479,13 +505,16 @@ class ModelService
 			foreach( $data as $attribute => $value )
 			{
                 if ( $value  == '' ) continue;
+                if ( $attribute == 'UID' ) {
+                    $query[] = new \FilterTextExactPredicate('UID', $value);
+                    continue;
+                }
 				if ( $object->getAttributeDbType($attribute) == '' ) continue;
 				if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
 				if ( !$object->IsAttributeStored($attribute) ) continue;
 
 				$predicate = new \FilterAttributePredicate($attribute, $value);
 				$predicate->setHasMultipleValues(false);
-
 				$query[] = $predicate;
 			}
 		}
@@ -543,16 +572,18 @@ class ModelService
         return $url;
     }
 
-    static function computeFormula( $objectIt, $formula )
+    static function computeFormula( $objectIt, $formula, $resolveReferences = true )
     {
+        $userIt = getSession()->getUserIt();
         $result = array();
         $referenceIt = null;
         $uid = new \ObjectUID();
 
         $text = preg_replace_callback('/\{([^\}]+)\}/',
-            function($match) use ($objectIt, &$referenceIt, &$result, $uid)
+            function($match) use ($objectIt, &$referenceIt, &$result, $uid, $userIt, $resolveReferences, $formula)
             {
                 list($path,$default) = preg_split('/,/', $match[1]);
+                if ( $default == '' && substr($formula, 0, 1) == '=' ) $default = '0';
 
                 $attributes = preg_split('/\./', $path);
                 foreach( $attributes as $attributeIndex => $caption )
@@ -561,8 +592,13 @@ class ModelService
                     if ( strcasecmp($caption,'ИД') == 0 ) {
                         $refName = $object->getIdAttribute();
                     }
+                    else if ( strcasecmp($caption,'Пользователь') == 0 ) {
+                        $referenceIt = $userIt->copy();
+                        return '{'.join('.',array_slice($attributes, $attributeIndex+1)).'}';
+                    }
                     else {
                         $refName = $object->getAttributeByCaption($caption);
+                        if ( $refName == '' ) $refName = $caption;
                     }
                     if ( $object->IsReference($refName) ) {
                         if ( $objectIt->get($refName) != '' ) {
@@ -574,7 +610,9 @@ class ModelService
                             else {
                                 $objectIt = $objectIt->getRef($refName);
                                 if ( $attributeIndex >= count($attributes) - 1 ) {
-                                    return $uid->getUidWithCaption($objectIt) . '&nbsp;';
+                                    return $resolveReferences
+                                                ? $uid->getUidWithCaption($objectIt) . '&nbsp;'
+                                                : $objectIt->getId();
                                 }
                                 continue;
                             }
@@ -591,9 +629,18 @@ class ModelService
                         }
                         else {
                             switch( $object->getAttributeType($refName) ) {
+                                case '':
+                                    $value = '0';
+                                    break;
                                 case 'integer':
                                 case 'float':
-                                    $value = floatval($objectIt->get($refName));
+                                    $value = $objectIt->get($refName) == '' ? '0' : floatval($objectIt->get($refName));
+                                    break;
+                                case 'date':
+                                    $value = getSession()->getLanguage()->getDateFormatted($objectIt->get($refName));
+                                    break;
+                                case 'datetime':
+                                    $value = getSession()->getLanguage()->getDateTimeFormatted($objectIt->get($refName));
                                     break;
                                 default:
                                     $value = $objectIt->getHtmlDecoded($refName);
@@ -613,7 +660,9 @@ class ModelService
                 $result = array_merge( $result,
                     strpos($text, '{}') === false
                         ? self::computeFormula($referenceIt, $text)
-                        : array($uid->getUidWithCaption($referenceIt) . '&nbsp;')
+                        : array( $resolveReferences
+                                    ? $uid->getUidWithCaption($referenceIt)
+                                    : $referenceIt->getId() )
                 );
                 $referenceIt->moveNext();
             }
@@ -621,6 +670,18 @@ class ModelService
         else {
             $result[] = $text;
         }
+
+        $result = array_map(function($value) {
+                $matches = array();
+                if ( substr($value, 0, 1) == '=' ) {
+                    $value = trim($value, '= ');
+                    preg_match_all('/(?![\s\d\.,\(\)\-\+\*\^\/])/', $value, $matches);
+                    if ( $value != '' && count($matches[0]) == 1 ) {
+                        return eval(" return $value; ");
+                    }
+                }
+                return $value;
+            }, $result);
 
         if ( is_numeric(array_shift(array_values($result))) ) {
             return array(

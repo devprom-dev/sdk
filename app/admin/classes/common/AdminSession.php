@@ -1,11 +1,9 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/project/PortfolioAllBuilder.php";
 include SERVER_ROOT_PATH."admin/classes/model/ModelFactoryAdmin.php";
 include SERVER_ROOT_PATH."admin/classes/common/AdminAccessPolicy.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminChangeLogNotificator.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminSystemTriggers.php";
-include SERVER_ROOT_PATH."admin/classes/notificators/ProcessFirstUserEvent.php";
 include SERVER_ROOT_PATH."admin/classes/model/events/RecentBackupCreatedEvent.php";
 include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceModuleBuilder.php";
 include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceJSBuilder.php";
@@ -60,7 +58,6 @@ class AdminSession extends SessionBase
                 new PortfolioAllBuilder(),
                 new AdminChangeLogNotificator(),
                 new AdminSystemTriggers(),
-                new ProcessFirstUserEvent(),
                 new MaintenanceModuleBuilder(),
                 new RecentBackupCreatedEvent()
             )

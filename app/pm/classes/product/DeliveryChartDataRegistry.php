@@ -2,18 +2,18 @@
 
 class DeliveryChartDataRegistry extends ObjectRegistrySQL
 {
- 	function getQueryClause()
+ 	function getQueryClause(array $parms)
  	{
 	 	$metastate = getFactory()->getObject('StateMeta');
 		$metastate->setAggregatedStateObject(getFactory()->getObject('IssueState'));
  		$metastate->setStatesDelimiter("-");
  		
-		$states = $metastate->getRegistry()->getAll()->fieldToArray('ReferenceName');
+		$states = $metastate->getRegistry()->Query(array())->fieldToArray('ReferenceName');
 		$submitted = array_shift($states);
 
 		$items = array(
 			" SELECT DATE(IFNULL(t.StartDate, NOW())) StartDate, ".
-			"		 CONCAT(DATE(IFNULL(t.DeliveryDate,NOW())),' 23:59:59') FinishDate, ".
+			"		 DATE(IFNULL(t.DeliveryDate,NOW())) FinishDate, ".
 			"		 (SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project, ".
 			"		 t.Caption, t.pm_FunctionId entityId, 'Feature' ObjectClass, t.RecordCreated, t.RecordModified, t.VPD, ".
 			"		 IFNULL(CONCAT('Feature',(SELECT ft.ReferenceName FROM pm_FeatureType ft WHERE ft.pm_FeatureTypeId = t.Type)),'Feature') ObjectType, ".
@@ -22,8 +22,8 @@ class DeliveryChartDataRegistry extends ObjectRegistrySQL
 			"   FROM pm_Function t ".
  			"  WHERE 1 = 1 ".getFactory()->getObject('Feature')->getVpdPredicate('t'),
 				
-			" SELECT DATE(IFNULL(t.StartDate, NOW())), ".
-			"		 CONCAT(DATE(IFNULL(t.DeliveryDate, NOW())),' 23:59:59'), ".
+			" SELECT DATE(IFNULL(t.EstimatedStartDate, NOW())), ".
+			"		 DATE(IFNULL(IFNULL(t.EstimatedFinishDate, t.DeliveryDate), NOW())), ".
 			"		 t.Project, t.Caption, t.pm_ChangeRequestId, 'Request', t.RecordCreated, t.RecordModified, t.VPD, ".
 			"		 IFNULL(CONCAT('Request',(SELECT ft.ReferenceName FROM pm_IssueType ft WHERE ft.pm_IssueTypeId = t.Type)),'Request') ObjectType, t.Priority, 0, t.State, ".
 			"		 (SELECT p.OrderNum FROM Priority p WHERE p.PriorityId = t.Priority), ".

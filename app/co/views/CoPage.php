@@ -1,5 +1,4 @@
 <?php
-
 include 'CoPageTable.php';
 include "CoPageNavigation.php";
 

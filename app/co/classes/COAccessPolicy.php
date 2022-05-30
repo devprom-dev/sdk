@@ -25,13 +25,14 @@ class CoAccessPolicy extends AccessPolicy
             $user_it = $user->getEmptyIterator();
         }
 
+        $groupObject = getFactory()->getObject('co_UserGroup');
  	 	if ( $user_it->object->getAttributeType('GroupId') == '' ) {
- 	    	return $this->group_it = getFactory()->getObject('co_UserGroup')->getEmptyIterator();
+ 	    	return $this->group_it = $groupObject->getEmptyIterator();
  	    }
  		if ( $user_it->get('GroupId') == '' ) {
- 		    return $this->group_it = getFactory()->getObject('co_UserGroup')->getEmptyIterator();
+ 		    return $this->group_it = $groupObject->getEmptyIterator();
  		} 		
- 		return $this->group_it = $user_it->getRef('GroupId');
+ 		return $this->group_it = $groupObject->getExact(\TextUtils::parseIds($user_it->get('GroupId')));
  	}
  	
  	public function setGroupIt( $group_it )
@@ -83,9 +84,13 @@ class CoAccessPolicy extends AccessPolicy
         if ( !is_object($this->group_access_it) ) {
             $class = getFactory()->getClass('co_AccessRight');
 	        if ( $class != 'co_AccessRight' ) {
-				$access = getFactory()->getObject($class);
-				$access->addSort( new SortAttributeClause('UserGroup') );
-	            $this->group_access_it = $access->getOverriden();
+                $accessRegistry = new ObjectRegistrySQL(getFactory()->getObject($class));
+	            $this->group_access_it = $accessRegistry->Query(
+                    array(
+                        new SortAttributeClause('UserGroup')
+                    )
+                );
+                $this->group_access_it->buildHash();
             }
         }
         else {

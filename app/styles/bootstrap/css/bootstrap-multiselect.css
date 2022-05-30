@@ -39,6 +39,13 @@ span.multiselect-native-select select {
     font-weight: 700
 }
 
+.multiselect-container > li.multiselect-reset {
+    padding: 5px;
+}
+.multiselect-container > li.multiselect-reset .input-group {
+    margin: 0;
+}
+
 .multiselect-container > li.multiselect-group label {
     margin: 0;
     padding: 3px 20px;

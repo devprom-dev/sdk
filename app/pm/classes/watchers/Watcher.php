@@ -1,7 +1,7 @@
 <?php
-
 include "WatcherIterator.php";
 include "WatcherRegistry.php";
+include "validators/ModelValidatorWatcherSubject.php";
 include_once "persisters/WatchersPersister.php";
 include_once "predicates/WatcherUserPredicate.php";
 
@@ -11,31 +11,31 @@ class Watcher extends Metaobject
  	
  	function Watcher( $object_it = null, ObjectRegistry $registry = null )
  	{
- 		parent::Metaobject('pm_Watcher', is_object($registry) ? $registry : new WatcherRegistry($this));
+ 		parent::__construct('pm_Watcher', is_object($registry) ? $registry : new WatcherRegistry($this));
  		
- 		$this->setAttributeType('SystemUser', 'REF_UserActiveId');
+ 		$this->setAttributeType('SystemUser', 'REF_IssueAuthorId');
         $this->addAttributeGroup('SystemUser', 'skip-mapper');
 
 		$this->object_it = $object_it;
  	}
  	
- 	function createIterator() 
- 	{
+ 	function createIterator() {
  		return new WatcherIterator( $this );
  	}
  	
- 	function getObjectIt()
- 	{
+ 	function getObjectIt() {
  		return $this->object_it;
  	}
- 	
- 	function getAll()
+
+    function getAnchorIt() {
+        return $this->object_it;
+    }
+
+    function getAll()
  	{
- 		if ( !is_object($this->object_it) )
- 		{
+ 		if ( !is_object($this->object_it) ) {
  			return $this->getByRef('ObjectId', "-1");
  		}
- 		
  		return parent::getAll();
  	}
  	
@@ -64,22 +64,6 @@ class Watcher extends Metaobject
  			);
  	}
 
-	function IsAttributeRequired( $attr_name )
-	{
-		switch ( $attr_name )
-		{
-			case 'Email':
-				return false;
-			case 'SystemUser':
-				return true;
-		}
-	}
-	
-	function getAnchorIt()
-	{
-		return $this->object_it;
-	}
-	
 	function add_parms( $parms )
 	{
 	    if ( is_numeric($parms['SystemUser']) && $parms['SystemUser'] > 1000000 ) {
@@ -104,4 +88,14 @@ class Watcher extends Metaobject
 	    
 	    return parent::add_parms( $parms );
 	}
+
+	function getValidators()
+    {
+        return array_merge(
+            parent::getValidators(),
+            array(
+                new ModelValidatorWatcherSubject()
+            )
+        );
+    }
 }

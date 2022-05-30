@@ -31,7 +31,7 @@ function setupEditorGlobal()
 	});
 }
 
-function setupWysiwygEditor( editor_id, height )
+function setupWysiwygEditor( editor_id, height, alertMessage )
 {
 	var editor = CKEDITOR.replace( document.getElementById(editor_id), {
 		customConfig: 'support_config.js',
@@ -54,6 +54,26 @@ function setupWysiwygEditor( editor_id, height )
 		var editableElement = $(e.editor.editable().$);
 		buildPastable(editableElement);
 	});
+
+	editor.on( 'required', function( evt ) {
+		var element = $('#cke_issue_form_description');
+		element.popover({
+			content: alertMessage,
+			title: function() {
+				return '';
+			},
+			template: '<div class="popover popover-required"><div class="arrow"></div>' +
+						'<div class="popover-inner"><div class="popover-content"><p>' +
+							'</p></div></div></div>',
+			placement: 'top',
+			trigger: 'custom'
+		});
+		element.popover('show');
+		$(evt.editor.editable().$).keyup(function() {
+			element.popover('hide');
+		});
+		evt.cancel();
+	} );
 }
 
 function pasteImage(ev, data)

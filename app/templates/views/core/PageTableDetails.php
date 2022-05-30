@@ -78,9 +78,6 @@ $defaultUrl = str_replace('%class%', strtolower($className), str_replace('%id%',
         }
         <? if ( $detailsVisible == 'true' ) { ?>
             toggleMasterDetails(false);
-            setTimeout(function() {
-                $(document).trigger('trackerItemSelected', [<?=$default_id?>, false, '<?=$className?>']);
-            }, 500);
         <? } ?>
 
         function detailsWideMode(on) {

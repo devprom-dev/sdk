@@ -56,8 +56,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 	 
  	public function & getHandler( $object_it ) 
  	{
-	    if ( $object_it->object->getClassName() == 'WikiPage' && !is_a( $object_it->object, 'WikiPage' ) )
-	    {
+	    if ( $object_it->object->getClassName() == 'WikiPage' && !is_a( $object_it->object, 'WikiPage' ) ) {
 	        return $this->common_handler; 
 	    }
 		    
@@ -75,7 +74,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 		$this->addRecipient(getSession()->getUserIt(), $self_emails);
 
 		$recipients = array_diff(
-            array_unique($this->getEmailRecipientArray($object_it, $prev_object_it, $action, $usersToNotify)),
+            array_unique($this->getEmailRecipientArray($object_it, $usersToNotify)),
             $self_emails
 		);
 
@@ -85,22 +84,56 @@ class EmailNotificator extends ObjectFactoryNotificator
 		}
 
 		$render_service = new RenderService(
-				getSession(), SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/Emails"
-		);
+				getSession(),
+                SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/Emails"
+    		);
+
+		$entityIt = $this->getHandler($object_it)->getEntityIt($object_it);
+        $emailId = $entityIt->get('EmailMessageId') != ''
+                        ? $entityIt->getHtmlDecoded('EmailMessageId')
+                        : md5(get_class($entityIt) . $entityIt->getId()) . '@alm';
 
 		$keys = array_keys($recipients);
 		for($i = 0; $i < count($keys); $i++) 
 		{
 			$recipient = $recipients[$keys[$i]];
+			$recipientAddress = $this->getAddress($recipient);
 
 			$parms = $this->getRenderParms($action, $object_it, $prev_object_it, $recipient);
 			if ( count($parms['fields']) < 1 ) continue;
 
+            $queueIt = (new Metaobject('EmailQueue'))->getRegistry()->Query(
+                array(
+                    new FilterAttributePredicate('EmailMessageId', $emailId),
+                    new FilterAttributePredicate('Recipient', $recipientAddress)
+                )
+            );
+            if ( $queueIt->getId() != '' ) {
+                $wasParms = \JsonWrapper::decode($queueIt->getHtmlDecoded('Parameters'));
+                if ( is_array($wasParms) ) {
+                    $newParms = $parms;
+                    $parms = $wasParms;
+                    foreach( $parms['fields'] as $key => $value ) {
+                        if ( !is_array($parms['fields'][$key]) ) continue;
+                        if ( !is_array($newParms['fields'][$key]) ) continue;
+                        $parms['fields'][$key]['value'] = $newParms['fields'][$key]['value'];
+                    }
+                    foreach( $newParms['fields'] as $key => $value ) {
+                        if ( array_key_exists($key, $parms['fields']) ) continue;
+                        $parms['fields'][$key] = $value;
+                    }
+                    if ( is_array($newParms['comments']) ) {
+                        $parms['comments'] = $newParms['comments'];
+                    }
+                }
+            }
+
 			$mail = new HtmlMailBox();
-			$mail->appendAddress( $this->getAddress($recipient) );
+			$mail->appendAddress($recipientAddress);
 			$mail->setSubject( $this->getSubject( $object_it, $prev_object_it, $action, $recipient ) );
 	   		$mail->setBody($render_service->getContent($parms['template'], $parms));
-            $mail->setInReplyMessageId($object_it->getHtmlDecoded('EmailMessageId'));
+            $mail->setInReplyMessageId($emailId);
+            $mail->setParameters(\JsonWrapper::encode($parms));
 
 	   		$attachments = array();
 	   		foreach( $object_it->object->getAttributesByGroup('email-attachments') as $attribute ) {
@@ -129,7 +162,7 @@ class EmailNotificator extends ObjectFactoryNotificator
         // include participants who wants to receive all notifications
         $participant = getFactory()->getObject('Participant');
         $participants =
-            $participant->getRegistry()->Query(
+            $participant->getRegistry()->QueryKeys(
                 array(
                     new ParticipantActivePredicate(),
                     new FilterVpdPredicate(),
@@ -148,14 +181,14 @@ class EmailNotificator extends ObjectFactoryNotificator
                 )->fieldToArray('SystemUser')
             );
 
-        $users = array_filter(
+        $users = array_unique(array_filter(
             array_merge(
                 $users, $handler->getUsers( $object_it, $prev_object_it, $action )
             ),
             function( $id ) use ($self) {
                 return is_numeric($id) && $id > 0 && $id != $self;
             }
-        );
+        ));
         if ( count($users) < 1 ) return;
 
         if ( $object_it->object instanceof Comment ) {
@@ -192,7 +225,6 @@ class EmailNotificator extends ObjectFactoryNotificator
 			case 'pm_Artefact' : 
 			case 'Comment' :
 			case 'pm_Question':
-			case 'BlogPost':
                 $doNotification = true;
 				break;
 
@@ -224,10 +256,16 @@ class EmailNotificator extends ObjectFactoryNotificator
 		}
 
 		if ( $doNotification ) {
-		    $usersToNotify = array_merge(
-		        $this->getMentions($object_it),
-                $this->getWatchers($object_it)
-            );
+            $mentionedUsers = $this->getMentions($object_it);
+            if ( count($mentionedUsers) > 0 ) {
+                $usersToNotify = $mentionedUsers;
+            }
+            else {
+                $usersToNotify = array_merge(
+                    $this->getWatchers($object_it),
+                    $this->getHandlerUsers($object_it, $prev_object_it, $action)
+                );
+            }
 
             if ( in_array($action, array('add', 'modify')) ) {
                 $this->notifyUsersOnChanges($action, $object_it, $prev_object_it, $usersToNotify);
@@ -282,39 +320,20 @@ class EmailNotificator extends ObjectFactoryNotificator
 		}
 	}
 
-	protected function getEmailRecipientArray( $object_it, $prev_object_it, $action, $usersToNotify )
+	protected function getEmailRecipientArray( $object_it, $usersToNotify )
 	{
 		$project_it = getSession()->getProjectIt();
+        $participant = getFactory()->getObject('Participant');
 
 		$handler = $this->getHandler( $object_it );
 
-		// include participants who wants to receive all notifications
-        $participant = getFactory()->getObject('Participant');
-        $participants =
-            $participant->getRegistry()->Query(
-                    array(
-                        new ParticipantActivePredicate(),
-                        new FilterVpdPredicate(),
-                        new FilterAttributePredicate('NotificationTrackingType', 'any-changes'),
-                        new FilterAttributeNotNullPredicate('NotificationEmailType')
-                    )
-                )->idsToArray();
-
-        $users =
-            array_merge(
-                array_filter($handler->getUsers( $object_it, $prev_object_it, $action ), function( $id ) {
-                    return is_numeric($id) && $id > 0;
-                }),
-                $usersToNotify
-            );
-
 		// process users
 		$user = getFactory()->getObject('cms_User');
-		if ( count($users) > 0 ) {
+		if ( count($usersToNotify) > 0 ) {
 		    $systemuser_it = $user->getRegistry()->Query(
 				array (
 					new UserStatePredicate('nonblocked'),
-					new FilterInPredicate($users)
+					new FilterInPredicate($usersToNotify)
 				)
 			);
 		}
@@ -323,11 +342,11 @@ class EmailNotificator extends ObjectFactoryNotificator
 		}
 
         // make email addresses
+        $participants = array();
         $emails = array();
-
 		while( !$systemuser_it->end() )
 		{
-			// check if user is a prticipant
+			// check if user is a participant
 			$it = $participant->getRegistry()->Query(
                 array(
                     new ParticipantActivePredicate(),
@@ -409,10 +428,14 @@ class EmailNotificator extends ObjectFactoryNotificator
 		while ( !$watcher_it->end() )
 		{
 			// skip current user or external emails
-			if ( in_array($watcher_it->get('SystemUser'), array('', getSession()->getUserIt()->getId())) ) {
+			if ( $watcher_it->get('SystemUser') == getSession()->getUserIt()->getId() ) {
 				$watcher_it->moveNext();
 				continue;
 			}
+            if ( $watcher_it->get('Email') != '' ) {
+                $watcher_it->moveNext();
+                continue;
+            }
             $users[] = $watcher_it->get('SystemUser');
 			$watcher_it->moveNext();
 		}
@@ -425,35 +448,69 @@ class EmailNotificator extends ObjectFactoryNotificator
 		$matches = array();
 
 		// get any available text
-		$texts = $object_it->getHtmlDecoded('Caption');
-		$texts .= $object_it->getHtmlDecoded('Content');
-		$texts .= $object_it->getHtmlDecoded('Description');
+        $texts = '';
+        foreach( $object_it->object->getAttributesByType('wysiwyg') as $attribute ) {
+            $texts .= $object_it->getHtmlDecoded($attribute);
+        }
 
 		if ( !preg_match_all('/@(\w*)/u', $texts, $matches) ) return array();
 		array_shift($matches);
 		$matches = array_shift($matches);
 
+        $mentionedIt = $object_it;
+        if ( $mentionedIt->object instanceof Comment ) {
+            $mentionedIt = $mentionedIt->getAnchorIt();
+        }
+        $attributeMentions = array();
+        foreach( $mentionedIt->object->getAttributesByEntity('cms_User') as $attribute ) {
+            $title = str_replace(' ','', mb_strtolower($mentionedIt->object->getAttributeUserName($attribute)));
+            $attributeMentions[$title] = $attribute;
+        }
+
 		// convert mentions into system users
 		$user_ids = array();
-		$mention_it = getFactory()->getObject('Mentioned')->getAll();
+        $mention = getFactory()->getObject('Mentioned');
+        $mention->setAttributesObject($mentionedIt->object);
+        $mention_it = $mention->getAll();
 		while( !$mention_it->end() ) {
 			if ( in_array($mention_it->getId(), $matches) ) {
-				$user_ids[] = $mention_it->get('User');
+                if ( array_key_exists($mention_it->getId(), $attributeMentions) ) {
+                    $user_ids[] = $mentionedIt->get($attributeMentions[$mention_it->getId()]);
+                }
+                else {
+                    $user_ids[] = $mention_it->get('User');
+                }
 			}
 			$mention_it->moveNext();
 		}
 
-		// skip current user
-		$user_id = getSession()->getUserIt()->getId();
-		$user_ids = array_filter(
-				preg_split('/,/',join(',',$user_ids)),
-				function($value) use ($user_id) {
-					return $value != '' && trim($value) != $user_id;
-				}
-		);
-
-		return $user_ids;
+		return \TextUtils::parseIds(join(',',$user_ids));
 	}
+
+    protected function getHandlerUsers( $object_it, $prev_object_it, $action )
+    {
+        $handler = $this->getHandler( $object_it );
+
+        // users who want to receive all notifications
+        $participant = getFactory()->getObject('Participant');
+        $users =
+            $participant->getRegistryBase()->Query(
+                array(
+                    new ParticipantActivePredicate(),
+                    new FilterVpdPredicate(),
+                    new FilterAttributePredicate('NotificationTrackingType', 'any-changes'),
+                    new FilterAttributeNotNullPredicate('NotificationEmailType')
+                )
+            )->fieldToArray('SystemUser');
+
+        // users defined by handler logic
+        return array_merge(
+                    array_filter($handler->getUsers( $object_it, $prev_object_it, $action ), function( $id ) {
+                        return is_numeric($id) && $id > 0;
+                    }),
+                    $users
+                );
+    }
 
 	protected function getSubject( $object_it, $prev_object_it, $action, $recipient )
 	{

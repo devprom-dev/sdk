@@ -128,7 +128,16 @@ class FieldDictionary extends Field
 		$uid = new ObjectUID;
 
         if ( !is_object($this->objectIt) ) {
-            $this->objectIt = $this->object->getAll();
+            if ( count($this->object->getVpds()) > 1 ) {
+                $this->objectIt = $this->object->getRegistry()->Query(
+                    array(
+                        new FilterBaseVpdPredicate()
+                    )
+                );
+            }
+            else {
+                $this->objectIt = $this->object->getAll();
+            }
         }
         $entity_it = $this->objectIt;
         $entity_it->moveFirst();

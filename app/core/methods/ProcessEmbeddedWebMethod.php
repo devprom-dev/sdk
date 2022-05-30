@@ -28,7 +28,6 @@ class ProcessEmbeddedWebMethod extends WebMethod
 			 switch ( $class_name )
 			 {
 				case 'wikipagefile':
-				case 'blogpostfile':
 					$file_field = 'Content';
 					break;
 
@@ -125,18 +124,14 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 		}
 
             $anchor_field = $_REQUEST['embeddedAnchor'.$i];
-            if ( is_object($anchor_it) ) {
-				$attrs[$anchor_field] = $anchor_it->getId();
-				$object->setAttributeType($anchor_field, 'REF_'.get_class($anchor_it->object).'Id');
-	 		}
-	 		else {
-                $attrs[$anchor_field] = 1;
-            }
-
 		 	$result = array();
+
             if ( is_object($anchor_it) )
 	 		{
                 try {
+                    $attrs[$anchor_field] = $anchor_it->getId();
+                    $object->setAttributeType($anchor_field, 'REF_'.get_class($anchor_it->object).'Id');
+
                     $it = getFactory()->createEntity($object, $attrs);
                     $result['id'] = $it->getId();
                 }
@@ -150,8 +145,8 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 		else
 	 		{
                 try {
-                    $mapper = new \ModelDataTypeMapper();
-                    $mapper->map($object, $attrs);
+                    $object->setAttributeRequired($anchor_field, false);
+                    getFactory()->transformEntityData($object, $attrs);
                 }
                 catch( \Exception $e ) {
                     echo \JsonWrapper::encode(array(
@@ -172,16 +167,10 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 		switch ( $object->getEntityRefName() )
 	 		{
 	 			case 'WikiPageFile':
-	 			case 'BlogPostFile':
-	 			    break;
-
 	 			case 'pm_Attachment':
 					break;
-
 	 			default:
-	 			    
 	 			    $uid = new ObjectUID;
-
 	 				$result['caption'] = $it->getId() > 0
                         ? $uid->getUidWithCaption($it) : $it->getDisplayName();
 	 		}
@@ -189,7 +178,6 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 		switch ( $object->getEntityRefName() )
 	 		{
 	 			case 'WikiPageFile':
-	 			case 'BlogPostFile':
 	 			    $result['file'] = $it->get_native('ContentExt');
 		 			$result['name'] = $it->get_native('ContentExt');
 			 		$result['caption'] = $it->get_native('ContentExt').' ('.$it->getFileSizeKb('Content').' Kb)';

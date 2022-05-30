@@ -77,4 +77,21 @@ class FieldParticipantDictionary extends FieldDictionary
  		}
  		return $options;
 	}
+
+    function draw( $view = null )
+    {
+        $workloadReportIt = getFactory()->getObject('Module')->getExact('resman/resourceload');
+        if ( $workloadReportIt->getId() == '' ) {
+            parent::draw($view);
+            return;
+        }
+
+        echo '<table width="100%"><tr><td>';
+            parent::draw($view);
+        echo '</td><td width="10" >
+                <a class="btn btn-sm btn-success" href="'.$workloadReportIt->getUrl().'" target="_blank" style="margin-left: 6px;" title="'.$workloadReportIt->getDisplayName().'">
+                    <i class="icon-barcode icon-white"></i>
+                </a>
+            </td></tr></table>';
+    }
 }

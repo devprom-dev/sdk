@@ -10,6 +10,11 @@ class DictionaryItemsList extends PMPageList
             case 'pm_IssueType':
                 $this->object->setRegistry( new ObjectRegistrySQL($this->object) );
                 break;
+            case 'pm_ExportTemplate':
+                foreach( $this->object->getAttributesByGroup('additional') as $attribute ) {
+                    $this->object->setAttributeVisible($attribute, false);
+                }
+                break;
         }
     }
 
@@ -52,7 +57,7 @@ class DictionaryItemsList extends PMPageList
 		switch ( $attr )
 		{
 			case 'EntityReferenceName':
-			    if ( getSession()->IsRDD() && $object_it->get($attr) == 'request' ) {
+			    if ( getSession()->IsRDD() && $object_it->get($attr) == 'request' && $object_it->get('ObjectKind') == '' ) {
                     echo translate('Доработка');
                 }
 			    else {

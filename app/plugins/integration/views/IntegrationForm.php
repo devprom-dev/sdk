@@ -1,7 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."plugins/integration/commands/c_integrationtask.php";
 include_once SERVER_ROOT_PATH."plugins/integration/model/validators/IntegrationMappingModelValidator.php";
-include_once SERVER_ROOT_PATH."plugins/integration/model/validators/IntegrationQueueModelValidator.php";
 
 class IntegrationForm extends PMPageForm
 {
@@ -11,6 +10,7 @@ class IntegrationForm extends PMPageForm
 
 		$object = $this->getObject();
 		$object->setAttributeVisible('Caption', false);
+		$object->setAttributeEditable('Log', false);
 
 		$app_it = getFactory()->getObject('IntegrationApplication')->getAll();
 		$app_it->moveToId($this->getFieldValue('Caption'));
@@ -59,14 +59,15 @@ class IntegrationForm extends PMPageForm
 		$actions = parent::getActions();
 		$object_it = $this->getObjectIt();
 
-		$method = new IntegrationTaskRunWebMethod($object_it);
-		if ( $method->hasAccess() ) {
-			$actions[] = array();
-			$actions[] = array(
-				'url' => $method->getJSCall(),
-				'name' => $method->getCaption()
-			);
-		}
+        $job_it = getFactory()->getObject('co_ScheduledJob')->getByRef('ClassName', 'integration/integrationtask');
+        $url = '/tasks/command.php?class=runjobs&job='.$job_it->getId().'&chunk='.$object_it->getId().'&redirect='.urlencode($_SERVER['REQUEST_URI']);
+
+        $actions[] = array();
+        $actions[] = array(
+            'url' => $url,
+            'name' => translate('integration7')
+        );
+
         return $actions;
 	}
 
@@ -75,8 +76,7 @@ class IntegrationForm extends PMPageForm
         return array_merge(
             parent::getValidators(),
             array(
-                new IntegrationMappingModelValidator(),
-                new IntegrationQueueModelValidator()
+                new IntegrationMappingModelValidator()
             )
         );
     }

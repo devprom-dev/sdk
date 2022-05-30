@@ -60,7 +60,11 @@
  	{
  		return 'entity';
  	}
- 	
+
+    function getAttributes() {
+         return $this->attributes;
+    }
+
 	function delete( $id, $record_version = '' )
 	{
 		$entity = $this->getExact($id);
@@ -87,18 +91,6 @@
 	
 	function getHashed( $ref_name )
 	{
-		/*
-		global $entities_hash;
-		
-		if ( !isset($entities_hash) )
-		{
-			$entities_hash = $this->getHashTable( array('ReferenceName') );
-		}
-
-		$entities_hash->find( array($ref_name) );
-		return $entities_hash->getData();
-		*/
-		
 		return $this->getByRef('ReferenceName', $ref_name);
 	}
 	

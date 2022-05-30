@@ -69,7 +69,7 @@ class TaskConvertToIssueServiceTest extends \DevpromDummyTestCase
 
     function testConvertTaskToIssue() {
         $service = new TaskConvertToIssueService(getFactory());
-        $requestIt = $service->mapTaskToIssue($this->taskReqistry->getAll());
+        $requestIt = $service->mapTaskToIssue($this->taskReqistry->Query(array()));
         $this->assertEquals('test', $requestIt->get('Caption'));
         $this->assertEquals('1', $requestIt->get('Owner'));
     }
@@ -77,18 +77,18 @@ class TaskConvertToIssueServiceTest extends \DevpromDummyTestCase
     function testCommentsRebinded() {
         $service = new TaskConvertToIssueService(getFactory());
         $service->bindComments(
-            $this->taskReqistry->getAll(),
-            $this->requestRegistry->getAll()
+            $this->taskReqistry->Query(array()),
+            $this->requestRegistry->Query(array())
         );
-        $comment_it = getFactory()->getObject('Comment')->getRegistry()->getAll();
+        $comment_it = getFactory()->getObject('Comment')->getRegistry()->Query(array());
         $this->assertEquals('Request', $comment_it->get('ObjectClass'));
         $this->assertEquals('5', $comment_it->get('ObjectId'));
     }
 
     function testConvertTaskIterator() {
         $service = new TaskConvertToIssueService(getFactory());
-        $service->convert($this->taskReqistry->getAll());
-        $comment_it = getFactory()->getObject('Comment')->getRegistry()->getAll();
+        $service->convert($this->taskReqistry->Query(array()));
+        $comment_it = getFactory()->getObject('Comment')->getRegistry()->Query(array());
         $this->assertEquals('Request', $comment_it->get('ObjectClass'));
         $this->assertEquals('2', $comment_it->get('ObjectId'));
     }

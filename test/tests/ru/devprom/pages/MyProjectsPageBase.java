@@ -12,9 +12,9 @@ public class MyProjectsPageBase extends PageBase {
 		super(driver);
 	}
 
-	public MyTasksPage gotoMyTasks(){
-		driver.findElement(By.xpath("//a[text()='Мои задачи']")).click();
+	public MyTasksPage gotoMyTasks()
+	{
+		clickOnInvisibleElement(driver.findElement(By.xpath("//a[@uid='mytasks']")));
 		return new MyTasksPage(driver);
 	}
-	
 }

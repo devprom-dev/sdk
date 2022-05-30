@@ -5,13 +5,11 @@ class FieldTransitionAttribute extends FieldForm
 {
  	var $object_it;
  	var $state_it;
+ 	private $attributeObject = null;
  	
- 	function __construct( $object_it ) {
+ 	function __construct( $object_it, $attributeObject ) {
  		$this->object_it = $object_it;
- 	}
- 	
- 	function setStateIt( $state_it ) {
- 	    $this->state_it = $state_it;
+ 		$this->attributeObject = $attributeObject;
  	}
  	
  	function render( $view ) {
@@ -20,10 +18,10 @@ class FieldTransitionAttribute extends FieldForm
  	
  	function draw( $view = null )
  	{
-		$anchor = getFactory()->getObject( 'TransitionAttribute' );
-		$anchor->setStateIt( $this->state_it );
-		
-		if ( is_object($this->object_it) ) {
+		$anchor = getFactory()->getObject( 'StateAttribute' );
+        $anchor->setAttributeType('State', 'REF_'.$this->attributeObject->getStateClassName().'Id');
+
+        if ( is_object($this->object_it) ) {
             $anchorIt = $anchor->getRegistry()->Query(
                 array(
                     new FilterAttributePredicate('Transition', $this->object_it->getId()),
@@ -36,7 +34,8 @@ class FieldTransitionAttribute extends FieldForm
 		}
 
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
-	 		$form = new FormTransitionAttributeEmbedded( $anchorIt, 'Transition' );
+	 		$form = new FormStateAttributeEmbedded( $anchorIt, 'Transition' );
+            $form->setAttributeObject($this->attributeObject);
 	 		$form->setReadonly( $this->readOnly() );
             $form->draw( $view );
  		echo '</div>';

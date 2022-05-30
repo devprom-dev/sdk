@@ -21,6 +21,7 @@ class RequestFormMethods
 	private $formDisplayed = false;
 	private $implementObject = null;
 	private $duplicateMethod = null;
+    private $componentMethod = null;
 
 	function __construct( $object, $formDisplayed, $implementObject = null )
     {
@@ -54,6 +55,10 @@ class RequestFormMethods
 
 		$method = new ObjectCreateNewWebMethod($this->implementObject);
 		if ( $method->hasAccess() ) $this->method_duplicate = $method;
+
+        $method = new ObjectCreateNewWebMethod($this->implementObject);
+        $method->doSelectProject();
+        if ( $method->hasAccess() ) $this->method_duplicate_select = $method;
 
 		if ( class_exists('Issue') ) {
             $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Issue'));
@@ -119,6 +124,7 @@ class RequestFormMethods
 			while( !$linked_it->end() ) {
 				$this->target_projects[$linked_it->get('VPD')] = array (
 				    'id' => $linked_it->getId(),
+                    'code' => $linked_it->get('CodeName'),
 					'title' => $linked_it->getDisplayName(),
 					'vpd' => $linked_it->get('VPD'),
                     'issue' => $linked_it->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD
@@ -129,6 +135,7 @@ class RequestFormMethods
 			if ( !$projectIt->IsPortfolio() ) {
 				$this->target_projects[$projectIt->get('VPD')] = array (
                     'id' => $projectIt->getId(),
+                    'code' => $projectIt->get('CodeName'),
 					'title' => $projectIt->getDisplayName(),
 					'vpd' => $projectIt->get('VPD'),
                     'issue' => $projectIt->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD
@@ -168,6 +175,12 @@ class RequestFormMethods
         }
 
         $this->duplicateMethod = new DuplicateIssuesWebMethod();
+
+        $this->componentMethod = new ObjectCreateNewWebMethod(
+            getFactory()->getObject('Component'));
+        if ( !$this->componentMethod->hasAccess() ) {
+            $this->componentMethod = null;
+        }
     }
 
 	function getDeleteActions( $object_it, $actions )
@@ -191,7 +204,10 @@ class RequestFormMethods
         $skipAttributes = array_merge(
             $objectIt->object->getAttributesByGroup('system'),
             $objectIt->object->getAttributesByGroup('trace'),
-            $this->duplicateMethod->getAttributesToReset()
+            $this->duplicateMethod->getAttributesToReset(),
+            array(
+                'Project'
+            )
         );
 	    return \JsonWrapper::encode(
 	        array_filter(
@@ -232,15 +248,16 @@ class RequestFormMethods
                             'name' => $data['title'],
                             'url' => $method->getJSCall(
                                 array_merge($parms, array('Project' => $data['id']))
-                            )
+                            ),
+                            'uid' => 'implement-'.$data['code']
                         );
                     }
 
                     $items[] = array();
-                    $this->method_duplicate->setVpd($object_it->get('VPD'));
                     $items[] = array (
                         'name' => translate('Выбрать'),
-                        'url' => $this->method_duplicate->getJSCall($parms)
+                        'url' => $this->method_duplicate_select->getJSCall($parms),
+                        'uid' => 'implement'
                     );
 
                     $actions[] = array(
@@ -252,7 +269,7 @@ class RequestFormMethods
                 {
                     $actions[] = array(
                         'name' => text(2694),
-                        'url' => $this->method_duplicate->getJSCall($parms),
+                        'url' => $this->method_duplicate_select->getJSCall($parms),
                         'uid' => 'implement'
                     );
                 }
@@ -361,7 +378,16 @@ class RequestFormMethods
                     );
                 }
             }
-		}
+
+            if ( is_object($this->componentMethod) && $object_it->object->hasAttribute('Components') ) {
+                $actions[] = array(
+                    'name' => $this->componentMethod->getCaption(),
+                    'url' => $this->componentMethod->getJSCall(
+                        array('Requests' => $object_it->getId())
+                    )
+                );
+            }
+        }
 
 		return $actions;
 	}

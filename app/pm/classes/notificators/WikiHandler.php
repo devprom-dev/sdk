@@ -13,30 +13,30 @@ class WikiHandler extends EmailNotificatorHandler
         );
 
 		// notify assignee and owners of tasks and issues related to wiki page
-		if ( $object_it->get('Tasks') != '' ) {
-			$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
-					array (
-							new FilterInPredicate($object_it->get('Tasks')),
-							new StatePredicate('notresolved')
-					)
+		if ( $action == 'modify' && $object_it->get('Tasks') != '' ) {
+			$task_it = getFactory()->getObject('Task')->getRegistryBase()->Query(
+                array (
+                    new FilterInPredicate($object_it->get('Tasks')),
+                    new StatePredicate('notresolved')
+                )
 			);
 			$result = array_merge($result, $task_it->fieldToArray('Assignee'));
 		}
 
-		if ( $object_it->get('Increments') != '' ) {
-			$issue_it = getFactory()->getObject('Request')->getRegistry()->Query(
-					array (
-							new FilterInPredicate($object_it->get('Increments')),
-							new StatePredicate('notresolved')
-					)
+		if ( $action == 'modify' && $object_it->get('Increments') != '' ) {
+			$issue_it = getFactory()->getObject('Request')->getRegistryBase()->Query(
+                array (
+                    new FilterInPredicate($object_it->get('Increments')),
+                    new StatePredicate('notresolved')
+                )
 			);
 			$result = array_merge($result, $issue_it->fieldToArray('Owner'));
 			
-			$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
-					array (
-							new FilterAttributePredicate('ChangeRequest', $issue_it->idsToArray()),
-							new StatePredicate('notresolved')
-					)
+			$task_it = getFactory()->getObject('Task')->getRegistryBase()->Query(
+                array (
+                    new FilterAttributePredicate('ChangeRequest', $issue_it->idsToArray()),
+                    new StatePredicate('notresolved')
+                )
 			);
 			$result = array_merge($result, $task_it->fieldToArray('Assignee'));
 		}

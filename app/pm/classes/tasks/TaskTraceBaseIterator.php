@@ -39,8 +39,10 @@ class TaskTraceBaseIterator extends OrderedIterator
  	
 	function getObjectIt()
 	{
-		$object = getFactory()->getObject( $this->get('ObjectClass') );
-	
+	    $className = getFactory()->getClass($this->get('ObjectClass'));
+	    if ( !class_exists($className) ) return $this->object->getEmptyIterator();
+
+		$object = getFactory()->getObject($className);
 		if ( $this->get('ObjectId') == '' ) return $object->getEmptyIterator();
 		
 		return $object->getExact( $this->get('ObjectId') );

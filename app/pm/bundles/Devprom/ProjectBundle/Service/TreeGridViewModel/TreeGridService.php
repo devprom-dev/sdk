@@ -16,6 +16,9 @@ class TreeGridService
 
     function getTreeGridJsonView( $listView, $view, $titleField, $childrenField, $parentField, $showTraces = 'trace' )
     {
+        if ( $_REQUEST['roots'] == '0' && $_REQUEST['search'] != '' ) {
+            unset($_REQUEST['roots']);
+        }
         if ( $_REQUEST['roots'] != '0' ) {
             $_REQUEST['rows'] = 'all';
             $_REQUEST['offset1'] = '0';
@@ -126,7 +129,13 @@ class TreeGridService
         }
 
         $widgets = $this->getWidgets();
-        $parentIt = $it->object->getExact(\TextUtils::parseIds($_REQUEST['roots']));
+        $parentIt = $it->object->getExact(
+                \TextUtils::parseIds(
+                        $_REQUEST['roots'] != ''
+                                ? $_REQUEST['roots']
+                                : $_REQUEST[strtolower($parentClass)]
+                )
+            );
         $tracesJson = array();
 
         while( !$parentIt->end() ) {
@@ -138,6 +147,8 @@ class TreeGridService
                 $ids = \TextUtils::parseIds($parentIt->get($attribute));
 
                 $refObject = $parentIt->object->getAttributeObject($attribute);
+                if ( !getFactory()->getAccessPolicy()->can_read($refObject) ) continue;
+
                 $refRegistry = $refObject->getRegistry()->useImportantPersistersOnly();
                 $refRegistry->setLimit(self::TRACES_LIMIT);
                 $widget_it = $widgets[get_class($refObject)];
@@ -172,6 +183,7 @@ class TreeGridService
                 $cells['folder'] = true;
                 $cells['section'] = ' ';
                 $cells['parentkey'] = $itemId;
+                $cells['modified'] = time();
                 $tracesJson[$selfKey] = $cells;
 
                 $tracesJson = array_merge($tracesJson,
@@ -299,21 +311,30 @@ class TreeGridService
             $sorts[] = new \SortAttributeClause($sort->getAttributeName() . '.' . $groupOrder);
         }
 
-        $groupIt = $groupObject->getRegistry()->Query(array_merge(
-                array(
-                    new \FilterInPredicate($ids)
-                ), $sorts
-            ));
-
-        $parentField = array_shift($groupObject->getAttributesByGroup('hierarchy-parent'));
-        if ( $parentField != '' ) {
-            $ids = \TextUtils::parseIds(join(',',$groupIt->fieldToArray('ParentPath')));
-            if ( count($ids) < 1 ) return $groups;
+        if ( $groupObject instanceof \MetaobjectCacheable ) {
+            $groupIt = $groupObject->createCachedIterator(
+                            array_values(array_filter($groupObject->getAll()->getRowset(),
+                                function($row) use ($ids, $groupObject) {
+                                    return in_array($row[$groupObject->getIdAttribute()], $ids);
+                                }))
+                        );
+        }
+        else {
             $groupIt = $groupObject->getRegistry()->Query(array_merge(
                 array(
                     new \FilterInPredicate($ids)
                 ), $sorts
             ));
+            $parentField = array_shift($groupObject->getAttributesByGroup('hierarchy-parent'));
+            if ( $parentField != '' ) {
+                $ids = \TextUtils::parseIds(join(',',$groupIt->fieldToArray('ParentPath')));
+                if ( count($ids) < 1 ) return $groups;
+                $groupIt = $groupObject->getRegistry()->Query(array_merge(
+                    array(
+                        new \FilterInPredicate($ids)
+                    ), $sorts
+                ));
+            }
         }
 
         while( !$groupIt->end() ) {

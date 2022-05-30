@@ -98,7 +98,10 @@ class ReportRegistry extends ObjectRegistryArray
     		$data['WidgetClass'] = $report['widget'];
     		$data['IsCustomized'] = $report['custom'] ? 'Y' : 'N';
     		$data['VPD'] = $vpd_value;
-    		
+            $data['RecordCreated'] = $report['created'];
+            $data['RecordModified'] = $report['modified'];
+            $data['IsActive'] = $report['active'];
+
     		$data_array[] = $data;
  	    }
 

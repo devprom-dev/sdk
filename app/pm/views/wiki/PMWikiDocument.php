@@ -10,7 +10,6 @@ class PMWikiDocument extends PMWikiTable
  	private $object_it = null;
  	private $document_it = null;
  	private $revision_it = null;
- 	private $compareto_it = null;
 
     function getDocumentIt()
 	{
@@ -171,7 +170,9 @@ class PMWikiDocument extends PMWikiTable
     {
         $filters = parent::buildCustomFilters();
         foreach( $filters as $filter ) {
-            $filter->setDefaultValue('');
+            if ( $filter instanceof FilterWebMethod ) {
+                $filter->setDefaultValue('');
+            }
         }
         return $filters;
     }
@@ -192,7 +193,7 @@ class PMWikiDocument extends PMWikiTable
 	{
 		return array_merge(parent::getFilterPredicates( $values ),
             array(
-                new WikiPageCompareContentFilter($values['comparemode'], $this->getCompareToSnapshot()),
+                new WikiPageCompareContentFilter($values['comparemode'], $this->getCompareToSnapshot($values)),
                 new FilterAttributePredicate('DocumentId', $this->getDocumentIt()->idsToArray())
             )
         );
@@ -206,41 +207,12 @@ class PMWikiDocument extends PMWikiTable
 	    return 'pm/WikiDocument.php';
 	}
 	
-	function getCompareToSnapshot()
-	{
-		if ( is_object($this->compareto_it) ) return $this->compareto_it;
-	 
-		$matches = array();
-		if( preg_match('/document:(\d+)/', $_REQUEST['compareto'], $matches) && $matches[1] != '' )
-		{
-			if ( $matches[1] != $this->getRevisionIt()->getId() ) {
-				$registry = new WikiPageRegistryContent($this->getObject());
-				return $this->compareto_it = $registry->Query(array(new FilterInPredicate($matches[1])));
-			}
-		}
-		else if ( !in_array($_REQUEST['compareto'], array('', 'none', 'all')) )
-		{
-			$snapshot = new WikiPageComparableSnapshot($this->getDocumentIt());
-            if ( $_REQUEST['compareto'] == 'latest' ) {
-                $snapshot_it = $snapshot->getLatest(2);
-                if ( $snapshot_it->count() > 1 ) {
-                    $snapshot_it->moveNext();
-                }
-            }
-            else {
-                $snapshot_it = $snapshot->getExact($_REQUEST['compareto']);
-            }
-			if ( $snapshot_it->getId() != '' ) return $this->compareto_it = $snapshot_it;
-		}
 
-    	return $this->getObject()->getEmptyIterator();
-	}
-	
 	function getCompareToActions()
 	{
 		$selectedBaseline = $this->getRevisionIt()->getId();
 		$selectedBranch = $this->getDocumentIt()->getId();
-		$comparedToBaselineIt = $this->getCompareToSnapshot();
+		$comparedToBaselineIt = $this->getCompareToSnapshot($_REQUEST);
         $comparedToBaselineText = text(1566);
 
 		$baselines = array();
@@ -250,6 +222,7 @@ class PMWikiDocument extends PMWikiTable
         $branchesIt = $registry->useImportantPersistersOnly()->Query(
             array(
                 new FilterTextExactPredicate('UID', $this->getDocumentIt()->get('UID')),
+                new ProjectActiveVpdPredicate(),
                 new SortDocumentBaselineClause()
             )
         );
@@ -484,9 +457,8 @@ class PMWikiDocument extends PMWikiTable
         }
     }
 
-    function getTraceActions()
-	{
-		return $this->getForm()->getTraceActions( $this->getDocumentIt() );
+    function getTraceActions() {
+		return array();
 	}
 	
 	function getActions()
@@ -548,14 +520,6 @@ class PMWikiDocument extends PMWikiTable
             'name' => translate('Просмотр'),
             'url' => $url.'&viewmode=view'
         );
-
-		if ( $this->getObject()->getStateClassName() != '' ) {
-            $actions[] = array (
-                'name' => translate('Согласование'),
-                'url' => $url.'&affirmation=myturn',
-                'uid' => 'affirmation'
-            );
-        }
 
         $method = new ObjectCreateNewWebMethod($this->getObject());
         if ( $method->hasAccess() ) {
@@ -636,7 +600,7 @@ class PMWikiDocument extends PMWikiTable
         return $_REQUEST['viewmode'] != 'view'
             && in_array($filter_values['search'], array('','all','hide'))
             && $this->getRevisionIt()->getId() < 1
-            && $this->getCompareToSnapshot()->getId() < 1
+            && $this->getCompareToSnapshot($filter_values)->getId() < 1
             && getFactory()->getAccessPolicy()->can_modify($this->getObject());
     }
 
@@ -656,7 +620,7 @@ class PMWikiDocument extends PMWikiTable
         $form = parent::getForm();
         $form->setDocumentIt( $this->getDocumentIt() );
         $form->setRevisionIt( $this->getRevisionIt() );
-        $compare_to = $this->getCompareToSnapshot();
+        $compare_to = $this->getCompareToSnapshot($_REQUEST);
         if ( $compare_to->getId() != '' ) {
             $form->setCompareTo($compare_to);
         }
@@ -670,12 +634,15 @@ class PMWikiDocument extends PMWikiTable
     function getDetails()
     {
         $documentIt = $this->getDocumentIt();
+        $filterValues = $this->getFilterValues();
+
         return array(
             'comments' => array (
                 'image' => 'icon-comment',
                 'title' => text(980),
                 'url' => getSession()->getApplicationUrl().
-                    'details/comments/'.get_class($documentIt->object).'/'.$documentIt->getId().'?tableonly=true'
+                            'details/comments/'.get_class($documentIt->object).'/'.$documentIt->getId()
+                                .'?tableonly=true&commentstate='.$filterValues['commentstate']
             ),
            'props' => array (
                 'image' => 'icon-zoom-in',
@@ -685,7 +652,8 @@ class PMWikiDocument extends PMWikiTable
             'more' => array (
                 'image' => 'icon-time',
                 'title' => text(2166),
-                'url' => getSession()->getApplicationUrl().'details/log?tableonly=true&document='.$documentIt->getId()
+                'url' => getSession()->getApplicationUrl().'details/log?tableonly=true&document='
+                            .$documentIt->getId()
             )
         );
     }
@@ -696,5 +664,25 @@ class PMWikiDocument extends PMWikiTable
 
     function buildLinkStateFilter( $values ) {
         return new PMWikiTransitiveLinkedStateFilter( $values['linkstate'] );
+    }
+
+    function buildCompareToSnapshot($values)
+    {
+        $matches = array();
+        if( preg_match('/document:(\d+)/', $values['compareto'], $matches) && $matches[1] != '' ) {
+            if ( $matches[1] != $this->getRevisionIt()->getId() ) {
+                $registry = new WikiPageRegistryContent($this->getObject());
+                return $registry->Query(array(new FilterInPredicate($matches[1])));
+            }
+        }
+        else if ( $values['compareto'] == 'latest' ) {
+            $snapshot = new WikiPageComparableSnapshot($this->getDocumentIt());
+            $snapshot_it = $snapshot->getLatest(2);
+            if ( $snapshot_it->count() > 1 ) {
+                $snapshot_it->moveNext();
+            }
+            return $snapshot_it;
+        }
+        return parent::buildCompareToSnapshot($values);
     }
 }
