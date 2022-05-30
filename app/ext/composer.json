@@ -116,7 +116,7 @@
     "symfony/security-bundle": "3.4.*",
     "symfony/monolog-bundle": "3.6.*",
     "symfony/swiftmailer-bundle": "3.3.*",
-    "twig/twig": "2.13.*",
+    "twig/twig": "2.14.*",
     "doctrine/orm": "2.7.*",
     "doctrine/doctrine-migrations-bundle": "2.2.*",
     "friendsofsymfony/rest-bundle": "2.*",
