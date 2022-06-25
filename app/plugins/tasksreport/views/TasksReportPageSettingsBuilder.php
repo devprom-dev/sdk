@@ -8,7 +8,7 @@ class TasksReportPageSettingsBuilder extends PageSettingBuilder
         $setting = new PageListSetting('TasksReportList');
         $setting->setGroup( 'none' );
         $setting->setVisibleColumns( array(
-            'UID', 'Caption', 'TaskType', 'Fact', CONTRACT_REFNAME, 'LastDate', 'StartDateOnly', 'DayFact', 'FactRegion', 'regionCaption'
+            'UID', 'Caption', 'TaskType', 'FactPeriod', CONTRACT_REFNAME, 'LastDate', 'StartDateOnly', 'DayFact', 'FactRegion', 'regionCaption'
         ));
         $settings->add( $setting );
 

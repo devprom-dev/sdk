@@ -22,6 +22,14 @@ class SpentTimeReportDatePredicate extends FilterPredicate
         parent::__construct('dummy');
     }
 
+    function getAfterDate() {
+        return $this->after;
+    }
+
+    function getBeforeDate() {
+        return $this->before;
+    }
+
     function _predicate( $filter )
  	{
         if ( $this->after == self::MAX_AFTER && $this->before == self::MAX_BEFORE ) {

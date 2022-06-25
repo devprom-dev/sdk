@@ -29,7 +29,7 @@ class TasksReportTable extends PMPageTable
                     getFactory()->getObject('TaskType'), '', 'tasktype'
                 ),
             	new FilterDateIntervalWebMethod(text(2334), 'spentafter'),
-           	new FilterDateIntervalWebMethod(text(2334), 'spentbefore')
+           	    new FilterDateIntervalWebMethod(text(2334), 'spentbefore')
             )
         );
     }
@@ -46,7 +46,7 @@ class TasksReportTable extends PMPageTable
                 new FilterSubmittedBeforePredicate($values['submittedbefore']),
                 new FilterAttributePredicate('TaskType', $values['tasktype']),
                 new FilterAttributePredicate('regionId', $values[REGION_REFNAME]),
-		new SpentTimeReportDatePredicate($values['spentafter'], $values['spentbefore'])
+		        new SpentTimeReportDatePredicate($values['spentafter'], $values['spentbefore'])
             )
         );
     }

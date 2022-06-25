@@ -11,6 +11,7 @@ class TasksReportPage extends PMPage
 
     function getObject() {
         $object = new Task(new TasksReportRegistry());
+        $object->addAttribute('FactPeriod', 'FLOAT', 'Затрачено', true);
         $object->addAttribute('StartDateOnly', 'DATE', 'Дата списания', true);
         $object->addAttribute('LastDate', 'DATE', 'Дата последней активности', true);
         $object->addAttribute('DayFact', 'FLOAT', 'Затраченное время', true);
