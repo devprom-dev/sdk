@@ -24,4 +24,21 @@ class TasksReportPage extends PMPage
  	function getTable() {
  		return new TasksReportTable($this->getObject());
  	}
+
+    function buildExportIterator( $object, $ids, $iteratorClassName, $queryParms )
+    {
+        $ids = array_filter($ids, function($value) {
+            return $value != '';
+        });
+        if ( count($ids) < 1 ) return $object->getEmptyIterator();
+
+        return $object->getRegistry()->Query(
+            array_merge(
+                array(
+                    new TasksReportActivityPredicate($ids)
+                ),
+                $queryParms
+            )
+        );
+    }
 }

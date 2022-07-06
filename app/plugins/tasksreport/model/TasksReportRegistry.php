@@ -1,4 +1,5 @@
 <?php
+include "predicates/TasksReportActivityPredicate.php";
 
 class TasksReportRegistry extends ObjectRegistrySQL
 {
@@ -7,7 +8,10 @@ class TasksReportRegistry extends ObjectRegistrySQL
         $activityClause = "";
         foreach( $parms as $parameter ) {
             if ( $parameter instanceof \SpentTimeReportDatePredicate ) {
-                $activityClause = " AND a.ReportDate BETWEEN '{$parameter->getAfterDate()}' AND '{$parameter->getBeforeDate()}' ";
+                $activityClause .= " AND a.ReportDate BETWEEN '{$parameter->getAfterDate()}' AND '{$parameter->getBeforeDate()}' ";
+            }
+            if ( $parameter instanceof \TasksReportActivityPredicate ) {
+                $activityClause .= " AND a.pm_ActivityId IN ({$parameter->getValue()}) ";
             }
         }
 
@@ -19,11 +23,13 @@ class TasksReportRegistry extends ObjectRegistrySQL
                    r.DayFact, 
                    r.FactRegion, 
                    r.regionId,
-                   (SELECT SUM(a.Capacity) FROM pm_Activity a WHERE a.Task = t.pm_TaskId {$activityClause}) FactPeriod
+                   (SELECT SUM(a.Capacity) FROM pm_Activity a WHERE a.Task = t.pm_TaskId {$activityClause}) FactPeriod,
+                   r.Activities
               FROM pm_Task t INNER JOIN
                    (select a.Task, a.ReportDate, r.regionCaption, r.regionId, av.StringValue,
                            SUM(a.Capacity) DayFact,
-                           ROUND(SUM(a.Capacity) / IF(av.StringValue = '1', 10, LENGTH(av.StringValue) - LENGTH(REPLACE(av.StringValue, ',', '')) + 1), 2) FactRegion
+                           ROUND(SUM(a.Capacity) / IF(av.StringValue = '1', 10, LENGTH(av.StringValue) - LENGTH(REPLACE(av.StringValue, ',', '')) + 1), 2) FactRegion,
+                           GROUP_CONCAT(CAST(a.pm_ActivityId AS CHAR)) Activities
                       from pm_Activity a, pm_CustomAttribute ca, pm_AttributeValue av,
                             (select 2 regionId, 'Великий Новгород' regionCaption
                              union
@@ -59,11 +65,13 @@ class TasksReportRegistry extends ObjectRegistrySQL
                    r.DayFact, 
                    r.FactRegion, 
                    r.regionId,
-                   (SELECT SUM(a.Capacity) FROM pm_Activity a WHERE a.Issue = t.ChangeRequest {$activityClause}) FactPeriod
+                   (SELECT SUM(a.Capacity) FROM pm_Activity a WHERE a.Issue = t.ChangeRequest {$activityClause}) FactPeriod,
+                   r.Activities
               FROM pm_Task t INNER JOIN
                    (select a.Issue, a.ReportDate, r.regionCaption, r.regionId, av.StringValue,
                            SUM(a.Capacity) DayFact,
-                           ROUND(SUM(a.Capacity) / IF(av.StringValue = '1', 10, LENGTH(av.StringValue) - LENGTH(REPLACE(av.StringValue, ',', '')) + 1), 2) FactRegion
+                           ROUND(SUM(a.Capacity) / IF(av.StringValue = '1', 10, LENGTH(av.StringValue) - LENGTH(REPLACE(av.StringValue, ',', '')) + 1), 2) FactRegion,
+                           GROUP_CONCAT(CAST(a.pm_ActivityId AS CHAR)) Activities
                       from pm_Activity a, pm_CustomAttribute ca, pm_AttributeValue av,
                             (select 2 regionId, 'Великий Новгород' regionCaption
                              union
