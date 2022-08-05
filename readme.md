@@ -6,13 +6,19 @@
 Пример создания триггеров на изменение данных: изменение задач, создание пользователя.
 Пример триггера, изменяющего состояние пожелания при создании задачи.
 #### app/plugins/example2 
-Пример расширения модели данных путем добавления нового поля в таблице и соответствующего атрибута на форме.
+Пример расширения модели данных путем добавления нового поля в таблице и соответствующего атрибута на форме задачи.
+![Image of Example2](https://raw.githubusercontent.com/devprom-dev/sdk/master/images/example2.png)
 #### app/plugins/example3
 Пример добавления дополнительного поля на форму списания времени, для указания типа задачи (активности) на что списано время.
 ![Image of Example3](https://raw.githubusercontent.com/devprom-dev/sdk/master/images/example3.png)
 #### app/plugins/example4
 Пример реализации модуля, отображающего все заявки от пользователей.
 ![Image of Example4](https://raw.githubusercontent.com/devprom-dev/sdk/master/images/example4.png)
+#### app/plugins/example5
+Пример создания интерфейса пользователя для управления пользовательской сущностью.
+В базе данных создается структура и метаданные для новой сущности.
+Показан пример создания таблицы и формы для управления записями новой сущности.
+![Image of Example5](https://raw.githubusercontent.com/devprom-dev/sdk/master/images/example5.png)
 #### app/plugins/customs
 Пример создания собственого отчета "Детализация времени цикла".
 
@@ -31,25 +37,8 @@
 2. Установить сервис dev/pycron/pycron -install (нужны права администратора)
 3. Запустить сервис net start pycron
 
-## Разработка плагинов
-Команда для создания нового плагина:   
-
-    > php /projects/sdk/lib/app/console new-plugin mypluginname   
-    
-Расположение кода плагина:   
-
-    > cd /projects/sdk/app/plugins/mypluginname   
-    
-Подготовка дистрибутива для установки плагина:   
-
-    > php /projects/sdk/lib/app/console build-plugin mypluginname   
-         
-Расположение дистрибутива плагина:   
-
-    > ls -l /projects/sdk/build/plugin.mypluginname.zip
-
-## Основные команды
-Команда для создания нового плагина:   
+## Основные команды при разработке плагинов
+Команда создания нового плагина:   
 
     > dev\php\php lib/app/console new-plugin mypluginname   
     

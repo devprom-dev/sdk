@@ -1,6 +1,0 @@
-Options +FollowSymLinks
-
-RewriteEngine On
-RewriteBase /mobile
-RewriteRule ^(bundles)($|/) - [L]
-RewriteRule .? index.php [L,QSA]

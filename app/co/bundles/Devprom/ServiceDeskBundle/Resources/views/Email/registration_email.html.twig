@@ -1,9 +1,0 @@
-{% extends "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
-
-{% block subject %}
-    {{ 'registration.email.subject'|trans('emails', default_locale) }}
-{% endblock subject %}
-
-{% block body %}
-    {% include emailBody("registration.twig",default_locale) %}
-{% endblock body %}
