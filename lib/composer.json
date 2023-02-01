@@ -11,7 +11,7 @@
         }
     },
     "require": {
-    	"symfony/symfony": "3.4.*",
-    	"symfony/symfony": "3.4.*"
+    	"symfony/symfony": "4.4.*",
+    	"symfony/symfony": "4.4.*"
     }
 }
