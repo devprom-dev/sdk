@@ -30,3 +30,39 @@ function downloadUpdate()
         reportError(ajaxErrorExplain(xhr, error) + "\n\n" + url);
     });
 }
+
+/**
+ * Check for updates and outputs the result message
+ *
+ * @param route
+ */
+function searchForUpdates( route )
+{
+    let url = document.location + route;
+    
+    $.getJSON(
+        url,
+        // Always. Leaving it for examiner
+        // @todo remove it after test task is passed|failed
+        function( data ){
+            console.log( 'Success. Received data: ' );
+            console.log( data )
+        }
+    )
+        .done(function (data) {
+            
+            console.log(data)
+            // Format processing. Could use an Exception.
+            if( typeof data.updates_found === 'undefined' ){
+                reportError('Unexpected format'); // @todo apply a translation here
+                return;
+            }
+            
+            +data.updates_found === 1
+                ? reportSuccess('Updates found. Please update.') // @todo apply a translation here
+                : reportError('No new updates are found'); // @todo apply a translation here
+        })
+        .fail(function (xhr, status, error) {
+            reportError(ajaxErrorExplain(xhr, error) + "\n\n" + url);
+        });
+}

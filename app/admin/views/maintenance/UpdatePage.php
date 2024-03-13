@@ -59,6 +59,17 @@ class UpdatePage extends AdminPage
 		        
 		    case 'check':
 		        return new UpdateFormCheck( $object );
+            
+            case 'check_for_updates':
+                
+                /** @var CheckpointUpdatesAvailable $check_point */
+                $check_point = getCheckpointFactory()->getCheckpoint( 'CheckpointUpdatesAvailable' );
+                
+                $check_point->execute();
+                
+                // 0 - new updates found
+                // 1 - no new updates found
+                die( json_encode( [ 'updates_found' => ! $check_point->getValue() ] ) );
 		        
 		    default:
 		        return null;

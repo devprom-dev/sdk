@@ -55,7 +55,12 @@ class UpdateTable extends StaticPageTable
 			'url' => '?action=upload',
 			'uid' => 'upload'
 		);
-
+        
+        $actions[] = [
+            'name' => translate('Найти обновления'),
+            'url' => 'javascript: searchForUpdates(\'?action=check_for_updates\')',
+        ];
+        
 		return $actions;
 	}
 
