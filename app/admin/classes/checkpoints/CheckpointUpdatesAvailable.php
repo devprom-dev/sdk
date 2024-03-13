@@ -6,7 +6,16 @@ class CheckpointUpdatesAvailable extends CheckpointEntryDynamic
     {
         return '/admin/updates.php';
     }
-
+    
+    /**
+     * Checks for updates
+     *
+     * set $this->value to
+     *  0 if updates are found
+     *  1 if updates aren't found
+     *
+     * @return void
+     */
     function execute()
     {
         if ( \EnvironmentSettings::getAutoUpdate() ) {
