@@ -26,7 +26,7 @@ function downloadUpdate()
             alert('%error%');
         }
     })
-    .error(function (xhr, status, error) {
+    .fail(function (xhr, status, error) {
         reportError(ajaxErrorExplain(xhr, error) + "\n\n" + url);
     });
 }
